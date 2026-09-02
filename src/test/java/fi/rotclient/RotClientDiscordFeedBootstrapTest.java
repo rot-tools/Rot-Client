@@ -43,10 +43,22 @@ final class RotClientDiscordFeedBootstrapTest {
         String ignore = Files.readString(Path.of(".gitignore"), StandardCharsets.UTF_8);
         assertTrue(ignore.lines().anyMatch("/rotclient-dev.local.json"::equals),
                 "Local Discord bot path configuration must be ignored");
+        assertTrue(ignore.lines().anyMatch("/AGENTS.md"::equals),
+                "Local development process notes must stay out of the public tree");
 
-        String agents = Files.readString(Path.of("AGENTS.md"), StandardCharsets.UTF_8);
-        assertTrue(agents.contains("ensure-discord-project-feed.ps1"));
-        assertTrue(agents.contains("Do not commit credentials"));
-        assertFalse(agents.matches("(?s).*\\b[A-Z]:\\\\Users\\\\[^\\s]+.*"));
+        String contributing = Files.readString(Path.of("CONTRIBUTING.md"), StandardCharsets.UTF_8);
+        assertTrue(contributing.contains("rotclient-dev.local.json"));
+        assertTrue(contributing.contains("AGENTS.md"));
+        assertTrue(contributing.contains("ensure-discord-project-feed.ps1")
+                || contributing.contains("tokens, secrets"));
+        assertFalse(contributing.matches("(?s).*\\b[A-Z]:\\\\Users\\\\[^\\s]+.*"));
+
+        Path agents = Path.of("AGENTS.md");
+        if (Files.isRegularFile(agents)) {
+            String text = Files.readString(agents, StandardCharsets.UTF_8);
+            assertTrue(text.contains("ensure-discord-project-feed.ps1"));
+            assertTrue(text.contains("Do not commit credentials"));
+            assertFalse(text.matches("(?s).*\\b[A-Z]:\\\\Users\\\\[^\\s]+.*"));
+        }
     }
 }

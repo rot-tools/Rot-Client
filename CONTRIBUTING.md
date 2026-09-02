@@ -1,8 +1,10 @@
 # Contributing to Rot Client
 
-Contributions should preserve tracker accuracy, family isolation, user privacy, and a reviewable Git history.
+Contributions should preserve a clear in-game UI, tracker accuracy, family isolation, user privacy, and a reviewable Git history.
 
-Rot Client was originally authored under the OgRudolf identity (historical attribution) and is developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Use a focused branch and open a pull request for review before merging changes.
+Rot Client is created by **OgRudolf** and developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Use a focused branch and open a pull request for review before merging changes.
+
+Local-only files stay out of Git: `AGENTS.md`, `rotclient-dev.local.json`, and the Discord project-feed bootstrap path. Do not commit credentials, tokens, secrets, or personal machine paths. The optional local helper is `scripts/ensure-discord-project-feed.ps1`.
 
 ## Development setup
 

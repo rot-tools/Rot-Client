@@ -893,6 +893,11 @@ public final class RotClientClient implements ClientModInitializer {
                                 context.getSource(),
                                 legacyAlias,
                                 RotClientClient::openMiningUi)))
+                .then(literal("qol")
+                        .executes(context -> runCommand(
+                                context.getSource(),
+                                legacyAlias,
+                                RotClientClient::openQolUi)))
                 .then(literal("help")
                         .executes(context -> runCommand(
                                 context.getSource(),
@@ -2309,6 +2314,14 @@ public final class RotClientClient implements ClientModInitializer {
 
     private static int openHome(FabricClientCommandSource source) {
         return openMiningUi(source);
+    }
+
+    private static int openQolUi(FabricClientCommandSource source) {
+        Minecraft.getInstance().schedule(() -> {
+            WORKSPACE.flushIfDirty();
+            openClientUiNavigating(DashboardModule.QOL_SETTINGS, null);
+        });
+        return 1;
     }
 
     private static int openMiningUi(FabricClientCommandSource source) {
@@ -3842,26 +3855,33 @@ private static int toggle(FabricClientCommandSource source) {
     private static int rotClientHelp(FabricClientCommandSource source) {
         source.sendFeedback(Component.literal(
                 """
-                Rot Client commands:
-                /rot help
-                /rot session help
-                /rot history help
-                /rot edit|toggle|reset|status
+                Rot Client:
+                Right Shift (or the Click GUI key) opens the dashboard.
+                /rot              open dashboard
+                /rot ui           same
+                /rot qol          open QoL modules
+                /rot edit         HUD layout editor
+                /rot help         this list
                 /rot layout reset
                 /rot layout reset ui|hud
-                /rot shadow status
-                /rot slayer status | carry ...
-                /rot termsim [ping]
-                /rot target <coal|iron|gold|lapis|redstone|emerald|diamond|quartz|mithril|titanium|tungsten|umber>
+
+                Session:
+                /rot session help
+                /rot history help
+
+                Mining:
+                /rot target <material>
                 /rot record start|stop
                 /rot fortune auto|<mining> [material]
-                Open the dashboard with /rot.
-                /rot ui also opens the dashboard.
+                /rot shadow status
 
-                Compatibility (deprecated):
-                /rotclient, /miningtracker and /MiningTracker still open the dashboard;
-                each shows a deprecation notice pointing to /rot.
-                /miningui still opens the dashboard and shows a deprecation notice."""
+                Other:
+                /rot slayer status | carry ...
+                /rot termsim [ping]
+                /rot toggle|reset|status
+
+                Old aliases /rotclient, /miningtracker, /miningui still open
+                the dashboard and print a deprecation notice."""
                         .trim()));
         return 1;
     }

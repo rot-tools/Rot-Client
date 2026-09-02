@@ -25,13 +25,13 @@ final class RotClientHomeScreen extends Screen {
         RotClientUiDraw.drawHeaderBar(
                 graphics, font, x, y, PANEL_WIDTH, 42, "Rot Client", "Home");
         RotClientUiDraw.text(graphics, font,
-                "Open the dashboard for mining, sessions, HUD layout, and QoL.",
+                "Open the dashboard for QoL modules, HUD layout, mining, and sessions.",
                 x + 20,
                 y + 64,
                 RotClientTheme.TEXT_DIM,
                 false);
         RotClientUiDraw.text(graphics, font,
-                "Search modules from the address bar, or type /rot in chat.",
+                "Right Shift opens it in-game. Search the address bar, or type /rot qol.",
                 x + 20,
                 y + 80,
                 RotClientTheme.TEXT_MUTED,

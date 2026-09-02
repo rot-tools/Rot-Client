@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 final class MiningUiScreen extends Screen {
-    private static final String PRODUCT_HEADER = "ROT CLIENT · ALPHA";
+    private static final String PRODUCT_HEADER = "ROT CLIENT";
     private static final int CHROME_HEIGHT = RotClientDashboardLayout.chromeHeight();
     private static final int HEADER_HEIGHT = CHROME_HEIGHT;
     private static final int TAB_BAR_HEIGHT = RotClientDashboardLayout.TAB_STRIP_HEIGHT;
@@ -716,14 +716,27 @@ final class MiningUiScreen extends Screen {
         RotClientUiDraw.text(graphics, font, "Overview", contentLeft, panelY + CHROME_HEIGHT + 12,
                 RotClientTheme.TEXT_DIM, true);
         RotClientUiDraw.text(graphics, font,
-                "Search modules in the address bar. /rot opens this dashboard.",
+                "Right Shift opens this dashboard. Search the address bar, or type /rot qol.",
                 contentLeft, panelY + CHROME_HEIGHT + 28, RotClientTheme.TEXT_MUTED, false);
 
         int cardY = panelY + CHROME_HEIGHT + 52;
         int gap = 10;
-        int cardWidth = (contentWidth - gap * 2) / 3;
+        int cardWidth = (contentWidth - gap) / 2;
+        int row2Y = cardY + 84 + gap;
         drawOverviewCard(graphics, mouseX, mouseY,
                 contentLeft, cardY, cardWidth,
+                "Quality of life",
+                QolUtilityCatalog.modules().size() + " modules",
+                "Combat, dungeons, utilities…",
+                true);
+        drawOverviewCard(graphics, mouseX, mouseY,
+                contentLeft + cardWidth + gap, cardY, cardWidth,
+                "Look & HUD",
+                "Appearance",
+                "Colors, background, HUD layout",
+                false);
+        drawOverviewCard(graphics, mouseX, mouseY,
+                contentLeft, row2Y, cardWidth,
                 "Mining tracker",
                 config.selectedSelection().displayName(),
                 config.enabled ? "Tracking ON" : "Tracking OFF",
@@ -731,26 +744,19 @@ final class MiningUiScreen extends Screen {
         MiningSessionAnalyticsPresentation analytics =
                 RotClientClient.sessionAnalyticsPresentation();
         boolean analyticsActive = analytics.currentRunning();
-        drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft + cardWidth + gap, cardY, cardWidth,
-                "Session analytics",
-                analytics.statusBadge(),
-                analyticsActive ? "Current Session · Running" : "Current Session",
-                analyticsActive);
         MiningSessionHistoryPresentation history =
                 RotClientClient.sessionHistoryPresentation();
+        String historyDetail = history.available()
+                ? (history.empty() ? "No saved sessions" : history.sessions().size() + " saved")
+                : "History unavailable";
         drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft + (cardWidth + gap) * 2, cardY, cardWidth,
-                "Session history",
-                history.available()
-                        ? (history.empty()
-                        ? "Empty"
-                        : history.sessions().size() + " saved")
-                        : "Unavailable",
-                "Local · max 20",
-                history.available() && !history.empty());
+                contentLeft + cardWidth + gap, row2Y, cardWidth,
+                "Sessions",
+                analytics.statusBadge(),
+                historyDetail,
+                analyticsActive);
 
-        int linkY = cardY + 100;
+        int linkY = row2Y + 100;
         RotClientUiDraw.text(graphics, font, "Community", contentLeft, linkY, RotClientTheme.TEXT_DIM, false);
         RotClientUiDraw.drawButton(
                 graphics, font, mouseX, mouseY,
@@ -766,17 +772,17 @@ final class MiningUiScreen extends Screen {
                 RotClientLinks.ISSUES_LABEL, false, true);
 
         drawButton(graphics, mouseX, mouseY,
-                contentLeft, panelY + actionRowY(), 168,
-                "Mining tracker", RotClientTheme.TEXT_DIM, false);
+                contentLeft, panelY + actionRowY(), 148,
+                "QoL modules", RotClientTheme.TEXT_DIM, false);
         drawButton(graphics, mouseX, mouseY,
-                contentLeft + 176, panelY + actionRowY(), 168,
-                "ANALYTICS", RotClientTheme.TEXT_DIM, false);
+                contentLeft + 158, panelY + actionRowY(), 148,
+                "Edit HUD", RotClientTheme.TEXT_DIM, false);
         drawButton(graphics, mouseX, mouseY,
-                contentLeft + 352, panelY + actionRowY(), 148,
-                "HISTORY", RotClientTheme.TEXT_DIM, false);
+                contentLeft + 316, panelY + actionRowY(), 148,
+                "Mining", RotClientTheme.TEXT_DIM, false);
         drawButton(graphics, mouseX, mouseY,
                 contentRight - 148, panelY + actionRowY(), 148,
-                "DONE", RotClientTheme.HUD_ACCENT, true);
+                "Done", RotClientTheme.HUD_ACCENT, true);
     }
 
     private void drawSettingsSearchField(
@@ -2632,27 +2638,36 @@ int selectorY = masterY + 10;
             int contentWidth = contentRight - contentLeft;
             int cardY = panelY + CHROME_HEIGHT + 52;
             int gap = 10;
-            int cardWidth = (contentWidth - gap * 2) / 3;
+            int cardWidth = (contentWidth - gap) / 2;
+            int row2Y = cardY + 84 + gap;
             settingsSearchFocused = false;
             if (inside(logicalMouseX, logicalMouseY,
                     contentLeft, cardY, cardWidth, 84)
                     || inside(logicalMouseX, logicalMouseY,
-                    contentLeft, panelY + actionRowY(), 168, BUTTON_HEIGHT)) {
+                    contentLeft, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
+                selectModule(DashboardModule.QOL_SETTINGS);
+                return true;
+            }
+            if (inside(logicalMouseX, logicalMouseY,
+                    contentLeft + cardWidth + gap, cardY, cardWidth, 84)) {
+                openAppearanceCustomizer();
+                return true;
+            }
+            if (inside(logicalMouseX, logicalMouseY,
+                    contentLeft, row2Y, cardWidth, 84)
+                    || inside(logicalMouseX, logicalMouseY,
+                    contentLeft + 316, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
                 selectModule(DashboardModule.MINING_TRACKER);
                 return true;
             }
             if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + cardWidth + gap, cardY, cardWidth, 84)
-                    || inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 176, panelY + actionRowY(), 168, BUTTON_HEIGHT)) {
+                    contentLeft + cardWidth + gap, row2Y, cardWidth, 84)) {
                 selectModule(DashboardModule.SESSION_ANALYTICS);
                 return true;
             }
             if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + (cardWidth + gap) * 2, cardY, cardWidth, 84)
-                    || inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 352, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
-                selectModule(DashboardModule.SESSION_HISTORY);
+                    contentLeft + 158, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
+                RotClientClient.openHudEditor(this);
                 return true;
             }
             if (inside(logicalMouseX, logicalMouseY,
@@ -2661,19 +2676,19 @@ int selectorY = masterY + 10;
                 onClose();
                 return true;
             }
-            int linkY = cardY + 114;
+            int linkY = row2Y + 100;
             if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft, linkY, 148, BUTTON_HEIGHT)) {
+                    contentLeft, linkY + 14, 148, BUTTON_HEIGHT)) {
                 RotClientLinkOpener.openConfirmed(this, RotClientLinks.DISCORD);
                 return true;
             }
             if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 158, linkY, 128, BUTTON_HEIGHT)) {
+                    contentLeft + 158, linkY + 14, 128, BUTTON_HEIGHT)) {
                 RotClientLinkOpener.openConfirmed(this, RotClientLinks.SOURCE);
                 return true;
             }
             if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 296, linkY, 110, BUTTON_HEIGHT)) {
+                    contentLeft + 296, linkY + 14, 110, BUTTON_HEIGHT)) {
                 RotClientLinkOpener.openConfirmed(this, RotClientLinks.ISSUES);
                 return true;
             }
@@ -3779,7 +3794,7 @@ private void drawTrackerDropdown(
         RotClientUiDraw.text(graphics, font, "ROT", brandX, brandY, RotClientTheme.HUD_ACCENT, false);
         RotClientUiDraw.text(graphics, font, " CLIENT", brandX + font.width("ROT"), brandY,
                 RotClientTheme.TEXT, false);
-        RotClientUiDraw.text(graphics, font, "ALPHA · by RotTools", brandX, brandY + 10,
+        RotClientUiDraw.text(graphics, font, "by OgRudolf", brandX, brandY + 10,
                 RotClientTheme.TEXT_MUTED, false);
         drawSettingsSearchField(graphics, mouseX, mouseY, box[0], box[1], box[2]);
     }

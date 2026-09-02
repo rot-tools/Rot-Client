@@ -16,9 +16,13 @@ final class RotClientRuntimePolishTest {
         String ui = Files.readString(
                 Path.of("src/client/java/fi/rotclient/MiningUiScreen.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(ui.contains("\"ROT CLIENT · ALPHA\""));
+        assertTrue(ui.contains("\"ROT CLIENT\""));
+        assertFalse(ui.contains("\"ROT CLIENT · ALPHA\""));
+        assertFalse(ui.contains("\"ALPHA · by RotTools\""));
+        assertTrue(ui.contains("\"by OgRudolf\""));
         // Product-level header must not identify the app as Mining Tracker.
         assertFalse(ui.contains("graphics.text(font, \"MINING TRACKER\", panelX + 16"));
+        assertTrue(ui.contains("\"Quality of life\""));
         assertTrue(ui.contains("\"Mining tracker\""));
         assertTrue(ui.contains("DashboardModule.MINING_TRACKER")
                 || ui.contains("selectedModule == DashboardModule.MINING_TRACKER"));

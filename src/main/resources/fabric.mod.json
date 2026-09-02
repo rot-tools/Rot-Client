@@ -3,10 +3,10 @@
 	"id": "rotclient",
 	"version": "${version}",
 	"name": "Rot Client",
-	"description": "A modular client-side SkyBlock companion with mining and gemstone tracking, canonical sessions and history, Powder Chest and MOB accounting, configurable HUDs, item information, visual helpers, and an opt-in QoL dashboard.",
+	"description": "Client-side Fabric companion for Hypixel SkyBlock: dashboard, HUD editor, mining tracker, and a 119-module quality-of-life catalog.",
 	"authors": [
 		{
-			"name": "RotTools"
+			"name": "OgRudolf"
 		}
 	],
 	"contact": {

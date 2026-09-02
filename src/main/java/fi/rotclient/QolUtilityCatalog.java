@@ -2704,7 +2704,7 @@ public final class QolUtilityCatalog {
                 setting("qol.click_gui.rounded_bottoms", "Rounded Panel Bottoms", "Round the bottom corners of Rot Client panels.", SettingType.TOGGLE),
                 setting("qol.click_gui.open_hud_editor", "Edit HUD Layout", "Open the global HUD editor with every enabled overlay.", SettingType.ACTION),
                 setting("qol.click_gui.developer_message", "Developer Message", "Optional local debug line. Leave off unless you are testing.", SettingType.TOGGLE),
-                setting("qol.click_gui.keybind", "Open UI Key", "Opens the Rot Client dashboard. Blank uses Right Shift.", SettingType.KEYBIND, "right shift")));
+                setting("qol.click_gui.keybind", "Open UI Key", "Opens the Rot Client dashboard (Overview, QoL, mining, sessions). Blank uses Right Shift.", SettingType.KEYBIND, "right shift")));
 
         return List.copyOf(modules);
     }

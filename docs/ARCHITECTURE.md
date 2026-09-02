@@ -220,6 +220,7 @@ The current client registers `/rot` as the canonical command root. Legacy aliase
 | --- | --- |
 | `/rot` | Open the Rot Client dashboard. |
 | `/rot ui` | Open the same dashboard. |
+| `/rot qol` | Open the QoL module catalog inside the dashboard. |
 | `/rot edit` | Enable tracking and open the HUD editor. |
 | `/rot layout reset [ui\|hud]` | Reset both layouts, or only the selected UI/HUD layout. |
 | `/rot toggle` | Toggle the selected tracker on or off. |
