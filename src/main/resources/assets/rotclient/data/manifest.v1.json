@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "manifest.v1",
+  "generatedAt": "2026-08-08T18:29:50.391833Z",
+  "canonicalItems": "canonical-items.v1.json",
+  "domainRules": "domain-rules.v1.json",
+  "bazaarProductIndex": "bazaar-product-index.v1.json",
+  "conflicts": "conflicts.v1.json",
+  "provenance": "provenance.v1.json",
+  "miningResources": "mining-resources.v2.json",
+  "itemCount": 89,
+  "conflictCount": 6,
+  "bazaarProductCount": 2123,
+  "valuationPolicy": "BAZAAR_INSTANT_SELL_GROSS_NO_BUY_SIDE",
+  "observationPolicy": "CATALOG_IS_NOT_AN_ALLOW_LIST"
+}

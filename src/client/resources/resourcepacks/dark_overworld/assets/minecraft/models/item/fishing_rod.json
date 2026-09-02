@@ -1,0 +1,22 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:item/handheld_rod",
+	"textures": {
+		"layer0": "item/fishing_rod"
+	},
+	"overrides": [
+		{"predicate": {"cast": 1}, "model": "item/fishing_rod_cast"}
+	],
+	"display": {
+		"firstperson_righthand": {
+			"rotation": [8, 90, 18],
+			"translation": [2, 3.25, -4.5],
+			"scale": [0.8, 0.8, 0.8]
+		},
+		"firstperson_lefthand": {
+			"rotation": [-8, -90, -18],
+			"translation": [2, 3.75, -4.25],
+			"scale": [0.8, 0.8, 0.8]
+		}
+	}
+}

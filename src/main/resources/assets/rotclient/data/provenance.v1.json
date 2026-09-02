@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "provenance.v1",
+  "generatedAt": "2026-08-08T18:29:50.391833Z",
+  "dataset": [
+    {
+      "url": "rotclient://domain-rules",
+      "sourceName": "Rot Client domain rules",
+      "sourceType": "ROT_DOMAIN_RULE",
+      "retrievedAt": "2026-08-08T18:29:50.391833Z",
+      "confidence": "HIGH",
+      "notes": "Handwritten Rot Client domain rules"
+    },
+    {
+      "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+      "sourceName": "Hypixel SkyBlock Items",
+      "sourceType": "OFFICIAL_HYPIXEL",
+      "retrievedAt": "2026-08-08T18:29:50.391833Z",
+      "confidence": "VERIFIED_CURRENT",
+      "notes": "Official items lastUpdated\u003d1786046142121; itemCount\u003d5646; bazaarProducts\u003d2123"
+    }
+  ]
+}

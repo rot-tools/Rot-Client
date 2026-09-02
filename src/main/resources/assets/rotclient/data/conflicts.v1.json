@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "conflicts.v1",
+  "generatedAt": "2026-08-08T18:29:50.391833Z",
+  "conflicts": [
+    {
+      "stableId": "TITANIUM",
+      "field": "hypixelItemId",
+      "officialValue": "TITANIUM_ORE",
+      "otherValue": "TITANIUM",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "KEEP_DOMAIN_STABLE_ID",
+      "notes": "Domain stableId differs from official Hypixel item id"
+    },
+    {
+      "stableId": "LAPIS_LAZULI",
+      "field": "hypixelItemId",
+      "officialValue": "INK_SACK:4",
+      "otherValue": "LAPIS_LAZULI",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "KEEP_DOMAIN_STABLE_ID",
+      "notes": "Domain stableId differs from official Hypixel item id"
+    },
+    {
+      "stableId": "ENCHANTED_REDSTONE",
+      "field": "displayName",
+      "officialValue": "Enchanted Redstone Dust",
+      "otherValue": "Enchanted Redstone",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "KEEP_DOMAIN_DISPLAY_ADD_OFFICIAL_ALIAS",
+      "notes": "Official name retained as alias; domain display preserved"
+    },
+    {
+      "stableId": "MITHRIL_POWDER",
+      "field": "hypixelItemId",
+      "officialValue": "",
+      "otherValue": "MITHRIL_POWDER",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "UNVERIFIED_OFFICIAL_ID",
+      "notes": "No matching official Hypixel items entry at refresh time"
+    },
+    {
+      "stableId": "GEMSTONE_POWDER",
+      "field": "hypixelItemId",
+      "officialValue": "",
+      "otherValue": "GEMSTONE_POWDER",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "UNVERIFIED_OFFICIAL_ID",
+      "notes": "No matching official Hypixel items entry at refresh time"
+    },
+    {
+      "stableId": "GLACITE_POWDER",
+      "field": "hypixelItemId",
+      "officialValue": "",
+      "otherValue": "GLACITE_POWDER",
+      "otherAuthority": "ROT_DOMAIN_RULE",
+      "resolution": "UNVERIFIED_OFFICIAL_ID",
+      "notes": "No matching official Hypixel items entry at refresh time"
+    }
+  ]
+}

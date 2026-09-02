@@ -1,0 +1,162 @@
+# gradle
+
+.gradle/
+build/
+out/
+classes/
+
+# eclipse
+
+*.launch
+
+# idea
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# macos
+
+*.DS_Store
+
+# fabric
+
+run/
+
+# java
+
+*.class
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
+
+# Rot Client / legacy MiningTracker local runtime data
+
+logs/
+*.log
+runclient-*.log
+rotclient-diagnostic-*.log
+miningtracker-diagnostic-*.log
+tracking-runtime*.log
+tracking-summary*.txt
+rotclient.json
+miningtracker.json
+rotclient-current-session.json
+rotclient-current-session.corrupt.json
+rotclient-session-start-new-transaction.json
+rotclient-session-history.json
+rotclient-session-history.corrupt.json
+miningtracker-session-history.json
+rotclient-appearance.json
+rotclient-workspace.json
+
+# Local Minecraft and test runtime state
+
+/config/
+/crash-reports/
+/screenshots/
+/current-session*.json
+/session-history*.json
+/hypixel-cache*.json
+/hypixel-dump*.json
+
+# Local backups and media captures
+
+*.zip
+*.7z
+*.rar
+*.mp4
+*.mov
+*.webm
+*.bak
+*.tmp
+*.orig
+*.rej
+/backup-manifest*
+/backup-bundle*
+
+# Local living-roadmap artifacts
+
+/Rot-Client-Roadmap.xlsx
+/~$Rot-Client-Roadmap.xlsx
+/Rot-Client-Roadmap.xlsx.inspect.ndjson
+/outputs/
+
+# Local credentials
+
+.env
+.env.*
+!.env.example
+credentials*.json
+secrets*.json
+*.pem
+*.key
+/rotclient-dev.local.json
+
+# Personal local maintenance helpers
+
+/scripts/backup-local.ps1
+/scripts/convert-dark-resource-packs.py
+
+# Local editor state
+
+/.cursor/
+
+# Accidental decompile / JAR unpack dumps
+
+/tmp-legacy-textures/
+
+# Private source codebook (owner only; never push)
+
+/obsidian-vault/00-System/Private source map.md
+/_rewrite_public_refs.py
+
+# Local-only development process notes (owner only; never push)
+
+/AGENTS.md
+
+# Local clean-room reference audit + scratch dumps (owner-only; never push)
+
+/docs/reports/reference-mod-feature-audit.md
+/.audit-temp.txt
+/obsidian-vault-audit.txt
+/.audit-testrun.log
+/.audit-*.txt
+/.audit-*.log
+
+# Obsidian vault UI cache (keep notes; ignore local workspace/trash)
+
+/obsidian-vault/.obsidian/workspace.json
+/obsidian-vault/.obsidian/workspace-mobile.json
+/obsidian-vault/.obsidian/cache/
+/obsidian-vault/.trash/
+
+# Local reference dumps (never commit Minecraft instances or decompiled mods)
+
+/Projects/
+
+# Accidental root-level Fabric JAR extraction artifacts
+
+/META-INF/
+/assets/
+/data/
+/net/
+/programmer_art/
+/temp-fl/
+/fabric.mod.json
+/fabric-*.mixins.json
+/fabric-*.client.mixins.json
+/fabric-*.classtweaker
+/fabric-*.mapping
+/fabric-*.accesswidener
+/LICENSE-fabric-*

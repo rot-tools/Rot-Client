@@ -1,0 +1,16 @@
+# id|name|source|museum_set|recipe ingredient*quantity,...|dye_frames|skin_frames
+ENCHANTED_DIAMOND|Enchanted Diamond|Crafting||DIAMOND*160||
+DIAMOND_BLOCK|Block of Diamond|Crafting||DIAMOND*9||
+ENCHANTED_DIAMOND_BLOCK|Enchanted Diamond Block|Crafting||ENCHANTED_DIAMOND*160||
+ASPECT_OF_THE_END|Aspect of the End|Crafting||ENCHANTED_DIAMOND*32,ENCHANTED_EYE_OF_ENDER*1||minecraft:diamond_sword;minecraft:ender_pearl
+ENCHANTED_EYE_OF_ENDER|Enchanted Eye of Ender|Crafting||ENCHANTED_ENDER_PEARL*16,BLAZE_POWDER*32||
+YOUNG_DRAGON_HELMET|Young Dragon Helmet|Crafting|Young Dragon Armor|YOUNG_DRAGON_FRAGMENT*50||YOUNG_DRAGON_HELMET
+YOUNG_DRAGON_CHESTPLATE|Young Dragon Chestplate|Crafting|Young Dragon Armor|YOUNG_DRAGON_FRAGMENT*80||YOUNG_DRAGON_CHESTPLATE
+YOUNG_DRAGON_LEGGINGS|Young Dragon Leggings|Crafting|Young Dragon Armor|YOUNG_DRAGON_FRAGMENT*70||YOUNG_DRAGON_LEGGINGS
+YOUNG_DRAGON_BOOTS|Young Dragon Boots|Crafting|Young Dragon Armor|YOUNG_DRAGON_FRAGMENT*40||YOUNG_DRAGON_BOOTS
+LEATHER_CHESTPLATE|Leather Chestplate|Vanilla crafting|Leather Armor|LEATHER*8|10511680;3381759;16733695|
+LEATHER_LEGGINGS|Leather Leggings|Vanilla crafting|Leather Armor|LEATHER*7|10511680;3381759;16733695|
+LEATHER_BOOTS|Leather Boots|Vanilla crafting|Leather Armor|LEATHER*4|10511680;3381759;16733695|
+LEATHER_HELMET|Leather Cap|Vanilla crafting|Leather Armor|LEATHER*5|10511680;3381759;16733695|
+ROT_TEST_CYCLE_A|Cycle Guard Fixture A|Internal validation||ROT_TEST_CYCLE_B*1||
+ROT_TEST_CYCLE_B|Cycle Guard Fixture B|Internal validation||ROT_TEST_CYCLE_A*1||

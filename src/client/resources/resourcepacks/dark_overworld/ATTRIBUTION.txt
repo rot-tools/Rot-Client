@@ -1,0 +1,2 @@
+Rot Client Dark Overworld
+Built-in Rot Client world textures.

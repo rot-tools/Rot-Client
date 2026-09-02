@@ -1,0 +1,1420 @@
+{
+  "schemaVersion": "domain-rules.v1",
+  "description": "Handwritten Rot Client domain rules. Separate from generated upstream metadata.",
+  "rules": [
+    {
+      "stableId": "GOLD_INGOT",
+      "displayName": "Gold Ingot",
+      "aliases": [
+        "Gold Ingot",
+        "Gold Ingots",
+        "Pure Gold"
+      ],
+      "hypixelItemIdHint": "GOLD_INGOT",
+      "bazaarProductIdHint": "GOLD_INGOT",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_GOLD",
+      "displayName": "Enchanted Gold",
+      "aliases": [
+        "Enchanted Gold",
+        "Enchanted Gold Ingot"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_GOLD",
+      "bazaarProductIdHint": "ENCHANTED_GOLD",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "DIAMOND",
+      "displayName": "Diamond",
+      "aliases": [
+        "Diamond",
+        "Diamonds",
+        "Pure Diamond"
+      ],
+      "hypixelItemIdHint": "DIAMOND",
+      "bazaarProductIdHint": "DIAMOND",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_DIAMOND",
+      "displayName": "Enchanted Diamond",
+      "aliases": [
+        "Enchanted Diamond"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_DIAMOND",
+      "bazaarProductIdHint": "ENCHANTED_DIAMOND",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "MITHRIL_ORE",
+      "displayName": "Mithril",
+      "aliases": [
+        "Mithril"
+      ],
+      "hypixelItemIdHint": "MITHRIL_ORE",
+      "bazaarProductIdHint": "MITHRIL_ORE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_MITHRIL",
+      "displayName": "Enchanted Mithril",
+      "aliases": [
+        "Enchanted Mithril"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_MITHRIL",
+      "bazaarProductIdHint": "ENCHANTED_MITHRIL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "TITANIUM",
+      "displayName": "Titanium",
+      "aliases": [
+        "Titanium"
+      ],
+      "hypixelItemIdHint": "TITANIUM_ORE",
+      "bazaarProductIdHint": "TITANIUM_ORE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": [
+        "Domain stableId TITANIUM; official Hypixel/Bazaar id TITANIUM_ORE"
+      ]
+    },
+    {
+      "stableId": "ENCHANTED_TITANIUM",
+      "displayName": "Enchanted Titanium",
+      "aliases": [
+        "Enchanted Titanium"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_TITANIUM",
+      "bazaarProductIdHint": "ENCHANTED_TITANIUM",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "HARD_STONE",
+      "displayName": "Hard Stone",
+      "aliases": [
+        "Hard Stone"
+      ],
+      "hypixelItemIdHint": "HARD_STONE",
+      "bazaarProductIdHint": "HARD_STONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_HARD_STONE",
+      "displayName": "Enchanted Hard Stone",
+      "aliases": [
+        "Enchanted Hard Stone"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_HARD_STONE",
+      "bazaarProductIdHint": "ENCHANTED_HARD_STONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "COBBLESTONE",
+      "displayName": "Cobblestone",
+      "aliases": [
+        "Cobblestone"
+      ],
+      "hypixelItemIdHint": "COBBLESTONE",
+      "bazaarProductIdHint": "COBBLESTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_COBBLESTONE",
+      "displayName": "Enchanted Cobblestone",
+      "aliases": [
+        "Enchanted Cobblestone"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_COBBLESTONE",
+      "bazaarProductIdHint": "ENCHANTED_COBBLESTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "COAL_ORE",
+      "displayName": "Coal",
+      "aliases": [
+        "Coal",
+        "Coal Ore"
+      ],
+      "hypixelItemIdHint": "COAL_ORE",
+      "bazaarProductIdHint": "COAL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_COAL",
+      "displayName": "Enchanted Coal",
+      "aliases": [
+        "Enchanted Coal"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_COAL",
+      "bazaarProductIdHint": "ENCHANTED_COAL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "IRON_ORE",
+      "displayName": "Iron Ingot",
+      "aliases": [
+        "Iron",
+        "Iron Ingot",
+        "Iron Ore"
+      ],
+      "hypixelItemIdHint": "IRON_ORE",
+      "bazaarProductIdHint": "IRON_INGOT",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_IRON",
+      "displayName": "Enchanted Iron",
+      "aliases": [
+        "Enchanted Iron",
+        "Enchanted Iron Ingot"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_IRON",
+      "bazaarProductIdHint": "ENCHANTED_IRON",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "LAPIS_LAZULI",
+      "displayName": "Lapis Lazuli",
+      "aliases": [
+        "Lapis Lazuli",
+        "Lapis"
+      ],
+      "hypixelItemIdHint": "INK_SACK:4",
+      "bazaarProductIdHint": "INK_SACK:4",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": [
+        "Domain stableId LAPIS_LAZULI; official Hypixel/Bazaar id INK_SACK:4"
+      ]
+    },
+    {
+      "stableId": "ENCHANTED_LAPIS_LAZULI",
+      "displayName": "Enchanted Lapis Lazuli",
+      "aliases": [
+        "Enchanted Lapis Lazuli",
+        "Enchanted Lapis"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_LAPIS_LAZULI",
+      "bazaarProductIdHint": "ENCHANTED_LAPIS_LAZULI",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "REDSTONE",
+      "displayName": "Redstone",
+      "aliases": [
+        "Redstone",
+        "Redstone Dust"
+      ],
+      "hypixelItemIdHint": "REDSTONE",
+      "bazaarProductIdHint": "REDSTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_REDSTONE",
+      "displayName": "Enchanted Redstone",
+      "aliases": [
+        "Enchanted Redstone"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_REDSTONE",
+      "bazaarProductIdHint": "ENCHANTED_REDSTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "TUNGSTEN",
+      "displayName": "Tungsten",
+      "aliases": [
+        "Tungsten"
+      ],
+      "hypixelItemIdHint": "TUNGSTEN",
+      "bazaarProductIdHint": "TUNGSTEN",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_TUNGSTEN",
+      "displayName": "Enchanted Tungsten",
+      "aliases": [
+        "Enchanted Tungsten"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_TUNGSTEN",
+      "bazaarProductIdHint": "ENCHANTED_TUNGSTEN",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "UMBER",
+      "displayName": "Umber",
+      "aliases": [
+        "Umber"
+      ],
+      "hypixelItemIdHint": "UMBER",
+      "bazaarProductIdHint": "UMBER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_UMBER",
+      "displayName": "Enchanted Umber",
+      "aliases": [
+        "Enchanted Umber"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_UMBER",
+      "bazaarProductIdHint": "ENCHANTED_UMBER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "GLACITE",
+      "displayName": "Glacite",
+      "aliases": [
+        "Glacite"
+      ],
+      "hypixelItemIdHint": "GLACITE",
+      "bazaarProductIdHint": "GLACITE",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT",
+        "GREAT_GLACITE_LAKE"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_GLACITE",
+      "displayName": "Enchanted Glacite",
+      "aliases": [
+        "Enchanted Glacite"
+      ],
+      "hypixelItemIdHint": "ENCHANTED_GLACITE",
+      "bazaarProductIdHint": "ENCHANTED_GLACITE",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT",
+        "GREAT_GLACITE_LAKE"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_RUBY_GEM",
+      "displayName": "Rough Ruby Gemstone",
+      "aliases": [
+        "Rough Ruby Gemstone",
+        "Rough Ruby"
+      ],
+      "hypixelItemIdHint": "ROUGH_RUBY_GEM",
+      "bazaarProductIdHint": "ROUGH_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_RUBY_GEM",
+      "displayName": "Flawed Ruby Gemstone",
+      "aliases": [
+        "Flawed Ruby Gemstone",
+        "Flawed Ruby"
+      ],
+      "hypixelItemIdHint": "FLAWED_RUBY_GEM",
+      "bazaarProductIdHint": "FLAWED_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_RUBY_GEM",
+      "displayName": "Fine Ruby Gemstone",
+      "aliases": [
+        "Fine Ruby Gemstone",
+        "Fine Ruby"
+      ],
+      "hypixelItemIdHint": "FINE_RUBY_GEM",
+      "bazaarProductIdHint": "FINE_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_RUBY_GEM",
+      "displayName": "Flawless Ruby Gemstone",
+      "aliases": [
+        "Flawless Ruby Gemstone",
+        "Flawless Ruby"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_RUBY_GEM",
+      "bazaarProductIdHint": "FLAWLESS_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_RUBY_GEM",
+      "displayName": "Perfect Ruby Gemstone",
+      "aliases": [
+        "Perfect Ruby Gemstone",
+        "Perfect Ruby"
+      ],
+      "hypixelItemIdHint": "PERFECT_RUBY_GEM",
+      "bazaarProductIdHint": "PERFECT_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AMBER_GEM",
+      "displayName": "Rough Amber Gemstone",
+      "aliases": [
+        "Rough Amber Gemstone",
+        "Rough Amber"
+      ],
+      "hypixelItemIdHint": "ROUGH_AMBER_GEM",
+      "bazaarProductIdHint": "ROUGH_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AMBER_GEM",
+      "displayName": "Flawed Amber Gemstone",
+      "aliases": [
+        "Flawed Amber Gemstone",
+        "Flawed Amber"
+      ],
+      "hypixelItemIdHint": "FLAWED_AMBER_GEM",
+      "bazaarProductIdHint": "FLAWED_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AMBER_GEM",
+      "displayName": "Fine Amber Gemstone",
+      "aliases": [
+        "Fine Amber Gemstone",
+        "Fine Amber"
+      ],
+      "hypixelItemIdHint": "FINE_AMBER_GEM",
+      "bazaarProductIdHint": "FINE_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AMBER_GEM",
+      "displayName": "Flawless Amber Gemstone",
+      "aliases": [
+        "Flawless Amber Gemstone",
+        "Flawless Amber"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_AMBER_GEM",
+      "bazaarProductIdHint": "FLAWLESS_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AMBER_GEM",
+      "displayName": "Perfect Amber Gemstone",
+      "aliases": [
+        "Perfect Amber Gemstone",
+        "Perfect Amber"
+      ],
+      "hypixelItemIdHint": "PERFECT_AMBER_GEM",
+      "bazaarProductIdHint": "PERFECT_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_SAPPHIRE_GEM",
+      "displayName": "Rough Sapphire Gemstone",
+      "aliases": [
+        "Rough Sapphire Gemstone",
+        "Rough Sapphire"
+      ],
+      "hypixelItemIdHint": "ROUGH_SAPPHIRE_GEM",
+      "bazaarProductIdHint": "ROUGH_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_SAPPHIRE_GEM",
+      "displayName": "Flawed Sapphire Gemstone",
+      "aliases": [
+        "Flawed Sapphire Gemstone",
+        "Flawed Sapphire"
+      ],
+      "hypixelItemIdHint": "FLAWED_SAPPHIRE_GEM",
+      "bazaarProductIdHint": "FLAWED_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_SAPPHIRE_GEM",
+      "displayName": "Fine Sapphire Gemstone",
+      "aliases": [
+        "Fine Sapphire Gemstone",
+        "Fine Sapphire"
+      ],
+      "hypixelItemIdHint": "FINE_SAPPHIRE_GEM",
+      "bazaarProductIdHint": "FINE_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_SAPPHIRE_GEM",
+      "displayName": "Flawless Sapphire Gemstone",
+      "aliases": [
+        "Flawless Sapphire Gemstone",
+        "Flawless Sapphire"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_SAPPHIRE_GEM",
+      "bazaarProductIdHint": "FLAWLESS_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_SAPPHIRE_GEM",
+      "displayName": "Perfect Sapphire Gemstone",
+      "aliases": [
+        "Perfect Sapphire Gemstone",
+        "Perfect Sapphire"
+      ],
+      "hypixelItemIdHint": "PERFECT_SAPPHIRE_GEM",
+      "bazaarProductIdHint": "PERFECT_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_JADE_GEM",
+      "displayName": "Rough Jade Gemstone",
+      "aliases": [
+        "Rough Jade Gemstone",
+        "Rough Jade"
+      ],
+      "hypixelItemIdHint": "ROUGH_JADE_GEM",
+      "bazaarProductIdHint": "ROUGH_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_JADE_GEM",
+      "displayName": "Flawed Jade Gemstone",
+      "aliases": [
+        "Flawed Jade Gemstone",
+        "Flawed Jade"
+      ],
+      "hypixelItemIdHint": "FLAWED_JADE_GEM",
+      "bazaarProductIdHint": "FLAWED_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_JADE_GEM",
+      "displayName": "Fine Jade Gemstone",
+      "aliases": [
+        "Fine Jade Gemstone",
+        "Fine Jade"
+      ],
+      "hypixelItemIdHint": "FINE_JADE_GEM",
+      "bazaarProductIdHint": "FINE_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_JADE_GEM",
+      "displayName": "Flawless Jade Gemstone",
+      "aliases": [
+        "Flawless Jade Gemstone",
+        "Flawless Jade"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_JADE_GEM",
+      "bazaarProductIdHint": "FLAWLESS_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_JADE_GEM",
+      "displayName": "Perfect Jade Gemstone",
+      "aliases": [
+        "Perfect Jade Gemstone",
+        "Perfect Jade"
+      ],
+      "hypixelItemIdHint": "PERFECT_JADE_GEM",
+      "bazaarProductIdHint": "PERFECT_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AMETHYST_GEM",
+      "displayName": "Rough Amethyst Gemstone",
+      "aliases": [
+        "Rough Amethyst Gemstone",
+        "Rough Amethyst"
+      ],
+      "hypixelItemIdHint": "ROUGH_AMETHYST_GEM",
+      "bazaarProductIdHint": "ROUGH_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AMETHYST_GEM",
+      "displayName": "Flawed Amethyst Gemstone",
+      "aliases": [
+        "Flawed Amethyst Gemstone",
+        "Flawed Amethyst"
+      ],
+      "hypixelItemIdHint": "FLAWED_AMETHYST_GEM",
+      "bazaarProductIdHint": "FLAWED_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AMETHYST_GEM",
+      "displayName": "Fine Amethyst Gemstone",
+      "aliases": [
+        "Fine Amethyst Gemstone",
+        "Fine Amethyst"
+      ],
+      "hypixelItemIdHint": "FINE_AMETHYST_GEM",
+      "bazaarProductIdHint": "FINE_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AMETHYST_GEM",
+      "displayName": "Flawless Amethyst Gemstone",
+      "aliases": [
+        "Flawless Amethyst Gemstone",
+        "Flawless Amethyst"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_AMETHYST_GEM",
+      "bazaarProductIdHint": "FLAWLESS_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AMETHYST_GEM",
+      "displayName": "Perfect Amethyst Gemstone",
+      "aliases": [
+        "Perfect Amethyst Gemstone",
+        "Perfect Amethyst"
+      ],
+      "hypixelItemIdHint": "PERFECT_AMETHYST_GEM",
+      "bazaarProductIdHint": "PERFECT_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_TOPAZ_GEM",
+      "displayName": "Rough Topaz Gemstone",
+      "aliases": [
+        "Rough Topaz Gemstone",
+        "Rough Topaz"
+      ],
+      "hypixelItemIdHint": "ROUGH_TOPAZ_GEM",
+      "bazaarProductIdHint": "ROUGH_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_TOPAZ_GEM",
+      "displayName": "Flawed Topaz Gemstone",
+      "aliases": [
+        "Flawed Topaz Gemstone",
+        "Flawed Topaz"
+      ],
+      "hypixelItemIdHint": "FLAWED_TOPAZ_GEM",
+      "bazaarProductIdHint": "FLAWED_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_TOPAZ_GEM",
+      "displayName": "Fine Topaz Gemstone",
+      "aliases": [
+        "Fine Topaz Gemstone",
+        "Fine Topaz"
+      ],
+      "hypixelItemIdHint": "FINE_TOPAZ_GEM",
+      "bazaarProductIdHint": "FINE_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_TOPAZ_GEM",
+      "displayName": "Flawless Topaz Gemstone",
+      "aliases": [
+        "Flawless Topaz Gemstone",
+        "Flawless Topaz"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_TOPAZ_GEM",
+      "bazaarProductIdHint": "FLAWLESS_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_TOPAZ_GEM",
+      "displayName": "Perfect Topaz Gemstone",
+      "aliases": [
+        "Perfect Topaz Gemstone",
+        "Perfect Topaz"
+      ],
+      "hypixelItemIdHint": "PERFECT_TOPAZ_GEM",
+      "bazaarProductIdHint": "PERFECT_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_JASPER_GEM",
+      "displayName": "Rough Jasper Gemstone",
+      "aliases": [
+        "Rough Jasper Gemstone",
+        "Rough Jasper"
+      ],
+      "hypixelItemIdHint": "ROUGH_JASPER_GEM",
+      "bazaarProductIdHint": "ROUGH_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_JASPER_GEM",
+      "displayName": "Flawed Jasper Gemstone",
+      "aliases": [
+        "Flawed Jasper Gemstone",
+        "Flawed Jasper"
+      ],
+      "hypixelItemIdHint": "FLAWED_JASPER_GEM",
+      "bazaarProductIdHint": "FLAWED_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_JASPER_GEM",
+      "displayName": "Fine Jasper Gemstone",
+      "aliases": [
+        "Fine Jasper Gemstone",
+        "Fine Jasper"
+      ],
+      "hypixelItemIdHint": "FINE_JASPER_GEM",
+      "bazaarProductIdHint": "FINE_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_JASPER_GEM",
+      "displayName": "Flawless Jasper Gemstone",
+      "aliases": [
+        "Flawless Jasper Gemstone",
+        "Flawless Jasper"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_JASPER_GEM",
+      "bazaarProductIdHint": "FLAWLESS_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_JASPER_GEM",
+      "displayName": "Perfect Jasper Gemstone",
+      "aliases": [
+        "Perfect Jasper Gemstone",
+        "Perfect Jasper"
+      ],
+      "hypixelItemIdHint": "PERFECT_JASPER_GEM",
+      "bazaarProductIdHint": "PERFECT_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_OPAL_GEM",
+      "displayName": "Rough Opal Gemstone",
+      "aliases": [
+        "Rough Opal Gemstone",
+        "Rough Opal"
+      ],
+      "hypixelItemIdHint": "ROUGH_OPAL_GEM",
+      "bazaarProductIdHint": "ROUGH_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_OPAL_GEM",
+      "displayName": "Flawed Opal Gemstone",
+      "aliases": [
+        "Flawed Opal Gemstone",
+        "Flawed Opal"
+      ],
+      "hypixelItemIdHint": "FLAWED_OPAL_GEM",
+      "bazaarProductIdHint": "FLAWED_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_OPAL_GEM",
+      "displayName": "Fine Opal Gemstone",
+      "aliases": [
+        "Fine Opal Gemstone",
+        "Fine Opal"
+      ],
+      "hypixelItemIdHint": "FINE_OPAL_GEM",
+      "bazaarProductIdHint": "FINE_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_OPAL_GEM",
+      "displayName": "Flawless Opal Gemstone",
+      "aliases": [
+        "Flawless Opal Gemstone",
+        "Flawless Opal"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_OPAL_GEM",
+      "bazaarProductIdHint": "FLAWLESS_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_OPAL_GEM",
+      "displayName": "Perfect Opal Gemstone",
+      "aliases": [
+        "Perfect Opal Gemstone",
+        "Perfect Opal"
+      ],
+      "hypixelItemIdHint": "PERFECT_OPAL_GEM",
+      "bazaarProductIdHint": "PERFECT_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_ONYX_GEM",
+      "displayName": "Rough Onyx Gemstone",
+      "aliases": [
+        "Rough Onyx Gemstone",
+        "Rough Onyx"
+      ],
+      "hypixelItemIdHint": "ROUGH_ONYX_GEM",
+      "bazaarProductIdHint": "ROUGH_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_ONYX_GEM",
+      "displayName": "Flawed Onyx Gemstone",
+      "aliases": [
+        "Flawed Onyx Gemstone",
+        "Flawed Onyx"
+      ],
+      "hypixelItemIdHint": "FLAWED_ONYX_GEM",
+      "bazaarProductIdHint": "FLAWED_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_ONYX_GEM",
+      "displayName": "Fine Onyx Gemstone",
+      "aliases": [
+        "Fine Onyx Gemstone",
+        "Fine Onyx"
+      ],
+      "hypixelItemIdHint": "FINE_ONYX_GEM",
+      "bazaarProductIdHint": "FINE_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_ONYX_GEM",
+      "displayName": "Flawless Onyx Gemstone",
+      "aliases": [
+        "Flawless Onyx Gemstone",
+        "Flawless Onyx"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_ONYX_GEM",
+      "bazaarProductIdHint": "FLAWLESS_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_ONYX_GEM",
+      "displayName": "Perfect Onyx Gemstone",
+      "aliases": [
+        "Perfect Onyx Gemstone",
+        "Perfect Onyx"
+      ],
+      "hypixelItemIdHint": "PERFECT_ONYX_GEM",
+      "bazaarProductIdHint": "PERFECT_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AQUAMARINE_GEM",
+      "displayName": "Rough Aquamarine Gemstone",
+      "aliases": [
+        "Rough Aquamarine Gemstone",
+        "Rough Aquamarine"
+      ],
+      "hypixelItemIdHint": "ROUGH_AQUAMARINE_GEM",
+      "bazaarProductIdHint": "ROUGH_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AQUAMARINE_GEM",
+      "displayName": "Flawed Aquamarine Gemstone",
+      "aliases": [
+        "Flawed Aquamarine Gemstone",
+        "Flawed Aquamarine"
+      ],
+      "hypixelItemIdHint": "FLAWED_AQUAMARINE_GEM",
+      "bazaarProductIdHint": "FLAWED_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AQUAMARINE_GEM",
+      "displayName": "Fine Aquamarine Gemstone",
+      "aliases": [
+        "Fine Aquamarine Gemstone",
+        "Fine Aquamarine"
+      ],
+      "hypixelItemIdHint": "FINE_AQUAMARINE_GEM",
+      "bazaarProductIdHint": "FINE_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AQUAMARINE_GEM",
+      "displayName": "Flawless Aquamarine Gemstone",
+      "aliases": [
+        "Flawless Aquamarine Gemstone",
+        "Flawless Aquamarine"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_AQUAMARINE_GEM",
+      "bazaarProductIdHint": "FLAWLESS_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AQUAMARINE_GEM",
+      "displayName": "Perfect Aquamarine Gemstone",
+      "aliases": [
+        "Perfect Aquamarine Gemstone",
+        "Perfect Aquamarine"
+      ],
+      "hypixelItemIdHint": "PERFECT_AQUAMARINE_GEM",
+      "bazaarProductIdHint": "PERFECT_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_CITRINE_GEM",
+      "displayName": "Rough Citrine Gemstone",
+      "aliases": [
+        "Rough Citrine Gemstone",
+        "Rough Citrine"
+      ],
+      "hypixelItemIdHint": "ROUGH_CITRINE_GEM",
+      "bazaarProductIdHint": "ROUGH_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_CITRINE_GEM",
+      "displayName": "Flawed Citrine Gemstone",
+      "aliases": [
+        "Flawed Citrine Gemstone",
+        "Flawed Citrine"
+      ],
+      "hypixelItemIdHint": "FLAWED_CITRINE_GEM",
+      "bazaarProductIdHint": "FLAWED_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_CITRINE_GEM",
+      "displayName": "Fine Citrine Gemstone",
+      "aliases": [
+        "Fine Citrine Gemstone",
+        "Fine Citrine"
+      ],
+      "hypixelItemIdHint": "FINE_CITRINE_GEM",
+      "bazaarProductIdHint": "FINE_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_CITRINE_GEM",
+      "displayName": "Flawless Citrine Gemstone",
+      "aliases": [
+        "Flawless Citrine Gemstone",
+        "Flawless Citrine"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_CITRINE_GEM",
+      "bazaarProductIdHint": "FLAWLESS_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_CITRINE_GEM",
+      "displayName": "Perfect Citrine Gemstone",
+      "aliases": [
+        "Perfect Citrine Gemstone",
+        "Perfect Citrine"
+      ],
+      "hypixelItemIdHint": "PERFECT_CITRINE_GEM",
+      "bazaarProductIdHint": "PERFECT_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_PERIDOT_GEM",
+      "displayName": "Rough Peridot Gemstone",
+      "aliases": [
+        "Rough Peridot Gemstone",
+        "Rough Peridot"
+      ],
+      "hypixelItemIdHint": "ROUGH_PERIDOT_GEM",
+      "bazaarProductIdHint": "ROUGH_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_PERIDOT_GEM",
+      "displayName": "Flawed Peridot Gemstone",
+      "aliases": [
+        "Flawed Peridot Gemstone",
+        "Flawed Peridot"
+      ],
+      "hypixelItemIdHint": "FLAWED_PERIDOT_GEM",
+      "bazaarProductIdHint": "FLAWED_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FINE_PERIDOT_GEM",
+      "displayName": "Fine Peridot Gemstone",
+      "aliases": [
+        "Fine Peridot Gemstone",
+        "Fine Peridot"
+      ],
+      "hypixelItemIdHint": "FINE_PERIDOT_GEM",
+      "bazaarProductIdHint": "FINE_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_PERIDOT_GEM",
+      "displayName": "Flawless Peridot Gemstone",
+      "aliases": [
+        "Flawless Peridot Gemstone",
+        "Flawless Peridot"
+      ],
+      "hypixelItemIdHint": "FLAWLESS_PERIDOT_GEM",
+      "bazaarProductIdHint": "FLAWLESS_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_PERIDOT_GEM",
+      "displayName": "Perfect Peridot Gemstone",
+      "aliases": [
+        "Perfect Peridot Gemstone",
+        "Perfect Peridot"
+      ],
+      "hypixelItemIdHint": "PERFECT_PERIDOT_GEM",
+      "bazaarProductIdHint": "PERFECT_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "notes": []
+    },
+    {
+      "stableId": "MITHRIL_POWDER",
+      "displayName": "Mithril Powder",
+      "aliases": [
+        "Mithril Powder"
+      ],
+      "hypixelItemIdHint": "MITHRIL_POWDER",
+      "areas": [
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "CURRENCY",
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    },
+    {
+      "stableId": "GEMSTONE_POWDER",
+      "displayName": "Gemstone Powder",
+      "aliases": [
+        "Gemstone Powder"
+      ],
+      "hypixelItemIdHint": "GEMSTONE_POWDER",
+      "areas": [
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "CURRENCY",
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    },
+    {
+      "stableId": "GLACITE_POWDER",
+      "displayName": "Glacite Powder",
+      "aliases": [
+        "Glacite Powder"
+      ],
+      "hypixelItemIdHint": "GLACITE_POWDER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "CURRENCY",
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    }
+  ]
+}

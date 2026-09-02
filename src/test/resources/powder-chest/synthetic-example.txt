@@ -1,0 +1,15 @@
+# Powder Chest synthetic fixtures
+
+These examples are synthetic and used only for unit tests in this milestone.
+Real Powder Chest reward blocks captured by MiningTracker during diagnostic
+recording are still required for in-game runtime validation.
+
+## Example block
+
+```
+CHEST LOCKPICKED
+    Rough Ruby Gemstone x 2
+    Gemstone Powder x 500
+    Gold Essence x 10
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+```

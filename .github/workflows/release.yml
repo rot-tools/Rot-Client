@@ -1,0 +1,126 @@
+name: Publish Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rot-client-release-${{ github.event.release.id }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-attach:
+    if: github.event.release.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          validate-wrappers: true
+          cache-provider: basic
+
+      - name: Test
+        run: ./gradlew test --rerun-tasks --console=plain
+
+      - name: Compile client
+        run: ./gradlew compileClientJava --console=plain
+
+      - name: Build release candidate
+        run: ./gradlew clean build --console=plain
+
+      - name: Locate exactly one playable JAR
+        id: playable_jar
+        shell: bash
+        run: |
+          shopt -s nullglob
+
+          candidates=(build/libs/*.jar)
+          playable=()
+
+          for jar in "${candidates[@]}"; do
+            case "$jar" in
+              *-sources.jar|*-javadoc.jar|*-dev.jar)
+                ;;
+              *)
+                playable+=("$jar")
+                ;;
+            esac
+          done
+
+          if (( ${#playable[@]} != 1 )); then
+            echo "Expected exactly one playable JAR, found ${#playable[@]}."
+            printf 'Candidate: %s\n' "${playable[@]}"
+            exit 1
+          fi
+
+          mkdir -p build/release
+          sha256sum "${playable[0]}" | sed 's#  build/libs/#  #' > build/release/SHA256SUMS.txt
+          echo "path=${playable[0]}" >> "$GITHUB_OUTPUT"
+          echo "filename=$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Reject an existing playable JAR asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          existing_playable=0
+          while IFS= read -r asset; do
+            case "$asset" in
+              *.jar)
+                case "$asset" in
+                  *-sources.jar|*-javadoc.jar|*-dev.jar)
+                    ;;
+                  *)
+                    existing_playable=$((existing_playable + 1))
+                    ;;
+                esac
+                ;;
+            esac
+          done < <(gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets" --paginate --jq '.[].name')
+
+          if (( existing_playable != 0 )); then
+            echo "Release already contains ${existing_playable} playable JAR asset(s); refusing to overwrite."
+            exit 1
+          fi
+
+      - name: Attach playable JAR and checksum
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PLAYABLE_JAR: ${{ steps.playable_jar.outputs.path }}
+        run: |
+          gh release upload "$RELEASE_TAG" "$PLAYABLE_JAR" build/release/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish release summary
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          PLAYABLE_NAME: ${{ steps.playable_jar.outputs.filename }}
+        run: |
+          {
+            echo "## Rot Client release asset"
+            echo
+            echo "- Tag: \`$RELEASE_TAG\`"
+            echo "- Playable JAR: \`$PLAYABLE_NAME\`"
+            echo "- Checksum file: \`SHA256SUMS.txt\`"
+            echo "- Sources, Javadoc, and development JARs were not uploaded."
+          } >> "$GITHUB_STEP_SUMMARY"

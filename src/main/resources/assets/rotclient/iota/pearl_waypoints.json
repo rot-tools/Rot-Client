@@ -1,0 +1,752 @@
+{
+  "schema": "rot.kuudra.pearls.v2",
+  "note": "Rot Client pearl-throw overlay. Coordinates are Kuudra arena facts.",
+  "zones": [
+    {
+      "id": "x",
+      "corner_a": [
+        -150,
+        -170
+      ],
+      "corner_b": [
+        -123,
+        -134
+      ],
+      "flip_ew": true,
+      "throws": [
+        {
+          "xyz": {
+            "x": -139.25,
+            "y": 124,
+            "z": -92
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -135,
+            "y": 77,
+            "z": -139
+          },
+          "scale": 1.2,
+          "tag": "35",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 91.75,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "59",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "slash",
+      "corner_a": [
+        -108,
+        -69
+      ],
+      "corner_b": [
+        -115,
+        -67
+      ],
+      "flip_ns": true,
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 88.7,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -114,
+            "y": 77,
+            "z": -69
+          },
+          "scale": 0.6,
+          "tag": "65",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -127,
+            "y": 119,
+            "z": -78
+          },
+          "hex": "#00FFFF",
+          "scale": 0.9,
+          "tag": "17",
+          "ping": true,
+          "hide_pre": 3
+        },
+        {
+          "xyz": {
+            "x": -140,
+            "y": 89,
+            "z": -92
+          },
+          "hex": "#00FFFF",
+          "scale": 0.9,
+          "tag": "17",
+          "ping": true,
+          "hide_pre": 3
+        },
+        {
+          "xyz": {
+            "x": -125,
+            "y": 125,
+            "z": -105
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "29",
+          "ping": true,
+          "hide_pre": 2
+        }
+      ]
+    },
+    {
+      "id": "slash slab",
+      "corner_a": [
+        -108,
+        -69
+      ],
+      "corner_b": [
+        -117,
+        -83
+      ],
+      "flip_ns": true,
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 87.9,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -115,
+            "y": 77.5,
+            "z": -70
+          },
+          "scale": 0.6,
+          "tag": "65",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -127,
+            "y": 119,
+            "z": -78
+          },
+          "hex": "#00FFFF",
+          "scale": 0.9,
+          "tag": "17",
+          "ping": true,
+          "hide_pre": 3
+        },
+        {
+          "xyz": {
+            "x": -140,
+            "y": 88,
+            "z": -92
+          },
+          "hex": "#00FFFF",
+          "scale": 0.9,
+          "tag": "17",
+          "ping": true,
+          "hide_pre": 3
+        },
+        {
+          "xyz": {
+            "x": -125,
+            "y": 125,
+            "z": -105
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "35",
+          "ping": true,
+          "hide_pre": 2
+        }
+      ]
+    },
+    {
+      "id": "equals",
+      "corner_a": [
+        -80,
+        -108
+      ],
+      "corner_b": [
+        -45,
+        -65
+      ],
+      "throws": [
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 96,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -66,
+            "y": 76,
+            "z": -87
+          },
+          "scale": 0.6,
+          "tag": "53",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -89,
+            "y": 145,
+            "z": -125
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "29",
+          "ping": false
+        },
+        {
+          "xyz": {
+            "x": -77,
+            "y": 135,
+            "z": -136
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "29",
+          "ping": false
+        }
+      ]
+    },
+    {
+      "id": "triangle",
+      "corner_a": [
+        -80,
+        -126
+      ],
+      "corner_b": [
+        -50,
+        -109
+      ],
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -93.5,
+            "y": 86.4,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -68,
+            "y": 77,
+            "z": -123
+          },
+          "scale": 0.5,
+          "tag": "71",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -74,
+            "y": 152,
+            "z": -134
+          },
+          "hex": "#00FFFF",
+          "scale": 1.2,
+          "tag": "11",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "x cannon",
+      "corner_a": [
+        -126,
+        -104
+      ],
+      "corner_b": [
+        -140,
+        -120
+      ],
+      "flip_ns": null,
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 163,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -131,
+            "y": 78,
+            "z": -115
+          },
+          "scale": 1.2,
+          "tag": "11",
+          "ping": false
+        },
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 82.1,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.4,
+          "tag": "77",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "xc stair",
+      "corner_a": [
+        -126,
+        -120
+      ],
+      "corner_b": [
+        -138,
+        -124
+      ],
+      "flip_ns": null,
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 86.2,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -136,
+            "y": 76,
+            "z": -124
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "xc coal",
+      "corner_a": [
+        -129,
+        -127
+      ],
+      "corner_b": [
+        -138,
+        -133
+      ],
+      "flip_ns": null,
+      "flip_ew": null,
+      "throws": [
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 88,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -135,
+            "y": 78,
+            "z": -129
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "xc coal left",
+      "corner_a": [
+        -132,
+        -128
+      ],
+      "corner_b": [
+        -138,
+        -124
+      ],
+      "flip_ns": null,
+      "flip_ew": true,
+      "throws": [
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 87.5,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -137,
+            "y": 78,
+            "z": -126
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "square top",
+      "corner_a": [
+        -143,
+        -93
+      ],
+      "corner_b": [
+        -135,
+        -88
+      ],
+      "flip_ns": null,
+      "flip_ew": true,
+      "throws": [
+        {
+          "xyz": {
+            "x": -93.5,
+            "y": 107,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -141,
+            "y": 78,
+            "z": -91
+          },
+          "scale": 0.7,
+          "tag": "41",
+          "ping": true,
+          "pre": 6
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 105,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.7,
+          "tag": "41",
+          "ping": true,
+          "pre": 7
+        },
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 94,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "59",
+          "ping": true,
+          "pre": 1
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 97,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "59",
+          "ping": true,
+          "pre": 4
+        },
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 89.1,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "65",
+          "ping": true,
+          "pre": 5
+        },
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 88.5,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true,
+          "pre": 2
+        }
+      ]
+    },
+    {
+      "id": "square bottom",
+      "corner_a": [
+        -144,
+        -88
+      ],
+      "corner_b": [
+        -135,
+        -82
+      ],
+      "flip_ns": true,
+      "flip_ew": true,
+      "throws": [
+        {
+          "xyz": {
+            "x": -93.5,
+            "y": 116,
+            "z": -105.8
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -142,
+            "y": 77,
+            "z": -87
+          },
+          "scale": 0.8,
+          "tag": "41",
+          "ping": true,
+          "pre": 6
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 115,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.8,
+          "tag": "35",
+          "ping": true,
+          "pre": 7
+        },
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 99,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "53",
+          "ping": true,
+          "pre": 1
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 101.5,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "53",
+          "ping": true,
+          "pre": 4
+        },
+        {
+          "xyz": {
+            "x": -105.5,
+            "y": 91.7,
+            "z": -98.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "59",
+          "ping": true,
+          "pre": 5
+        },
+        {
+          "xyz": {
+            "x": -109.5,
+            "y": 91,
+            "z": -105.5
+          },
+          "hex": "#00FFFF",
+          "scale": 0.6,
+          "tag": "59",
+          "ping": true,
+          "pre": 2
+        }
+      ]
+    },
+    {
+      "id": "shop close (coal)",
+      "corner_a": [
+        -94,
+        -123
+      ],
+      "corner_b": [
+        -72,
+        -131
+      ],
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 81.25,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -86,
+            "y": 78,
+            "z": -129
+          },
+          "scale": 0.35,
+          "tag": "77",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 163,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "11",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "shop long (slab)",
+      "corner_a": [
+        -72,
+        -142
+      ],
+      "corner_b": [
+        -80,
+        -132
+      ],
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 87.5,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -76,
+            "y": 77.5,
+            "z": -137
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 153.5,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 1.3,
+          "tag": "11",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "shop border",
+      "corner_a": [
+        -75,
+        -131
+      ],
+      "corner_b": [
+        -70,
+        -135
+      ],
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 88.8,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -71,
+            "y": 79,
+            "z": -135
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 159,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 1.0,
+          "tag": "11",
+          "ping": true
+        }
+      ]
+    },
+    {
+      "id": "shop border bottom",
+      "corner_a": [
+        -69,
+        -138
+      ],
+      "corner_b": [
+        -72,
+        -135
+      ],
+      "throws": [
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 90,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "stand": {
+            "x": -71,
+            "y": 77,
+            "z": -137
+          },
+          "scale": 0.5,
+          "tag": "65",
+          "ping": true
+        },
+        {
+          "xyz": {
+            "x": -97.5,
+            "y": 154,
+            "z": -112.5
+          },
+          "hex": "#00FFFF",
+          "scale": 1.25,
+          "tag": "11",
+          "ping": true
+        }
+      ]
+    }
+  ]
+}

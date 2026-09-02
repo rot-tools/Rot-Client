@@ -1,0 +1,3266 @@
+{
+  "schemaVersion": "canonical-items.v1",
+  "generatedAt": "2026-08-08T18:29:50.391833Z",
+  "items": [
+    {
+      "stableId": "GOLD_INGOT",
+      "displayName": "Gold Ingot",
+      "aliases": [
+        "Gold Ingot",
+        "Gold Ingots",
+        "Pure Gold"
+      ],
+      "hypixelItemId": "GOLD_INGOT",
+      "bazaarProductId": "GOLD_INGOT",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for GOLD_INGOT"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item GOLD_INGOT"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_GOLD",
+      "displayName": "Enchanted Gold",
+      "aliases": [
+        "Enchanted Gold",
+        "Enchanted Gold Ingot"
+      ],
+      "hypixelItemId": "ENCHANTED_GOLD",
+      "bazaarProductId": "ENCHANTED_GOLD",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_GOLD"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_GOLD"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "DIAMOND",
+      "displayName": "Diamond",
+      "aliases": [
+        "Diamond",
+        "Diamonds",
+        "Pure Diamond"
+      ],
+      "hypixelItemId": "DIAMOND",
+      "bazaarProductId": "DIAMOND",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for DIAMOND"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item DIAMOND"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_DIAMOND",
+      "displayName": "Enchanted Diamond",
+      "aliases": [
+        "Enchanted Diamond"
+      ],
+      "hypixelItemId": "ENCHANTED_DIAMOND",
+      "bazaarProductId": "ENCHANTED_DIAMOND",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_DIAMOND"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_DIAMOND"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "MITHRIL_ORE",
+      "displayName": "Mithril",
+      "aliases": [
+        "Mithril"
+      ],
+      "hypixelItemId": "MITHRIL_ORE",
+      "bazaarProductId": "MITHRIL_ORE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for MITHRIL_ORE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item MITHRIL_ORE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_MITHRIL",
+      "displayName": "Enchanted Mithril",
+      "aliases": [
+        "Enchanted Mithril"
+      ],
+      "hypixelItemId": "ENCHANTED_MITHRIL",
+      "bazaarProductId": "ENCHANTED_MITHRIL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_MITHRIL"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_MITHRIL"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "TITANIUM",
+      "displayName": "Titanium",
+      "aliases": [
+        "Titanium"
+      ],
+      "hypixelItemId": "TITANIUM_ORE",
+      "bazaarProductId": "TITANIUM_ORE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for TITANIUM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item TITANIUM_ORE"
+        }
+      ],
+      "notes": [
+        "Domain stableId TITANIUM; official Hypixel/Bazaar id TITANIUM_ORE"
+      ]
+    },
+    {
+      "stableId": "ENCHANTED_TITANIUM",
+      "displayName": "Enchanted Titanium",
+      "aliases": [
+        "Enchanted Titanium"
+      ],
+      "hypixelItemId": "ENCHANTED_TITANIUM",
+      "bazaarProductId": "ENCHANTED_TITANIUM",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_TITANIUM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_TITANIUM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "HARD_STONE",
+      "displayName": "Hard Stone",
+      "aliases": [
+        "Hard Stone"
+      ],
+      "hypixelItemId": "HARD_STONE",
+      "bazaarProductId": "HARD_STONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for HARD_STONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item HARD_STONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_HARD_STONE",
+      "displayName": "Enchanted Hard Stone",
+      "aliases": [
+        "Enchanted Hard Stone"
+      ],
+      "hypixelItemId": "ENCHANTED_HARD_STONE",
+      "bazaarProductId": "ENCHANTED_HARD_STONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_HARD_STONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_HARD_STONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "COBBLESTONE",
+      "displayName": "Cobblestone",
+      "aliases": [
+        "Cobblestone"
+      ],
+      "hypixelItemId": "COBBLESTONE",
+      "bazaarProductId": "COBBLESTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for COBBLESTONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item COBBLESTONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_COBBLESTONE",
+      "displayName": "Enchanted Cobblestone",
+      "aliases": [
+        "Enchanted Cobblestone"
+      ],
+      "hypixelItemId": "ENCHANTED_COBBLESTONE",
+      "bazaarProductId": "ENCHANTED_COBBLESTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_COBBLESTONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_COBBLESTONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "COAL_ORE",
+      "displayName": "Coal",
+      "aliases": [
+        "Coal",
+        "Coal Ore"
+      ],
+      "hypixelItemId": "COAL_ORE",
+      "bazaarProductId": "COAL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for COAL_ORE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item COAL_ORE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_COAL",
+      "displayName": "Enchanted Coal",
+      "aliases": [
+        "Enchanted Coal"
+      ],
+      "hypixelItemId": "ENCHANTED_COAL",
+      "bazaarProductId": "ENCHANTED_COAL",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_COAL"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_COAL"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "IRON_ORE",
+      "displayName": "Iron Ingot",
+      "aliases": [
+        "Iron",
+        "Iron Ingot",
+        "Iron Ore"
+      ],
+      "hypixelItemId": "IRON_ORE",
+      "bazaarProductId": "IRON_INGOT",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for IRON_ORE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item IRON_ORE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_IRON",
+      "displayName": "Enchanted Iron",
+      "aliases": [
+        "Enchanted Iron",
+        "Enchanted Iron Ingot"
+      ],
+      "hypixelItemId": "ENCHANTED_IRON",
+      "bazaarProductId": "ENCHANTED_IRON",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_IRON"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_IRON"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "LAPIS_LAZULI",
+      "displayName": "Lapis Lazuli",
+      "aliases": [
+        "Lapis Lazuli",
+        "Lapis"
+      ],
+      "hypixelItemId": "INK_SACK:4",
+      "bazaarProductId": "INK_SACK:4",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for LAPIS_LAZULI"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item INK_SACK:4"
+        }
+      ],
+      "notes": [
+        "Domain stableId LAPIS_LAZULI; official Hypixel/Bazaar id INK_SACK:4"
+      ]
+    },
+    {
+      "stableId": "ENCHANTED_LAPIS_LAZULI",
+      "displayName": "Enchanted Lapis Lazuli",
+      "aliases": [
+        "Enchanted Lapis Lazuli",
+        "Enchanted Lapis"
+      ],
+      "hypixelItemId": "ENCHANTED_LAPIS_LAZULI",
+      "bazaarProductId": "ENCHANTED_LAPIS_LAZULI",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_LAPIS_LAZULI"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_LAPIS_LAZULI"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "REDSTONE",
+      "displayName": "Redstone",
+      "aliases": [
+        "Redstone",
+        "Redstone Dust"
+      ],
+      "hypixelItemId": "REDSTONE",
+      "bazaarProductId": "REDSTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for REDSTONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item REDSTONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_REDSTONE",
+      "displayName": "Enchanted Redstone",
+      "aliases": [
+        "Enchanted Redstone",
+        "Enchanted Redstone Dust"
+      ],
+      "hypixelItemId": "ENCHANTED_REDSTONE",
+      "bazaarProductId": "ENCHANTED_REDSTONE",
+      "areas": [
+        "DWARVEN_MINES",
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_REDSTONE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_REDSTONE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "TUNGSTEN",
+      "displayName": "Tungsten",
+      "aliases": [
+        "Tungsten"
+      ],
+      "hypixelItemId": "TUNGSTEN",
+      "bazaarProductId": "TUNGSTEN",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for TUNGSTEN"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item TUNGSTEN"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_TUNGSTEN",
+      "displayName": "Enchanted Tungsten",
+      "aliases": [
+        "Enchanted Tungsten"
+      ],
+      "hypixelItemId": "ENCHANTED_TUNGSTEN",
+      "bazaarProductId": "ENCHANTED_TUNGSTEN",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_TUNGSTEN"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_TUNGSTEN"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "UMBER",
+      "displayName": "Umber",
+      "aliases": [
+        "Umber"
+      ],
+      "hypixelItemId": "UMBER",
+      "bazaarProductId": "UMBER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for UMBER"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item UMBER"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_UMBER",
+      "displayName": "Enchanted Umber",
+      "aliases": [
+        "Enchanted Umber"
+      ],
+      "hypixelItemId": "ENCHANTED_UMBER",
+      "bazaarProductId": "ENCHANTED_UMBER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_UMBER"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_UMBER"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "GLACITE",
+      "displayName": "Glacite",
+      "aliases": [
+        "Glacite"
+      ],
+      "hypixelItemId": "GLACITE",
+      "bazaarProductId": "GLACITE",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT",
+        "GREAT_GLACITE_LAKE"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for GLACITE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item GLACITE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ENCHANTED_GLACITE",
+      "displayName": "Enchanted Glacite",
+      "aliases": [
+        "Enchanted Glacite"
+      ],
+      "hypixelItemId": "ENCHANTED_GLACITE",
+      "bazaarProductId": "ENCHANTED_GLACITE",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT",
+        "GREAT_GLACITE_LAKE"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ENCHANTED_GLACITE"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ENCHANTED_GLACITE"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_RUBY_GEM",
+      "displayName": "Rough Ruby Gemstone",
+      "aliases": [
+        "Rough Ruby Gemstone",
+        "Rough Ruby"
+      ],
+      "hypixelItemId": "ROUGH_RUBY_GEM",
+      "bazaarProductId": "ROUGH_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_RUBY_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_RUBY_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_RUBY_GEM",
+      "displayName": "Flawed Ruby Gemstone",
+      "aliases": [
+        "Flawed Ruby Gemstone",
+        "Flawed Ruby"
+      ],
+      "hypixelItemId": "FLAWED_RUBY_GEM",
+      "bazaarProductId": "FLAWED_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_RUBY_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_RUBY_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_RUBY_GEM",
+      "displayName": "Fine Ruby Gemstone",
+      "aliases": [
+        "Fine Ruby Gemstone",
+        "Fine Ruby"
+      ],
+      "hypixelItemId": "FINE_RUBY_GEM",
+      "bazaarProductId": "FINE_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_RUBY_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_RUBY_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_RUBY_GEM",
+      "displayName": "Flawless Ruby Gemstone",
+      "aliases": [
+        "Flawless Ruby Gemstone",
+        "Flawless Ruby"
+      ],
+      "hypixelItemId": "FLAWLESS_RUBY_GEM",
+      "bazaarProductId": "FLAWLESS_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_RUBY_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_RUBY_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_RUBY_GEM",
+      "displayName": "Perfect Ruby Gemstone",
+      "aliases": [
+        "Perfect Ruby Gemstone",
+        "Perfect Ruby"
+      ],
+      "hypixelItemId": "PERFECT_RUBY_GEM",
+      "bazaarProductId": "PERFECT_RUBY_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_RUBY_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_RUBY_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AMBER_GEM",
+      "displayName": "Rough Amber Gemstone",
+      "aliases": [
+        "Rough Amber Gemstone",
+        "Rough Amber"
+      ],
+      "hypixelItemId": "ROUGH_AMBER_GEM",
+      "bazaarProductId": "ROUGH_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_AMBER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_AMBER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AMBER_GEM",
+      "displayName": "Flawed Amber Gemstone",
+      "aliases": [
+        "Flawed Amber Gemstone",
+        "Flawed Amber"
+      ],
+      "hypixelItemId": "FLAWED_AMBER_GEM",
+      "bazaarProductId": "FLAWED_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_AMBER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_AMBER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AMBER_GEM",
+      "displayName": "Fine Amber Gemstone",
+      "aliases": [
+        "Fine Amber Gemstone",
+        "Fine Amber"
+      ],
+      "hypixelItemId": "FINE_AMBER_GEM",
+      "bazaarProductId": "FINE_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_AMBER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_AMBER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AMBER_GEM",
+      "displayName": "Flawless Amber Gemstone",
+      "aliases": [
+        "Flawless Amber Gemstone",
+        "Flawless Amber"
+      ],
+      "hypixelItemId": "FLAWLESS_AMBER_GEM",
+      "bazaarProductId": "FLAWLESS_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_AMBER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_AMBER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AMBER_GEM",
+      "displayName": "Perfect Amber Gemstone",
+      "aliases": [
+        "Perfect Amber Gemstone",
+        "Perfect Amber"
+      ],
+      "hypixelItemId": "PERFECT_AMBER_GEM",
+      "bazaarProductId": "PERFECT_AMBER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_AMBER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_AMBER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_SAPPHIRE_GEM",
+      "displayName": "Rough Sapphire Gemstone",
+      "aliases": [
+        "Rough Sapphire Gemstone",
+        "Rough Sapphire"
+      ],
+      "hypixelItemId": "ROUGH_SAPPHIRE_GEM",
+      "bazaarProductId": "ROUGH_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_SAPPHIRE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_SAPPHIRE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_SAPPHIRE_GEM",
+      "displayName": "Flawed Sapphire Gemstone",
+      "aliases": [
+        "Flawed Sapphire Gemstone",
+        "Flawed Sapphire"
+      ],
+      "hypixelItemId": "FLAWED_SAPPHIRE_GEM",
+      "bazaarProductId": "FLAWED_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_SAPPHIRE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_SAPPHIRE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_SAPPHIRE_GEM",
+      "displayName": "Fine Sapphire Gemstone",
+      "aliases": [
+        "Fine Sapphire Gemstone",
+        "Fine Sapphire"
+      ],
+      "hypixelItemId": "FINE_SAPPHIRE_GEM",
+      "bazaarProductId": "FINE_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_SAPPHIRE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_SAPPHIRE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_SAPPHIRE_GEM",
+      "displayName": "Flawless Sapphire Gemstone",
+      "aliases": [
+        "Flawless Sapphire Gemstone",
+        "Flawless Sapphire"
+      ],
+      "hypixelItemId": "FLAWLESS_SAPPHIRE_GEM",
+      "bazaarProductId": "FLAWLESS_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_SAPPHIRE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_SAPPHIRE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_SAPPHIRE_GEM",
+      "displayName": "Perfect Sapphire Gemstone",
+      "aliases": [
+        "Perfect Sapphire Gemstone",
+        "Perfect Sapphire"
+      ],
+      "hypixelItemId": "PERFECT_SAPPHIRE_GEM",
+      "bazaarProductId": "PERFECT_SAPPHIRE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_SAPPHIRE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_SAPPHIRE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_JADE_GEM",
+      "displayName": "Rough Jade Gemstone",
+      "aliases": [
+        "Rough Jade Gemstone",
+        "Rough Jade"
+      ],
+      "hypixelItemId": "ROUGH_JADE_GEM",
+      "bazaarProductId": "ROUGH_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_JADE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_JADE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_JADE_GEM",
+      "displayName": "Flawed Jade Gemstone",
+      "aliases": [
+        "Flawed Jade Gemstone",
+        "Flawed Jade"
+      ],
+      "hypixelItemId": "FLAWED_JADE_GEM",
+      "bazaarProductId": "FLAWED_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_JADE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_JADE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_JADE_GEM",
+      "displayName": "Fine Jade Gemstone",
+      "aliases": [
+        "Fine Jade Gemstone",
+        "Fine Jade"
+      ],
+      "hypixelItemId": "FINE_JADE_GEM",
+      "bazaarProductId": "FINE_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_JADE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_JADE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_JADE_GEM",
+      "displayName": "Flawless Jade Gemstone",
+      "aliases": [
+        "Flawless Jade Gemstone",
+        "Flawless Jade"
+      ],
+      "hypixelItemId": "FLAWLESS_JADE_GEM",
+      "bazaarProductId": "FLAWLESS_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_JADE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_JADE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_JADE_GEM",
+      "displayName": "Perfect Jade Gemstone",
+      "aliases": [
+        "Perfect Jade Gemstone",
+        "Perfect Jade"
+      ],
+      "hypixelItemId": "PERFECT_JADE_GEM",
+      "bazaarProductId": "PERFECT_JADE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_JADE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_JADE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AMETHYST_GEM",
+      "displayName": "Rough Amethyst Gemstone",
+      "aliases": [
+        "Rough Amethyst Gemstone",
+        "Rough Amethyst"
+      ],
+      "hypixelItemId": "ROUGH_AMETHYST_GEM",
+      "bazaarProductId": "ROUGH_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_AMETHYST_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_AMETHYST_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AMETHYST_GEM",
+      "displayName": "Flawed Amethyst Gemstone",
+      "aliases": [
+        "Flawed Amethyst Gemstone",
+        "Flawed Amethyst"
+      ],
+      "hypixelItemId": "FLAWED_AMETHYST_GEM",
+      "bazaarProductId": "FLAWED_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_AMETHYST_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_AMETHYST_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AMETHYST_GEM",
+      "displayName": "Fine Amethyst Gemstone",
+      "aliases": [
+        "Fine Amethyst Gemstone",
+        "Fine Amethyst"
+      ],
+      "hypixelItemId": "FINE_AMETHYST_GEM",
+      "bazaarProductId": "FINE_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_AMETHYST_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_AMETHYST_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AMETHYST_GEM",
+      "displayName": "Flawless Amethyst Gemstone",
+      "aliases": [
+        "Flawless Amethyst Gemstone",
+        "Flawless Amethyst"
+      ],
+      "hypixelItemId": "FLAWLESS_AMETHYST_GEM",
+      "bazaarProductId": "FLAWLESS_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_AMETHYST_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_AMETHYST_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AMETHYST_GEM",
+      "displayName": "Perfect Amethyst Gemstone",
+      "aliases": [
+        "Perfect Amethyst Gemstone",
+        "Perfect Amethyst"
+      ],
+      "hypixelItemId": "PERFECT_AMETHYST_GEM",
+      "bazaarProductId": "PERFECT_AMETHYST_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_AMETHYST_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_AMETHYST_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_TOPAZ_GEM",
+      "displayName": "Rough Topaz Gemstone",
+      "aliases": [
+        "Rough Topaz Gemstone",
+        "Rough Topaz"
+      ],
+      "hypixelItemId": "ROUGH_TOPAZ_GEM",
+      "bazaarProductId": "ROUGH_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_TOPAZ_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_TOPAZ_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_TOPAZ_GEM",
+      "displayName": "Flawed Topaz Gemstone",
+      "aliases": [
+        "Flawed Topaz Gemstone",
+        "Flawed Topaz"
+      ],
+      "hypixelItemId": "FLAWED_TOPAZ_GEM",
+      "bazaarProductId": "FLAWED_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_TOPAZ_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_TOPAZ_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_TOPAZ_GEM",
+      "displayName": "Fine Topaz Gemstone",
+      "aliases": [
+        "Fine Topaz Gemstone",
+        "Fine Topaz"
+      ],
+      "hypixelItemId": "FINE_TOPAZ_GEM",
+      "bazaarProductId": "FINE_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_TOPAZ_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_TOPAZ_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_TOPAZ_GEM",
+      "displayName": "Flawless Topaz Gemstone",
+      "aliases": [
+        "Flawless Topaz Gemstone",
+        "Flawless Topaz"
+      ],
+      "hypixelItemId": "FLAWLESS_TOPAZ_GEM",
+      "bazaarProductId": "FLAWLESS_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_TOPAZ_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_TOPAZ_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_TOPAZ_GEM",
+      "displayName": "Perfect Topaz Gemstone",
+      "aliases": [
+        "Perfect Topaz Gemstone",
+        "Perfect Topaz"
+      ],
+      "hypixelItemId": "PERFECT_TOPAZ_GEM",
+      "bazaarProductId": "PERFECT_TOPAZ_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_TOPAZ_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_TOPAZ_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_JASPER_GEM",
+      "displayName": "Rough Jasper Gemstone",
+      "aliases": [
+        "Rough Jasper Gemstone",
+        "Rough Jasper"
+      ],
+      "hypixelItemId": "ROUGH_JASPER_GEM",
+      "bazaarProductId": "ROUGH_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_JASPER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_JASPER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_JASPER_GEM",
+      "displayName": "Flawed Jasper Gemstone",
+      "aliases": [
+        "Flawed Jasper Gemstone",
+        "Flawed Jasper"
+      ],
+      "hypixelItemId": "FLAWED_JASPER_GEM",
+      "bazaarProductId": "FLAWED_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_JASPER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_JASPER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_JASPER_GEM",
+      "displayName": "Fine Jasper Gemstone",
+      "aliases": [
+        "Fine Jasper Gemstone",
+        "Fine Jasper"
+      ],
+      "hypixelItemId": "FINE_JASPER_GEM",
+      "bazaarProductId": "FINE_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_JASPER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_JASPER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_JASPER_GEM",
+      "displayName": "Flawless Jasper Gemstone",
+      "aliases": [
+        "Flawless Jasper Gemstone",
+        "Flawless Jasper"
+      ],
+      "hypixelItemId": "FLAWLESS_JASPER_GEM",
+      "bazaarProductId": "FLAWLESS_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_JASPER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_JASPER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_JASPER_GEM",
+      "displayName": "Perfect Jasper Gemstone",
+      "aliases": [
+        "Perfect Jasper Gemstone",
+        "Perfect Jasper"
+      ],
+      "hypixelItemId": "PERFECT_JASPER_GEM",
+      "bazaarProductId": "PERFECT_JASPER_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_JASPER_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_JASPER_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_OPAL_GEM",
+      "displayName": "Rough Opal Gemstone",
+      "aliases": [
+        "Rough Opal Gemstone",
+        "Rough Opal"
+      ],
+      "hypixelItemId": "ROUGH_OPAL_GEM",
+      "bazaarProductId": "ROUGH_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_OPAL_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_OPAL_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_OPAL_GEM",
+      "displayName": "Flawed Opal Gemstone",
+      "aliases": [
+        "Flawed Opal Gemstone",
+        "Flawed Opal"
+      ],
+      "hypixelItemId": "FLAWED_OPAL_GEM",
+      "bazaarProductId": "FLAWED_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_OPAL_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_OPAL_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_OPAL_GEM",
+      "displayName": "Fine Opal Gemstone",
+      "aliases": [
+        "Fine Opal Gemstone",
+        "Fine Opal"
+      ],
+      "hypixelItemId": "FINE_OPAL_GEM",
+      "bazaarProductId": "FINE_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_OPAL_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_OPAL_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_OPAL_GEM",
+      "displayName": "Flawless Opal Gemstone",
+      "aliases": [
+        "Flawless Opal Gemstone",
+        "Flawless Opal"
+      ],
+      "hypixelItemId": "FLAWLESS_OPAL_GEM",
+      "bazaarProductId": "FLAWLESS_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_OPAL_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_OPAL_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_OPAL_GEM",
+      "displayName": "Perfect Opal Gemstone",
+      "aliases": [
+        "Perfect Opal Gemstone",
+        "Perfect Opal"
+      ],
+      "hypixelItemId": "PERFECT_OPAL_GEM",
+      "bazaarProductId": "PERFECT_OPAL_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_OPAL_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_OPAL_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_ONYX_GEM",
+      "displayName": "Rough Onyx Gemstone",
+      "aliases": [
+        "Rough Onyx Gemstone",
+        "Rough Onyx"
+      ],
+      "hypixelItemId": "ROUGH_ONYX_GEM",
+      "bazaarProductId": "ROUGH_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_ONYX_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_ONYX_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_ONYX_GEM",
+      "displayName": "Flawed Onyx Gemstone",
+      "aliases": [
+        "Flawed Onyx Gemstone",
+        "Flawed Onyx"
+      ],
+      "hypixelItemId": "FLAWED_ONYX_GEM",
+      "bazaarProductId": "FLAWED_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_ONYX_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_ONYX_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_ONYX_GEM",
+      "displayName": "Fine Onyx Gemstone",
+      "aliases": [
+        "Fine Onyx Gemstone",
+        "Fine Onyx"
+      ],
+      "hypixelItemId": "FINE_ONYX_GEM",
+      "bazaarProductId": "FINE_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_ONYX_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_ONYX_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_ONYX_GEM",
+      "displayName": "Flawless Onyx Gemstone",
+      "aliases": [
+        "Flawless Onyx Gemstone",
+        "Flawless Onyx"
+      ],
+      "hypixelItemId": "FLAWLESS_ONYX_GEM",
+      "bazaarProductId": "FLAWLESS_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_ONYX_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_ONYX_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_ONYX_GEM",
+      "displayName": "Perfect Onyx Gemstone",
+      "aliases": [
+        "Perfect Onyx Gemstone",
+        "Perfect Onyx"
+      ],
+      "hypixelItemId": "PERFECT_ONYX_GEM",
+      "bazaarProductId": "PERFECT_ONYX_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_ONYX_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_ONYX_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_AQUAMARINE_GEM",
+      "displayName": "Rough Aquamarine Gemstone",
+      "aliases": [
+        "Rough Aquamarine Gemstone",
+        "Rough Aquamarine"
+      ],
+      "hypixelItemId": "ROUGH_AQUAMARINE_GEM",
+      "bazaarProductId": "ROUGH_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_AQUAMARINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_AQUAMARINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_AQUAMARINE_GEM",
+      "displayName": "Flawed Aquamarine Gemstone",
+      "aliases": [
+        "Flawed Aquamarine Gemstone",
+        "Flawed Aquamarine"
+      ],
+      "hypixelItemId": "FLAWED_AQUAMARINE_GEM",
+      "bazaarProductId": "FLAWED_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_AQUAMARINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_AQUAMARINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_AQUAMARINE_GEM",
+      "displayName": "Fine Aquamarine Gemstone",
+      "aliases": [
+        "Fine Aquamarine Gemstone",
+        "Fine Aquamarine"
+      ],
+      "hypixelItemId": "FINE_AQUAMARINE_GEM",
+      "bazaarProductId": "FINE_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_AQUAMARINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_AQUAMARINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_AQUAMARINE_GEM",
+      "displayName": "Flawless Aquamarine Gemstone",
+      "aliases": [
+        "Flawless Aquamarine Gemstone",
+        "Flawless Aquamarine"
+      ],
+      "hypixelItemId": "FLAWLESS_AQUAMARINE_GEM",
+      "bazaarProductId": "FLAWLESS_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_AQUAMARINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_AQUAMARINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_AQUAMARINE_GEM",
+      "displayName": "Perfect Aquamarine Gemstone",
+      "aliases": [
+        "Perfect Aquamarine Gemstone",
+        "Perfect Aquamarine"
+      ],
+      "hypixelItemId": "PERFECT_AQUAMARINE_GEM",
+      "bazaarProductId": "PERFECT_AQUAMARINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_AQUAMARINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_AQUAMARINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_CITRINE_GEM",
+      "displayName": "Rough Citrine Gemstone",
+      "aliases": [
+        "Rough Citrine Gemstone",
+        "Rough Citrine"
+      ],
+      "hypixelItemId": "ROUGH_CITRINE_GEM",
+      "bazaarProductId": "ROUGH_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_CITRINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_CITRINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_CITRINE_GEM",
+      "displayName": "Flawed Citrine Gemstone",
+      "aliases": [
+        "Flawed Citrine Gemstone",
+        "Flawed Citrine"
+      ],
+      "hypixelItemId": "FLAWED_CITRINE_GEM",
+      "bazaarProductId": "FLAWED_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_CITRINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_CITRINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_CITRINE_GEM",
+      "displayName": "Fine Citrine Gemstone",
+      "aliases": [
+        "Fine Citrine Gemstone",
+        "Fine Citrine"
+      ],
+      "hypixelItemId": "FINE_CITRINE_GEM",
+      "bazaarProductId": "FINE_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_CITRINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_CITRINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_CITRINE_GEM",
+      "displayName": "Flawless Citrine Gemstone",
+      "aliases": [
+        "Flawless Citrine Gemstone",
+        "Flawless Citrine"
+      ],
+      "hypixelItemId": "FLAWLESS_CITRINE_GEM",
+      "bazaarProductId": "FLAWLESS_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_CITRINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_CITRINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_CITRINE_GEM",
+      "displayName": "Perfect Citrine Gemstone",
+      "aliases": [
+        "Perfect Citrine Gemstone",
+        "Perfect Citrine"
+      ],
+      "hypixelItemId": "PERFECT_CITRINE_GEM",
+      "bazaarProductId": "PERFECT_CITRINE_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_CITRINE_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_CITRINE_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "ROUGH_PERIDOT_GEM",
+      "displayName": "Rough Peridot Gemstone",
+      "aliases": [
+        "Rough Peridot Gemstone",
+        "Rough Peridot"
+      ],
+      "hypixelItemId": "ROUGH_PERIDOT_GEM",
+      "bazaarProductId": "ROUGH_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for ROUGH_PERIDOT_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item ROUGH_PERIDOT_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWED_PERIDOT_GEM",
+      "displayName": "Flawed Peridot Gemstone",
+      "aliases": [
+        "Flawed Peridot Gemstone",
+        "Flawed Peridot"
+      ],
+      "hypixelItemId": "FLAWED_PERIDOT_GEM",
+      "bazaarProductId": "FLAWED_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWED_PERIDOT_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWED_PERIDOT_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FINE_PERIDOT_GEM",
+      "displayName": "Fine Peridot Gemstone",
+      "aliases": [
+        "Fine Peridot Gemstone",
+        "Fine Peridot"
+      ],
+      "hypixelItemId": "FINE_PERIDOT_GEM",
+      "bazaarProductId": "FINE_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FINE_PERIDOT_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FINE_PERIDOT_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "FLAWLESS_PERIDOT_GEM",
+      "displayName": "Flawless Peridot Gemstone",
+      "aliases": [
+        "Flawless Peridot Gemstone",
+        "Flawless Peridot"
+      ],
+      "hypixelItemId": "FLAWLESS_PERIDOT_GEM",
+      "bazaarProductId": "FLAWLESS_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for FLAWLESS_PERIDOT_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item FLAWLESS_PERIDOT_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "PERFECT_PERIDOT_GEM",
+      "displayName": "Perfect Peridot Gemstone",
+      "aliases": [
+        "Perfect Peridot Gemstone",
+        "Perfect Peridot"
+      ],
+      "hypixelItemId": "PERFECT_PERIDOT_GEM",
+      "bazaarProductId": "PERFECT_PERIDOT_GEM",
+      "areas": [
+        "CRYSTAL_HOLLOWS",
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "MINING",
+      "idAuthority": "OFFICIAL_HYPIXEL",
+      "bazaarAuthority": "OFFICIAL_HYPIXEL",
+      "confidence": "HIGH",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for PERFECT_PERIDOT_GEM"
+        },
+        {
+          "url": "https://api.hypixel.net/v2/resources/skyblock/items",
+          "sourceName": "Hypixel SkyBlock Items",
+          "sourceType": "OFFICIAL_HYPIXEL",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "VERIFIED_CURRENT",
+          "notes": "Matched official item PERFECT_PERIDOT_GEM"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "stableId": "MITHRIL_POWDER",
+      "displayName": "Mithril Powder",
+      "aliases": [
+        "Mithril Powder"
+      ],
+      "hypixelItemId": "MITHRIL_POWDER",
+      "areas": [
+        "DWARVEN_MINES"
+      ],
+      "sourceHint": "CURRENCY",
+      "idAuthority": "ROT_DOMAIN_RULE",
+      "bazaarAuthority": "ROT_DOMAIN_RULE",
+      "confidence": "MEDIUM",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for MITHRIL_POWDER"
+        }
+      ],
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    },
+    {
+      "stableId": "GEMSTONE_POWDER",
+      "displayName": "Gemstone Powder",
+      "aliases": [
+        "Gemstone Powder"
+      ],
+      "hypixelItemId": "GEMSTONE_POWDER",
+      "areas": [
+        "CRYSTAL_HOLLOWS"
+      ],
+      "sourceHint": "CURRENCY",
+      "idAuthority": "ROT_DOMAIN_RULE",
+      "bazaarAuthority": "ROT_DOMAIN_RULE",
+      "confidence": "MEDIUM",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for GEMSTONE_POWDER"
+        }
+      ],
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    },
+    {
+      "stableId": "GLACITE_POWDER",
+      "displayName": "Glacite Powder",
+      "aliases": [
+        "Glacite Powder"
+      ],
+      "hypixelItemId": "GLACITE_POWDER",
+      "areas": [
+        "GLACITE_TUNNELS",
+        "GLACITE_MINESHAFT"
+      ],
+      "sourceHint": "CURRENCY",
+      "idAuthority": "ROT_DOMAIN_RULE",
+      "bazaarAuthority": "ROT_DOMAIN_RULE",
+      "confidence": "MEDIUM",
+      "provenance": [
+        {
+          "url": "rotclient://domain-rules",
+          "sourceName": "Rot Client domain rules",
+          "sourceType": "ROT_DOMAIN_RULE",
+          "retrievedAt": "2026-08-08T18:29:50.391833Z",
+          "confidence": "HIGH",
+          "notes": "Domain rule for GLACITE_POWDER"
+        }
+      ],
+      "notes": [
+        "No Bazaar product (currency or non-market item)"
+      ]
+    }
+  ]
+}

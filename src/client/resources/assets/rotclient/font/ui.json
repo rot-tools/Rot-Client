@@ -1,0 +1,16 @@
+{
+  "providers": [
+    {
+      "type": "reference",
+      "id": "minecraft:include/space"
+    },
+    {
+      "type": "ttf",
+      "file": "rotclient:ui.ttf",
+      "shift": [0, 1.0],
+      "size": 11.0,
+      "oversample": 8.0,
+      "skip": ""
+    }
+  ]
+}

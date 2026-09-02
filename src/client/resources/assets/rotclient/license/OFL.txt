@@ -1,0 +1,3 @@
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+The bundled ui.ttf is Source Sans 3 Regular (Adobe), OFL-1.1.
+https://github.com/adobe-fonts/source-sans

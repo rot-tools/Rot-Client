@@ -1,0 +1,60 @@
+{
+  "schema": "rot.kuudra.piles.v2",
+  "note": "Rot Client supply-pile overlay anchors. Coordinates are Kuudra arena facts.",
+  "spots": [
+    {
+      "label": "Shop",
+      "xyz": {
+        "x": -98.5,
+        "y": 78.4,
+        "z": -113.5
+      },
+      "nopre": 7
+    },
+    {
+      "label": "Triangle",
+      "xyz": {
+        "x": -94.5,
+        "y": 78.4,
+        "z": -106.5
+      },
+      "nopre": 6
+    },
+    {
+      "label": "Equals",
+      "xyz": {
+        "x": -106.5,
+        "y": 78.4,
+        "z": -99.5
+      },
+      "nopre": 5
+    },
+    {
+      "label": "Slash",
+      "xyz": {
+        "x": -98.5,
+        "y": 78.4,
+        "z": -99.5
+      },
+      "nopre": 4
+    },
+    {
+      "label": "X Cannon",
+      "xyz": {
+        "x": -110.5,
+        "y": 78.4,
+        "z": -106.5
+      },
+      "nopre": 2
+    },
+    {
+      "label": "X",
+      "xyz": {
+        "x": -106.5,
+        "y": 78.4,
+        "z": -113.5
+      },
+      "nopre": 1
+    }
+  ]
+}

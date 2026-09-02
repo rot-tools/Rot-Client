@@ -1,0 +1,423 @@
+{
+  "schema": "rot.kuudra.ether.v2",
+  "note": "Rot Client etherwarp/highlight overlay. Coordinates are Kuudra arena facts.",
+  "groups": [
+    {
+      "title": "Skip Spot Waypoint",
+      "on": true,
+      "marks": [
+        {
+          "label": "Skip Spot",
+          "xyz": {
+            "x": -174.5,
+            "y": 31,
+            "z": -155.5
+          },
+          "hex": "#00FFFF",
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 2.0,
+          "shape": "FULL",
+          "phases": [
+            "DPS"
+          ],
+          "skip_phases": [
+            ""
+          ],
+          "max_dist": -1
+        }
+      ]
+    },
+    {
+      "title": "DPS Waypoints",
+      "on": true,
+      "marks": [
+        {
+          "label": "DPS Agro (Close / Mid / Long)",
+          "xyz_list": [
+            {
+              "x": -88.5,
+              "y": 78,
+              "z": -78.5
+            },
+            {
+              "x": -84.5,
+              "y": 78,
+              "z": -85.5
+            },
+            {
+              "x": -82.5,
+              "y": 78,
+              "z": -92.5
+            }
+          ],
+          "hex": "#00FFFF",
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 1.0,
+          "shape": "FULL",
+          "phases": [
+            "EATEN"
+          ],
+          "skip_phases": [
+            ""
+          ],
+          "max_dist": 100
+        },
+        {
+          "label": "DPS Main (Top / Top / Bottom / Bottom)",
+          "xyz_list": [
+            {
+              "x": -110.5,
+              "y": 78,
+              "z": -71.5
+            },
+            {
+              "x": -110.5,
+              "y": 78,
+              "z": -72.5
+            },
+            {
+              "x": -113.5,
+              "y": 76,
+              "z": -68.5
+            },
+            {
+              "x": -113.5,
+              "y": 76,
+              "z": -69.5
+            }
+          ],
+          "hex": "#00FFFF",
+          "alpha": 0.4,
+          "draw": "SOLID",
+          "line": 1.0,
+          "shape": "FULL",
+          "phases": [
+            "EATEN"
+          ],
+          "skip_phases": [
+            ""
+          ],
+          "max_dist": 100
+        }
+      ]
+    },
+    {
+      "title": "X Etherwarps",
+      "on": true,
+      "marks": [
+        {
+          "label": "X Aim (X Cannon / Coal Left / Coal Right / Square)",
+          "xyz_list": [
+            {
+              "x": -158,
+              "y": 76,
+              "z": -139.5
+            },
+            {
+              "x": -154.5,
+              "y": 76.5,
+              "z": -147
+            },
+            {
+              "x": -154.5,
+              "y": 76.52,
+              "z": -150.5
+            },
+            {
+              "x": -169,
+              "y": 76,
+              "z": -115
+            }
+          ],
+          "hex_list": [
+            "#FF5555",
+            "#55FF55",
+            "#5599FF",
+            "#FFAA00"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "EDGE_TOP",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        },
+        {
+          "label": "X Block Highlights (X Cannon / Coal Left / Coal Right / Square)",
+          "xyz_list": [
+            {
+              "x": -129.5,
+              "y": 78,
+              "z": -114.5
+            },
+            {
+              "x": -135.5,
+              "y": 78,
+              "z": -125.5
+            },
+            {
+              "x": -135.5,
+              "y": 78,
+              "z": -130.5
+            },
+            {
+              "x": -139.5,
+              "y": 78,
+              "z": -89.5
+            }
+          ],
+          "hex_list": [
+            "#FF5555",
+            "#55FF55",
+            "#5599FF",
+            "#FFAA00"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "FULL",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        }
+      ]
+    },
+    {
+      "title": "Other Etherwarps",
+      "on": true,
+      "marks": [
+        {
+          "label": "Square Safe Spot",
+          "xyz_list": [
+            {
+              "x": -141.5,
+              "y": 77,
+              "z": -86.5
+            }
+          ],
+          "hex": "#00FFFF",
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "FULL",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        },
+        {
+          "label": "X Cannon Safe Spot",
+          "xyz_list": [
+            {
+              "x": -135.25,
+              "y": 77.5,
+              "z": -128
+            }
+          ],
+          "hex": "#FFFF55",
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "CENTER_PLATE",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        }
+      ]
+    },
+    {
+      "title": "Equals Etherwarps",
+      "on": true,
+      "marks": [
+        {
+          "label": "Equals Aim (Square / Shop Left / Shop Right)",
+          "xyz_list": [
+            {
+              "x": -101.5,
+              "y": 75,
+              "z": -77
+            },
+            {
+              "x": -47,
+              "y": 75,
+              "z": -115.5
+            },
+            {
+              "x": -34,
+              "y": 75,
+              "z": -123.5
+            }
+          ],
+          "hex_list": [
+            "#AA55FF",
+            "#FFAA00",
+            "#FF55AA"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "EDGE_TOP",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        },
+        {
+          "label": "Equals Block Highlights (Square / Shop Left / Shop Right)",
+          "xyz_list": [
+            {
+              "x": -139.5,
+              "y": 78,
+              "z": -90.5
+            },
+            {
+              "x": -87.5,
+              "y": 78,
+              "z": -127.5
+            },
+            {
+              "x": -74.5,
+              "y": 78,
+              "z": -135.5
+            }
+          ],
+          "hex_list": [
+            "#AA55FF",
+            "#FFAA00",
+            "#FF55AA"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "FULL",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        }
+      ]
+    },
+    {
+      "title": "Triangle Etherwarps",
+      "on": true,
+      "marks": [
+        {
+          "label": "Tri Aim (Square / X Cannon / Coal Left / Coal Right / Shop Left / Shop Right)",
+          "xyz_list": [
+            {
+              "x": -113,
+              "y": 76,
+              "z": -107
+            },
+            {
+              "x": -103.5,
+              "y": 76,
+              "z": -130.5
+            },
+            {
+              "x": -103.5,
+              "y": 76.2,
+              "z": -140.3
+            },
+            {
+              "x": -103.5,
+              "y": 76.3,
+              "z": -143
+            },
+            {
+              "x": -62,
+              "y": 76,
+              "z": -143.5
+            },
+            {
+              "x": -50,
+              "y": 76.1,
+              "z": -149.5
+            }
+          ],
+          "hex_list": [
+            "#FF5555",
+            "#55FF55",
+            "#FFFF55",
+            "#FFAA00",
+            "#AA55FF",
+            "#FF55AA"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "EDGE_TOP",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        },
+        {
+          "label": "Tri Block Highlights (Square / X Cannon / Coal Left / Coal Right / Shop Left / Shop Right)",
+          "xyz_list": [
+            {
+              "x": -139.5,
+              "y": 78,
+              "z": -90.5
+            },
+            {
+              "x": -129.5,
+              "y": 78,
+              "z": -114.5
+            },
+            {
+              "x": -135.5,
+              "y": 78,
+              "z": -125.5
+            },
+            {
+              "x": -135.5,
+              "y": 78,
+              "z": -130.5
+            },
+            {
+              "x": -87.5,
+              "y": 78,
+              "z": -127.5
+            },
+            {
+              "x": -74.5,
+              "y": 78,
+              "z": -135.5
+            }
+          ],
+          "hex_list": [
+            "#FF5555",
+            "#55FF55",
+            "#FFFF55",
+            "#FFAA00",
+            "#AA55FF",
+            "#FF55AA"
+          ],
+          "alpha": 0.8,
+          "draw": "OUTLINE",
+          "line": 0.5,
+          "shape": "FULL",
+          "phases": [
+            "SUPPLIES"
+          ],
+          "skip_phases": [],
+          "max_dist": -1
+        }
+      ]
+    }
+  ]
+}

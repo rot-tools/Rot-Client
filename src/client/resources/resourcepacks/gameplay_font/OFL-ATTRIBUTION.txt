@@ -1,0 +1,6 @@
+Source Sans 3
+Copyright 2010-2021 Adobe
+Licensed under the SIL Open Font License, Version 1.1.
+
+License text: https://openfontlicense.org/open-font-license-official-text/
+Source: https://github.com/adobe-fonts/source-sans
