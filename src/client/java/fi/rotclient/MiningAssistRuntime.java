@@ -7,7 +7,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gizmos.GizmoStyle;
 import net.minecraft.gizmos.Gizmos;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -181,10 +180,8 @@ public final class MiningAssistRuntime {
         detectorHits.clear();
         LocalPlayer player = client.player;
         MiningAssistPolicy.BlockPos center = null;
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand stand)) {
-                continue;
-            }
+        AABB search = player.getBoundingBox().inflate(80.0D, 40.0D, 80.0D);
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
             Optional<String> keeper = MiningAssistPolicy.parseKeeper(stand.getName().getString());
             if (keeper.isEmpty()) {
                 continue;

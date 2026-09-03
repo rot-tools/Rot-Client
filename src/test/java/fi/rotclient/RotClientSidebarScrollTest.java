@@ -68,7 +68,7 @@ final class RotClientSidebarScrollTest {
         scroll.setScrollPixels(scroll.maxScroll());
 
         List<String> collapsed = RotClientSidebarNav.toggleSection(
-                expanded, RotClientSidebarNav.SECTION_SESSIONS);
+                expanded, RotClientSidebarNav.SECTION_QOL);
         collapsed = RotClientSidebarNav.toggleSection(
                 collapsed, RotClientSidebarNav.SECTION_SETTINGS);
         RotClientSidebarNav.Layout closed =
@@ -106,17 +106,15 @@ final class RotClientSidebarScrollTest {
 
     @Test
     void scrolledActiveCategoryCanCollapseWithoutRouteChange() {
-        // Pure layout: collapsing sessions hides analytics/history Y but does
-        // not alter DashboardModule selection (UI concern). Content shrinks.
         List<String> expanded = RotClientSidebarNav.defaultExpandedSections();
         RotClientSidebarNav.Layout before =
                 RotClientSidebarNav.layout(ORIGIN, expanded);
-        assertTrue(before.analyticsVisible());
+        assertTrue(before.qolChildrenVisible());
         List<String> after = RotClientSidebarNav.toggleSection(
-                expanded, RotClientSidebarNav.SECTION_SESSIONS);
+                expanded, RotClientSidebarNav.SECTION_QOL);
         RotClientSidebarNav.Layout layout =
                 RotClientSidebarNav.layout(ORIGIN, after);
-        assertFalse(layout.analyticsVisible());
-        assertTrue(layout.miningExpanded());
+        assertFalse(layout.qolChildrenVisible());
+        assertTrue(layout.qolHeaderY() >= 0);
     }
 }

@@ -28,6 +28,8 @@ final class MiningUiScreen extends Screen {
     private static final int OVERVIEW_MODULE_Y = CHROME_HEIGHT + 14;
     private static final int HOME_BUTTON_Y_OFFSET =
             RotClientDashboardLayout.HOME_BUTTON_Y_OFFSET;
+    private static final int SIDEBAR_BOTTOM_INSET = 8;
+    private static final long BACK_EDGE_PULSE_MS = 200L;
     private static final int ANALYTICS_MAX_RESOURCE_ROWS = 8;
     private static final int HISTORY_MAX_VISIBLE_ROWS = 7;
     private static final int HISTORY_ROW_HEIGHT = 36;
@@ -86,6 +88,10 @@ final class MiningUiScreen extends Screen {
     private String chromeHoverTip = "";
     private int omniboxHighlight;
     private boolean awaitingNewSessionConfirm = false;
+    private final DashboardNavStack navStack = new DashboardNavStack();
+    private boolean restoringNav;
+    private boolean skipSidebarReveal;
+    private long backEdgePulseUntilMillis;
     private double panelDragOriginMouseX;
     private double panelDragOriginMouseY;
     private double panelDragOriginPanelX;
@@ -382,8 +388,7 @@ final class MiningUiScreen extends Screen {
         RotClientWorkspace workspace = RotClientClient.workspace();
         RotClientSidebarNav.Layout layout = sidebarLayout(true);
         int sidebarTop = panelY + CHROME_HEIGHT;
-        int homeY = panelY + panelH() - HOME_BUTTON_Y_OFFSET;
-        int sidebarBottom = homeY - 10;
+        int sidebarBottom = sidebarBottomY(panelY);
         int viewportHeight = Math.max(0, sidebarBottom - sidebarTop);
         int contentHeight = layout.contentHeight(OVERVIEW_MODULE_Y);
         sidebarScroll.setBounds(contentHeight, viewportHeight);
@@ -393,9 +398,12 @@ final class MiningUiScreen extends Screen {
         int headerX = panelX + 12;
         int itemX = panelX + MODULE_X_OFFSET;
         boolean appearanceSelected =
-                workspace.activeRoute().isAppearance();
+                workspace.activeRoute().isAppearance()
+                        || qolDashboard.appearanceLanding();
+        boolean hudLayoutSelected = qolDashboard.hudLayoutLanding();
+        boolean visualsChildSelected = appearanceSelected || hudLayoutSelected;
         boolean qolSelected = selectedModule == DashboardModule.QOL_SETTINGS
-                && !appearanceSelected;
+                && !visualsChildSelected;
 
         graphics.enableScissor(panelX + 1, sidebarTop, panelX + SIDEBAR_WIDTH - 1, sidebarBottom);
         RotClientUiMotion.pushFractionalScroll(graphics, sidebarScroll);
@@ -409,109 +417,13 @@ final class MiningUiScreen extends Screen {
                     MODULE_WIDTH, NAV_ITEM_HEIGHT,
                     "Overview",
                     "Status at a glance",
-                    selectedModule == DashboardModule.NONE && !appearanceSelected,
+                    selectedModule == DashboardModule.NONE && !visualsChildSelected,
                     false, false);
 
             drawSidebarSectionHeader(
                     graphics, mouseX, mouseY,
-                    headerX, mapY.applyAsInt(layout.miningHeaderY()),
-                    "Mining",
-                    layout.miningOpen());
-            drawSidebarChildren(
-                    graphics,
-                    panelX,
-                    sidebarTop,
-                    sidebarBottom,
-                    mapY.applyAsInt(layout.trackerY()),
-                    layout.miningClipHeight(),
-                    () -> {
-                        if (layout.trackerVisible()) {
-                            drawModuleEntry(graphics, mouseX, mouseY,
-                                    itemX, mapY.applyAsInt(layout.trackerY()),
-                                    MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "Mining Tracker",
-                                    config.selectedSelection()
-                                            .displayName()
-                                            + (config.enabled ? "  ·  ON" : "  ·  OFF"),
-                                    selectedModule == DashboardModule.MINING_TRACKER
-                                            && !appearanceSelected,
-                                    false, config.enabled);
-                        }
-                        if (layout.miningHudVisible()) {
-                            drawModuleEntry(graphics, mouseX, mouseY,
-                                    itemX, mapY.applyAsInt(layout.miningHudY()),
-                                    MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "Mining HUD",
-                                    "Layout & colors",
-                                    appearanceSelected
-                                            && workspace.activeRoute()
-                                            == RotClientWorkspaceRoute.APPEARANCE_MINING_HUD,
-                                    false, false);
-                        }
-                        if (layout.powderChestTrackerVisible()) {
-                            PowderChestTrackerPresentation powder =
-                                    RotClientClient.powderChestTrackerPresentation();
-                            drawModuleEntry(graphics, mouseX, mouseY,
-                                    itemX, mapY.applyAsInt(layout.powderChestTrackerY()),
-                                    MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "Powder Chest",
-                                    powder.chestsOpened() + " chests  |  "
-                                            + powder.statusLabel(),
-                                    selectedModule
-                                            == DashboardModule.POWDER_CHEST_TRACKER
-                                            && !appearanceSelected,
-                                    false, powder.enabled());
-                        }
-                    });
-
-            drawSidebarSectionHeader(
-                    graphics, mouseX, mouseY,
-                    headerX, mapY.applyAsInt(layout.sessionsHeaderY()),
-                    "Sessions",
-                    layout.sessionsOpen());
-            drawSidebarChildren(
-                    graphics,
-                    panelX,
-                    sidebarTop,
-                    sidebarBottom,
-                    mapY.applyAsInt(layout.analyticsY()),
-                    layout.sessionsClipHeight(),
-                    () -> {
-                        MiningSessionAnalyticsPresentation analytics =
-                                RotClientClient.sessionAnalyticsPresentation();
-                        boolean analyticsActive = analytics.currentRunning();
-                        if (layout.analyticsVisible()) {
-                            drawModuleEntry(graphics, mouseX, mouseY,
-                                    itemX, mapY.applyAsInt(layout.analyticsY()),
-                                    MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "Session Analytics",
-                                    analytics.statusBadge(),
-                                    selectedModule == DashboardModule.SESSION_ANALYTICS
-                                            && !appearanceSelected,
-                                    false, analyticsActive);
-                        }
-                        if (layout.historyVisible()) {
-                            MiningSessionHistoryPresentation history =
-                                    RotClientClient.sessionHistoryPresentation();
-                            drawModuleEntry(graphics, mouseX, mouseY,
-                                    itemX, mapY.applyAsInt(layout.historyY()),
-                                    MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "Session History",
-                                    history.available()
-                                            ? (history.empty()
-                                            ? "Local  ·  empty"
-                                            : "Local  ·  " + history.sessions().size())
-                                            : "Unavailable",
-                                    selectedModule == DashboardModule.SESSION_HISTORY
-                                            && !appearanceSelected,
-                                    false, false);
-                        }
-                    });
-
-            drawSidebarSectionHeader(
-                    graphics, mouseX, mouseY,
                     headerX, mapY.applyAsInt(layout.settingsHeaderY()),
-                    "SETTINGS",
+                    "Visuals",
                     layout.settingsOpen());
             drawSidebarChildren(
                     graphics,
@@ -534,9 +446,9 @@ final class MiningUiScreen extends Screen {
                             drawModuleEntry(graphics, mouseX, mouseY,
                                     itemX, mapY.applyAsInt(layout.hudLayoutY()),
                                     MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                    "HUD Layout",
+                                    "HUD Elements Editor",
                                     "Move & align overlays",
-                                    false,
+                                    hudLayoutSelected,
                                     false, false);
                         }
                     });
@@ -544,7 +456,7 @@ final class MiningUiScreen extends Screen {
             drawSidebarSectionHeader(
                     graphics, mouseX, mouseY,
                     headerX, mapY.applyAsInt(layout.qolHeaderY()),
-                    "QoL & Settings",
+                    "Modules",
                     layout.qolOpen());
             int qolClipTop = layout.qolPageYs() != null && layout.qolPageYs().length > 0
                     ? mapY.applyAsInt(layout.qolPageYs()[0])
@@ -591,20 +503,6 @@ final class MiningUiScreen extends Screen {
                     scrollbarHovered,
                     sidebarScroll.isThumbDragging());
         }
-
-        graphics.fill(panelX + 10, homeY - 8,
-                panelX + SIDEBAR_WIDTH - 10, homeY - 7, RotClientTheme.DIVIDER);
-        RotClientUiDraw.drawButton(
-                graphics,
-                font,
-                mouseX,
-                mouseY,
-                panelX + MODULE_X_OFFSET,
-                homeY,
-                MODULE_WIDTH,
-                selectedModule == DashboardModule.NONE ? "Close" : "Overview",
-                selectedModule != DashboardModule.NONE,
-                true);
     }
 
     private void drawSidebarChildren(
@@ -712,51 +610,70 @@ final class MiningUiScreen extends Screen {
         int contentLeft = panelX + SIDEBAR_WIDTH + CONTENT_INSET;
         int contentRight = panelX + panelW() - CONTENT_INSET;
         int contentWidth = contentRight - contentLeft;
+        OverviewLandingPolicy.Model model = overviewLandingModel();
+        OverviewLandingPolicy.Layout layout = OverviewLandingPolicy.layout(
+                contentLeft, panelY + CHROME_HEIGHT, contentWidth, model.hasNotice());
 
-        RotClientUiDraw.text(graphics, font, "Overview", contentLeft, panelY + CHROME_HEIGHT + 12,
+        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.TITLE,
+                contentLeft, panelY + CHROME_HEIGHT + OverviewLandingPolicy.TITLE_Y_OFFSET,
                 RotClientTheme.TEXT_DIM, true);
-        RotClientUiDraw.text(graphics, font,
-                "Right Shift opens this dashboard. Search the address bar, or type /rot qol.",
-                contentLeft, panelY + CHROME_HEIGHT + 28, RotClientTheme.TEXT_MUTED, false);
+        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.SUBTITLE,
+                contentLeft, panelY + CHROME_HEIGHT + OverviewLandingPolicy.SUBTITLE_Y_OFFSET,
+                RotClientTheme.TEXT_MUTED, false);
 
-        int cardY = panelY + CHROME_HEIGHT + 52;
-        int gap = 10;
-        int cardWidth = (contentWidth - gap) / 2;
-        int row2Y = cardY + 84 + gap;
+        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.session(), model.session());
+        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.tracker(), model.tracker());
+        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.powder(), model.powder());
+
+        if (model.hasNotice()) {
+            OverviewLandingPolicy.Rect notice = layout.notice();
+            RotClientUiDraw.drawElevatedCard(
+                    graphics, notice.x(), notice.y(), notice.width(), notice.height());
+            RotClientUiDraw.sectionLabel(
+                    graphics, font, "NOTICE", notice.x() + 12, notice.y() + 8);
+            RotClientUiDraw.bodyText(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsizeAndHover(
+                            font,
+                            model.notice(),
+                            notice.width() - 24,
+                            notice.x() + 12,
+                            notice.y() + 20,
+                            12),
+                    notice.x() + 12,
+                    notice.y() + 22);
+        }
+
+        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.GOTO_LABEL,
+                contentLeft, layout.gotoY(), RotClientTheme.TEXT_DIM, false);
         drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft, cardY, cardWidth,
-                "Quality of life",
+                layout.modules().x(), layout.modules().y(), layout.modules().width(),
+                "Modules",
                 QolUtilityCatalog.modules().size() + " modules",
-                "Combat, dungeons, utilities…",
+                "Combat, dungeons, Kuudra, garden…",
                 true);
         drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft + cardWidth + gap, cardY, cardWidth,
-                "Look & HUD",
-                "Appearance",
-                "Colors, background, HUD layout",
+                layout.look().x(), layout.look().y(), layout.look().width(),
+                "Visuals",
+                "Overlays",
+                "HUDs, layout, cursor",
                 false);
         drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft, row2Y, cardWidth,
-                "Mining tracker",
+                layout.mining().x(), layout.mining().y(), layout.mining().width(),
+                "Mining",
                 config.selectedSelection().displayName(),
-                config.enabled ? "Tracking ON" : "Tracking OFF",
-                config.enabled);
-        MiningSessionAnalyticsPresentation analytics =
-                RotClientClient.sessionAnalyticsPresentation();
-        boolean analyticsActive = analytics.currentRunning();
-        MiningSessionHistoryPresentation history =
-                RotClientClient.sessionHistoryPresentation();
-        String historyDetail = history.available()
-                ? (history.empty() ? "No saved sessions" : history.sessions().size() + " saved")
-                : "History unavailable";
+                (config.enabled ? "Tracker ON" : "Tracker OFF")
+                        + " · powder · session",
+                model.miningCardActive());
         drawOverviewCard(graphics, mouseX, mouseY,
-                contentLeft + cardWidth + gap, row2Y, cardWidth,
-                "Sessions",
-                analytics.statusBadge(),
-                historyDetail,
-                analyticsActive);
+                layout.events().x(), layout.events().y(), layout.events().width(),
+                "Events",
+                "Diana",
+                "Burrows, mobs, drops",
+                false);
 
-        int linkY = row2Y + 100;
+        int linkY = layout.communityY();
         RotClientUiDraw.text(graphics, font, "Community", contentLeft, linkY, RotClientTheme.TEXT_DIM, false);
         RotClientUiDraw.drawButton(
                 graphics, font, mouseX, mouseY,
@@ -770,19 +687,45 @@ final class MiningUiScreen extends Screen {
                 graphics, font, mouseX, mouseY,
                 contentLeft + 296, linkY + 14, 110,
                 RotClientLinks.ISSUES_LABEL, false, true);
+    }
 
-        drawButton(graphics, mouseX, mouseY,
-                contentLeft, panelY + actionRowY(), 148,
-                "QoL modules", RotClientTheme.TEXT_DIM, false);
-        drawButton(graphics, mouseX, mouseY,
-                contentLeft + 158, panelY + actionRowY(), 148,
-                "Edit HUD", RotClientTheme.TEXT_DIM, false);
-        drawButton(graphics, mouseX, mouseY,
-                contentLeft + 316, panelY + actionRowY(), 148,
-                "Mining", RotClientTheme.TEXT_DIM, false);
-        drawButton(graphics, mouseX, mouseY,
-                contentRight - 148, panelY + actionRowY(), 148,
-                "Done", RotClientTheme.HUD_ACCENT, true);
+    private OverviewLandingPolicy.Model overviewLandingModel() {
+        MiningSessionAnalyticsPresentation presentation =
+                RotClientClient.sessionAnalyticsPresentation();
+        PowderChestTrackerPresentation powder =
+                RotClientClient.powderChestTrackerPresentation();
+        String badge = presentation.statusBadge();
+        boolean paused = badge != null && badge.contains("PAUSED");
+        return OverviewLandingPolicy.from(
+                presentation.currentRunning(),
+                paused,
+                presentation.viewModel().entryCount(),
+                config.enabled,
+                config.selectedSelection().displayName(),
+                powder.enabled(),
+                powder.chestsOpened(),
+                presentation.viewModel().priceBookStale());
+    }
+
+    private void drawOverviewMetricChip(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            OverviewLandingPolicy.Rect rect,
+            OverviewLandingPolicy.Kpi kpi) {
+        int accent = switch (kpi.tone()) {
+            case GOOD -> RotClientTheme.SUCCESS;
+            case WARN -> RotClientTheme.WARNING;
+            case MUTED -> RotClientTheme.TEXT_DIM;
+        };
+        RotClientUiDraw.drawMetricCard(
+                graphics, font, rect.x(), rect.y(), rect.width(),
+                kpi.title(), kpi.value(), kpi.hint(), accent);
+        if (rect.contains(mouseX, mouseY)) {
+            roundedOutline(graphics, rect.x(), rect.y(),
+                    rect.x() + rect.width(), rect.y() + rect.height(),
+                    RotClientTheme.BORDER_BRIGHT);
+        }
     }
 
     private void drawSettingsSearchField(
@@ -953,6 +896,15 @@ int selectorY = masterY + 10;
         drawButton(graphics, mouseX, mouseY,
                 thirdX, buttonY, contentRight - thirdX,
                 "DONE", RotClientTheme.HUD_ACCENT, true);
+
+        if (trackerDropdownOpen) {
+            RotClientUiDraw.drawScrim(
+                    graphics,
+                    contentLeft,
+                    panelY + CHROME_HEIGHT,
+                    contentRight - contentLeft,
+                    Math.max(1, (panelY + actionRowY()) - (panelY + CHROME_HEIGHT)));
+        }
 
         // Draw the dropdown last so it stays above the settings.
         drawTrackerDropdown(
@@ -2276,8 +2228,7 @@ int selectorY = masterY + 10;
             return true;
         }
         int sidebarTop = panelY + CHROME_HEIGHT;
-        int homeY = panelY + panelH() - HOME_BUTTON_Y_OFFSET;
-        int sidebarBottom = homeY - 10;
+        int sidebarBottom = sidebarBottomY(panelY);
         if (RotClientUiDraw.inside(
                 logicalX,
                 logicalY,
@@ -2494,20 +2445,10 @@ int selectorY = masterY + 10;
             return true;
         }
 
-        if (inside(logicalMouseX, logicalMouseY,
-                panelX + MODULE_X_OFFSET,
-                panelY + panelH() - HOME_BUTTON_Y_OFFSET,
-                MODULE_WIDTH,
-                BUTTON_HEIGHT)) {
-            openOverview();
-            return true;
-        }
-
         RotClientWorkspace workspace = RotClientClient.workspace();
         RotClientSidebarNav.Layout layout = sidebarLayout(false);
         int sidebarTop = panelY + CHROME_HEIGHT;
-        int homeY = panelY + panelH() - HOME_BUTTON_Y_OFFSET;
-        int sidebarBottom = homeY - 10;
+        int sidebarBottom = sidebarBottomY(panelY);
         int viewportHeight = Math.max(0, sidebarBottom - sidebarTop);
         sidebarScroll.setBounds(
                 layout.contentHeight(OVERVIEW_MODULE_Y),
@@ -2558,68 +2499,80 @@ int selectorY = masterY + 10;
                 : RotClientSidebarNav.HitTarget.NONE;
         switch (hit) {
             case OVERVIEW -> {
-                selectModule(DashboardModule.NONE);
+                goHome();
                 return true;
             }
             case TRACKER -> {
-                selectModule(DashboardModule.MINING_TRACKER);
+                openQolCatalogModule(MiningTrackerCatalogPolicy.TRACKER);
                 return true;
             }
             case POWDER_CHEST_TRACKER -> {
-                selectModule(DashboardModule.POWDER_CHEST_TRACKER);
+                openQolCatalogModule(MiningTrackerCatalogPolicy.POWDER);
                 return true;
             }
             case MINING_HUD -> {
-                openAppearanceCustomizer(
-                        RotClientAppearanceScreen.Section.MINING_HUD);
+                openQolCatalogHud(MiningTrackerCatalogPolicy.TRACKER);
                 return true;
             }
             case ANALYTICS -> {
-                selectModule(DashboardModule.SESSION_ANALYTICS);
+                openQolCatalogModule(MiningTrackerCatalogPolicy.SESSION);
                 return true;
             }
             case HISTORY -> {
-                selectModule(DashboardModule.SESSION_HISTORY);
+                openQolCatalogModule(MiningTrackerCatalogPolicy.HISTORY);
                 return true;
             }
             case APPEARANCE -> {
-                openAppearanceCustomizer();
-                return true;
-            }
-            case HUD_LAYOUT -> {
-                RotClientClient.openHudEditor(this);
-                return true;
-            }
-            case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_MINING,
-                 QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
-                QolUtilityCatalog.Group group =
-                        RotClientSidebarNav.groupForHitTarget(hit);
-                if (group != null) {
-                    selectQolPage(group);
+                if (qolDashboard.appearanceLanding()) {
+                    goHome();
+                } else {
+                    openAppearanceLanding();
                 }
                 return true;
             }
-            case SECTION_MINING -> {
-                workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_MINING);
-                reclampSidebarScroll();
+            case HUD_LAYOUT -> {
+                if (qolDashboard.hudLayoutLanding()) {
+                    goHome();
+                } else {
+                    openHudLayoutLanding();
+                }
                 return true;
             }
-            case SECTION_SESSIONS -> {
-                workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_SESSIONS);
-                reclampSidebarScroll();
+            case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
+                 QOL_GARDEN, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
+                QolUtilityCatalog.Group group =
+                        RotClientSidebarNav.groupForHitTarget(hit);
+                if (group != null) {
+                    selectQolPageFromUser(group);
+                }
                 return true;
             }
             case SECTION_SETTINGS -> {
+                boolean collapsingVisuals = RotClientSidebarNav.isExpanded(
+                        workspace.expandedSidebarSections(),
+                        RotClientSidebarNav.SECTION_SETTINGS);
+                if (collapsingVisuals
+                        && (qolDashboard.appearanceLanding()
+                        || qolDashboard.hudLayoutLanding())) {
+                    goHome();
+                }
                 workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_SETTINGS);
                 reclampSidebarScroll();
                 return true;
             }
-            case SECTION_QOL -> {
+            case SECTION_QOL, SECTION_MINING, SECTION_SESSIONS -> {
                 workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_QOL);
                 reclampSidebarScroll();
                 return true;
             }
             case NONE -> {
+                if (VisualsLandingNavPolicy.dismissOnUnhandledClick(
+                        qolDashboard.appearanceLanding()
+                                || qolDashboard.hudLayoutLanding(),
+                        hit)) {
+                    goHome();
+                    return true;
+                }
             }
         }
 
@@ -2629,54 +2582,54 @@ int selectorY = masterY + 10;
             int cardY = panelY + MASTER_Y;
             if (inside(logicalMouseX, logicalMouseY,
                     contentLeft + 16, cardY + 70, 168, BUTTON_HEIGHT)) {
-                openAppearanceCustomizer();
+                openAppearanceLanding();
                 return true;
             }
             return super.mouseClicked(event, doubleClick);
         }
         if (selectedModule == DashboardModule.NONE) {
             int contentWidth = contentRight - contentLeft;
-            int cardY = panelY + CHROME_HEIGHT + 52;
-            int gap = 10;
-            int cardWidth = (contentWidth - gap) / 2;
-            int row2Y = cardY + 84 + gap;
+            OverviewLandingPolicy.Model model = overviewLandingModel();
+            OverviewLandingPolicy.Layout landingLayout = OverviewLandingPolicy.layout(
+                    contentLeft, panelY + CHROME_HEIGHT, contentWidth, model.hasNotice());
             settingsSearchFocused = false;
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft, cardY, cardWidth, 84)
-                    || inside(logicalMouseX, logicalMouseY,
-                    contentLeft, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
-                selectModule(DashboardModule.QOL_SETTINGS);
-                return true;
+            OverviewLandingPolicy.Hit landingHit = OverviewLandingPolicy.hit(
+                    (int) Math.round(logicalMouseX),
+                    (int) Math.round(logicalMouseY),
+                    landingLayout);
+            switch (landingHit) {
+                case SESSION -> {
+                    openQolCatalogModule(MiningTrackerCatalogPolicy.SESSION);
+                    return true;
+                }
+                case TRACKER -> {
+                    openQolCatalogModule(MiningTrackerCatalogPolicy.TRACKER);
+                    return true;
+                }
+                case POWDER -> {
+                    openQolCatalogModule(MiningTrackerCatalogPolicy.POWDER);
+                    return true;
+                }
+                case MODULES -> {
+                    selectQolPageFromUser(QolUtilityCatalog.Group.COMBAT);
+                    return true;
+                }
+                case LOOK -> {
+                    selectQolPageFromUser(QolUtilityCatalog.Group.HUD_DISPLAY);
+                    return true;
+                }
+                case MINING -> {
+                    selectQolPageFromUser(QolUtilityCatalog.Group.MINING);
+                    return true;
+                }
+                case EVENTS -> {
+                    selectQolPageFromUser(QolUtilityCatalog.Group.EVENTS);
+                    return true;
+                }
+                case NONE -> {
+                }
             }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + cardWidth + gap, cardY, cardWidth, 84)) {
-                openAppearanceCustomizer();
-                return true;
-            }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft, row2Y, cardWidth, 84)
-                    || inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 316, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
-                selectModule(DashboardModule.MINING_TRACKER);
-                return true;
-            }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + cardWidth + gap, row2Y, cardWidth, 84)) {
-                selectModule(DashboardModule.SESSION_ANALYTICS);
-                return true;
-            }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 158, panelY + actionRowY(), 148, BUTTON_HEIGHT)) {
-                RotClientClient.openHudEditor(this);
-                return true;
-            }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentRight - 148, panelY + actionRowY(),
-                    148, BUTTON_HEIGHT)) {
-                onClose();
-                return true;
-            }
-            int linkY = row2Y + 100;
+            int linkY = landingLayout.communityY();
             if (inside(logicalMouseX, logicalMouseY,
                     contentLeft, linkY + 14, 148, BUTTON_HEIGHT)) {
                 RotClientLinkOpener.openConfirmed(this, RotClientLinks.DISCORD);
@@ -2871,7 +2824,7 @@ if (trackerDropdownOpen) {
         int panelX = panelX();
         int panelY = panelY();
         int sidebarTop = panelY + CHROME_HEIGHT;
-        int sidebarBottom = panelY + panelH() - HOME_BUTTON_Y_OFFSET - 10;
+        int sidebarBottom = sidebarBottomY(panelY);
         if (sidebarScroll.dragThumbTo(
                 snappedMouseY,
                 sidebarTop,
@@ -3071,7 +3024,7 @@ if (trackerDropdownOpen) {
         if (inside(logicalMouseX, logicalMouseY,
                 doneX, buttonY, contentRight - doneX, BUTTON_HEIGHT)) {
             awaitingNewSessionConfirm = false;
-            onClose();
+            navigateBack();
             return true;
         }
         awaitingNewSessionConfirm = false;
@@ -3195,7 +3148,9 @@ if (trackerDropdownOpen) {
         if (selectedModule == DashboardModule.SESSION_ANALYTICS) {
             analyticsScroll.reset();
         }
-        ensureSidebarReveals(selectedModule);
+        if (!skipSidebarReveal) {
+            ensureSidebarReveals(selectedModule);
+        }
         config.setSelectedDashboardModule(selectedModule);
         RotClientWorkspace workspace = RotClientClient.workspace();
         RotClientWorkspaceRoute route =
@@ -3215,6 +3170,97 @@ if (trackerDropdownOpen) {
         ensureSidebarRevealsQol();
     }
 
+    private void selectQolPageFromUser(QolUtilityCatalog.Group group) {
+        pushThen(() -> selectQolPage(group));
+    }
+
+    void openTrackedPage(DashboardModule module) {
+        pushThen(() -> selectModule(module));
+    }
+
+    void openQolCatalogModule(String moduleId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        if (module == null) {
+            return;
+        }
+        pushThen(() -> {
+            selectQolPage(module.group());
+            qolDashboard.openModule(moduleId);
+        });
+    }
+
+    void openQolCatalogHud(String moduleId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        if (module == null) {
+            return;
+        }
+        pushThen(() -> {
+            selectQolPage(module.group());
+            qolDashboard.openHudSettings(moduleId);
+        });
+    }
+
+    void openAppearanceLanding() {
+        pushThen(() -> {
+            selectVisualsChild(RotClientSidebarNav.HitTarget.APPEARANCE);
+            qolDashboard.openAppearanceLanding();
+        });
+    }
+
+    void openHudLayoutLanding() {
+        pushThen(() -> {
+            selectVisualsChild(RotClientSidebarNav.HitTarget.HUD_LAYOUT);
+            qolDashboard.openHudLayoutLanding();
+        });
+    }
+
+    private void selectVisualsChild(RotClientSidebarNav.HitTarget target) {
+        skipSidebarReveal = true;
+        try {
+            selectModule(DashboardModule.QOL_SETTINGS);
+        } finally {
+            skipSidebarReveal = false;
+        }
+        ensureSidebarRevealsVisuals(target);
+    }
+
+    void openAppearanceCustomizer() {
+        openAppearanceCustomizer(RotClientAppearanceScreen.Section.OVERVIEW);
+    }
+
+    void openAppearanceCustomizer(RotClientAppearanceScreen.Section section) {
+        Minecraft.getInstance().gui.setScreen(
+                new RotClientAppearanceScreen(this, config, hud, section));
+    }
+
+    private void ensureSidebarRevealsVisuals(RotClientSidebarNav.HitTarget target) {
+        if (target != RotClientSidebarNav.HitTarget.APPEARANCE
+                && target != RotClientSidebarNav.HitTarget.HUD_LAYOUT) {
+            return;
+        }
+        RotClientWorkspace workspace = RotClientClient.workspace();
+        if (!RotClientSidebarNav.isExpanded(
+                workspace.expandedSidebarSections(),
+                RotClientSidebarNav.SECTION_SETTINGS)) {
+            workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_SETTINGS);
+        }
+        RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
+                OVERVIEW_MODULE_Y,
+                workspace.expandedSidebarSections());
+        int viewportHeight = sidebarViewportHeight();
+        int contentHeight = layout.contentHeight(OVERVIEW_MODULE_Y);
+        sidebarScroll.setBounds(contentHeight, viewportHeight);
+        int top = RotClientSidebarNav.targetTop(layout, target);
+        int bottom = top + RotClientSidebarNav.targetHeight(target);
+        int next = RotClientSidebarNav.scrollToReveal(
+                sidebarScroll.scrollPixels(),
+                viewportHeight,
+                contentHeight,
+                Math.max(0, top - OVERVIEW_MODULE_Y),
+                Math.max(0, bottom - OVERVIEW_MODULE_Y));
+        sidebarScroll.setScrollPixels(next);
+    }
+
     private void ensureSidebarRevealsQol() {
         RotClientWorkspace workspace = RotClientClient.workspace();
         if (!RotClientSidebarNav.isExpanded(
@@ -3225,9 +3271,7 @@ if (trackerDropdownOpen) {
         RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
                 OVERVIEW_MODULE_Y,
                 workspace.expandedSidebarSections());
-        int viewportHeight = Math.max(0,
-                (panelH() - HOME_BUTTON_Y_OFFSET - 10)
-                        - (CHROME_HEIGHT));
+        int viewportHeight = sidebarViewportHeight();
         RotClientSidebarNav.HitTarget target =
                 RotClientSidebarNav.hitTargetForQolGroup(qolDashboard.activePage());
         int top = RotClientSidebarNav.targetTop(layout, target);
@@ -3243,15 +3287,20 @@ if (trackerDropdownOpen) {
 
     private void reclampSidebarScroll() {
         RotClientSidebarNav.Layout layout = sidebarLayout(false);
-        int viewportHeight = Math.max(0,
-                (panelH() - HOME_BUTTON_Y_OFFSET - 10)
-                        - (CHROME_HEIGHT));
+        int viewportHeight = sidebarViewportHeight();
         sidebarScroll.setBounds(
                 layout.contentHeight(OVERVIEW_MODULE_Y),
                 viewportHeight);
     }
 
     private void ensureSidebarReveals(DashboardModule module) {
+        if (qolDashboard.appearanceLanding() || qolDashboard.hudLayoutLanding()) {
+            ensureSidebarRevealsVisuals(
+                    qolDashboard.hudLayoutLanding()
+                            ? RotClientSidebarNav.HitTarget.HUD_LAYOUT
+                            : RotClientSidebarNav.HitTarget.APPEARANCE);
+            return;
+        }
         RotClientWorkspace workspace = RotClientClient.workspace();
         String section = RotClientSidebarNav.sectionForModule(module);
         if (section != null
@@ -3262,9 +3311,7 @@ if (trackerDropdownOpen) {
         RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
                 OVERVIEW_MODULE_Y,
                 workspace.expandedSidebarSections());
-        int viewportHeight = Math.max(0,
-                (panelH() - HOME_BUTTON_Y_OFFSET - 10)
-                        - (CHROME_HEIGHT));
+        int viewportHeight = sidebarViewportHeight();
         int contentHeight = layout.contentHeight(OVERVIEW_MODULE_Y);
         sidebarScroll.setBounds(contentHeight, viewportHeight);
         RotClientSidebarNav.HitTarget target =
@@ -3284,6 +3331,7 @@ if (trackerDropdownOpen) {
     }
 
     private void syncSelectedModuleFromWorkspace() {
+        navStack.clear();
         selectedModule = RotClientClient.workspace().activeRoute().toDashboardModule();
         if (selectedModule == DashboardModule.SESSION_ANALYTICS) {
             analyticsScroll.reset();
@@ -3292,17 +3340,12 @@ if (trackerDropdownOpen) {
             config.setSelectedDashboardModule(selectedModule);
             RotClientClient.save();
         }
-    }
-
-    private void openAppearanceCustomizer() {
-        openAppearanceCustomizer(RotClientAppearanceScreen.Section.OVERVIEW);
-    }
-
-    private void openAppearanceCustomizer(RotClientAppearanceScreen.Section section) {
-        RotClientClient.workspace().navigateActive(
-                RotClientWorkspaceRoute.APPEARANCE_OVERVIEW);
-        Minecraft.getInstance().gui.setScreen(
-                new RotClientAppearanceScreen(this, config, hud, section));
+        restoringNav = true;
+        try {
+            qolDashboard.restoreFromWorkspace(RotClientClient.workspace().activeTab());
+        } finally {
+            restoringNav = false;
+        }
     }
 
     private void activateSettingsEntry(RotClientSettingsIndex.Entry entry) {
@@ -3352,11 +3395,14 @@ if (trackerDropdownOpen) {
                     openAppearanceCustomizer(
                             RotClientAppearanceScreen.Section.RESET);
                 } else {
-                    openAppearanceCustomizer();
+                    openAppearanceLanding();
                 }
             }
             case MINING_TRACKER -> {
-                if (RotClientSettingsIndex.isHudVisibilityToggle(entry.id())) {
+                openQolCatalogHud(MiningTrackerCatalogPolicy.TRACKER);
+                if (RotClientSettingsIndex.isHudVisibilityToggle(entry.id())
+                        || !MiningTrackerCatalogPolicy.catalogIdForLegacyHudToggle(
+                                entry.id()).isBlank()) {
                     highlightSettingId = entry.id();
                     highlightUntilMillis = System.currentTimeMillis() + 4_000L;
                 } else {
@@ -3400,7 +3446,7 @@ if (trackerDropdownOpen) {
                 graphics, contentLeft, cardY, contentRight - contentLeft, cardHeight, true);
         RotClientUiDraw.text(graphics, font, "Appearance",
                 contentLeft + 16, cardY + 18, RotClientTheme.TEXT, true);
-        RotClientUiDraw.text(graphics, font, "Open the Appearance customizer for this tab.",
+        RotClientUiDraw.text(graphics, font, "Open the Appearance submenu from Modules.",
                 contentLeft + 16, cardY + 38, RotClientTheme.TEXT_MUTED, false);
         drawButton(graphics, mouseX, mouseY,
                 contentLeft + 16, cardY + 70, 168,
@@ -3439,16 +3485,84 @@ if (trackerDropdownOpen) {
         return event.hasShiftDown();
     }
 
-    private void openOverview() {
-        if (selectedModule == DashboardModule.NONE) {
-            onClose();
-            return;
-        }
+    private void goHome() {
+        navStack.clear();
+        qolDashboard.closeDrawer();
+        qolDashboard.closeLandings();
         selectModule(DashboardModule.NONE);
     }
 
     private void openHome() {
-        openOverview();
+        goHome();
+    }
+
+    private DashboardNavStack.Frame currentNavFrame() {
+        return new DashboardNavStack.Frame(
+                selectedModule.id(),
+                selectedModule == DashboardModule.QOL_SETTINGS
+                        ? qolDashboard.activePage().name()
+                        : "",
+                selectedModule == DashboardModule.QOL_SETTINGS
+                        ? qolDashboard.openModuleId()
+                        : "",
+                qolDashboard.appearanceLanding(),
+                qolDashboard.hudLayoutLanding());
+    }
+
+    private void pushThen(Runnable navigation) {
+        if (navigation == null) {
+            return;
+        }
+        if (!restoringNav && !openInNewTabGesture) {
+            navStack.push(currentNavFrame());
+        }
+        navigation.run();
+    }
+
+    private void restoreNavFrame(DashboardNavStack.Frame frame) {
+        if (frame == null) {
+            goHome();
+            return;
+        }
+        restoringNav = true;
+        try {
+            qolDashboard.closeDrawer();
+            DashboardModule module = DashboardModule.fromId(frame.moduleId(), false);
+            selectModule(module);
+            if (module == DashboardModule.QOL_SETTINGS) {
+                if (!frame.qolGroup().isBlank()) {
+                    qolDashboard.setActivePage(
+                            QolUtilityCatalog.Group.fromId(frame.qolGroup()));
+                }
+                if (frame.hudLayoutLanding()) {
+                    qolDashboard.openHudLayoutLanding();
+                } else if (frame.appearanceLanding()) {
+                    qolDashboard.openAppearanceLanding();
+                } else if (!frame.focusId().isBlank()) {
+                    qolDashboard.openModule(frame.focusId());
+                } else {
+                    qolDashboard.closeLandings();
+                }
+            } else {
+                qolDashboard.closeLandings();
+            }
+        } finally {
+            restoringNav = false;
+        }
+    }
+
+    private boolean isOverviewHome() {
+        return selectedModule == DashboardModule.NONE
+                && !qolDashboard.appearanceLanding()
+                && !qolDashboard.hudLayoutLanding();
+    }
+
+    private void pulseBackEdge() {
+        backEdgePulseUntilMillis = System.currentTimeMillis() + BACK_EDGE_PULSE_MS;
+    }
+
+    void navigateDashboardBack() {
+        navigateBack();
     }
 
     private void drawButton(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
@@ -3712,6 +3826,12 @@ private void drawTrackerDropdown(
             return true;
         }
 
+        int[] back = pageBackBounds(panelX, panelY);
+        if (RotClientUiDraw.hitBackButton(mx, my, back[0], back[1])) {
+            navigateBack();
+            return true;
+        }
+
         int[] box = omniboxBounds(panelX, panelY);
         if (inside(logicalMouseX, logicalMouseY, box[0], box[1], box[2], box[3])) {
             settingsSearchFocused = true;
@@ -3773,11 +3893,42 @@ private void drawTrackerDropdown(
         return Double.isFinite(livePanelY) ? livePanelY : panelY();
     }
 
-    private int[] omniboxBounds(int panelX, int panelY) {
+    private int[] pageBackBounds(int panelX, int panelY) {
+        int[] box = omniboxBounds(panelX, panelY);
         return new int[] {
-                panelX + 216,
+                panelX + SIDEBAR_WIDTH + 8,
+                box[1] - 2
+        };
+    }
+
+    private void navigateBack() {
+        if (trackerDropdownOpen) {
+            closeTrackerDropdown();
+            return;
+        }
+        if (selectedModule == DashboardModule.QOL_SETTINGS
+                && qolDashboard.isDrawerOpen()) {
+            qolDashboard.closeDrawer();
+            return;
+        }
+        DashboardNavStack.Frame previous = navStack.pop();
+        if (previous != null) {
+            restoreNavFrame(previous);
+            return;
+        }
+        if (!isOverviewHome()) {
+            goHome();
+            return;
+        }
+        pulseBackEdge();
+    }
+
+    private int[] omniboxBounds(int panelX, int panelY) {
+        int x = panelX + SIDEBAR_WIDTH + 8 + RotClientUiDraw.BACK_BUTTON_WIDTH + 8;
+        return new int[] {
+                x,
                 RotClientDashboardLayout.omniboxY(panelY) + 4,
-                Math.max(120, panelW() - 228),
+                Math.max(120, panelW() - (x - panelX) - 12),
                 RotClientDashboardLayout.OMNIBOX_HEIGHT - 8
         };
     }
@@ -3789,6 +3940,16 @@ private void drawTrackerDropdown(
             int mouseX,
             int mouseY) {
         int[] box = omniboxBounds(panelX, panelY);
+        int[] back = pageBackBounds(panelX, panelY);
+        int backDrawX = back[0];
+        long now = System.currentTimeMillis();
+        if (now < backEdgePulseUntilMillis) {
+            double elapsed = BACK_EDGE_PULSE_MS - (backEdgePulseUntilMillis - now);
+            double wave = Math.sin((elapsed / (double) BACK_EDGE_PULSE_MS) * Math.PI);
+            backDrawX += (int) Math.round(wave * 6.0D);
+        }
+        RotClientUiDraw.drawBackButton(
+                graphics, font, mouseX, mouseY, backDrawX, back[1]);
         int brandX = panelX + 12;
         int brandY = box[1] + 5;
         RotClientUiDraw.text(graphics, font, "ROT", brandX, brandY, RotClientTheme.HUD_ACCENT, false);
@@ -3856,6 +4017,14 @@ private void drawTrackerDropdown(
                 preview.right(),
                 preview.bottom(),
                 RotClientUiDraw.withAlpha(RotClientTheme.HUD_ACCENT, 0x44));
+    }
+
+    private int sidebarBottomY(int panelY) {
+        return panelY + panelH() - SIDEBAR_BOTTOM_INSET;
+    }
+
+    private int sidebarViewportHeight() {
+        return Math.max(0, (panelH() - SIDEBAR_BOTTOM_INSET) - CHROME_HEIGHT);
     }
 
     private int actionRowY() {

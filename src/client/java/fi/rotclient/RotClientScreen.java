@@ -37,7 +37,7 @@ final class RotClientScreen extends Screen {
     private HudEditorChromePolicy.Panel chromeDragging;
     private int chromeDragOffsetX;
     private int chromeDragOffsetY;
-    private int inspectorScroll;
+    private final HudEditorVisibilityUndo visibilityUndo = new HudEditorVisibilityUndo();
 
     RotClientScreen(RotClientHud hud) {
         this(hud, null, "");
@@ -54,7 +54,11 @@ final class RotClientScreen extends Screen {
         this.qolHud = RotClientClient.qolHud();
         this.parent = parent;
         this.initialFocusId = focusId == null ? "" : focusId.trim();
-        if (!this.initialFocusId.isEmpty()) {
+        if ("mining_tracker".equals(this.initialFocusId)) {
+            this.target = LayoutTarget.MINING_HUD;
+        } else if ("powder_chest".equals(this.initialFocusId)) {
+            this.target = LayoutTarget.POWDER_CHEST_HUD;
+        } else if (!this.initialFocusId.isEmpty()) {
             this.target = LayoutTarget.QOL_HUD;
         }
     }
@@ -64,7 +68,11 @@ final class RotClientScreen extends Screen {
         hud.setEditorOpen(true);
         powderHud.setEditorOpen(true);
         qolHud.setEditorOpen(true);
-        qolHud.setFocusId(initialFocusId);
+        if (target == LayoutTarget.QOL_HUD) {
+            qolHud.setFocusId(initialFocusId);
+        } else {
+            qolHud.setFocusId("");
+        }
         hud.clampToScreen();
         powderHud.clampToScreen();
     }
@@ -100,34 +108,34 @@ final class RotClientScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         int mx = (int) Math.round(mouseX);
         int my = (int) Math.round(mouseY);
-        boolean hoverHud = hud.containsScreen(mouseX, mouseY);
-        boolean hoverPowderHud = powderHud.containsScreen(mouseX, mouseY);
+        boolean hoverHud = HudEditorPreviewPolicy.showMiningTracker(
+                RotClientClient.trackerConfig().enabled)
+                && hud.containsScreen(mouseX, mouseY);
+        boolean hoverPowderHud = HudEditorPreviewPolicy.showPowderChest(
+                RotClientClient.trackerConfig().powderChestHudEnabled)
+                && powderHud.containsScreen(mouseX, mouseY);
         boolean hoverUi = RotClientUiDraw.inside(
                 mx, my, clientUiGhostX(), clientUiGhostY(),
                 CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT);
 
         drawClientUiGhost(graphics, hoverUi);
-        drawHudEditorChrome(graphics, hoverHud);
-        drawPowderHudEditorChrome(graphics, hoverPowderHud);
+        TrackerConfig tracker = RotClientClient.trackerConfig();
+        if (HudEditorPreviewPolicy.showMiningTracker(tracker.enabled)) {
+            drawHudEditorChrome(graphics, hoverHud);
+        }
+        if (HudEditorPreviewPolicy.showPowderChest(tracker.powderChestHudEnabled)) {
+            drawPowderHudEditorChrome(graphics, hoverPowderHud);
+        }
         qolHud.render(graphics);
+
+        RotClientUiDraw.drawBackButton(graphics, font, mx, my, 12, 12);
 
         String selected = selectedLabel();
         HudEditorChromePolicy.Rect title = chromeRect(HudEditorChromePolicy.Panel.TITLE);
-        drawMovableChromeCard(
-                graphics,
-                title,
-                "LAYOUT EDITOR",
-                "Selected: " + selected,
-                mx,
-                my);
-        HudEditorChromePolicy.Rect help = chromeRect(HudEditorChromePolicy.Panel.HELP);
-        drawHelpCard(graphics, help, mx, my);
-        drawInspector(graphics, mx, my);
+        drawEditorChromeCard(graphics, title, selected, mx, my);
 
         super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
-
-    private static final int INSPECTOR_WIDTH = HudEditorChromePolicy.INSPECTOR_WIDTH;
 
     private String selectedLabel() {
         return switch (target) {
@@ -175,11 +183,10 @@ final class RotClientScreen extends Screen {
         }
     }
 
-    private void drawMovableChromeCard(
+    private void drawEditorChromeCard(
             GuiGraphicsExtractor graphics,
             HudEditorChromePolicy.Rect rect,
-            String title,
-            String subtitle,
+            String selected,
             int mouseX,
             int mouseY) {
         boolean hover = rect.contains(mouseX, mouseY);
@@ -197,11 +204,18 @@ final class RotClientScreen extends Screen {
                 rect.x() + rect.w(),
                 rect.y() + rect.h(),
                 hover ? RotClientTheme.HUD_ACCENT : RotClientTheme.BORDER);
-        RotClientUiDraw.text(graphics, font, title, rect.x() + 10, rect.y() + 8, RotClientTheme.TEXT, true);
         RotClientUiDraw.text(
                 graphics,
                 font,
-                subtitle,
+                "HUD ELEMENTS EDITOR",
+                rect.x() + 10,
+                rect.y() + 8,
+                RotClientTheme.TEXT,
+                true);
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Selected: " + selected,
                 rect.x() + 10,
                 rect.y() + 22,
                 RotClientTheme.TEXT_DIM,
@@ -209,147 +223,17 @@ final class RotClientScreen extends Screen {
         RotClientUiDraw.text(
                 graphics,
                 font,
-                "Drag this card",
+                "How to edit",
                 rect.x() + 10,
-                rect.y() + 36,
-                RotClientTheme.TEXT_MUTED,
-                false);
-    }
-
-    private void drawHelpCard(
-            GuiGraphicsExtractor graphics,
-            HudEditorChromePolicy.Rect rect,
-            int mouseX,
-            int mouseY) {
-        boolean hover = rect.contains(mouseX, mouseY);
-        RotClientUiDraw.roundedFill(
-                graphics,
-                rect.x(),
-                rect.y(),
-                rect.x() + rect.w(),
-                rect.y() + rect.h(),
-                RotClientUiDraw.withAlpha(RotClientTheme.SURFACE, 0xF0));
-        RotClientUiDraw.roundedOutline(
-                graphics,
-                rect.x(),
-                rect.y(),
-                rect.x() + rect.w(),
-                rect.y() + rect.h(),
-                hover ? RotClientTheme.HUD_ACCENT : RotClientTheme.BORDER);
-        RotClientUiDraw.text(graphics, font, "How to edit", rect.x() + 10, rect.y() + 8, RotClientTheme.TEXT, true);
-        int row = rect.y() + 22;
+                rect.y() + 38,
+                RotClientTheme.TEXT,
+                true);
+        int row = rect.y() + 52;
         for (String line : HudEditorChromePolicy.helpLines()) {
-            RotClientUiDraw.text(graphics, font, line, rect.x() + 10, row, RotClientTheme.TEXT_DIM, false);
+            RotClientUiDraw.text(
+                    graphics, font, line, rect.x() + 10, row, RotClientTheme.TEXT_DIM, false);
             row += 12;
         }
-    }
-
-    private int inspectorX() {
-        return chromeRect(HudEditorChromePolicy.Panel.INSPECTOR).x();
-    }
-
-    private int inspectorY() {
-        return chromeRect(HudEditorChromePolicy.Panel.INSPECTOR).y();
-    }
-
-    private int inspectorHeight() {
-        return chromeRect(HudEditorChromePolicy.Panel.INSPECTOR).h();
-    }
-
-    private void drawInspector(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        int x = inspectorX();
-        int y = inspectorY();
-        int w = INSPECTOR_WIDTH;
-        int h = inspectorHeight();
-        RotClientUiDraw.roundedFill(
-                graphics, x, y, x + w, y + h, RotClientUiDraw.withAlpha(RotClientTheme.SURFACE, 0xF0));
-        RotClientUiDraw.roundedOutline(graphics, x, y, x + w, y + h, RotClientTheme.BORDER);
-        RotClientUiDraw.text(graphics, font, "HUD inspector", x + 10, y + 8, RotClientTheme.TEXT, true);
-        RotClientUiDraw.text(graphics, font, "Drag header to move", x + 10, y + 20, RotClientTheme.TEXT_MUTED, false);
-        String selected = selectedLabel();
-        RotClientUiDraw.text(graphics, font, selected, x + 10, y + 32, RotClientTheme.TEXT_DIM, false);
-        int row = y + 50;
-        String bgLabel = selectedBackgroundOn() ? "Background" : "Text only";
-        drawInspectorButton(graphics, x + 10, row, 100, 18, bgLabel, mouseX, mouseY);
-        drawInspectorButton(graphics, x + 116, row, 100, 18, "Scale +", mouseX, mouseY);
-        row += 22;
-        drawInspectorButton(graphics, x + 10, row, 100, 18, "Text color", mouseX, mouseY);
-        drawInspectorButton(graphics, x + 116, row, 100, 18, "Scale -", mouseX, mouseY);
-        row += 22;
-        drawInspectorButton(graphics, x + 10, row, 206, 18, "Panel color", mouseX, mouseY);
-        row += 26;
-        int listTop = row;
-        int listBottom = y + h - 18;
-        java.util.List<InspectorRow> rows = inspectorRows();
-        int content = rows.size() * 12;
-        int viewport = Math.max(12, listBottom - listTop);
-        inspectorScroll = Math.max(0, Math.min(inspectorScroll, Math.max(0, content - viewport)));
-        int drawY = listTop - inspectorScroll;
-        for (InspectorRow entry : rows) {
-            if (drawY + 12 > listTop && drawY < listBottom) {
-                if (entry.heading()) {
-                    RotClientUiDraw.text(graphics, font, entry.label(), x + 10, drawY, RotClientTheme.TEXT_MUTED, false);
-                } else {
-                    boolean enabled = HudLayerTogglePolicy.isOn(
-                            RotClientClient.qolConfigPublic(), entry.settingId(), entry.moduleToggle());
-                    RotClientUiDraw.text(
-                            graphics,
-                            font,
-                            (enabled ? "[ON]  " : "[off] ") + entry.label(),
-                            x + 10,
-                            drawY,
-                            enabled ? RotClientTheme.SUCCESS : RotClientTheme.TEXT_MUTED,
-                            false);
-                }
-            }
-            drawY += 12;
-        }
-        RotClientUiDraw.text(graphics, font,
-                "Scroll list  ·  drag header to move",
-                x + 10,
-                y + h - 16,
-                RotClientTheme.TEXT_MUTED,
-                false);
-    }
-
-    private record InspectorRow(String settingId, String label, boolean heading, boolean moduleToggle) {
-    }
-
-    private java.util.List<InspectorRow> inspectorRows() {
-        java.util.ArrayList<InspectorRow> rows = new java.util.ArrayList<>();
-        rows.add(new InspectorRow("", "Vanilla / Hypixel HUD", true, false));
-        for (HudLayerCatalog.Layer layer : HudLayerCatalog.vanillaLayers()) {
-            rows.add(new InspectorRow(layer.settingId(), layer.label(), false, false));
-        }
-        rows.add(new InspectorRow("", "Rot overlays", true, false));
-        for (HudLayerCatalog.Layer layer : HudLayerCatalog.rotOverlays()) {
-            rows.add(new InspectorRow(layer.settingId(), layer.label(), false, layer.moduleToggle()));
-        }
-        java.util.List<HudElementCatalog.InspectorToggle> bits =
-                target == LayoutTarget.QOL_HUD
-                        ? HudElementCatalog.inspectorToggles(qolHud.selectedId())
-                        : java.util.List.of();
-        if (!bits.isEmpty()) {
-            rows.add(new InspectorRow("", "Selected HUD bits", true, false));
-            for (HudElementCatalog.InspectorToggle toggle : bits) {
-                rows.add(new InspectorRow(toggle.settingId(), toggle.label(), false, false));
-            }
-        }
-        return rows;
-    }
-
-    private boolean selectedBackgroundOn() {
-        if (target == LayoutTarget.MINING_HUD) {
-            return RotClientClient.trackerConfig().hudShowBackground;
-        }
-        if (target == LayoutTarget.POWDER_CHEST_HUD) {
-            return RotClientClient.trackerConfig().powderChestHudShowBackground;
-        }
-        if (target == LayoutTarget.QOL_HUD) {
-            return RotClientClient.qolConfigPublic().extras()
-                    .resolvedHudStyle(qolHud.selectedId()).showBackground;
-        }
-        return true;
     }
 
     private void toggleSelectedBackground() {
@@ -369,93 +253,6 @@ final class RotClientScreen extends Screen {
             qolHud.toggleSelectedBackground();
             RotClientClient.save();
         }
-    }
-
-    private void drawInspectorButton(
-            GuiGraphicsExtractor graphics,
-            int x,
-            int y,
-            int w,
-            int h,
-            String label,
-            int mouseX,
-            int mouseY) {
-        boolean hover = RotClientUiDraw.inside(mouseX, mouseY, x, y, w, h);
-        RotClientUiDraw.roundedFill(
-                graphics,
-                x,
-                y,
-                x + w,
-                y + h,
-                hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON);
-        RotClientUiDraw.text(graphics, font, label, x + 6, y + 5, RotClientTheme.BUTTON_TEXT, false);
-    }
-
-    private boolean handleInspectorClick(int mx, int my) {
-        int x = inspectorX();
-        int y = inspectorY();
-        if (!RotClientUiDraw.inside(mx, my, x, y, INSPECTOR_WIDTH, inspectorHeight())) {
-            return false;
-        }
-        int row = y + 50;
-        if (RotClientUiDraw.inside(mx, my, x + 10, row, 100, 18)) {
-            toggleSelectedBackground();
-            return true;
-        }
-        if (RotClientUiDraw.inside(mx, my, x + 116, row, 100, 18)) {
-            if (target == LayoutTarget.QOL_HUD) {
-                qolHud.nudgeSelectedScale(0.1F);
-            } else if (target == LayoutTarget.MINING_HUD) {
-                hud.nudgeScale(0.1F);
-            } else if (target == LayoutTarget.POWDER_CHEST_HUD) {
-                powderHud.nudgeScale(0.1F);
-            }
-            RotClientClient.save();
-            return true;
-        }
-        row += 22;
-        if (RotClientUiDraw.inside(mx, my, x + 10, row, 100, 18)) {
-            if (target == LayoutTarget.QOL_HUD) {
-                openSelectedHudColor(false);
-            }
-            return true;
-        }
-        if (RotClientUiDraw.inside(mx, my, x + 116, row, 100, 18)) {
-            if (target == LayoutTarget.QOL_HUD) {
-                qolHud.nudgeSelectedScale(-0.1F);
-            } else if (target == LayoutTarget.MINING_HUD) {
-                hud.nudgeScale(-0.1F);
-            } else if (target == LayoutTarget.POWDER_CHEST_HUD) {
-                powderHud.nudgeScale(-0.1F);
-            }
-            RotClientClient.save();
-            return true;
-        }
-        row += 22;
-        if (RotClientUiDraw.inside(mx, my, x + 10, row, 206, 18)) {
-            if (target == LayoutTarget.QOL_HUD) {
-                openSelectedHudColor(true);
-            }
-            return true;
-        }
-        row += 26;
-        int listTop = row;
-        int listBottom = y + inspectorHeight() - 18;
-        java.util.List<InspectorRow> rows = inspectorRows();
-        int drawY = listTop - inspectorScroll;
-        for (InspectorRow entry : rows) {
-            if (!entry.heading()
-                    && drawY >= listTop
-                    && drawY < listBottom
-                    && RotClientUiDraw.inside(mx, my, x + 10, drawY, INSPECTOR_WIDTH - 20, 12)
-                    && HudLayerTogglePolicy.toggle(
-                            RotClientClient.qolConfigPublic(), entry.settingId(), entry.moduleToggle())) {
-                RotClientClient.save();
-                return true;
-            }
-            drawY += 12;
-        }
-        return true;
     }
 
     private void drawClientUiGhost(GuiGraphicsExtractor graphics, boolean hovered) {
@@ -538,6 +335,18 @@ final class RotClientScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Z && event.hasShiftDown()) {
+            applyVisibilityRedo();
+            return true;
+        }
+        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Z) {
+            applyVisibilityUndo();
+            return true;
+        }
+        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Y) {
+            applyVisibilityRedo();
+            return true;
+        }
         if (key == GLFW.GLFW_KEY_1) {
             target = LayoutTarget.MINING_HUD;
             return true;
@@ -646,28 +455,22 @@ final class RotClientScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int mx = (int) Math.round(event.x());
+        int my = (int) Math.round(event.y());
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            return handleEditorRightClick(mx, my);
+        }
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return super.mouseClicked(event, doubleClick);
         }
 
-        int mx = (int) Math.round(event.x());
-        int my = (int) Math.round(event.y());
-        HudEditorChromePolicy.Rect inspector = chromeRect(HudEditorChromePolicy.Panel.INSPECTOR);
-        if (inspector.containsHeader(mx, my, HudEditorChromePolicy.INSPECTOR_HEADER_HEIGHT)) {
-            beginChromeDrag(HudEditorChromePolicy.Panel.INSPECTOR, mx, my);
-            return true;
-        }
-        if (handleInspectorClick(mx, my)) {
+        if (RotClientUiDraw.hitBackButton(mx, my, 12, 12)) {
+            onClose();
             return true;
         }
         HudEditorChromePolicy.Rect title = chromeRect(HudEditorChromePolicy.Panel.TITLE);
         if (title.contains(mx, my)) {
             beginChromeDrag(HudEditorChromePolicy.Panel.TITLE, mx, my);
-            return true;
-        }
-        HudEditorChromePolicy.Rect help = chromeRect(HudEditorChromePolicy.Panel.HELP);
-        if (help.contains(mx, my)) {
-            beginChromeDrag(HudEditorChromePolicy.Panel.HELP, mx, my);
             return true;
         }
         if (qolHud.beginDrag(event.x(), event.y())) {
@@ -700,6 +503,85 @@ final class RotClientScreen extends Screen {
             return true;
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    private boolean handleEditorRightClick(int mx, int my) {
+        if (RotClientUiDraw.hitBackButton(mx, my, 12, 12)) {
+            onClose();
+            return true;
+        }
+        HudEditorChromePolicy.Rect title = chromeRect(HudEditorChromePolicy.Panel.TITLE);
+        if (title.contains(mx, my)) {
+            return true;
+        }
+        if (RotClientUiDraw.inside(
+                mx, my, clientUiGhostX(), clientUiGhostY(),
+                CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT)) {
+            target = LayoutTarget.CLIENT_UI;
+            return true;
+        }
+        String qolId = qolHud.elementAt(mx, my);
+        if (qolId != null && !qolId.isBlank()) {
+            HudLayoutLandingPolicy.Disable spec = HudLayoutLandingPolicy.disableForPose(qolId);
+            if (spec != null
+                    && HudLayoutLandingPolicy.hide(
+                            RotClientClient.qolConfigPublic(), spec.settingId(), spec.moduleToggle())) {
+                visibilityUndo.pushHide(
+                        HudEditorVisibilityUndo.Entry.qol(spec.settingId(), spec.moduleToggle()));
+                RotClientClient.save();
+            }
+            target = LayoutTarget.QOL_HUD;
+            return true;
+        }
+        if (powderHud.containsScreen(mx, my)) {
+            if (RotClientClient.trackerConfig().powderChestHudEnabled) {
+                visibilityUndo.pushHide(HudEditorVisibilityUndo.Entry.powderChest());
+                RotClientClient.setPowderChestHudEnabled(false);
+            }
+            target = LayoutTarget.POWDER_CHEST_HUD;
+            return true;
+        }
+        if (hud.containsScreen(mx, my)) {
+            if (RotClientClient.trackerConfig().enabled) {
+                visibilityUndo.pushHide(HudEditorVisibilityUndo.Entry.miningTracker());
+                RotClientClient.setTrackerEnabled(false);
+            }
+            target = LayoutTarget.MINING_HUD;
+            return true;
+        }
+        return true;
+    }
+
+    private void applyVisibilityUndo() {
+        applyVisibilityEntry(visibilityUndo.undo(), true);
+    }
+
+    private void applyVisibilityRedo() {
+        applyVisibilityEntry(visibilityUndo.redo(), false);
+    }
+
+    private void applyVisibilityEntry(HudEditorVisibilityUndo.Entry entry, boolean restore) {
+        if (entry == null) {
+            return;
+        }
+        switch (entry.kind()) {
+            case MINING_TRACKER -> RotClientClient.setTrackerEnabled(restore);
+            case POWDER_CHEST -> RotClientClient.setPowderChestHudEnabled(restore);
+            case QOL -> {
+                if (restore) {
+                    HudLayerTogglePolicy.enable(
+                            RotClientClient.qolConfigPublic(),
+                            entry.settingId(),
+                            entry.moduleToggle());
+                } else {
+                    HudLayerTogglePolicy.disable(
+                            RotClientClient.qolConfigPublic(),
+                            entry.settingId(),
+                            entry.moduleToggle());
+                }
+                RotClientClient.save();
+            }
+        }
     }
 
     private void beginChromeDrag(HudEditorChromePolicy.Panel panel, int mouseX, int mouseY) {
@@ -782,9 +664,10 @@ final class RotClientScreen extends Screen {
         }
         int mx = (int) Math.round(mouseX);
         int my = (int) Math.round(mouseY);
-        HudEditorChromePolicy.Rect inspector = chromeRect(HudEditorChromePolicy.Panel.INSPECTOR);
-        if (inspector.contains(mx, my)) {
-            inspectorScroll = Math.max(0, inspectorScroll - (int) Math.round(verticalAmount * 18.0D));
+        if (chromeRect(HudEditorChromePolicy.Panel.TITLE).contains(mx, my)
+                || RotClientUiDraw.inside(
+                        mx, my, clientUiGhostX(), clientUiGhostY(),
+                        CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT)) {
             return true;
         }
         if (qolHud.onScroll(mouseX, mouseY, verticalAmount)) {

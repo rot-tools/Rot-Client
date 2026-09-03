@@ -13,7 +13,7 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All 119 current catalog entries are wired and automated-tested. The group-wide
+All 124 current catalog entries are wired and automated-tested. The group-wide
 runtime matrix is still pending, so this table intentionally does not claim
 that every option is release-ready.
 
@@ -21,16 +21,19 @@ that every option is release-ready.
 
 | Group | Modules | Current evidence |
 | --- | --- | --- |
-| Combat | Auto Clicker; Hide Players; Trajectories; Etherwarp; Auto Dojo; Diana Burrows; Diana Mobs; Diana Profit; Diana Share; Mob Highlight | Wired · automated tested · runtime matrix pending |
+| Combat | Auto Clicker; Hide Players; Trajectories; Etherwarp; Auto Dojo; Mob Highlight | Wired · automated tested · runtime matrix pending |
+| Events | Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Dagger Swap; Enderman Laser Hider; Attunement Display; Auto Soulcry; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras | Wired · automated tested · runtime matrix pending |
-| Dungeons | Secret Hitboxes; Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Term Sim; Requeue; Puzzles; F7 Boss; Dungeon Menus (including overlay-only chest prize reel); Auto GFS; Auto Sell; Kuudra Tools | Wired · automated tested · runtime matrix pending |
-| Mining | World Scanner; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain | Wired · automated tested · runtime matrix pending |
+| Dungeons | Secret Hitboxes; Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Term Sim; Requeue; Puzzles; F7 Boss; Dungeon Menus (including overlay-only chest prize reel); Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
+| Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
+| Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; World Scanner; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
 | Foraging | Foraging Trees; Foraging Audio; Foraging Helpers; Foraging Cheats | Wired · automated tested · runtime matrix pending |
-| HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Missing Enchants; Info Tooltips; Price Tooltips; Custom Tooltip; Skill Levels | Wired · automated tested · runtime matrix pending |
+| Garden | Farm Keys | Wired · automated tested · runtime matrix pending |
+| HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance and HUD Elements Editor are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
 | Render | Fullbright; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Camera; Free Camera; Legacy SkyBlock Textures; Dark SkyBlock Pack | Wired · automated tested · runtime matrix pending |
-| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; HUD Layout Editor (vanilla/Hypixel hides + Rot overlay on/off); Custom Cursor; Click GUI | Wired · automated tested · runtime matrix pending |
-| Utilities | Hotkey Macros; Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Wardrobe Swapper; Chat Commands (including overlay-only Vanguard prize reel); Auto Conversation; No Cursor Reset; Auto Sprint; Inventory Walk; Farm Keys; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Auto Experiments; Auto Harp; Market Guard | Wired · automated tested · runtime matrix pending |
+| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; Auto Experiments; Auto Harp; No Cursor Reset; Click GUI | Wired · automated tested · runtime matrix pending |
+| Utilities | Hotkey Macros; Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Wardrobe Swapper; Chat Commands (including overlay-only Vanguard prize reel); Auto Conversation; Auto Sprint; Inventory Walk; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard | Wired · automated tested · runtime matrix pending |
 
 ## Fishing suite
 
@@ -48,13 +51,13 @@ World Scanner worm-lava spots stay on Mining (`qol.world_scanner.worm`).
 
 ## Kuudra Tools and Market Guard
 
-`qol.iota` — **Kuudra Tools** (Dungeons / Kuudra, parent default **off**). Provides Kuudra 3D waypoints and hitboxes, Fresh Tools and build HUDs, phase titles, party join/limbo alerts, `!` party commands (including `!t1`–`!t5`), an arrow tracker HUD, terminator/fishing-cast mutes, a fishing-hook fix, and optional toggle-left/right latch clicks. Bundled arena data uses Rot's own `rot.kuudra.*.v2` overlay schema (`pile_locations.json`, `pearl_waypoints.json`, `etherwarp_config.json`) drives the supply-crate, pile, pearl, build, stun-pod, ichor, hitbox, double-pearl, and etherwarp overlays. Child waypoint toggles default on but stay gated by the parent. Supply-progress timers read the title and subtitle. SkyBlock gating uses the shared scoreboard detector. `!chests` / `!runs` increment on `KUUDRA DOWN!` / `DEFEAT`; opening a Free/Paid Chest (slot 31 → `PAID/FREE CHEST REWARDS`) decrements the chest counter; slot 50/51 rerolls subtract live Kismet Feather / Wheel of Fate quotes (lore cost as fallback). `!profit` values a run against Rot's own Bazaar/BIN quotes (sell-order then lowest BIN, Mage key mats, 20% essence pet bonus, salvage to essence, lore-coin fallback). No websocket flipper is included. Run duration is persisted so the hourly rate survives a restart, and the session resets after 21 idle minutes.
+`qol.iota` — **Kuudra Tools** (Kuudra group, parent default **off**). Provides Kuudra 3D waypoints and hitboxes, Fresh Tools and build HUDs, phase titles, party join/limbo alerts, `!` party commands (including `!t1`–`!t5`), an arrow tracker HUD, terminator/fishing-cast mutes, a fishing-hook fix, and optional toggle-left/right latch clicks. Bundled arena data uses Rot's own `rot.kuudra.*.v2` overlay schema (`pile_locations.json`, `pearl_waypoints.json`, `etherwarp_config.json`) drives the supply-crate, pile, pearl, build, stun-pod, ichor, hitbox, double-pearl, and etherwarp overlays. Child waypoint toggles default on but stay gated by the parent. Supply-progress timers read the title and subtitle. SkyBlock gating uses the shared scoreboard detector. `!chests` / `!runs` increment on `KUUDRA DOWN!` / `DEFEAT`; opening a Free/Paid Chest (slot 31 → `PAID/FREE CHEST REWARDS`) decrements the chest counter; slot 50/51 rerolls subtract live Kismet Feather / Wheel of Fate quotes (lore cost as fallback). `!profit` values a run against Rot's own Bazaar/BIN quotes (sell-order then lowest BIN, Mage key mats, 20% essence pet bonus, salvage to essence, lore-coin fallback). No websocket flipper is included. Run duration is persisted so the hourly rate survives a restart, and the session resets after 21 idle minutes.
 
 `qol.stall_market` — **Market Guard** (Utilities / Market, parent default off). Local GUI only: Bazaar search (`/rot bazaarsearch` and a hovered-item bind), sell protection, angry co-op protection, a BIN overlay, and auction highlights versus the latest lowest BIN. Hovered-item search reads the hovered slot through an accessor mixin. No websocket flipper is included.
 
 ## Hotkey Macros
 
-`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) and runs backward-compatible macro logic on the same parent (catalog remains **119**). Custom macros are one line each: `KEY[+LIMIT] | message[,,message] | SEND/TYPE/EDIT/CYCLE/RANDOM/REPEAT | ASSERT/SUBMIT/VETO/AVOID | HOLD/VANILLA/RELEASE`. Placeholders (`%pos%`, `%x+3%`, `%clipboard%`, `%#regex%`, …), a 4-per-20-tick default rate limit, and a 256-character SEND cap are supported. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
+`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) and runs backward-compatible macro logic on the same parent (catalog remains **124**). Custom macros are one line each: `KEY[+LIMIT] | message[,,message] | SEND/TYPE/EDIT/CYCLE/RANDOM/REPEAT | ASSERT/SUBMIT/VETO/AVOID | HOLD/VANILLA/RELEASE`. Placeholders (`%pos%`, `%x+3%`, `%clipboard%`, `%#regex%`, …), a 4-per-20-tick default rate limit, and a 256-character SEND cap are supported. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
 
 ## Protocol and test scope
 

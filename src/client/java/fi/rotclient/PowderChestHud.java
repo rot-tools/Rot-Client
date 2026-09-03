@@ -27,7 +27,9 @@ final class PowderChestHud {
     }
 
     void render(GuiGraphicsExtractor graphics) {
-        if (!config.powderChestHudEnabled && !editorOpen) return;
+        if (!HudEditorPreviewPolicy.showPowderChest(config.powderChestHudEnabled)) {
+            return;
+        }
         PowderChestTrackerPresentation presentation =
                 RotClientClient.powderChestTrackerPresentation();
         List<PowderChestTrackerPresentation.RewardRow> rows = rows(presentation);
@@ -122,6 +124,9 @@ final class PowderChestHud {
     }
 
     boolean containsScreen(double mouseX, double mouseY) {
+        if (!HudEditorPreviewPolicy.showPowderChest(config.powderChestHudEnabled)) {
+            return false;
+        }
         return mouseX >= config.powderChestHudX
                 && mouseX <= config.powderChestHudX
                 + WIDTH * config.powderChestHudScale

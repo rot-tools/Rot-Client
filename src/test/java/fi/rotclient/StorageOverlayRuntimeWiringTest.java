@@ -15,7 +15,20 @@ class StorageOverlayRuntimeWiringTest {
         assertTrue(source.contains("Map<StorageOverlayPolicy.Page, CachedPage> visiblePages"));
         assertTrue(source.contains("SELECTOR_SLOTS.keySet()"));
         assertTrue(source.contains("new CachedPage(page, List.of(), 0)"));
-        assertTrue(source.contains("Open to preview"));
+        assertTrue(source.contains("slotRows"));
+        assertTrue(source.contains("Search items..."));
+        assertTrue(source.contains("highlightSearchMatches"));
+        assertTrue(source.contains("paintSearchOutline"));
+        assertTrue(source.contains("searchGlowPixel"));
+        assertTrue(source.contains("sawOverview"));
+        assertTrue(source.contains("drawSearchField"));
+        assertTrue(source.contains("drawCloseButton"));
+        assertTrue(source.contains("drawValueIcon"));
+        assertTrue(source.contains("clipSearchFromEnd"));
+        assertTrue(source.contains("scheduleSave"));
+        assertTrue(source.contains("texture"));
+        assertTrue(source.contains("closeOverlay"));
+        assertTrue(!source.contains("Open to preview"));
     }
 
     @Test
@@ -65,7 +78,7 @@ class StorageOverlayRuntimeWiringTest {
         String source = Files.readString(Path.of("src/client/java/fi/rotclient/StorageOverlayRuntime.java"));
 
         assertTrue(source.contains("boolean pageSearchMatch"));
-        assertTrue(source.contains("pageSearchMatch ? extras.storageOverlayHighlightColor"));
+        assertTrue(source.contains("pageSearchMatch ? RotClientTheme.VIOLET"));
     }
 
     @Test
@@ -85,6 +98,7 @@ class StorageOverlayRuntimeWiringTest {
         assertTrue(mixin.contains("StorageOverlayRuntime.shouldReplaceVanilla"));
         assertTrue(mixin.contains("hoveredSlot = StorageOverlayRuntime.hoveredSlot"));
         assertTrue(mixin.contains("rotclient$renderStorageReplacement"));
+        assertTrue(mixin.contains("ci.cancel()"));
         assertTrue(!mixin.contains("extractTransparentBackground"));
         String containerBackground = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/ContainerScreenStorageOverlayMixin.java"));
@@ -96,13 +110,73 @@ class StorageOverlayRuntimeWiringTest {
         String cursorResetMixin = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/GuiNoCursorResetMixin.java"));
         assertTrue(mixinsJson.contains("ContainerScreenStorageOverlayMixin"));
+        assertTrue(mixinsJson.contains("MouseHandlerStorageOverlayMixin"));
+        assertTrue(mixinsJson.contains("MouseHandlerCursorAccessor"));
         assertTrue(!source.contains("left - panelWidth"));
         assertTrue(mixinsJson.contains("SlotPositionAccessor"));
         assertTrue(!source.contains("rememberForNextScreen"));
         assertTrue(cursorResetMixin.contains("storageTransition"));
         assertTrue(cursorResetMixin.contains("NoCursorResetPolicy.DEFAULT_TIMEOUT_MS"));
-        assertTrue(source.contains("shouldNavigatePage"));
-        assertTrue(mixin.contains("hasShiftDown"));
-        assertTrue(mixin.contains("StorageOverlayRuntime.click"));
+        assertTrue(source.contains("RotClientUiDraw.drawScrollbar"));
+        assertTrue(source.contains("PAGE_SCROLL"));
+        assertTrue(source.contains("beginThumbDrag"));
+        assertTrue(source.contains("RotClientTheme.DASHBOARD_HEADER"));
+        assertTrue(mixin.contains("StorageOverlayRuntime.drag"));
+        assertTrue(mixin.contains("StorageOverlayRuntime.mouseReleased"));
+    }
+
+    @Test
+    void overlayKeepsKnownPagesAndClicksLiveSlotsWithoutRecentering() throws Exception {
+        String source = Files.readString(Path.of("src/client/java/fi/rotclient/StorageOverlayRuntime.java"));
+        String mixin = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"));
+        String guiMixin = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/GuiNoCursorResetMixin.java"));
+        String mouseMixin = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/MouseHandlerStorageOverlayMixin.java"));
+        String keyMixin = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/AbstractContainerScreenMenuKeybindMixin.java"));
+        String charMixin = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/KeyboardHandlerRingMixin.java"));
+        String client = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/RotClientClient.java"));
+        assertTrue(source.contains("shouldKeepExistingCache"));
+        assertTrue(source.contains("PAGE_FINGERPRINTS"));
+        assertTrue(source.contains("shouldSuppressOutsideClick"));
+        assertTrue(source.contains("shouldPinClosedContainer"));
+        assertTrue(source.contains("shouldKeepUngrabbedCursor"));
+        assertTrue(source.contains("forcePreserveNext"));
+        assertTrue(source.contains("rotclient-storage-cache.json"));
+        assertTrue(source.contains("addProperty(\"nbt\""));
+        assertTrue(source.contains("addProperty(\"texture\""));
+        assertTrue(source.contains("ResolvableProfile.createResolved"));
+        assertTrue(source.contains("applyValueTooltip"));
+        assertTrue(source.contains("flushForShutdown"));
+        assertTrue(source.contains("encodeStack"));
+        assertTrue(source.contains("incomingIsPlaceholder"));
+        assertTrue(source.contains("charTyped"));
+        assertTrue(source.contains("keyPressed"));
+        assertTrue(source.contains("insideSearchField"));
+        assertTrue(!source.contains("overlaySlotIndex"));
+        assertTrue(mixin.contains("hasClickedOutside"));
+        assertTrue(mixin.contains("shouldSuppressOutsideClick"));
+        assertTrue(mixin.contains("extractLabels"));
+        assertTrue(guiMixin.contains("shouldPinClosedContainer"));
+        assertTrue(mouseMixin.contains("shouldKeepUngrabbedCursor"));
+        assertTrue(keyMixin.contains("StorageOverlayRuntime.keyPressed"));
+        assertTrue(charMixin.contains("StorageOverlayRuntime.charTyped"));
+        assertTrue(source.contains("highlightSearchMatches"));
+        assertTrue(client.contains("shouldStealOverlayWheel"));
+        assertTrue(client.contains("CustomTooltipRuntime.clear()"));
+        assertTrue(source.contains("SkyBlockMarketQuoteService.current()"));
+        assertTrue(source.contains("marketUnitValue"));
+        assertTrue(source.contains("lowestBin()"));
+        assertTrue(source.contains("restoreMarketIdentity"));
+        assertTrue(source.contains("addProperty(\"marketId\""));
+        String quotes = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/SkyBlockMarketQuoteService.java"));
+        assertTrue(quotes.contains("api.eliteskyblock.com/resources/auctions/neu"));
+        assertTrue(quotes.contains("lb.tricked.pro/lowestbins"));
+        assertTrue(!quotes.contains("shouldFetchRemoteQuotes"));
     }
 }

@@ -1415,6 +1415,9 @@ final class RotClientHud {
     }
 
     private boolean contains(double mouseX, double mouseY) {
+        if (!HudEditorPreviewPolicy.showMiningTracker(config.enabled)) {
+            return false;
+        }
         return mouseX >= config.x && mouseX <= config.x + WIDTH * config.scale
                 && mouseY >= config.y && mouseY <= config.y + currentHeight() * config.scale;
     }

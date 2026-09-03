@@ -12,6 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SlayerFightPolicyTest {
     @Test
     void classifiesVoidgloomBeaconAndNukekubiStands() {
+        assertTrue(SlayerFightPolicy.isPowerOrbHologram("§5Overflux"));
+        assertTrue(SlayerFightPolicy.isPowerOrbHologram("Power Orb"));
+        assertFalse(SlayerFightPolicy.markerFromStand("Overflux", "Beacon").isPresent());
         assertEquals(
                 SlayerFightPolicy.Marker.BEACON,
                 SlayerFightPolicy.markerFromStand("", "Beacon").orElseThrow());
@@ -35,6 +38,9 @@ class SlayerFightPolicyTest {
                 "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWIwNzU5NGUyZGYyNzM5MjFhNzdjMTAxZDBiZmRmYTExMTVhYmVkNWI5YjIwMjllYjQ5NmNlYmE5YmRiYjRiMyJ9fX0="));
         assertEquals("3.5s", SlayerFightPolicy.countdownLabel(
                 SlayerFightPolicy.remainingSeconds(0L, 1_500L, SlayerFightPolicy.SITTING_BEACON_MILLIS)));
+        assertTrue(SlayerFightPolicy.flyingBeaconLanded(16.0D, 0.04D));
+        assertFalse(SlayerFightPolicy.flyingBeaconLanded(1.0D, 0.01D));
+        assertFalse(SlayerFightPolicy.flyingBeaconLanded(16.0D, 1.0D));
         assertEquals(0.0D, SlayerFightPolicy.remainingSeconds(0L, 8_000L, SlayerFightPolicy.LASER_DURATION_MILLIS));
         assertEquals("210M❤", SlayerFightPolicy.compactHealth("☠ Voidgloom Seraph IV 210M❤ 43 Hits").orElseThrow());
         assertEquals("1.2B❤", SlayerFightPolicy.compactHealth("1.2B❤").orElseThrow());
@@ -116,6 +122,43 @@ class SlayerFightPolicyTest {
         assertEquals(0xFFFFAA00, SlayerFightPolicy.attunementColor(SlayerPolicy.Attunement.AURIC));
         assertTrue(SlayerFightPolicy.shouldHideBlazeParticle("minecraft:flame"));
         assertFalse(SlayerFightPolicy.shouldHideBlazeParticle("minecraft:portal"));
+        assertEquals(
+                SlayerPolicy.SlayerType.VOIDGLOOM,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.BEACON).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.VOIDGLOOM,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.NUKEKUBI).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.TARANTULA,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.EGG_SAC).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.TARANTULA,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.INVINCIBLE).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.REVENANT,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.BOOM).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.SVEN,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.PUP).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.VAMPIRE,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.BLOOD_ICHOR).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.VAMPIRE,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.KILLER_SPRING).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.VAMPIRE,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.TWINCLAWS).orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.INFERNO,
+                SlayerFightPolicy.familyForMarker(SlayerFightPolicy.Marker.FIRE_PILLAR).orElseThrow());
+        assertEquals(
+                SlayerFightPolicy.VoidgloomPhase.UNKNOWN,
+                SlayerFightPolicy.voidgloomPhase("5s 8 hits"));
+        assertTrue(SlayerFightPolicy.hitsRemaining("5s 8 hits").isEmpty());
+        assertTrue(SlayerFightPolicy.familyFromMobName("Revenant Horror").isPresent());
+        assertTrue(SlayerFightPolicy.familyFromMobName("[Lv100] Random Zombie").isEmpty());
+        assertTrue(SlayerFightPolicy.familyFromMobName("Wolf").isEmpty());
     }
 
     @Test
@@ -130,6 +173,30 @@ class SlayerFightPolicyTest {
         assertEquals(4, quest.get().tier());
         assertEquals("enderman 4", SlayerFightPolicy.autoStartCommand(quest.get().type(), quest.get().tier()));
         assertEquals("sven 3", SlayerFightPolicy.autoStartCommand(SlayerPolicy.SlayerType.SVEN, 3));
+        assertTrue(SlayerFightPolicy.sidebarHasSlayerQuest(List.of(
+                "Slayer Quest",
+                "Voidgloom Seraph II",
+                "Spawn the boss!")));
+        Optional<SlayerFightPolicy.QuestRef> tierTwo = SlayerFightPolicy.questFromSidebar(List.of(
+                "Slayer Quest",
+                "Voidgloom Seraph II"));
+        assertTrue(tierTwo.isPresent());
+        assertEquals(2, tierTwo.get().tier());
+        Optional<SlayerFightPolicy.QuestRef> enderman = SlayerFightPolicy.questFromSidebar(List.of(
+                "Enderman Slayer II"));
+        assertTrue(enderman.isPresent());
+        assertEquals(SlayerPolicy.SlayerType.VOIDGLOOM, enderman.get().type());
+        assertEquals(2, enderman.get().tier());
+        Optional<SlayerFightPolicy.QuestRef> glued = SlayerFightPolicy.questFromSidebar(List.of(
+                "Voidgloom SeraphIV"));
+        assertTrue(glued.isPresent());
+        assertEquals(4, glued.get().tier());
+        Optional<SlayerFightPolicy.QuestRef> split = SlayerFightPolicy.questFromSidebar(List.of(
+                "Voidgloom Seraph",
+                "IV"));
+        assertTrue(split.isPresent());
+        assertEquals(4, split.get().tier());
+        assertEquals(" IV", SlayerFightPolicy.romanLabel(4));
         assertTrue(SlayerFightPolicy.wrongQuest(
                 SlayerPolicy.SlayerType.SVEN, SlayerPolicy.SlayerType.VOIDGLOOM));
         assertFalse(SlayerFightPolicy.wrongQuest(

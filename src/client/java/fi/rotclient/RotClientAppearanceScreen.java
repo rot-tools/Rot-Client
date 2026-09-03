@@ -66,7 +66,8 @@ final class RotClientAppearanceScreen extends Screen {
         }
         this.working = RotClientTheme.activeConfig().copy();
         this.working.normalize();
-        this.section = initialSection == null ? Section.OVERVIEW : initialSection;
+        Section start = initialSection == null ? Section.OVERVIEW : initialSection;
+        this.section = start == Section.MINING_HUD ? Section.COLORS : start;
     }
 
     private boolean expanded(String sectionId) {
@@ -95,6 +96,10 @@ final class RotClientAppearanceScreen extends Screen {
                 RotClientAppearanceNav.defaultExpandedSections());
         accordion.advanceSeconds(RotClientUiClock.seconds());
 
+        int logicalWidth = Math.round(width / uiScale);
+        int logicalHeight = Math.round(height / uiScale);
+        RotClientUiDraw.drawScrim(graphics, 0, 0, logicalWidth, logicalHeight);
+
         int panelX = panelX();
         int panelY = panelY();
         RotClientBackgroundManager.drawIfEnabled(
@@ -114,7 +119,15 @@ final class RotClientAppearanceScreen extends Screen {
                 PANEL_WIDTH,
                 HEADER_HEIGHT,
                 "Appearance",
-                sectionLabel(section));
+                sectionLabel(section),
+                true);
+        RotClientUiDraw.drawBackButton(
+                graphics,
+                font,
+                logicalMouseX,
+                logicalMouseY,
+                panelX + 8,
+                panelY + 8);
 
         graphics.fill(
                 panelX + 1,
@@ -147,7 +160,6 @@ final class RotClientAppearanceScreen extends Screen {
         int y = panelY + 56;
         y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.OVERVIEW, "Overview");
         y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.DASHBOARD, "Dashboard");
-        y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.MINING_HUD, "Mining HUD");
         y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.COLORS, "Colors");
         y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.BACKGROUND, "Background");
         y = drawNav(graphics, mouseX, mouseY, panelX, y, Section.CHARTS, "Charts");
@@ -219,14 +231,12 @@ final class RotClientAppearanceScreen extends Screen {
         int startY = y;
         try {
         switch (section) {
-            case OVERVIEW -> y = drawOverview(graphics, contentLeft, contentRight, y);
+            case OVERVIEW -> y = drawOverview(
+                    graphics, mouseX, mouseY, contentLeft, contentRight, y);
             case DASHBOARD -> y = drawDashboardSection(
                     graphics, mouseX, mouseY, contentLeft, contentRight, y,
                     contentTop, contentBottom);
-            case MINING_HUD -> y = drawHudSection(
-                    graphics, mouseX, mouseY, contentLeft, contentRight, y,
-                    contentTop, contentBottom);
-            case COLORS -> y = drawColorsSection(
+            case MINING_HUD, COLORS -> y = drawColorsSection(
                     graphics, mouseX, mouseY, contentLeft, contentRight, y,
                     contentTop, contentBottom);
             case BACKGROUND -> y = drawBackgroundSection(
@@ -249,13 +259,23 @@ final class RotClientAppearanceScreen extends Screen {
         }
 
         if (scroll.canScroll()) {
+            int scrollbarX = contentRight + 2;
+            boolean hovered = RotClientUiDraw.inside(
+                    mouseX,
+                    mouseY,
+                    scrollbarX,
+                    contentTop,
+                    RotClientUiDraw.SCROLLBAR_HIT_WIDTH,
+                    viewport);
             RotClientUiDraw.drawScrollbar(
                     graphics,
-                    contentRight + 2,
+                    scrollbarX,
                     contentTop,
                     contentBottom,
                     scroll.contentHeight(),
-                    scroll.scrollPixels());
+                    scroll.scrollPixels(),
+                    hovered,
+                    scroll.isThumbDragging());
         }
         if (!statusMessage.isBlank()) {
             RotClientUiDraw.text(graphics, font,
@@ -280,26 +300,28 @@ final class RotClientAppearanceScreen extends Screen {
 
     private int drawOverview(
             GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
             int left,
             int right,
             int y) {
         RotClientUiDraw.text(graphics, font, "Customize Rot Client visuals", left, y, RotClientTheme.TEXT, true);
         y += 14;
         RotClientUiDraw.text(graphics, font,
-                "Role-based colors cover dashboard panels, text, buttons, and the mining HUD.",
+                "Role-based colors cover dashboard panels, text, buttons, and HUD surfaces.",
                 left, y, RotClientTheme.TEXT_DIM, false);
         y += 14;
         RotClientUiDraw.text(graphics, font,
                 "Default theme uses readable blue-slate surfaces with a teal interaction accent.",
                 left, y, RotClientTheme.TEXT_MUTED, false);
         y += 22;
-        y = drawInfoCard(graphics, left, right, y,
+        y = drawInfoCard(graphics, mouseX, mouseY, left, right, y,
                 "Dashboard", "Panels, sidebar, headers, borders, buttons");
-        y = drawInfoCard(graphics, left, right, y,
-                "Mining HUD", "Overlay background, cards, accents");
-        y = drawInfoCard(graphics, left, right, y,
+        y = drawInfoCard(graphics, mouseX, mouseY, left, right, y,
+                "Colors", "Dashboard text, HUD surfaces, and accents");
+        y = drawInfoCard(graphics, mouseX, mouseY, left, right, y,
                 "Charts", "Rate sparkline line, glow, fill, grid, and well");
-        y = drawInfoCard(graphics, left, right, y,
+        y = drawInfoCard(graphics, mouseX, mouseY, left, right, y,
                 "Background",
                 "Optional images from config/rotclient/backgrounds/");
         return y + 8;
@@ -388,6 +410,30 @@ final class RotClientAppearanceScreen extends Screen {
             int clipTop,
             int clipBottom) {
         y = drawGroupHeader(graphics, mouseX, mouseY, left, right, y,
+                "HUD surfaces",
+                accordion.amount(RotClientAppearanceNav.HUD_BASICS));
+        if (expanded(RotClientAppearanceNav.HUD_BASICS)) {
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD background", () -> working.hudBackground,
+                    v -> working.hudBackground = v);
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD panel / card", () -> working.hudPanel,
+                    v -> working.hudPanel = v);
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD alternate panel", () -> working.hudPanelAlt,
+                    v -> working.hudPanelAlt = v);
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD header", () -> working.hudHeader,
+                    v -> working.hudHeader = v);
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD border", () -> working.hudBorder,
+                    v -> working.hudBorder = v);
+            y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                    "HUD accent", () -> working.hudAccent,
+                    v -> working.hudAccent = v);
+        }
+        y += 6;
+        y = drawGroupHeader(graphics, mouseX, mouseY, left, right, y,
                 "Dashboard text",
                 accordion.amount(RotClientAppearanceNav.DASHBOARD_TEXT));
         if (expanded(RotClientAppearanceNav.DASHBOARD_TEXT)) {
@@ -409,7 +455,7 @@ final class RotClientAppearanceScreen extends Screen {
         }
         y += 6;
         y = drawGroupHeader(graphics, mouseX, mouseY, left, right, y,
-                "Mining HUD text",
+                "HUD text",
                 accordion.amount(RotClientAppearanceNav.HUD_TEXT));
         if (expanded(RotClientAppearanceNav.HUD_TEXT)) {
             y = colorRow(graphics, mouseX, mouseY, left, right, y, clipTop, clipBottom,
@@ -674,14 +720,31 @@ final class RotClientAppearanceScreen extends Screen {
 
     private int drawInfoCard(
             GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
             int left,
             int right,
             int y,
             String title,
             String body) {
-        RotClientUiDraw.drawAccentCard(graphics, left, y, right - left, 40, false);
+        int width = right - left;
+        boolean hover = RotClientUiDraw.inside(mouseX, mouseY, left, y, width, 40);
+        RotClientUiDraw.drawAccentCard(graphics, left, y, width, 40, hover);
+        if (hover) {
+            RotClientUiDraw.roundedOutline(
+                    graphics, left, y, right, y + 40,
+                    RotClientTheme.BORDER_BRIGHT, RotClientUiDraw.RADIUS_SM);
+        }
         RotClientUiDraw.text(graphics, font, title, left + 12, y + 8, RotClientTheme.TEXT, true);
         RotClientUiDraw.text(graphics, font, body, left + 12, y + 22, RotClientTheme.TEXT_MUTED, false);
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Open →",
+                right - 12 - font.width("Open →"),
+                y + 14,
+                RotClientTheme.TEXT_DIM,
+                false);
         return y + 48;
     }
 
@@ -794,6 +857,15 @@ final class RotClientAppearanceScreen extends Screen {
         int contentBottom = panelY + PANEL_HEIGHT - 52;
         int buttonY = panelY + PANEL_HEIGHT - 36;
 
+        if (!RotClientUiDraw.inside(
+                mouseX, mouseY, panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT)) {
+            onClose();
+            return true;
+        }
+        if (RotClientUiDraw.hitBackButton(mouseX, mouseY, panelX + 8, panelY + 8)) {
+            onClose();
+            return true;
+        }
         if (RotClientUiDraw.inside(
                 mouseX, mouseY, panelX + 10, panelY + PANEL_HEIGHT - 42,
                 SIDEBAR_WIDTH - 20, RotClientUiDraw.BUTTON_HEIGHT)) {
@@ -820,12 +892,14 @@ final class RotClientAppearanceScreen extends Screen {
         }
 
         int navY = panelY + 56;
-        for (Section candidate : Section.values()) {
+        for (Section candidate : navSections()) {
             if (RotClientUiDraw.inside(
                     mouseX, mouseY, panelX + 10, navY, SIDEBAR_WIDTH - 20, 28)) {
                 if (candidate != section) {
                     if (section != Section.RESET) {
-                        resetTargetSection = section;
+                        resetTargetSection = section == Section.MINING_HUD
+                                ? Section.COLORS
+                                : section;
                     }
                     section = candidate;
                     scroll.reset();
@@ -839,6 +913,29 @@ final class RotClientAppearanceScreen extends Screen {
             navY += 32;
         }
 
+        int scrollbarHitX = contentRight + 2;
+        if (scroll.canScroll()
+                && RotClientUiDraw.inside(
+                        mouseX,
+                        mouseY,
+                        scrollbarHitX,
+                        contentTop,
+                        RotClientUiDraw.SCROLLBAR_HIT_WIDTH,
+                        contentBottom - contentTop)) {
+            if (scroll.beginThumbDrag(
+                    mouseY,
+                    contentTop,
+                    contentBottom,
+                    RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)
+                    || scroll.clickTrack(
+                    mouseY,
+                    contentTop,
+                    contentBottom,
+                    RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)) {
+                return true;
+            }
+        }
+
         return handleContentClick(mouseX, mouseY, contentLeft, contentRight, contentTop, contentBottom);
     }
 
@@ -850,6 +947,25 @@ final class RotClientAppearanceScreen extends Screen {
             int clipTop,
             int clipBottom) {
         int y = clipTop - scroll.scrollPixels();
+        if (section == Section.OVERVIEW) {
+            y += 50;
+            Section[] cards = {
+                    Section.DASHBOARD,
+                    Section.COLORS,
+                    Section.CHARTS,
+                    Section.BACKGROUND
+            };
+            for (Section target : cards) {
+                if (RotClientUiDraw.inside(mouseX, mouseY, left, y, right - left, 40)) {
+                    section = target;
+                    scroll.reset();
+                    statusMessage = "";
+                    return true;
+                }
+                y += 48;
+            }
+            return true;
+        }
         if (section == Section.DASHBOARD) {
             if (RotClientUiDraw.inside(mouseX, mouseY, left, y, right - left, 22)) {
                 toggleExpanded(RotClientAppearanceNav.DASHBOARD_BASICS);
@@ -881,7 +997,7 @@ final class RotClientAppearanceScreen extends Screen {
             }
             return true;
         }
-        if (section == Section.MINING_HUD) {
+        if (section == Section.MINING_HUD || section == Section.COLORS) {
             if (RotClientUiDraw.inside(mouseX, mouseY, left, y, right - left, 22)) {
                 toggleExpanded(RotClientAppearanceNav.HUD_BASICS);
                 return true;
@@ -903,13 +1019,11 @@ final class RotClientAppearanceScreen extends Screen {
                 y = maybeOpenColor(mouseX, mouseY, left, right, y, clipTop, clipBottom,
                         "HUD border", () -> working.hudBorder,
                         v -> working.hudBorder = v);
-                maybeOpenColor(mouseX, mouseY, left, right, y, clipTop, clipBottom,
+                y = maybeOpenColor(mouseX, mouseY, left, right, y, clipTop, clipBottom,
                         "HUD accent", () -> working.hudAccent,
                         v -> working.hudAccent = v);
             }
-            return true;
-        }
-        if (section == Section.COLORS) {
+            y += 6;
             if (RotClientUiDraw.inside(mouseX, mouseY, left, y, right - left, 22)) {
                 toggleExpanded(RotClientAppearanceNav.DASHBOARD_TEXT);
                 return true;
@@ -1170,15 +1284,13 @@ final class RotClientAppearanceScreen extends Screen {
                 working.dashboardBorder = fresh.dashboardBorder;
                 working.dashboardAccent = fresh.dashboardAccent;
             }
-            case MINING_HUD -> {
+            case MINING_HUD, COLORS -> {
                 working.hudBackground = fresh.hudBackground;
                 working.hudPanel = fresh.hudPanel;
                 working.hudPanelAlt = fresh.hudPanelAlt;
                 working.hudHeader = fresh.hudHeader;
                 working.hudBorder = fresh.hudBorder;
                 working.hudAccent = fresh.hudAccent;
-            }
-            case COLORS -> {
                 working.dashboardSectionTitle = fresh.dashboardSectionTitle;
                 working.dashboardTextPrimary = fresh.dashboardTextPrimary;
                 working.dashboardTextSecondary = fresh.dashboardTextSecondary;
@@ -1343,6 +1455,37 @@ final class RotClientAppearanceScreen extends Screen {
     }
 
     @Override
+    public boolean mouseDragged(
+            MouseButtonEvent event,
+            double dragX,
+            double dragY) {
+        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            return super.mouseDragged(event, dragX, dragY);
+        }
+        float uiScale = uiScale();
+        int mouseY = Math.round((float) event.y() / uiScale);
+        int panelY = panelY();
+        int contentTop = panelY + HEADER_HEIGHT + 12;
+        int contentBottom = panelY + PANEL_HEIGHT - 52;
+        if (scroll.dragThumbTo(
+                mouseY,
+                contentTop,
+                contentBottom,
+                RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)) {
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (scroll.endThumbDrag()) {
+            return true;
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
     public boolean keyPressed(KeyEvent event) {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             onClose();
@@ -1353,12 +1496,26 @@ final class RotClientAppearanceScreen extends Screen {
 
     @Override
     public void onClose() {
+        if (RotClientClient.workspace().activeRoute().isAppearance()) {
+            RotClientClient.workspace().navigateActive(
+                    RotClientWorkspaceRoute.OVERVIEW);
+        }
         Minecraft.getInstance().gui.setScreen(parent);
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private static List<Section> navSections() {
+        return List.of(
+                Section.OVERVIEW,
+                Section.DASHBOARD,
+                Section.COLORS,
+                Section.BACKGROUND,
+                Section.CHARTS,
+                Section.RESET);
     }
 
     private static String sectionLabel(Section section) {

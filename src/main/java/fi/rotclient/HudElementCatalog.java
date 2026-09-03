@@ -19,6 +19,12 @@ public final class HudElementCatalog {
         if (!id.endsWith("_hud_editor") && !id.endsWith(".open_hud_editor")) {
             return "";
         }
+        if (id.contains("mining_tracker")) {
+            return "mining_tracker";
+        }
+        if (id.contains("powder_chest")) {
+            return "powder_chest";
+        }
         if (id.contains("player_display") || id.contains("open_rng") || id.contains("open_profit")) {
             if (id.contains("open_rng")) {
                 return "slayer_rng";
@@ -96,7 +102,7 @@ public final class HudElementCatalog {
                 .replace("card switch", "Module switch");
         if (moduleHasHudEditor(module) || moduleHasHudToggle(module)) {
             return base
-                    + " Use Module to start the feature. HUD switches only the overlays. Settings has every option, including Edit HUD.";
+                    + " Use Module to start the feature. HUD opens this overlay's settings. Settings has the rest of the options.";
         }
         return base + " Use Module to start or stop this feature. Open Settings for every option.";
     }
@@ -135,7 +141,12 @@ public final class HudElementCatalog {
             case "performance" -> List.of(
                     new InspectorToggle("qol.performance_hud.show_fps", "FPS text"),
                     new InspectorToggle("qol.performance_hud.show_tps", "TPS text"),
-                    new InspectorToggle("qol.performance_hud.show_ping", "Ping text"));
+                    new InspectorToggle("qol.performance_hud.show_ping", "Ping text"),
+                    new InspectorToggle("qol.performance_hud.show_background", "Background"));
+            case "slayer" -> List.of(
+                    new InspectorToggle("qol.slayer_display.kill_time", "Kill time"));
+            case "slayer_progress" -> List.of(
+                    new InspectorToggle("qol.slayer_progress.show_remaining", "Remaining XP"));
             case "health" -> List.of(
                     new InspectorToggle("qol.player_display.health_hud", "Health HUD"),
                     new InspectorToggle("qol.player_display.show_icons", "Icons"),
@@ -232,7 +243,37 @@ public final class HudElementCatalog {
                         prev == null ? "" : prev.focusId()));
             }
         }
+        mergeLoneToggleWithEditor(byKey);
         return List.copyOf(byKey.values());
+    }
+
+    private static void mergeLoneToggleWithEditor(
+            java.util.LinkedHashMap<String, HudPiece> byKey) {
+        HudPiece editorPiece = null;
+        String editorKey = "";
+        HudPiece togglePiece = null;
+        String toggleKey = "";
+        int loneToggles = 0;
+        for (var entry : byKey.entrySet()) {
+            HudPiece piece = entry.getValue();
+            if (piece.hasEditor() && !piece.hasToggle()) {
+                editorPiece = piece;
+                editorKey = entry.getKey();
+            } else if (piece.hasToggle() && !piece.hasEditor()) {
+                loneToggles++;
+                togglePiece = piece;
+                toggleKey = entry.getKey();
+            }
+        }
+        if (editorPiece == null || togglePiece == null || loneToggles != 1) {
+            return;
+        }
+        byKey.remove(toggleKey);
+        byKey.put(editorKey, new HudPiece(
+                togglePiece.toggleId(),
+                editorPiece.editorId(),
+                togglePiece.label(),
+                editorPiece.focusId()));
     }
 
     public static boolean hudControlOpensMenu(QolUtilityCatalog.ModuleDef module) {
@@ -245,7 +286,8 @@ public final class HudElementCatalog {
 
     private static String hudEditorLabel(String raw) {
         String label = raw == null ? "" : raw.trim();
-        label = label.replace("Edit HUD Layout", "HUD")
+        label = label.replace("Open HUD Elements Editor", "HUD")
+                .replace("Edit HUD Layout", "HUD")
                 .replace("Edit ", "")
                 .replace(" Layout", "")
                 .trim();
@@ -289,6 +331,12 @@ public final class HudElementCatalog {
             }
         }
         return false;
+    }
+
+    public static List<QolUtilityCatalog.SettingDef> hudContentSettings(
+            QolUtilityCatalog.ModuleDef module,
+            HudPiece piece) {
+        return HudDrawerPolicy.hudCatalogSettings(module, piece);
     }
 
     public static boolean moduleHasHudToggle(QolUtilityCatalog.ModuleDef module) {

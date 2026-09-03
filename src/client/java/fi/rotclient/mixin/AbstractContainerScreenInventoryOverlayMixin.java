@@ -117,11 +117,6 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 imageHeight,
                 mouseX,
                 mouseY);
-        ItemRarityRuntime.afterContainerContents(
-                screen,
-                graphics,
-                leftPos,
-                topPos);
         ClientBoundaryGuard.run("STORAGE_OVERLAY_RENDER", () ->
                 StorageOverlayRuntime.render(
                 screen,
@@ -156,6 +151,41 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 graphics, leftPos, topPos, imageWidth, imageHeight, mouseX, mouseY));
         InventoryChromeRuntime.renderColorEditor(
                 screen, graphics, leftPos, topPos, imageWidth, imageHeight, mouseX, mouseY);
+    }
+
+    @Inject(method = "extractLabels", at = @At("HEAD"), cancellable = true)
+    private void rotclient$hideVanillaStorageLabels(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            CallbackInfo ci) {
+        AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        if (Boolean.TRUE.equals(ClientBoundaryGuard.call(
+                "STORAGE_OVERLAY_GATE",
+                () -> StorageOverlayRuntime.shouldReplaceVanilla(screen),
+                false))) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
+    private void rotclient$keepStorageOverlayClicksInside(
+            double mouseX,
+            double mouseY,
+            int left,
+            int top,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (StorageOverlayRuntime.shouldSuppressOutsideClick(mouseX, mouseY)) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "onClose", at = @At("HEAD"))
+    private void rotclient$storageOverlayUserExit(CallbackInfo ci) {
+        AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        if (StorageOverlayRuntime.shouldReplaceVanilla(screen)) {
+            StorageOverlayRuntime.markUserExiting();
+        }
     }
 
     @Inject(method = "extractTooltip", at = @At("HEAD"), cancellable = true)
@@ -220,6 +250,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 mouseX,
                 mouseY,
                 hoveredSlot);
+        StorageOverlayRuntime.applyValueTooltip(graphics, mouseX, mouseY);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
@@ -227,6 +258,10 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             MouseButtonEvent event,
             boolean doubleClick,
             CallbackInfoReturnable<Boolean> cir) {
+        if (hoveredSlot != null) {
+            MissingEnchantsRuntime.noteCtrlClick(
+                    hoveredSlot.getItem(), event.hasControlDown(), event.button());
+        }
         if (AutoExperimentsRuntime.shouldBlockMouse()) {
             cir.setReturnValue(true);
             return;
@@ -306,6 +341,10 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 (int) Math.round(event.y()),
                 event.button())
                 || Boolean.TRUE.equals(ClientBoundaryGuard.call(
+                "STORAGE_OVERLAY_DRAG",
+                () -> StorageOverlayRuntime.drag((int) Math.round(event.y())),
+                false))
+                || Boolean.TRUE.equals(ClientBoundaryGuard.call(
                 "INVENTORY_BUTTONS_DRAG",
                 () -> InventoryButtonsRuntime.drag(
                 (AbstractContainerScreen<?>) (Object) this,
@@ -330,6 +369,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             return;
         }
         if (InventoryChromeRuntime.handleInventoryRelease(event.button())
+                || StorageOverlayRuntime.mouseReleased()
                 || InventoryButtonsRuntime.release(event.button())) {
             cir.setReturnValue(true);
         }
@@ -350,11 +390,17 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ci.cancel();
             return;
         }
+        if (slot != null && (slot.x <= -1000 || slot.y <= -1000)
+                && StorageOverlayRuntime.shouldReplaceVanilla(
+                        (AbstractContainerScreen<?>) (Object) this)) {
+            ci.cancel();
+            return;
+        }
         if (slot != null && !slot.getItem().isEmpty()) {
             ItemRarityRuntime.paintSlotBackground(
                     graphics,
-                    leftPos + slot.x,
-                    topPos + slot.y,
+                    slot.x,
+                    slot.y,
                     slot.getItem());
         }
     }

@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,6 +15,7 @@ final class IotaStallWiringTest {
     void catalogListsRuntimeReadyIotaAndStall() {
         QolUtilityCatalog.ModuleDef iota = QolUtilityCatalog.findById("qol.iota");
         assertNotNull(iota);
+        assertEquals(QolUtilityCatalog.Group.KUUDRA, iota.group());
         assertTrue(iota.runtimeReady());
         assertTrue(iota.toggleable());
         assertTrue(iota.settings().stream().anyMatch(setting ->

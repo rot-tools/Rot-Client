@@ -387,6 +387,9 @@ public final class RotClientClient implements ClientModInitializer {
                     "CLICK_GUI_KEY",
                     () -> tickClickGuiKey(client));
             ClientBoundaryGuard.run(
+                    "NO_CURSOR_RESET",
+                    () -> restoreStorageCursor(client));
+            ClientBoundaryGuard.run(
                     "INVENTORY_WALK",
                     () -> InventoryWalkRuntime.tick(client));
             ClientBoundaryGuard.run(
@@ -560,6 +563,7 @@ public final class RotClientClient implements ClientModInitializer {
             }
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            StorageOverlayRuntime.flushForShutdown();
             long now = System.currentTimeMillis();
             TrackerSelection selection =
                     selectedSelection();
@@ -2048,6 +2052,7 @@ public final class RotClientClient implements ClientModInitializer {
                     newState,
                     isGemstoneTrackingActive()
                             || SESSION_ENGINE.isCollectionActive());
+            SlayerRuntime.onBlockUpdate(pos, newState);
 
             if (CONFIG.enabled && isMaterialSelection()) {
                 for (TrackedMaterial material : selectedMaterials()) {
@@ -2319,6 +2324,7 @@ public final class RotClientClient implements ClientModInitializer {
     private static int openQolUi(FabricClientCommandSource source) {
         Minecraft.getInstance().schedule(() -> {
             WORKSPACE.flushIfDirty();
+            WORKSPACE.setQolView("COMBAT", "");
             openClientUiNavigating(DashboardModule.QOL_SETTINGS, null);
         });
         return 1;
@@ -2327,7 +2333,7 @@ public final class RotClientClient implements ClientModInitializer {
     private static int openMiningUi(FabricClientCommandSource source) {
         Minecraft.getInstance().schedule(() -> {
             WORKSPACE.flushIfDirty();
-            // Restore existing workspace tabs; do not reset to Overview.
+            WORKSPACE.resetToDefaultOpenState();
             Minecraft.getInstance().gui.setScreen(
                     new MiningUiScreen(CONFIG, HUD, null, null, true));
         });
@@ -2336,7 +2342,8 @@ public final class RotClientClient implements ClientModInitializer {
 
     static void openClientUiNavigating(DashboardModule module, Screen parent) {
         WORKSPACE.flushIfDirty();
-        if (module != null) {
+        WORKSPACE.resetToDefaultOpenState();
+        if (module != null && module != DashboardModule.NONE) {
             WORKSPACE.navigateActive(
                     RotClientWorkspaceRoute.fromDashboardModule(module));
         }
@@ -2356,6 +2363,7 @@ public final class RotClientClient implements ClientModInitializer {
     /** Opens the existing Rot Client home / mining UI (Click GUI target). */
     static void openClickGui() {
         WORKSPACE.flushIfDirty();
+        WORKSPACE.resetToDefaultOpenState();
         Minecraft client = Minecraft.getInstance();
         if (client == null) {
             return;
@@ -2403,6 +2411,24 @@ public final class RotClientClient implements ClientModInitializer {
         return qolConfig().noCursorResetEnabled;
     }
 
+    private static void restoreStorageCursor(Minecraft client) {
+        if (client == null || client.getWindow() == null) {
+            return;
+        }
+        NoCursorResetController controller = noCursorReset();
+        if (!controller.consumeRestore(System.currentTimeMillis())) {
+            return;
+        }
+        GLFW.glfwSetCursorPos(
+                client.getWindow().handle(),
+                controller.savedX(),
+                controller.savedY());
+        if (client.mouseHandler instanceof fi.rotclient.mixin.MouseHandlerCursorAccessor access) {
+            access.rotclient$setXpos(controller.savedX());
+            access.rotclient$setYpos(controller.savedY());
+        }
+    }
+
     public static int noCursorUnhookTimeoutMs() {
         return NoCursorResetPolicy.clampTimeoutMs(
                 qolConfig().noCursorUnhookTimeoutMs);
@@ -2412,36 +2438,48 @@ public final class RotClientClient implements ClientModInitializer {
         QolUtilityConfig qol = qolConfig();
         return hideActionLocation()
                 || (qol.playerDisplayEnabled
-                && (qol.playerDisplayHideActionHealth
-                || qol.playerDisplayHideActionDefense
-                || qol.playerDisplayHideActionMana
-                || qol.playerDisplayHideActionOverflow
-                || qol.playerDisplayHideActionSpeed
-                || qol.playerDisplayHideActionVitality));
+                && (hideActionHealth()
+                || hideActionDefense()
+                || hideActionMana()
+                || hideActionOverflow()
+                || hideActionSpeed()
+                || hideActionVitality()));
     }
 
     public static boolean hideActionHealth() {
-        return qolConfig().playerDisplayHideActionHealth;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionHealth
+                || (qol.playerDisplayEnabled && qol.playerDisplayHealthHud);
     }
 
     public static boolean hideActionDefense() {
-        return qolConfig().playerDisplayHideActionDefense;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionDefense
+                || (qol.playerDisplayEnabled && qol.playerDisplayDefenseHud);
     }
 
     public static boolean hideActionMana() {
-        return qolConfig().playerDisplayHideActionMana;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionMana
+                || (qol.playerDisplayEnabled && qol.playerDisplayManaHud);
     }
 
     public static boolean hideActionOverflow() {
-        return qolConfig().playerDisplayHideActionOverflow;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionOverflow
+                || (qol.playerDisplayEnabled && qol.playerDisplayOverflowManaHud);
     }
 
     public static boolean hideActionSpeed() {
-        return qolConfig().playerDisplayHideActionSpeed;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionSpeed
+                || (qol.playerDisplayEnabled && qol.playerDisplaySpeedHud);
     }
 
     public static boolean hideActionVitality() {
-        return qolConfig().playerDisplayHideActionVitality;
+        QolUtilityConfig qol = qolConfig();
+        return qol.playerDisplayHideActionVitality
+                || (qol.playerDisplayEnabled && qol.playerDisplayVitalityHud);
     }
 
     public static boolean hideActionLocation() {
@@ -2677,11 +2715,26 @@ public final class RotClientClient implements ClientModInitializer {
             hovered = slot == null ? ItemStack.EMPTY : slot.getItem();
         }
         boolean overItem = overSlot && hovered != null && !hovered.isEmpty();
-        if (CustomTooltipRuntime.shouldStealWheel(overItem)) {
+        boolean container = current instanceof AbstractContainerScreen<?>;
+        boolean overlay = container
+                && StorageOverlayRuntime.shouldReplaceVanilla((AbstractContainerScreen<?>) current)
+                && StorageOverlayRuntime.lastLayout() != null;
+        Minecraft client = Minecraft.getInstance();
+        boolean shift = client != null
+                && client.getWindow() != null
+                && (QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT)
+                || QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT));
+        if (!container) {
+            CustomTooltipRuntime.clear();
+        }
+        if (StorageOverlayPolicy.shouldStealOverlayWheel(
+                container, overlay, shift, CustomTooltipRuntime.shouldStealWheel(overItem))) {
             return false;
         }
-        return !(current instanceof AbstractContainerScreen<?>
-                && StorageOverlayRuntime.scroll(vertical, overSlot));
+        if (overlay && CustomTooltipPolicy.storageOverlayTakesWheel(true, shift)) {
+            return !StorageOverlayRuntime.scroll(vertical, overSlot);
+        }
+        return !(container && StorageOverlayRuntime.scroll(vertical, overSlot));
     }
 
     private static void addPauseMenuButton(
@@ -3859,7 +3912,7 @@ private static int toggle(FabricClientCommandSource source) {
                 Right Shift (or the Click GUI key) opens the dashboard.
                 /rot              open dashboard
                 /rot ui           same
-                /rot qol          open QoL modules
+                /rot qol          open the Modules catalog (Combat first)
                 /rot edit         HUD layout editor
                 /rot help         this list
                 /rot layout reset

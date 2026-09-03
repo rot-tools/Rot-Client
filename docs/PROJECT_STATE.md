@@ -11,7 +11,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `qol-utilities` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | 119 wired QoL modules. The 12-mod clean-room audit is recorded; config safety, typed domain events, profile scoping, optional Hypixel Mod API location input, duplicate-mod warnings, terminal queue isolation, shared tab snapshots, bounded chat rules, Diana context/TTL gates, Slayer stale-entity suppression, and craft-helper ownership projection are automated-tested. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | 124 wired QoL modules. Appearance and HUD Elements Editor are Visuals-only (not HUD & Display cards). Unhandled clicks dismiss those landings to Overview. World editor shows only enabled overlays. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Mod ID | `rotclient` |
@@ -20,8 +20,8 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **1,962 tests**, 0 failures, 0 errors, 0 skipped across 284 suites; client compilation and clean build passed |
-| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Hover-box pan now wraps `GuiGraphicsExtractor.tooltip` → `positionTooltip` (the 26.2 draw path). Prism relaunch is the next runtime gate. |
+| Automated baseline | Current working tree: **2,035 tests**, 300 suites, 0 failures, 0 errors, 0 skipped; client compilation and clean build passed |
+| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 13 groups and **124** catalog parents. Appearance and HUD Elements Editor are Visuals-only; unhandled clicks dismiss the landing. Ready for Runtime Test. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
@@ -100,7 +100,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The 119-parent catalog lock, evidence-state guards, status-badge layout, and
+- The 124-parent catalog lock, evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -115,10 +115,10 @@ Focused automated coverage verifies:
   submissions were removed; storage transitions use two bounded restores so
   movement is preserved without pinning the pointer. The default/legacy-default
   visual now resolves to a conventional white arrow with dark outline.
-- HUD Layout is a single switchboard: vanilla/Hypixel layers hide through Fabric
-  HUD registry wraps (on/off), Rot overlays keep move/scale/on-off and a
-  Background / text-only switch, and the editor inspector lists every layer
-  plus Health icons/name/max bits. Vanilla hearts/hotbar are not dragged.
+- HUD Elements Editor is a single switchboard: vanilla/Hypixel layers hide through Fabric
+  HUD registry wraps (on/off), Rot overlays keep move/scale/on-off. The landing page lists
+  every layer; the world editor is one chrome card with right-click hide and Ctrl+Z undo.
+  Vanilla hearts/hotbar are not dragged.
   Minecraft playtest pending.
 - Signed Sack parsing, including preservation of negative deltas.
 - Rejection of negative Sack changes without consuming a pending batch.
@@ -168,7 +168,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 119 modules across Utilities, Render, HUD & Display,
+- QoL catalog wiring for 124 modules across Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -247,6 +247,8 @@ These constraints are part of the current safety model:
   process-interruption boundaries now use a bounded startup recovery marker;
   unreadable marker data fails closed and power-loss atomicity is not claimed.
 
+For a class-by-class briefing of the shipped JAR (what to open first, Policy vs Runtime vs Mixin, dashboard vs mining vs Current Session), see [`docs/CODE_WALKTHROUGH.md`](CODE_WALKTHROUGH.md).
+
 ## Local development workflow
 
 1. Use Java 25 for the Gradle process. Gradle's `toolchain { languageVersion = 25 }` block provisions JDK 25 for compile and test tasks.
@@ -313,7 +315,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Client visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: 119 wired modules across ten task-oriented groups, with
+- QoL dashboard: 124 wired modules across thirteen task-oriented groups, with
   automation-style development features disabled by default and scoped to the
   local Serveri. No separate server-detection
   branch is planned.

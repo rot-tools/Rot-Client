@@ -1,7 +1,9 @@
 package fi.rotclient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.OptionalInt;
 
 /**
  * Layout and chest-title rules for the SkyBlock inventory overlay: four
@@ -35,10 +37,38 @@ public final class InventoryOverlayPolicy {
     /** Pixel offset from the survival-inventory GUI origin. */
     public static final int EQUIPMENT_COLUMN_X = 76;
     public static final int EQUIPMENT_COLUMN_Y = 8;
+    /**
+     * Vanilla paper-doll scissor box inside {@code InventoryScreen}
+     * ({@code leftPos+26, topPos+8} to {@code leftPos+75, topPos+78}).
+     */
+    public static final int PLAYER_PREVIEW_X = 26;
+    public static final int PLAYER_PREVIEW_Y = 8;
+    public static final int PLAYER_PREVIEW_WIDTH = 49;
+    public static final int PLAYER_PREVIEW_HEIGHT = 70;
+    /**
+     * 2×2 crafting grid, result slot, and the Crafting label. Stops above
+     * the SkyBlock mascot strip at y=50+ so that cat stay covered.
+     */
+    public static final int CRAFTING_GRID_X = 97;
+    public static final int CRAFTING_GRID_Y = 6;
+    public static final int CRAFTING_GRID_WIDTH = 76;
+    public static final int CRAFTING_GRID_HEIGHT = 48;
     /** Vanilla armor column inside {@code InventoryScreen}. */
     public static final int ARMOR_COLUMN_X = 8;
+    public static final int ARMOR_COLUMN_Y = 8;
+    public static final int CRAFT_INPUT_X = 98;
+    public static final int CRAFT_INPUT_Y = 18;
+    public static final int CRAFT_RESULT_X = 154;
+    public static final int CRAFT_RESULT_Y = 28;
+    public static final int MAIN_INVENTORY_X = 8;
+    public static final int MAIN_INVENTORY_Y = 84;
+    public static final int HOTBAR_Y = 142;
+    public static final int MAIN_ROWS = 3;
+    public static final int MAIN_COLUMNS = 9;
     public static final int SLOT_STRIDE = 18;
     public static final int SLOT_SIZE = 18;
+    public static final int DEFAULT_SLOT_BORDER = 0xFF7A628C;
+    public static final int DEFAULT_SLOT_WELL = 0xFF100C14;
 
     public static final int EQUIPMENT_SLOT_COUNT = 4;
     /** Bottom equipment bar — pet sits to its right by default. */
@@ -62,6 +92,12 @@ public final class InventoryOverlayPolicy {
     private InventoryOverlayPolicy() {
     }
 
+    public static final int DEFAULT_INV_PANEL = 0xF518141C;
+    public static final int DEFAULT_INV_HEADER = 0xF524182C;
+    public static final int DEFAULT_INV_MAIN = 0xF50C0A10;
+    public static final int DEFAULT_INV_HOTBAR = 0xF5221A28;
+    public static final int DEFAULT_INV_BORDER = 0xFF4A3858;
+
     public static boolean isEquipmentMenu(String title) {
         String text = MenuKeybindPolicy.stripGuiText(title);
         if (text.isEmpty()) {
@@ -77,6 +113,36 @@ public final class InventoryOverlayPolicy {
                 || lower.contains("equipment and stats")
                 || lower.contains("stats & equipment")
                 || lower.contains("stats and equipment");
+    }
+
+    public static boolean isEquipmentSetsMenu(String title) {
+        String text = MenuKeybindPolicy.stripGuiText(title);
+        if (text.isEmpty()) {
+            return false;
+        }
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("equipment sets")
+                || (lower.contains("wardrobe") && lower.contains("equipment"));
+    }
+
+    /**
+     * Lime dye in chest slots 36–44 marks the selected wardrobe column.
+     */
+    public static OptionalInt equipmentSetsColumn(int slotIndex, String itemPath) {
+        String path = itemPath == null ? "" : itemPath.toLowerCase(Locale.ROOT);
+        if (slotIndex > 35 && slotIndex < 45 && path.contains("lime_dye")) {
+            return OptionalInt.of(slotIndex % 9);
+        }
+        return OptionalInt.empty();
+    }
+
+    public static boolean isEquipmentSetsPieceSlot(int slotIndex, int column) {
+        return column >= 0
+                && column < 9
+                && slotIndex >= 0
+                && slotIndex < 36
+                && slotIndex % 9 == column
+                && slotIndex / 9 < 4;
     }
 
     public static boolean isSkillsMenu(String title) {
@@ -248,21 +314,26 @@ public final class InventoryOverlayPolicy {
         }
     }
 
-    public static final int WRENCH_SIZE = 16;
-    public static final int WRENCH_GAP = 4;
-    public static final int EDITOR_WIDTH = 214;
+    public static final int WRENCH_SIZE = 12;
+    public static final int WRENCH_GAP = 8;
+    public static final int EDITOR_WIDTH = 248;
     public static final int EDITOR_ROW = 18;
     public static final int EDITOR_SLIDER_HEIGHT = 10;
+    public static final int EDITOR_RESET_WIDTH = 34;
+    public static final int DEFAULT_STORAGE_PANEL = 0xF00A1520;
+    public static final int DEFAULT_STORAGE_CARD = 0xFF122433;
+    public static final int DEFAULT_STORAGE_ACTIVE = 0xFF18384A;
+    public static final int DEFAULT_STORAGE_PLAYER = 0xF00A1520;
 
     public enum ChromeColorRole {
-        INV_PANEL("Inventory panel", "qol.inventory_overlay.chrome_panel"),
-        INV_HEADER("Crafting / armor", "qol.inventory_overlay.chrome_header"),
-        INV_MAIN("Item grid", "qol.inventory_overlay.chrome_main"),
+        INV_PANEL("Whole window", "qol.inventory_overlay.chrome_panel"),
+        INV_HEADER("Armor column", "qol.inventory_overlay.chrome_header"),
+        INV_MAIN("Backpack slots", "qol.inventory_overlay.chrome_main"),
         INV_HOTBAR("Hotbar", "qol.inventory_overlay.chrome_hotbar"),
-        INV_BORDER("Inventory border", "qol.inventory_overlay.chrome_border"),
-        STORAGE_PANEL("Storage panel", "qol.storage_overlay.panel_color"),
+        INV_BORDER("Outline", "qol.inventory_overlay.chrome_border"),
+        STORAGE_PANEL("Storage window", "qol.storage_overlay.panel_color"),
         STORAGE_CARD("Storage cards", "qol.storage_overlay.card_color"),
-        STORAGE_ACTIVE("Open storage", "qol.storage_overlay.card_active_color"),
+        STORAGE_ACTIVE("Open storage card", "qol.storage_overlay.card_active_color"),
         STORAGE_PLAYER("Storage inventory", "qol.storage_overlay.player_color");
 
         private final String label;
@@ -275,6 +346,20 @@ public final class InventoryOverlayPolicy {
 
         public String label() {
             return label;
+        }
+
+        public String hint() {
+            return switch (this) {
+                case INV_PANEL -> "Tints the inventory window behind items";
+                case INV_HEADER -> "Armor column and the strip beside the player";
+                case INV_MAIN -> "The 3x9 backpack rows";
+                case INV_HOTBAR -> "The bottom hotbar row";
+                case INV_BORDER -> "1-pixel edge around the window";
+                case STORAGE_PANEL -> "Background of /storage (not this screen)";
+                case STORAGE_CARD -> "Ender Chest / backpack cards in /storage";
+                case STORAGE_ACTIVE -> "The storage page you currently have open";
+                case STORAGE_PLAYER -> "Your inventory strip inside /storage";
+            };
         }
 
         public String settingId() {
@@ -291,9 +376,21 @@ public final class InventoryOverlayPolicy {
                 WRENCH_SIZE);
     }
 
+    /**
+     * SkyBlock's inventory texture paints a bowtie cat beside the 2x2
+     * crafting grid. Cover that strip, including a few pixels past the
+     * panel edge, without overlapping the left crafting column.
+     */
+    public static Rect mascotCoverRect(int guiLeft, int guiTop, int guiWidth) {
+        int x = guiLeft + 140;
+        int y = guiTop + 50;
+        int width = Math.max(28, Math.max(1, guiWidth) - 140 + 12);
+        return new Rect(x, y, width, 34);
+    }
+
     public static Rect editorRect(int wrenchX, int wrenchY, int screenWidth, int screenHeight) {
         int height = 22 + ChromeColorRole.values().length * EDITOR_ROW + 8
-                + 4 * (EDITOR_SLIDER_HEIGHT + 6) + 18;
+                + 4 * (EDITOR_SLIDER_HEIGHT + 6) + 36;
         int x = wrenchX + WRENCH_SIZE + 6;
         if (x + EDITOR_WIDTH > screenWidth - 4) {
             x = wrenchX - EDITOR_WIDTH - 6;
@@ -316,8 +413,33 @@ public final class InventoryOverlayPolicy {
                 EDITOR_ROW - 2);
     }
 
+    public static Rect editorResetRect(Rect row) {
+        return new Rect(
+                row.x() + row.width() - 22 - 4 - EDITOR_RESET_WIDTH,
+                row.y() + 2,
+                EDITOR_RESET_WIDTH,
+                row.height() - 4);
+    }
+
     public static Rect editorSwatchRect(Rect row) {
         return new Rect(row.x() + row.width() - 22, row.y() + 2, 20, row.height() - 4);
+    }
+
+    public static int defaultChromeColor(ChromeColorRole role) {
+        if (role == null) {
+            return 0;
+        }
+        return switch (role) {
+            case INV_PANEL -> DEFAULT_INV_PANEL;
+            case INV_HEADER -> DEFAULT_INV_HEADER;
+            case INV_MAIN -> DEFAULT_INV_MAIN;
+            case INV_HOTBAR -> DEFAULT_INV_HOTBAR;
+            case INV_BORDER -> DEFAULT_INV_BORDER;
+            case STORAGE_PANEL -> DEFAULT_STORAGE_PANEL;
+            case STORAGE_CARD -> DEFAULT_STORAGE_CARD;
+            case STORAGE_ACTIVE -> DEFAULT_STORAGE_ACTIVE;
+            case STORAGE_PLAYER -> DEFAULT_STORAGE_PLAYER;
+        };
     }
 
     public static Rect editorSliderRect(Rect editor, int channel) {
@@ -353,6 +475,24 @@ public final class InventoryOverlayPolicy {
         return Math.max(0, Math.min(255, Math.round(t * 255)));
     }
 
+    /**
+     * RGB edits that would stay fully transparent stay invisible. Bump opacity
+     * so the first color drag is visible; Alpha 0 still hides on purpose.
+     */
+    public static int withChannelEnsuringVisible(int argb, int channel, int value) {
+        int next = withChannel(argb, channel, value);
+        if (channel == 3) {
+            return next;
+        }
+        if (channelValue(next, 3) == 0
+                && (channelValue(next, 0) != 0
+                || channelValue(next, 1) != 0
+                || channelValue(next, 2) != 0)) {
+            return withChannel(next, 3, 224);
+        }
+        return next;
+    }
+
     public static boolean hitWrench(int guiLeft, int guiTop, int guiWidth, int mouseX, int mouseY) {
         return wrenchRect(guiLeft, guiTop, guiWidth).contains(mouseX, mouseY);
     }
@@ -372,5 +512,133 @@ public final class InventoryOverlayPolicy {
             case HOTBAR -> new Rect(guiLeft + 7, guiTop + 141, Math.max(1, width - 14), 18);
             case BORDER -> new Rect(guiLeft, guiTop, width, height);
         };
+    }
+
+    public static Rect playerPreviewRect(int guiLeft, int guiTop) {
+        return new Rect(
+                guiLeft + PLAYER_PREVIEW_X,
+                guiTop + PLAYER_PREVIEW_Y,
+                PLAYER_PREVIEW_WIDTH,
+                PLAYER_PREVIEW_HEIGHT);
+    }
+
+    public static Rect craftingGridRect(int guiLeft, int guiTop) {
+        return new Rect(
+                guiLeft + CRAFTING_GRID_X,
+                guiTop + CRAFTING_GRID_Y,
+                CRAFTING_GRID_WIDTH,
+                CRAFTING_GRID_HEIGHT);
+    }
+
+    /**
+     * PANEL and HEADER skip the paper doll. Item slots are painted as
+     * explicit wells on top of the remaining chrome.
+     */
+    public static List<Rect> chromeFillRects(
+            ChromeRegion region,
+            int guiLeft,
+            int guiTop,
+            int guiWidth,
+            int guiHeight) {
+        Rect fill = chromeRegion(region, guiLeft, guiTop, guiWidth, guiHeight);
+        if (region == ChromeRegion.PANEL || region == ChromeRegion.HEADER) {
+            return subtractAll(fill, playerPreviewRect(guiLeft, guiTop));
+        }
+        return List.of(fill);
+    }
+
+    public static Rect slotRect(int guiLeft, int guiTop, int slotX, int slotY) {
+        return new Rect(guiLeft + slotX, guiTop + slotY, SLOT_SIZE, SLOT_SIZE);
+    }
+
+    /**
+     * Vanilla survival-inventory wells: armor, 2×2 craft, result, 3×9
+     * backpack, hotbar, and optionally the off-hand slot.
+     */
+    public static List<Rect> survivalSlotRects(int guiLeft, int guiTop, boolean includeOffhand) {
+        List<Rect> slots = new ArrayList<>();
+        for (int i = 0; i < EQUIPMENT_SLOT_COUNT; i++) {
+            slots.add(slotRect(guiLeft, guiTop, ARMOR_COLUMN_X, ARMOR_COLUMN_Y + i * SLOT_STRIDE));
+        }
+        for (int row = 0; row < 2; row++) {
+            for (int col = 0; col < 2; col++) {
+                slots.add(slotRect(
+                        guiLeft,
+                        guiTop,
+                        CRAFT_INPUT_X + col * SLOT_STRIDE,
+                        CRAFT_INPUT_Y + row * SLOT_STRIDE));
+            }
+        }
+        slots.add(slotRect(guiLeft, guiTop, CRAFT_RESULT_X, CRAFT_RESULT_Y));
+        for (int row = 0; row < MAIN_ROWS; row++) {
+            for (int col = 0; col < MAIN_COLUMNS; col++) {
+                slots.add(slotRect(
+                        guiLeft,
+                        guiTop,
+                        MAIN_INVENTORY_X + col * SLOT_STRIDE,
+                        MAIN_INVENTORY_Y + row * SLOT_STRIDE));
+            }
+        }
+        for (int col = 0; col < MAIN_COLUMNS; col++) {
+            slots.add(slotRect(
+                    guiLeft,
+                    guiTop,
+                    MAIN_INVENTORY_X + col * SLOT_STRIDE,
+                    HOTBAR_Y));
+        }
+        if (includeOffhand) {
+            slots.add(slotRect(guiLeft, guiTop, VANILLA_OFFHAND_SLOT_X, VANILLA_OFFHAND_SLOT_Y));
+        }
+        return slots;
+    }
+
+    static List<Rect> subtractAll(Rect outer, Rect... holes) {
+        List<Rect> current = new ArrayList<>();
+        if (outer != null && outer.width() > 0 && outer.height() > 0) {
+            current.add(outer);
+        }
+        if (holes == null) {
+            return current;
+        }
+        for (Rect hole : holes) {
+            List<Rect> next = new ArrayList<>();
+            for (Rect piece : current) {
+                next.addAll(subtract(piece, hole));
+            }
+            current = next;
+        }
+        return current;
+    }
+
+    static List<Rect> subtract(Rect outer, Rect hole) {
+        if (outer == null || outer.width() <= 0 || outer.height() <= 0) {
+            return List.of();
+        }
+        if (hole == null || hole.width() <= 0 || hole.height() <= 0) {
+            return List.of(outer);
+        }
+        int x1 = Math.max(outer.x(), hole.x());
+        int y1 = Math.max(outer.y(), hole.y());
+        int x2 = Math.min(outer.x() + outer.width(), hole.x() + hole.width());
+        int y2 = Math.min(outer.y() + outer.height(), hole.y() + hole.height());
+        if (x2 <= x1 || y2 <= y1) {
+            return List.of(outer);
+        }
+        List<Rect> parts = new ArrayList<>();
+        if (y1 > outer.y()) {
+            parts.add(new Rect(outer.x(), outer.y(), outer.width(), y1 - outer.y()));
+        }
+        int outerBottom = outer.y() + outer.height();
+        if (y2 < outerBottom) {
+            parts.add(new Rect(outer.x(), y2, outer.width(), outerBottom - y2));
+        }
+        if (x1 > outer.x()) {
+            parts.add(new Rect(outer.x(), y1, x1 - outer.x(), y2 - y1));
+        }
+        int outerRight = outer.x() + outer.width();
+        if (x2 < outerRight) {
+            parts.add(new Rect(x2, y1, outerRight - x2, y2 - y1));
+        }
+        return parts;
     }
 }

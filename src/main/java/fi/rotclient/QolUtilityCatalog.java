@@ -12,9 +12,12 @@ public final class QolUtilityCatalog {
     public enum Group {
         COMBAT("Combat"),
         SLAYER("Slayer"),
+        EVENTS("Events"),
         FISHING("Fishing"),
         FORAGING("Foraging"),
+        GARDEN("Garden"),
         DUNGEONS("Dungeons"),
+        KUUDRA("Kuudra"),
         MINING("Mining"),
         UTILITIES("Utilities"),
         HUD_DISPLAY("HUD & Display"),
@@ -47,14 +50,17 @@ public final class QolUtilityCatalog {
 
         public String sidebarSubtitle() {
             return switch (this) {
-                case COMBAT -> "Clicker, warp, ESP, Diana";
+                case COMBAT -> "Clicker, warp, ESP";
                 case SLAYER -> "Boss HUD, alerts, carry";
+                case EVENTS -> "Diana burrows and drops";
                 case FISHING -> "Bite, creatures, trophy";
                 case FORAGING -> "Trees, beacon, Galatea";
+                case GARDEN -> "Farm keys";
                 case DUNGEONS -> "Secrets and dungeon helpers";
-                case MINING -> "Scanner, commissions, Glacite, Scatha";
-                case UTILITIES -> "Keybinds & helpers";
-                case HUD_DISPLAY -> "Overlays, stats, tooltips";
+                case KUUDRA -> "Waypoints, party, alerts";
+                case MINING -> "Tracker, powder, scanner, commissions, Glacite";
+                case UTILITIES -> "Keybinds, chat, market";
+                case HUD_DISPLAY -> "Overlays, layout, appearance";
                 case RENDER -> "Viewmodel and camera";
                 case INTERFACE -> "Menus, storage, inventory";
             };
@@ -62,16 +68,19 @@ public final class QolUtilityCatalog {
 
         public String pageDescription() {
             return switch (this) {
-                case COMBAT -> "Auto clicker, trajectories, Etherwarp, combat ESP, and Diana burrows.";
+                case COMBAT -> "Auto clicker, trajectories, Etherwarp, and combat ESP.";
                 case SLAYER -> "Shared Slayer engine: HUD, fight helpers, drops, and carry.";
+                case EVENTS -> "Griffin burrows, Diana mobs, profit HUD, and share helpers.";
                 case FISHING -> "Auto-pull, sea creatures, hotspots, trophy, and fishing HUD for the Serveri.";
                 case FORAGING -> "Galatea/Park/Torrhus tree HUD, audio mutes, temple/beacon helpers.";
-                case DUNGEONS -> "Secrets, ESP, terminals, and dungeon HUD.";
-                case MINING -> "Crystal Hollows scanner, commissions, Glacite, Scatha, and mining helpers.";
-                case UTILITIES -> "Keybinds, chat helpers, and everyday QoL tools.";
-                case HUD_DISPLAY -> "On-screen stats, performance, and item tooltip extras.";
+                case GARDEN -> "Garden farming key remaps. Cheat options stay off by default.";
+                case DUNGEONS -> "Secrets, ESP, terminals, puzzles, and dungeon HUD.";
+                case KUUDRA -> "Kuudra waypoints, Fresh Tools, party commands, and fight HUDs.";
+                case MINING -> "Mining Tracker, powder chests, session pages, scanner, commissions, Glacite, and helpers.";
+                case UTILITIES -> "Keybinds, chat helpers, market guard, and everyday tools.";
+                case HUD_DISPLAY -> "On-screen stats, HUD layout, appearance, custom cursor, and tooltip extras.";
                 case RENDER -> "Local visual filters, viewmodel, scale, and camera.";
-                case INTERFACE -> "Storage, inventory chrome, and how the Rot Client UI opens.";
+                case INTERFACE -> "Storage, inventory chrome, SkyBlock menus, and how the dashboard opens.";
             };
         }
     }
@@ -179,16 +188,37 @@ public final class QolUtilityCatalog {
     }
 
     /**
+     * Appearance and HUD Elements Editor live under Visuals, not as
+     * Modules → HUD &amp; Display cards. Catalog ids stay in this group.
+     */
+    public static boolean hiddenFromGroupPage(ModuleDef module) {
+        return module != null && VisualsLandingNavPolicy.hiddenFromGroupPage(module.id());
+    }
+
+    public static List<ModuleDef> modulesOnGroupPage(Group group) {
+        List<ModuleDef> out = new ArrayList<>();
+        for (ModuleDef module : modulesInGroup(group)) {
+            if (!hiddenFromGroupPage(module)) {
+                out.add(module);
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    /**
      * Sidebar order: combat and island gameplay first, then HUD/render/interface,
      * with Utilities last as the leftover toolbox.
      */
     private static final List<Group> SIDEBAR_ORDER = List.of(
             Group.COMBAT,
             Group.SLAYER,
+            Group.EVENTS,
             Group.DUNGEONS,
+            Group.KUUDRA,
             Group.MINING,
             Group.FISHING,
             Group.FORAGING,
+            Group.GARDEN,
             Group.HUD_DISPLAY,
             Group.RENDER,
             Group.INTERFACE,
@@ -213,9 +243,11 @@ public final class QolUtilityCatalog {
         if (module == null) {
             return false;
         }
+        if (isGameplayCheatId(module.id())) {
+            return true;
+        }
         if (containsCheatToken(module.searchAliases())
-                || containsCheatPhrase(module.description())
-                || module.id().endsWith("_cheats")) {
+                || containsCheatPhrase(module.description())) {
             return true;
         }
         for (SettingDef setting : module.settings()) {
@@ -224,14 +256,31 @@ public final class QolUtilityCatalog {
                 return true;
             }
         }
-        return switch (module.id()) {
-            case "qol.auto_dojo",
-                    "qol.auto_experiments",
-                    "qol.auto_harp",
-                    "qol.auto_gfs",
-                    "qol.auto_sell",
-                    "qol.cheater_wardrobe",
+        return false;
+    }
+
+    /**
+     * Gameplay automation and other illegal helpers. Auto Sprint stays off this
+     * list: it only holds vanilla sprint, it does not click or solve for you.
+     */
+    static boolean isGameplayCheatId(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
+        if (id.endsWith("_cheats")) {
+            return true;
+        }
+        if (id.startsWith("qol.auto_") && !id.equals("qol.auto_sprint")) {
+            return true;
+        }
+        return switch (id) {
+            case "qol.cheater_wardrobe",
                     "qol.farm_keys",
+                    "qol.inventory_walk",
+                    "qol.freecam",
+                    "qol.experiment_solver",
+                    "qol.fishing_helper",
+                    "qol.secret_hitboxes",
                     "qol.diana_share",
                     "qol.slayer_auto_start",
                     "qol.slayer_auto_soulcry" -> true;
@@ -384,7 +433,7 @@ public final class QolUtilityCatalog {
                 "qol.no_cursor_reset",
                 "No Cursor Reset",
                 "Keep the mouse pointer where it was when you close one supported chest and open another, instead of snapping back to the center.",
-                Group.UTILITIES,
+                Group.INTERFACE,
                 "GUI",
                 false,
                 true,
@@ -435,7 +484,7 @@ public final class QolUtilityCatalog {
                 setting("qol.player_display.ehp_color", "EHP Color", "EHP HUD color.", SettingType.COLOR),
                 setting("qol.player_display.speed_color", "Speed Color", "Speed HUD color.", SettingType.COLOR),
                 setting("qol.player_display.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND),
-                setting("qol.player_display.open_hud_editor", "Edit HUD Layout", "Move each Player Display element.", SettingType.ACTION, "position")));
+                setting("qol.player_display.open_hud_editor", "Open HUD Elements Editor", "Move each Player Display element.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.pet_keybinds",
@@ -475,7 +524,7 @@ public final class QolUtilityCatalog {
                 false,
                 true,
                 true,
-                List.of("auto clicker", "clicker", "cps", "left click", "right click"),
+                List.of("auto clicker", "clicker", "cps", "left click", "right click", "cheat"),
                 setting("qol.auto_clicker.whitelist_only", "Whitelist Only", "Only click while holding a whitelisted item. Add with /rot autoclicker add left|right.", SettingType.TOGGLE, "whitelist"),
                 setting("qol.auto_clicker.allow_breaking", "Allow Breaking Blocks", "Hold-mine the targeted block while left auto-click is active. Off skips left clicks on blocks.", SettingType.TOGGLE, "break", "mining"),
                 setting("qol.auto_clicker.block_breaker", "Block Dungeon Breaker", "Disable auto clicker while holding Dungeon Breaker.", SettingType.TOGGLE, "dungeon breaker"),
@@ -488,7 +537,7 @@ public final class QolUtilityCatalog {
                 setting("qol.auto_clicker.left_keybind", "Left Activation", "Blank uses left mouse. Examples: LMB, MOUSE_LEFT, R.", SettingType.KEYBIND, "left bind"),
                 setting("qol.auto_clicker.right_keybind", "Right Activation", "Blank uses right mouse. Examples: RMB, MOUSE_RIGHT.", SettingType.KEYBIND, "right bind"),
                 setting("qol.auto_clicker.cps_hud", "CPS HUD", "Show live synthetic clicks per second. BLOCK HOLD means continuous mining input is active.", SettingType.TOGGLE, "hud", "cps"),
-                setting("qol.auto_clicker.open_hud_editor", "Edit CPS HUD Layout", "Move the Auto Clicker CPS HUD.", SettingType.ACTION, "position")));
+                setting("qol.auto_clicker.open_hud_editor", "Open HUD Elements Editor", "Move the Auto Clicker CPS HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.auto_dojo",
@@ -729,7 +778,7 @@ public final class QolUtilityCatalog {
                 List.of("tooltip", "enchant", "price", "bazaar", "info", "museum"),
                 section("qol.item_tooltips.section_missing", "MISSING ENCHANTS"),
                 setting("qol.item_tooltips.missing", "Show Missing Enchants", "List enchants the hovered item still needs.", SettingType.TOGGLE),
-                setting("qol.missing_enchants.keybind", "Missing Enchants Keybind", "Hold to show. Blank always shows.", SettingType.KEYBIND, "left shift"),
+                setting("qol.missing_enchants.keybind", "Missing Enchants Keybind", "Hold to show. Ctrl+left-click also pins the check on that item. Blank always shows.", SettingType.KEYBIND, "left shift"),
                 setting("qol.missing_enchants.show_upgradable", "Show Upgradable", "Show applied enchants that can be upgraded to a higher supported level.", SettingType.TOGGLE),
                 setting("qol.missing_enchants.show_conflicting", "Show Conflicting", "Include mutually exclusive enchants such as Smite while Sharpness is applied.", SettingType.TOGGLE),
                 section("qol.item_tooltips.section_info", "ITEM INFO"),
@@ -785,7 +834,7 @@ public final class QolUtilityCatalog {
                 setting("qol.storage_overlay.open_item_search", "Item Search", "Search the bundled SkyBlock item index without opening a second durable ledger.", SettingType.ACTION, "items", "bazaar"),
                 setting("qol.storage_overlay.craft_helper", "Craft Helper", "Show recursive recipe totals, owned vs missing, and Storage-page counts on item tooltips.", SettingType.TOGGLE, "recipe", "craft"),
                 setting("qol.storage_overlay.museum_armor", "Museum Armor Hints", "Hint missing Museum armor pieces from the bundled set list.", SettingType.TOGGLE, "museum"),
-                setting("qol.storage_overlay.search_query", "Search Query", "Highlight matching cached item names in the storage overview. Blank disables search.", SettingType.TEXT, "search"),
+                setting("qol.storage_overlay.search_query", "Search Query", "Type an item name. Matching slots in Storage and Inventory get a moving purple-red edge light. The overlay also has a search box. Blank disables search.", SettingType.TEXT, "search"),
                 setting("qol.storage_overlay.clear_search", "Clear Search", "Clear the local storage search query.", SettingType.ACTION, "search", "clear"),
                 setting("qol.storage_overlay.always_open", "Always Open Overlay", "Replace supported Storage pages with the compact overview whenever possible.", SettingType.TOGGLE),
                 setting("qol.storage_overlay.outline_active", "Outline Active Page", "Outline the currently open server page.", SettingType.TOGGLE),
@@ -799,7 +848,7 @@ public final class QolUtilityCatalog {
                 setting("qol.storage_overlay.padding", "Padding", "Space between page cards.", SettingType.NUMBER),
                 setting("qol.storage_overlay.margin", "Margin", "Space around the storage panel content.", SettingType.NUMBER),
                 setting("qol.storage_overlay.block_item_scroll", "Block Scrolling on Items", "Leave the overlay stationary while hovering an item.", SettingType.TOGGLE),
-                setting("qol.storage_overlay.highlight_search", "Highlight Search Results", "Highlight matching cached items when search is active.", SettingType.TOGGLE),
+                setting("qol.storage_overlay.highlight_search", "Highlight Search Results", "Draw a clockwise purple-to-red light around matching cached and live slots.", SettingType.TOGGLE, "search"),
                 setting("qol.storage_overlay.filter_search", "Filter Search Results", "Show only cached pages containing every search term. Local cache only.", SettingType.TOGGLE),
                 setting("qol.storage_overlay.highlight_color", "Search Highlight Color", "Search-result highlight color.", SettingType.COLOR),
                 setting("qol.storage_overlay.panel_color", "Storage Panel", "Background of the compact Storage window.", SettingType.COLOR),
@@ -869,8 +918,8 @@ public final class QolUtilityCatalog {
                 setting("qol.inventory_overlay.hide_status_effects", "Hide Inventory Effects", "Hide the potion-effect panel on the right of the inventory screen.", SettingType.TOGGLE, "potion", "effects"),
                 setting("qol.inventory_overlay.pet_slot", "Pet Slot", "Show the equipped pet to the right of the bottom equipment bar. Click to open Pets. Ctrl+left-click and drag to reposition.", SettingType.TOGGLE, "pet"),
                 setting("qol.inventory_overlay.open_colors", "Inventory Colors", "Open the same color picker as the in-game wrench: panel, header, main, hotbar, and border.", SettingType.ACTION, "wrench", "color"),
-                setting("qol.inventory_overlay.chrome_panel", "Whole Inventory", "Tint over the full inventory panel. Alpha 0 leaves vanilla.", SettingType.COLOR),
-                setting("qol.inventory_overlay.chrome_header", "Top / Crafting", "Tint over the crafting and armor area.", SettingType.COLOR),
+                setting("qol.inventory_overlay.chrome_panel", "Whole Inventory", "Tint over the inventory panel. The player model and 2×2 crafting stay vanilla. Alpha 0 leaves vanilla.", SettingType.COLOR),
+                setting("qol.inventory_overlay.chrome_header", "Top / Armor", "Tint over the armor column and the strip beside the player. Crafting stays vanilla.", SettingType.COLOR),
                 setting("qol.inventory_overlay.chrome_main", "Main Inventory", "Tint over the 3x9 inventory rows.", SettingType.COLOR),
                 setting("qol.inventory_overlay.chrome_hotbar", "Hotbar", "Tint over the hotbar row.", SettingType.COLOR),
                 setting("qol.inventory_overlay.chrome_border", "Border", "Outline around the inventory.", SettingType.COLOR),
@@ -881,7 +930,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.skill_levels",
                 "Skill Levels",
-                "Overlay current skill levels on the Your Skills chest. Maxed skills use aqua instead of white.",
+                "Overlay current skill levels on the Your Skills chest. Only the digits get a tight background; maxed skills use aqua instead of white.",
                 Group.HUD_DISPLAY,
                 "Skills",
                 false,
@@ -940,7 +989,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.performance_hud",
                 "Performance HUD",
-                "FPS / TPS / Ping overlay. The card switch is this module. Show FPS / TPS / Ping are the HUD text bits. Edit HUD Layout focuses this overlay and fades the others.",
+                "FPS / TPS / Ping overlay. The card switch is this module. Show FPS / TPS / Ping are the HUD text bits. Open HUD Elements Editor focuses this overlay and fades the others.",
                 Group.HUD_DISPLAY,
                 "Overlays",
                 false,
@@ -954,8 +1003,85 @@ public final class QolUtilityCatalog {
                 setting("qol.performance_hud.show_fps", "Show FPS", "Show FPS readout.", SettingType.TOGGLE, "fps"),
                 setting("qol.performance_hud.show_tps", "Show TPS", "Show TPS readout.", SettingType.TOGGLE, "tps"),
                 setting("qol.performance_hud.show_ping", "Show Ping", "Show Ping readout.", SettingType.TOGGLE, "ping"),
-                setting("qol.performance_hud.open_hud_editor", "Edit HUD Layout", "Move the Performance HUD.", SettingType.ACTION, "position"),
+                setting("qol.performance_hud.show_background", "Show Background", "Draw the dark panel behind FPS / TPS / Ping. Off leaves the numbers only.", SettingType.TOGGLE, "background"),
+                setting("qol.performance_hud.open_hud_editor", "Open HUD Elements Editor", "Move the Performance HUD.", SettingType.ACTION, "position"),
                 setting("qol.performance_hud.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
+
+        modules.add(module(
+                "qol.mining_tracker",
+                "Mining Tracker",
+                "Ore and gemstone tracker: enable the overlay, pick HUD lines, and open the tracker page for material selection.",
+                Group.MINING,
+                "Tracker",
+                false,
+                true,
+                true,
+                List.of("mining tracker", "tracker", "ore tracker", "gemstone tracker"),
+                setting("qol.mining_tracker.show_blocks", "Blocks", "Broken-block counter on the Mining Tracker HUD.", SettingType.TOGGLE, "blocks"),
+                setting("qol.mining_tracker.show_raw", "Raw Material", "Raw material quantity on the HUD.", SettingType.TOGGLE, "raw"),
+                setting("qol.mining_tracker.show_enchanted", "Enchanted Material", "Enchanted material quantity on the HUD.", SettingType.TOGGLE, "enchanted"),
+                setting("qol.mining_tracker.show_session_profit", "Session Profit", "Estimated session value on the HUD.", SettingType.TOGGLE, "profit"),
+                setting("qol.mining_tracker.show_unsold", "Unsold Value", "Unsold inventory value on the HUD.", SettingType.TOGGLE, "unsold"),
+                setting("qol.mining_tracker.show_cph", "Coins / Hour", "Coins per hour on the HUD.", SettingType.TOGGLE, "cph"),
+                setting("qol.mining_tracker.show_mph", "Material / Hour", "Material per hour on the HUD.", SettingType.TOGGLE, "mph"),
+                setting("qol.mining_tracker.show_session_time", "Session Time", "Active session timer on the HUD.", SettingType.TOGGLE, "time"),
+                setting("qol.mining_tracker.show_tool", "Active Tool", "Held mining tool on the HUD.", SettingType.TOGGLE, "tool"),
+                setting("qol.mining_tracker.show_area", "Area / Location", "Live SkyBlock parent and sub-area on the HUD.", SettingType.TOGGLE, "area", "location"),
+                setting("qol.mining_tracker.show_graph", "Rate Graph", "Mining rate sparkline on the HUD.", SettingType.TOGGLE, "graph"),
+                setting("qol.mining_tracker.show_fortune", "Drop + Fortune", "Drop and Mining Fortune readout.", SettingType.TOGGLE, "fortune"),
+                setting("qol.mining_tracker.show_bazaar", "Bazaar + Tax", "Bazaar pricing and tax on the HUD.", SettingType.TOGGLE, "bazaar"),
+                setting("qol.mining_tracker.show_value_panel", "Value Panel", "Profit / session-value card on the HUD.", SettingType.TOGGLE, "value"),
+                setting("qol.mining_tracker.show_hud_title", "HUD Title", "Mining Tracker title chrome.", SettingType.TOGGLE, "title"),
+                setting("qol.mining_tracker.show_hud_status", "Status Pill", "HUD status pill.", SettingType.TOGGLE, "status"),
+                setting("qol.mining_tracker.show_hud_version", "Version", "Mod version on the Mining Tracker HUD.", SettingType.TOGGLE),
+                setting("qol.mining_tracker.show_auto_pause", "Auto-Pause Line", "Target auto-pause status line.", SettingType.TOGGLE, "pause"),
+                setting("qol.mining_tracker.hud_background", "HUD Background", "Panel behind Mining Tracker text.", SettingType.TOGGLE, "background"),
+                setting("qol.mining_tracker.show_target_heading", "Target Heading", "TARGET heading above item rows.", SettingType.TOGGLE),
+                setting("qol.mining_tracker.show_other_section", "Others Section", "OTHERS aggregate row.", SettingType.TOGGLE, "others"),
+                setting("qol.mining_tracker.show_target_value", "Target Value", "Target mined value line.", SettingType.TOGGLE),
+                setting("qol.mining_tracker.show_other_value", "Others Value", "OTHERS value line under the value panel.", SettingType.TOGGLE),
+                setting("qol.mining_tracker.show_total_mined", "Total Mined Value", "Combined target + others value line.", SettingType.TOGGLE, "total"),
+                setting("qol.mining_tracker.open_hud_editor", "Open HUD Elements Editor", "Move and scale the Mining Tracker HUD.", SettingType.ACTION, "position"),
+                setting("qol.mining_tracker.open_page", "Open Tracker", "Open the tracker page for material selection.", SettingType.ACTION, "page")));
+
+        modules.add(module(
+                "qol.powder_chest",
+                "Powder Chest Tracker",
+                "Standalone powder chest counter and overlay. Independent of the ore target on Mining Tracker.",
+                Group.MINING,
+                "Tracker",
+                false,
+                true,
+                true,
+                List.of("powder", "powder chest", "mithril powder", "gemstone powder"),
+                setting("qol.powder_chest.hud", "Powder HUD", "Show the Powder Chest overlay.", SettingType.TOGGLE, "hud"),
+                setting("qol.powder_chest.hud_background", "HUD Background", "Panel behind Powder Chest text.", SettingType.TOGGLE, "background"),
+                setting("qol.powder_chest.open_hud_editor", "Open HUD Elements Editor", "Move and scale the Powder Chest HUD.", SettingType.ACTION, "position"),
+                setting("qol.powder_chest.open_page", "Open Powder Page", "Open the Powder Chest tracker page.", SettingType.ACTION, "page")));
+
+        modules.add(module(
+                "qol.mining_session",
+                "Mining Session",
+                "Live Current Session analytics. Open the page for the full readout; it does not fit in a settings drawer.",
+                Group.MINING,
+                "Session",
+                false,
+                false,
+                true,
+                List.of("session", "analytics", "current session"),
+                setting("qol.mining_session.open_page", "Open Analytics", "Open live Current Session analytics.", SettingType.ACTION, "page")));
+
+        modules.add(module(
+                "qol.mining_history",
+                "Mining History",
+                "Saved local session history. Open the page for the table; it does not fit in a settings drawer.",
+                Group.MINING,
+                "Session",
+                false,
+                false,
+                true,
+                List.of("history", "saved sessions"),
+                setting("qol.mining_history.open_page", "Open History", "Open saved local session history.", SettingType.ACTION, "page")));
 
         modules.add(module(
                 "qol.commission_display",
@@ -971,7 +1097,7 @@ public final class QolUtilityCatalog {
                 setting("qol.commission_display.none", "None Available Text", "Shown when no commissions are parsed.", SettingType.TEXT),
                 setting("qol.commission_display.row", "Commission Text", "Row template. Variables: #name, #progress.", SettingType.TEXT),
                 setting("qol.commission_display.colored_percent", "Colored Percent", "Color the progress percent by completion.", SettingType.TOGGLE),
-                setting("qol.commission_display.open_hud_editor", "Edit HUD Layout", "Move the Commission Display.", SettingType.ACTION, "position")));
+                setting("qol.commission_display.open_hud_editor", "Open HUD Elements Editor", "Move the Commission Display.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.mining_scatha",
@@ -1085,7 +1211,8 @@ public final class QolUtilityCatalog {
                 true,
                 true,
                 List.of("pet", "pets", "hud", "dragon"),
-                setting("qol.pet_hud.open_hud_editor", "Edit HUD Layout", "Move the Pet HUD.", SettingType.ACTION, "position")));
+                setting("qol.pet_hud.show_background", "Show Background", "Draw the dark panel behind Pet HUD text. Off leaves icon and text only.", SettingType.TOGGLE, "background"),
+                setting("qol.pet_hud.open_hud_editor", "Open HUD Elements Editor", "Move the Pet HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.name_hider",
@@ -1619,7 +1746,7 @@ public final class QolUtilityCatalog {
                 "qol.diana_burrows",
                 "Diana Burrows",
                 "Spade lava-trail guess (polynomial fit), START/MOB/TREASURE particle burrows, waypoints. Serveri.",
-                Group.COMBAT,
+                Group.EVENTS,
                 "Diana",
                 false,
                 true,
@@ -1640,7 +1767,7 @@ public final class QolUtilityCatalog {
                 "qol.diana_mobs",
                 "Diana Mobs",
                 "Nametag ESP for Inquisitor and rare mythologicals, plus Griffin pet warning when digging without Griffin.",
-                Group.COMBAT,
+                Group.EVENTS,
                 "Diana",
                 false,
                 true,
@@ -1654,7 +1781,7 @@ public final class QolUtilityCatalog {
                 "qol.diana_profit",
                 "Diana Profit",
                 "Session-local drop HUD from dug chat (Crown of Greed, relics, coins). Not the mining Current Session ledger.",
-                Group.COMBAT,
+                Group.EVENTS,
                 "Diana",
                 false,
                 true,
@@ -1667,7 +1794,7 @@ public final class QolUtilityCatalog {
                 "qol.diana_share",
                 "Diana Share",
                 "Cheat: party /pc inquisitor coords and optional auto nearest hub warp. Serveri only. Off by default.",
-                Group.COMBAT,
+                Group.EVENTS,
                 "Diana",
                 false,
                 true,
@@ -1728,7 +1855,7 @@ public final class QolUtilityCatalog {
                 List.of("slayer", "boss", "display", "hud", "timer"),
                 setting("qol.slayer_display.kill_time", "Show Kill Time", "Keep the latest completed boss time on the HUD.", SettingType.TOGGLE),
                 setting("qol.slayer_display.dynamic_size", "Dynamic Text Size", "Shrink only long Slayer HUD lines to keep the panel compact without truncation.", SettingType.TOGGLE),
-                setting("qol.slayer_display.open_hud_editor", "Edit HUD Layout", "Move the Slayer HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_display.open_hud_editor", "Open HUD Elements Editor", "Move the Slayer HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_stats",
@@ -1745,7 +1872,7 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_stats.average_kill_time", "Average Kill Time", "Show mean owned-boss kill duration.", SettingType.TOGGLE),
                 setting("qol.slayer_stats.session_time", "Session Time", "Show elapsed Slayer session time.", SettingType.TOGGLE),
                 setting("qol.slayer_stats.reset_session", "Reset Slayer Session", "Clear local Slayer session totals and rare-drop counts. Settings and carry history are kept.", SettingType.ACTION, "reset"),
-                setting("qol.slayer_stats.open_hud_editor", "Edit HUD Layout", "Move the Slayer Stats HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_stats.open_hud_editor", "Open HUD Elements Editor", "Move the Slayer Stats HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_time_messages",
@@ -1776,19 +1903,19 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_progress.boss_warning", "Boss Spawn Warning", "Play a local title and sound only when verified progress crosses the threshold.", SettingType.TOGGLE),
                 setting("qol.slayer_progress.warning_repeat", "Repeat Higher Progress", "Repeat the local warning only when verified Combat XP reaches a higher completion.", SettingType.TOGGLE),
                 setting("qol.slayer_progress.warning_percent", "Warning Percent", "Combat XP percentage that triggers the one-time local boss-spawn warning.", SettingType.NUMBER),
-                setting("qol.slayer_progress.open_hud_editor", "Edit HUD Layout", "Move the Slayer Progress HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_progress.open_hud_editor", "Open HUD Elements Editor", "Move the Slayer Progress HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_highlights",
                 "Slayer Highlights",
-                "Highlight detected Slayer bosses, minibosses and Inferno demons.",
+                "Highlight detected Slayer bosses, minibosses and Inferno demons. Boxes, fight markers and target lines stay on your own fight.",
                 Group.SLAYER,
                 "Fight view",
                 false,
                 true,
                 true,
                 List.of("slayer", "highlight", "boss", "miniboss", "demon", "esp"),
-                setting("qol.slayer_highlights.only_mine", "Only For Mine", "Highlight only entities owned by the local player.", SettingType.TOGGLE),
+                setting("qol.slayer_highlights.only_mine", "Only For Mine", "Highlight only entities owned by the local player. Every Slayer family stays on your own boss.", SettingType.TOGGLE),
                 setting("qol.slayer_highlights.depth", "Depth Check", "Hide highlights behind solid blocks.", SettingType.TOGGLE),
                 setting("qol.slayer_highlights.target_lines", "Target Lines", "Draw a line from your view to verified Slayer targets.", SettingType.TOGGLE, "tracer", "line"),
                 setting("qol.slayer_highlights.target_line_width", "Target Line Width", "Set the width of verified Slayer target lines.", SettingType.NUMBER, "tracer", "width"),
@@ -1813,7 +1940,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_miniboss_alert",
                 "Miniboss Alert",
-                "Alert when a nearby Slayer miniboss is observed for the first time.",
+                "Alert when Hypixel announces that your Slayer miniboss spawned. Other players' minibosses are ignored.",
                 Group.SLAYER,
                 "Alerts",
                 false,
@@ -1822,7 +1949,7 @@ public final class QolUtilityCatalog {
                 List.of("slayer", "miniboss", "alert", "spawn"),
                 setting("qol.slayer_miniboss_alert.message", "Send Message", "Send a local chat notification.", SettingType.TOGGLE),
                 setting("qol.slayer_miniboss_alert.title", "Show Title", "Show the alert above the hotbar.", SettingType.TOGGLE),
-                setting("qol.slayer_miniboss_alert.distance", "Maximum Distance", "Only alert for minibosses within this range.", SettingType.NUMBER),
+                setting("qol.slayer_miniboss_alert.distance", "Maximum Distance", "Kept for saved configs. Alerts now follow your spawn chat, not nearby foreign minibosses.", SettingType.NUMBER),
                 setting("qol.slayer_miniboss_alert.text", "Alert Text", "Message for a regular Slayer miniboss.", SettingType.TEXT),
                 setting("qol.slayer_miniboss_alert.big_text", "Big Miniboss Text", "Message for the strongest miniboss tier.", SettingType.TEXT)));
 
@@ -1906,7 +2033,7 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_carry.inferno_t4_prices", "Inferno T4 Prices (M)", "Comma-separated accepted per-boss prices used to interpret completed trades.", SettingType.TEXT),
                 setting("qol.slayer_carry.open_manager", "Open Manager", "Open active Slayer carries by boss family.", SettingType.ACTION),
                 setting("qol.slayer_carry.display", "Slayer Carry Display", "Show active carry progress in a movable HUD.", SettingType.TOGGLE),
-                setting("qol.slayer_carry.open_hud_editor", "Edit HUD Layout", "Move the Slayer Carry HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_carry.open_hud_editor", "Open HUD Elements Editor", "Move the Slayer Carry HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_cocoon_alert",
@@ -1924,7 +2051,7 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_cocoon_alert.pitch", "Pitch", "Local alert-sound pitch.", SettingType.NUMBER),
                 setting("qol.slayer_cocoon_alert.volume", "Volume", "Local alert-sound volume.", SettingType.NUMBER),
                 setting("qol.slayer_cocoon_alert.timer", "Cocoon Timer", "Show the six-second cocoon countdown in a movable HUD.", SettingType.TOGGLE),
-                setting("qol.slayer_cocoon_alert.open_hud_editor", "Edit HUD Layout", "Move the Cocoon Timer HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_cocoon_alert.open_hud_editor", "Open HUD Elements Editor", "Move the Cocoon Timer HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_dagger_swap",
@@ -1956,18 +2083,18 @@ public final class QolUtilityCatalog {
                 "Attunement Display",
                 "Movable HUD for the current owned Inferno boss attunement and shield count.",
                 Group.SLAYER,
-                "HUD",
+                "Blaze",
                 false,
                 true,
                 true,
                 List.of("slayer", "blaze", "inferno", "attunement", "display"),
                 setting("qol.slayer_attunement_display.count", "Display Count", "Include the current attunement shield count.", SettingType.TOGGLE),
-                setting("qol.slayer_attunement_display.open_hud_editor", "Edit HUD Layout", "Move the Attunement Display HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_attunement_display.open_hud_editor", "Open HUD Elements Editor", "Move the Attunement Display HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_auto_soulcry",
                 "Auto Soulcry",
-                "Use a Voidgloom katana Soulcry when the selected boss and safety checks match.",
+                "Use a Voidgloom katana Soulcry when fighting the selected boss, then wait until the 4s ability is ready again.",
                 Group.SLAYER,
                 "Voidgloom",
                 false,
@@ -1979,7 +2106,7 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_auto_soulcry.min_delay", "Minimum Delay", "Minimum tick-based delay before Soulcry is used.", SettingType.NUMBER),
                 setting("qol.slayer_auto_soulcry.max_delay", "Maximum Delay", "Maximum tick-based delay before Soulcry is used.", SettingType.NUMBER),
                 setting("qol.slayer_auto_soulcry.tick_based", "Tick Based", "Observe the held katana and target every client tick.", SettingType.TOGGLE),
-                setting("qol.slayer_auto_soulcry.attack_based", "Attack Based", "Use Soulcry when attacking a detected Voidgloom boss.", SettingType.TOGGLE),
+                setting("qol.slayer_auto_soulcry.attack_based", "Attack Based", "Use Soulcry once when attacking a detected Voidgloom boss, then wait until the ability cooldown finishes.", SettingType.TOGGLE),
                 setting("qol.slayer_auto_soulcry.other_bosses", "Work On Other Bosses", "Allow attack-based detection for another player's Voidgloom boss.", SettingType.TOGGLE)));
 
         modules.add(module(
@@ -2007,7 +2134,7 @@ public final class QolUtilityCatalog {
                 List.of("slayer", "blaze", "inferno", "vengeance", "timer"),
                 setting("qol.slayer_vengeance.compact", "Compact Display", "Show only the remaining value.", SettingType.TOGGLE),
                 setting("qol.slayer_vengeance.use_ticks", "Use Ticks", "Show ticks instead of seconds.", SettingType.TOGGLE),
-                setting("qol.slayer_vengeance.open_hud_editor", "Edit HUD Layout", "Move the Vengeance Timer HUD.", SettingType.ACTION, "position")));
+                setting("qol.slayer_vengeance.open_hud_editor", "Open HUD Elements Editor", "Move the Vengeance Timer HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
                 "qol.slayer_vengeance_damage",
@@ -2045,7 +2172,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_voidgloom",
                 "Voidgloom Fight",
-                "Yang Glyph beacons, Nukekubi skulls, phase HUD and particle filter for Enderman Slayer.",
+                "Yang Glyph beacons, Nukekubi skulls, phase HUD and particle filter for your own Voidgloom fight.",
                 Group.SLAYER,
                 "Voidgloom",
                 false,
@@ -2072,12 +2199,12 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_voidgloom.hits_display", "Hits Remaining", "Show the Hits-phase count from the boss hologram.", SettingType.TOGGLE),
                 setting("qol.slayer_voidgloom.laser_timer", "Laser Timer", "Eight-second countdown while the boss is in the laser phase.", SettingType.TOGGLE),
                 setting("qol.slayer_voidgloom.laser_health", "Health During Laser", "Keep showing Voidgloom HP on the Slayer HUD during the laser phase.", SettingType.TOGGLE),
-                setting("qol.slayer_voidgloom.hide_particles", "Hide Particles", "Suppress smoke, flame and witch particles around nearby Endermen.", SettingType.TOGGLE)));
+                setting("qol.slayer_voidgloom.hide_particles", "Hide Particles", "Suppress smoke, flame and witch particles around your Voidgloom Seraph.", SettingType.TOGGLE)));
 
         modules.add(module(
                 "qol.slayer_revenant",
                 "Revenant Fight",
-                "BOOM warning and outlines for Revenant Horror V before the explosion.",
+                "BOOM warning and outlines for your own Revenant Horror fight.",
                 Group.SLAYER,
                 "Revenant",
                 false,
@@ -2094,7 +2221,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_tarantula",
                 "Tarantula Fight",
-                "Egg-sac outlines, hatchling lock, phase HUD and spider-sound mute for Tarantula Broodfather.",
+                "Egg-sac outlines, hatchling lock, phase HUD and spider-sound mute for your own Tarantula Broodfather fight.",
                 Group.SLAYER,
                 "Tarantula",
                 false,
@@ -2116,7 +2243,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_sven",
                 "Sven Fight",
-                "Pack-pup outlines, howl warning and wolf-sound mute for Sven Packmaster.",
+                "Pack-pup outlines, howl warning and wolf-sound mute for your own Sven Packmaster fight.",
                 Group.SLAYER,
                 "Sven",
                 false,
@@ -2135,7 +2262,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_vampire_markers",
                 "Vampire Fight",
-                "Ichor, Killer Spring, Twinclaws, Mania and Steak helpers for Riftstalker Bloodfiend.",
+                "Ichor, Killer Spring, Twinclaws, Mania and Steak helpers for your own Riftstalker Bloodfiend fight.",
                 Group.SLAYER,
                 "Vampire",
                 false,
@@ -2164,7 +2291,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.slayer_inferno",
                 "Inferno Fight",
-                "Fire Pillar, Fire Pits, hellion colors and particle hide for Inferno Demonlord.",
+                "Fire Pillar, Fire Pits, hellion colors and particle hide for your own Inferno Demonlord fight.",
                 Group.SLAYER,
                 "Blaze",
                 false,
@@ -2178,7 +2305,7 @@ public final class QolUtilityCatalog {
                 setting("qol.slayer_inferno.phase_display", "Phase Display", "Show Inferno 1/2 or 1/3 phase on the Slayer HUD.", SettingType.TOGGLE),
                 setting("qol.slayer_inferno.color_by_attunement", "Color By Attunement", "Outline your Inferno boss in the current hellion shield color.", SettingType.TOGGLE),
                 setting("qol.slayer_inferno.hide_chat", "Hide Attunement Chat", "Hide Hellion Shield and wrong-dagger chat lines.", SettingType.TOGGLE),
-                setting("qol.slayer_inferno.hide_particles", "Clear View", "Hide nearby blaze flame/smoke particles and fireballs.", SettingType.TOGGLE),
+                setting("qol.slayer_inferno.hide_particles", "Clear View", "Hide blaze flame/smoke particles and fireballs around your Inferno Demonlord.", SettingType.TOGGLE),
                 setting("qol.slayer_inferno.world_labels", "World Labels", "Name the Fire Pillar in the world.", SettingType.TOGGLE),
                 setting("qol.slayer_inferno.line_to_boss", "Line To Boss", "Draw a line from your view to your Inferno Demonlord.", SettingType.TOGGLE),
                 setting("qol.slayer_inferno.gummy_warning", "Gummy Warning", "Warn when Habanero Tactics or Smoldering Tomb is active without a Re-Heated Gummy Polar Bear.", SettingType.TOGGLE)));
@@ -2381,8 +2508,8 @@ public final class QolUtilityCatalog {
                 "qol.auto_experiments",
                 "Auto Experiments",
                 "Automatic Chronomatron and Ultrasequencer clicking at the Experimentation Table. Serveri automation.",
-                Group.UTILITIES,
-                "Automation",
+                Group.INTERFACE,
+                "Menus",
                 false,
                 true,
                 true,
@@ -2424,7 +2551,7 @@ public final class QolUtilityCatalog {
                 "Escrow Fix",
                 "Reopen of AH/BZ after escrow chat closes the menu. Same chat lines on Serveri.",
                 Group.UTILITIES,
-                "Fixes",
+                "Market",
                 false,
                 true,
                 true,
@@ -2434,8 +2561,8 @@ public final class QolUtilityCatalog {
                 "qol.auto_harp",
                 "Auto Harp",
                 "Melody's Harp: middle-click quartz notes in the Harp GUI. Serveri automation with the same 9x6 chest layout as Hypixel.",
-                Group.UTILITIES,
-                "Automation",
+                Group.INTERFACE,
+                "Menus",
                 false,
                 true,
                 true,
@@ -2487,8 +2614,8 @@ public final class QolUtilityCatalog {
                 "qol.farm_keys",
                 "Farm Keys",
                 "Crop-farming key remap: temporarily replace attack and jump binds, optionally lock look. Cheat, off by default.",
-                Group.UTILITIES,
-                "Movement",
+                Group.GARDEN,
+                "Garden",
                 false,
                 true,
                 true,
@@ -2541,11 +2668,27 @@ public final class QolUtilityCatalog {
                 setting("qol.camera.distance", "Distance", "Third-person camera distance when Custom Distance is on. Default is 4.", SettingType.NUMBER)));
 
         modules.add(module(
-                "qol.hud_layout",
-                "HUD Layout Editor",
-                "One editor for every Rot Client HUD. The card switch is this module. Each HUD still has its own on/off in its module. Open the editor to move, scale, and restyle backgrounds and text with the same RGB picker as other colors.",
-                Group.INTERFACE,
+                "qol.appearance",
                 "Appearance",
+                "Dashboard, HUD surface, chart, and background look. Opens a submenu of those pages. Mining Tracker overlay settings are on the Mining Tracker HUD button, not here.",
+                Group.HUD_DISPLAY,
+                "Visuals",
+                false,
+                false,
+                true,
+                List.of("appearance", "theme", "colors", "customizer", "look"),
+                setting("qol.appearance.open_dashboard", "Dashboard", "Panels, sidebar, headers, and buttons.", SettingType.ACTION),
+                setting("qol.appearance.open_colors", "Colors", "Text, HUD surfaces, and accents.", SettingType.ACTION),
+                setting("qol.appearance.open_background", "Background", "Optional dashboard background image.", SettingType.ACTION),
+                setting("qol.appearance.open_charts", "Charts", "Rate sparkline colors.", SettingType.ACTION),
+                setting("qol.appearance.open_reset", "Reset", "Restore appearance defaults.", SettingType.ACTION)));
+
+        modules.add(module(
+                "qol.hud_layout",
+                "HUD Elements Editor",
+                "One editor for every Rot Client HUD. The card switch is this module. Each HUD still has its own on/off in its module. Open the editor to move, scale, and restyle backgrounds and text with the same RGB picker as other colors.",
+                Group.HUD_DISPLAY,
+                "Layout",
                 false,
                 true,
                 true,
@@ -2555,7 +2698,7 @@ public final class QolUtilityCatalog {
                 setting("qol.hud_layout.background", "Background Color", "Default HUD panel fill. RGB picker with alpha.", SettingType.COLOR),
                 setting("qol.hud_layout.text", "Text Color", "Default HUD text color. RGB picker.", SettingType.COLOR),
                 setting("qol.hud_layout.scale", "HUD Scale", "Default size for QoL HUD panels. Mouse wheel or [ ] in the editor also scales the selected HUD.", SettingType.NUMBER),
-                setting("qol.hud_layout.open_hud_editor", "Open HUD Editor", "Show every HUD that is currently enabled and drag them on the world.", SettingType.ACTION, "position"),
+                setting("qol.hud_layout.open_hud_editor", "Open HUD Elements Editor", "Show every HUD that is currently enabled and drag them on the world.", SettingType.ACTION, "position"),
                 section("qol.hud_layout.section_vanilla", "Vanilla / Hypixel HUD"),
                 setting("qol.hud_layout.hide_hotbar", "Hide Hotbar", "Hide the vanilla hotbar.", SettingType.TOGGLE),
                 setting("qol.hud_layout.hide_health", "Hide Health Hearts", "Hide vanilla hearts.", SettingType.TOGGLE),
@@ -2576,8 +2719,8 @@ public final class QolUtilityCatalog {
                 "qol.custom_cursor",
                 "Custom Cursor",
                 "Rot Client pointer while any game menu is open: size, fill, outline, accent, click pulse, and hold ring. Dashboard edges show a resize arrow like a browser window.",
-                Group.INTERFACE,
-                "Appearance",
+                Group.HUD_DISPLAY,
+                "Cursor",
                 false,
                 true,
                 true,
@@ -2621,7 +2764,7 @@ public final class QolUtilityCatalog {
                 "qol.iota",
                 "Kuudra Tools",
                 "Kuudra 3D waypoints and hitboxes, Fresh Tools and build HUDs, phase titles, party join/limbo, party !commands including !t1-!t5, arrow tracker, terminator/fishing mutes, fishing-hook fix, and toggle left/right click. Parent off by default.",
-                Group.DUNGEONS,
+                Group.KUUDRA,
                 "Kuudra",
                 false,
                 true,
@@ -2692,9 +2835,9 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.click_gui",
                 "Click GUI",
-                "Rot Client window: Right Shift opens it. The card switch is this module. Accent color uses the RGB picker. Edit HUD Layout opens the same editor as HUD Layout Editor, with every enabled HUD.",
+                "Rot Client window: Right Shift opens it. The card switch is this module. Accent color uses the RGB picker. Open HUD Elements Editor opens the world editor with every enabled HUD.",
                 Group.INTERFACE,
-                "Appearance",
+                "Dashboard",
                 false,
                 true,
                 true,
@@ -2702,9 +2845,9 @@ public final class QolUtilityCatalog {
                 setting("qol.click_gui.chat_notifications", "Chat Notifications", "Local chat when you toggle a module or open Rot UI.", SettingType.TOGGLE),
                 setting("qol.click_gui.color", "Accent Color", "Dashboard highlight color. Same RGB picker as HUD colors.", SettingType.COLOR),
                 setting("qol.click_gui.rounded_bottoms", "Rounded Panel Bottoms", "Round the bottom corners of Rot Client panels.", SettingType.TOGGLE),
-                setting("qol.click_gui.open_hud_editor", "Edit HUD Layout", "Open the global HUD editor with every enabled overlay.", SettingType.ACTION),
+                setting("qol.click_gui.open_hud_editor", "Open HUD Elements Editor", "Open the global HUD editor with every enabled overlay.", SettingType.ACTION),
                 setting("qol.click_gui.developer_message", "Developer Message", "Optional local debug line. Leave off unless you are testing.", SettingType.TOGGLE),
-                setting("qol.click_gui.keybind", "Open UI Key", "Opens the Rot Client dashboard (Overview, QoL, mining, sessions). Blank uses Right Shift.", SettingType.KEYBIND, "right shift")));
+                setting("qol.click_gui.keybind", "Open UI Key", "Opens the Rot Client dashboard (Overview, modules, look, mining). Blank uses Right Shift.", SettingType.KEYBIND, "right shift")));
 
         return List.copyOf(modules);
     }

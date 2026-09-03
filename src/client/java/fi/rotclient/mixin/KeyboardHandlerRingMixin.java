@@ -1,6 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.RingKeybindsRuntime;
+import fi.rotclient.StorageOverlayRuntime;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -25,6 +26,10 @@ abstract class KeyboardHandlerRingMixin {
 
     @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
     private void rotclient$commandBindChar(long window, CharacterEvent event, CallbackInfo ci) {
+        if (StorageOverlayRuntime.charTyped(event)) {
+            ci.cancel();
+            return;
+        }
         if (RingKeybindsRuntime.shouldCancelCharTyped()) {
             ci.cancel();
         }

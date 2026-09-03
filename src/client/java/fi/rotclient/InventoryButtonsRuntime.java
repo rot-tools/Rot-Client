@@ -32,9 +32,11 @@ public final class InventoryButtonsRuntime {
             boolean hover = InventoryButtonsPolicy.hit(
                     button, anchor[0], anchor[1], anchor[2], anchor[3], mouseX, mouseY)
                     || button == dragging;
-            graphics.fill(x, y, x + size, y + size, hover ? 0xE02A4B5F : 0xD0182A38);
-            graphics.fill(x, y, x + size, y + 1, hover ? RotClientTheme.BORDER_BRIGHT : 0xFF31536A);
-            graphics.fill(x, y + size - 1, x + size, y + size, 0xFF0A1118);
+            graphics.fill(x, y, x + size, y + size,
+                    hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON);
+            RotClientTheme.drawOutline(
+                    graphics, x, y, size, size,
+                    hover ? RotClientTheme.BORDER_BRIGHT : RotClientTheme.BORDER);
             ItemStack icon = icon(button.icon);
             graphics.item(icon, x + Math.max(1, (size - 16) / 2), y + Math.max(1, (size - 16) / 2));
             if (hover && extras.inventoryButtonsHoverTooltip && client != null) {
@@ -111,7 +113,7 @@ public final class InventoryButtonsRuntime {
                 layout.panelX(),
                 layout.panelY(),
                 layout.panelWidth(),
-                layout.panelHeight() + StorageOverlayPolicy.PLAYER_HEIGHT - StorageOverlayPolicy.PLAYER_Y_INSET};
+                layout.panelHeight() + StorageOverlayPolicy.PLAYER_GAP + StorageOverlayPolicy.PLAYER_HEIGHT};
     }
 
     private static ItemStack icon(String raw) {

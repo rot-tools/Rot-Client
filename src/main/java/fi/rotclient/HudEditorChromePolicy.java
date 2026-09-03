@@ -10,7 +10,7 @@ import java.util.List;
 public final class HudEditorChromePolicy {
     public static final int UNPLACED = Integer.MIN_VALUE;
     public static final int TITLE_WIDTH = 268;
-    public static final int TITLE_HEIGHT = 50;
+    public static final int TITLE_HEIGHT = 148;
     public static final int HELP_WIDTH = 268;
     public static final int HELP_HEIGHT = 106;
     public static final int INSPECTOR_WIDTH = 228;
@@ -89,8 +89,9 @@ public final class HudEditorChromePolicy {
         return List.of(
                 "Drag a pink outline to move that HUD.",
                 "Scroll the wheel on a HUD to scale it.",
-                "Inspector: Background (text only), scale, colors, on/off bits.",
+                "Right-click a HUD to turn it off. Client UI cannot be scaled or hidden.",
                 "H / V / C center  ·  R reset  ·  Shift+R all",
+                "Ctrl+Z restores the last hidden HUD.",
                 "1 Mining  ·  2 Powder  ·  3 Client UI  ·  4 QoL",
                 "Drag these cards if they cover a HUD.");
     }

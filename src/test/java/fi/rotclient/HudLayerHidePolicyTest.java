@@ -24,17 +24,17 @@ final class HudLayerHidePolicyTest {
                         .findFirst()
                         .orElseThrow()));
         assertTrue(HudEditorChromePolicy.helpLines().stream().anyMatch(
-                line -> line.toLowerCase().contains("inspector")));
+                line -> line.toLowerCase().contains("right-click")));
         String client = java.nio.file.Files.readString(java.nio.file.Path.of(
                 "src/client/java/fi/rotclient/RotClientClient.java"));
         assertTrue(client.contains("VanillaHudElements.SCOREBOARD"));
         assertTrue(client.contains("VanillaHudElements.HOTBAR"));
         assertTrue(client.contains("VanillaHudElements.AIR_BAR"));
         assertTrue(client.contains("VanillaHudElements.PLAYER_LIST"));
-        String inspector = java.nio.file.Files.readString(java.nio.file.Path.of(
-                "src/client/java/fi/rotclient/RotClientScreen.java"));
-        assertTrue(inspector.contains("Vanilla / Hypixel HUD"));
-        assertTrue(inspector.contains("HudLayerCatalog.vanillaLayers()"));
+        String landing = java.nio.file.Files.readString(java.nio.file.Path.of(
+                "src/main/java/fi/rotclient/HudLayoutLandingPolicy.java"));
+        assertTrue(landing.contains("Vanilla / Hypixel"));
+        assertTrue(landing.contains("HudLayerCatalog.vanillaLayers()"));
     }
 
     @Test
@@ -100,6 +100,11 @@ final class HudLayerHidePolicyTest {
         assertFalse(HudLayerTogglePolicy.isOn(qol, "qol.player_display.health_hud", false));
         assertTrue(HudLayerTogglePolicy.toggle(qol, "qol.hud_layout.hide_hotbar", false));
         assertTrue(HudLayerTogglePolicy.isOn(qol, "qol.hud_layout.hide_hotbar", false));
+        assertTrue(HudLayerTogglePolicy.disable(qol, "qol.hud_layout.hide_hotbar", false));
+        assertFalse(HudLayerTogglePolicy.isOn(qol, "qol.hud_layout.hide_hotbar", false));
+        assertTrue(HudLayerTogglePolicy.enable(qol, "qol.hud_layout.hide_hotbar", false));
+        assertTrue(HudLayerTogglePolicy.isOn(qol, "qol.hud_layout.hide_hotbar", false));
+        assertFalse(HudLayerTogglePolicy.enable(qol, "qol.hud_layout.hide_hotbar", false));
         assertTrue(qol.resetModuleToDefaults("qol.hud_layout"));
         assertEquals(Boolean.FALSE, qol.readBoolean("qol.hud_layout.hide_scoreboard"));
         assertEquals(Boolean.FALSE, qol.readBoolean("qol.hud_layout.hide_hotbar"));

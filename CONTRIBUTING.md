@@ -4,6 +4,10 @@ Contributions should preserve a clear in-game UI, tracker accuracy, family isola
 
 Rot Client is created by **OgRudolf** and developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Use a focused branch and open a pull request for review before merging changes.
 
+Playtesters can skip a local build: download `RotClient-2.0.1+mc26.2.jar` from the
+[latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
+pre-release. That file is replaced on each green push to the default branch.
+
 Local-only files stay out of Git: `AGENTS.md`, `rotclient-dev.local.json`, and the Discord project-feed bootstrap path. Do not commit credentials, tokens, secrets, or personal machine paths. The optional local helper is `scripts/ensure-discord-project-feed.ps1`.
 
 ## Development setup

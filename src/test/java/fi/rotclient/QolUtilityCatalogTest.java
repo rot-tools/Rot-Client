@@ -72,6 +72,11 @@ final class QolUtilityCatalogTest {
                 "qol.fishing_tools",
                 "qol.item_tooltips",
                 "qol.commission_display",
+                "qol.mining_tracker",
+                "qol.powder_chest",
+                "qol.mining_session",
+                "qol.mining_history",
+                "qol.appearance",
                 "qol.mining_scatha",
                 "qol.mining_events",
                 "qol.mining_glacite",
@@ -168,24 +173,44 @@ final class QolUtilityCatalogTest {
                 QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.INTERFACE);
         assertTrue(utilities.stream().anyMatch(m -> m.id().equals("qol.auto_sprint")));
         assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.auto_clicker")));
+        assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.farm_keys")));
+        assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.hud_layout")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.player_display")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.performance_hud")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.pet_hud")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.name_hider")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.item_tooltips")));
+        assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.appearance")));
+        assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.hud_layout")));
+        assertTrue(QolUtilityCatalog.modulesOnGroupPage(QolUtilityCatalog.Group.HUD_DISPLAY)
+                .stream()
+                .noneMatch(m -> m.id().equals("qol.hud_layout")));
+        assertTrue(QolUtilityCatalog.modulesOnGroupPage(QolUtilityCatalog.Group.HUD_DISPLAY)
+                .stream()
+                .noneMatch(m -> m.id().equals("qol.appearance")));
+        assertTrue(QolUtilityCatalog.hiddenFromGroupPage(
+                QolUtilityCatalog.findById("qol.hud_layout")));
+        assertTrue(QolUtilityCatalog.hiddenFromGroupPage(
+                QolUtilityCatalog.findById("qol.appearance")));
+        assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.custom_cursor")));
         assertTrue(hud.stream().noneMatch(m -> m.id().equals("qol.info_tooltips")));
         assertTrue(hud.stream().anyMatch(m -> m.id().equals("qol.skill_levels")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.inventory_overlay")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.storage_overlay")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.reward_claim")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.slot_binds")));
-        assertTrue(utilities.stream().anyMatch(m -> m.id().equals("qol.farm_keys")));
+        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.no_cursor_reset")));
+        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.auto_experiments")));
+        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.auto_harp")));
+        assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.hud_layout")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.GARDEN)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.farm_keys")));
+        assertTrue(utilities.stream().anyMatch(m -> m.id().equals("qol.stall_market")));
         assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.skill_levels")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.camera")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.freecam")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.click_gui")));
-        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.hud_layout")));
-        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.custom_cursor")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.legacy_textures")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.custom_resource_pack")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
@@ -194,9 +219,12 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.auto_dojo")));
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.EVENTS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.diana_burrows")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
+                .stream()
+                .noneMatch(m -> m.id().equals("qol.diana_burrows")));
         assertEquals("Diana", QolUtilityCatalog.findById("qol.diana_burrows").section());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.FISHING)
                 .stream()
@@ -222,9 +250,13 @@ final class QolUtilityCatalogTest {
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_terminals").section());
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertEquals("Kuudra", QolUtilityCatalog.findById("qol.iota").section());
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.KUUDRA)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.iota")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .noneMatch(m -> m.id().equals("qol.iota")));
+        assertEquals(13, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.UTILITIES)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.stall_market")));
@@ -234,11 +266,14 @@ final class QolUtilityCatalogTest {
                 .anyMatch(m -> m.id().equals("qol.ghosts")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING)
                 .stream()
+                .anyMatch(m -> m.id().equals("qol.mining_tracker")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING)
+                .stream()
                 .anyMatch(m -> m.id().equals("qol.world_scanner")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.mining_scatha")));
-        assertEquals(7, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING).size());
+        assertEquals(11, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.mob_highlight")));
@@ -262,16 +297,20 @@ final class QolUtilityCatalogTest {
         assertEquals("Fight view", QolUtilityCatalog.findById("qol.slayer_active_boss_transparency").section());
         assertEquals("Fight view", QolUtilityCatalog.findById("qol.slayer_irrelevant_mobs").section());
         assertTrue(QolUtilityCatalog.sidebarPages().contains(QolUtilityCatalog.Group.COMBAT));
+        assertTrue(QolUtilityCatalog.sidebarPages().contains(QolUtilityCatalog.Group.EVENTS));
         assertTrue(QolUtilityCatalog.sidebarPages().contains(QolUtilityCatalog.Group.FISHING));
         assertTrue(QolUtilityCatalog.sidebarPages().contains(QolUtilityCatalog.Group.FORAGING));
         assertEquals(
                 List.of(
                         QolUtilityCatalog.Group.COMBAT,
                         QolUtilityCatalog.Group.SLAYER,
+                        QolUtilityCatalog.Group.EVENTS,
                         QolUtilityCatalog.Group.DUNGEONS,
+                        QolUtilityCatalog.Group.KUUDRA,
                         QolUtilityCatalog.Group.MINING,
                         QolUtilityCatalog.Group.FISHING,
                         QolUtilityCatalog.Group.FORAGING,
+                        QolUtilityCatalog.Group.GARDEN,
                         QolUtilityCatalog.Group.HUD_DISPLAY,
                         QolUtilityCatalog.Group.RENDER,
                         QolUtilityCatalog.Group.INTERFACE,
@@ -284,9 +323,32 @@ final class QolUtilityCatalogTest {
         assertEquals("Cheats", QolUtilityCatalog.findById("qol.foraging_cheats").section());
         assertEquals("Scanner", QolUtilityCatalog.findById("qol.world_scanner").section());
         assertEquals("Skills", QolUtilityCatalog.findById("qol.skill_levels").section());
+        assertEquals("Garden", QolUtilityCatalog.findById("qol.farm_keys").section());
+        assertEquals("Blaze", QolUtilityCatalog.findById("qol.slayer_attunement_display").section());
+        assertEquals("Dashboard", QolUtilityCatalog.findById("qol.click_gui").section());
+        assertEquals("Layout", QolUtilityCatalog.findById("qol.hud_layout").section());
+        assertEquals("HUD Elements Editor", QolUtilityCatalog.findById("qol.hud_layout").name());
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.foraging_cheats")));
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.diana_share")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_clicker")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_dojo")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_conversation")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_experiments")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_harp")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.fishing_helper")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.inventory_walk")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.freecam")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.experiment_solver")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.secret_hitboxes")));
+        assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_sprint")));
         assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.performance_hud")));
+        for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
+            if (module.id().startsWith("qol.auto_") && !module.id().equals("qol.auto_sprint")) {
+                assertTrue(
+                        QolUtilityCatalog.hasCheatTag(module),
+                        "auto module missing CHEAT tag: " + module.id());
+            }
+        }
     }
 
     @Test
@@ -308,7 +370,12 @@ final class QolUtilityCatalogTest {
                         && !id.equals("qol.storage_overlay.clear_cache")
                         && !id.equals("qol.storage_overlay.clear_search")
                         && !id.equals("qol.inventory_overlay.open_colors")
-                        && !id.startsWith("qol.inventory_buttons."))
+                        && !id.startsWith("qol.inventory_buttons.")
+                        && !id.equals("qol.mining_tracker.open_page")
+                        && !id.equals("qol.powder_chest.open_page")
+                        && !id.equals("qol.mining_session.open_page")
+                        && !id.equals("qol.mining_history.open_page")
+                        && !id.startsWith("qol.appearance.open_"))
                 .collect(Collectors.toList());
 
         assertTrue(unsupported.isEmpty(), "Action rows without behavior: " + unsupported);
@@ -346,6 +413,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(119, moduleIds.size());
+        assertEquals(124, moduleIds.size());
     }
 }

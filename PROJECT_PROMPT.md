@@ -102,7 +102,7 @@ not deleted.
 - Powder Chest CHEST/CURRENCY projection and representative bounded MOB paths
   have controlled runtime evidence. The latest MOB noise-filter correction and
   broader identity matrix still require runtime retest.
-- `QolUtilityCatalog` currently contains 119 wired modules across ten groups.
+- `QolUtilityCatalog` currently contains 124 wired modules across thirteen groups.
   They are automated-tested; do not claim group-wide runtime verification.
 - Price Tooltip remote quote requests are allowed only while Price Tooltips is
   enabled. Public networking and third-party lowest-BIN use must stay disclosed.

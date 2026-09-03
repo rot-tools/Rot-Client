@@ -20,6 +20,41 @@ public final class SlayerRngCatalog {
     public static Optional<Entry> byDisplay(String display){return Optional.ofNullable(BY_DISPLAY.get(normalize(display)));}
     public static Optional<Entry> byId(String id){String key=id==null?"":id.trim().toUpperCase(Locale.ROOT);return ENTRIES.stream().filter(e->e.skyBlockId().equals(key)).findFirst();}
 
+    /**
+     * Chat and {@code /rng} item names drift from the catalog: enchanted-book
+     * wrappers, extra punctuation, and a few Hypixel aliases.
+     */
+    public static Optional<Entry> resolve(String raw) {
+        String name = SlayerRngMeterPolicy.displayName(raw);
+        Optional<Entry> exact = byDisplay(name);
+        if (exact.isPresent()) {
+            return exact;
+        }
+        String key = normalize(name);
+        if (key.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<Entry> id = byId(key.replace(' ', '_'));
+        if (id.isPresent()) {
+            return id;
+        }
+        Entry best = null;
+        int bestLen = 0;
+        for (Entry entry : ENTRIES) {
+            String display = normalize(entry.display());
+            if (display.length() < 4) {
+                continue;
+            }
+            if (key.equals(display) || key.contains(display) || display.contains(key)) {
+                if (display.length() > bestLen) {
+                    best = entry;
+                    bestLen = display.length();
+                }
+            }
+        }
+        return Optional.ofNullable(best);
+    }
+
     private static List<Entry> build(){
         List<Entry> e=new ArrayList<>();
         var r=SlayerPolicy.SlayerType.REVENANT;

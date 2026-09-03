@@ -99,6 +99,15 @@ public final class SkillLevelOverlayPolicy {
         return max ? maxArgb : inProgressArgb;
     }
 
+    /** Bottom-right of a 16px item, matching vanilla stack counts. */
+    public static int labelX(int slotX, int textWidth) {
+        return slotX + 17 - Math.max(0, textWidth);
+    }
+
+    public static int labelY(int slotY) {
+        return slotY + 8;
+    }
+
     static boolean isMaxPhrase(String text) {
         if (text == null || text.isBlank()) {
             return false;

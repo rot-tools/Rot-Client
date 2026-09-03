@@ -34,10 +34,15 @@ public final class HudStylePolicy {
             return out;
         }
         out.showBackground = source.showBackground;
+        out.showTitle = source.showTitle;
         out.backgroundColor = source.backgroundColor;
         out.textColor = source.textColor;
         out.scale = clampScale(source.scale);
         return out;
+    }
+
+    public static boolean titleVisible(HudStyleState style) {
+        return style == null || style.showTitle == null || style.showTitle;
     }
 
     public static HudStyleState resolve(HudStyleState global, HudStyleState override) {
@@ -46,6 +51,9 @@ public final class HudStylePolicy {
             return base;
         }
         base.showBackground = override.showBackground;
+        if (override.showTitle != null) {
+            base.showTitle = override.showTitle;
+        }
         base.backgroundColor = override.backgroundColor;
         base.textColor = override.textColor;
         base.scale = clampScale(override.scale);

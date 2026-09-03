@@ -107,6 +107,10 @@ final class RotClientColorPickerScreen extends Screen {
         graphics.pose().pushMatrix();
         graphics.pose().scale(uiScale, uiScale);
 
+        int logicalWidth = Math.round(width / uiScale);
+        int logicalHeight = Math.round(height / uiScale);
+        RotClientUiDraw.drawScrim(graphics, 0, 0, logicalWidth, logicalHeight);
+
         int panelX = panelX();
         int panelY = panelY();
         RotClientUiDraw.drawShadowedPanel(
@@ -119,7 +123,10 @@ final class RotClientColorPickerScreen extends Screen {
                 PANEL_WIDTH,
                 36,
                 "Color Picker",
-                title);
+                title,
+                true);
+        RotClientUiDraw.drawBackButton(
+                graphics, font, logicalMouseX, logicalMouseY, panelX + 8, panelY + 5);
 
         int svX = panelX + 20;
         int svY = panelY + 52;
@@ -215,6 +222,12 @@ final class RotClientColorPickerScreen extends Screen {
         int mouseY = Math.round((float) event.y() / uiScale);
         int panelX = panelX();
         int panelY = panelY();
+        if (!RotClientUiDraw.inside(
+                mouseX, mouseY, panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT)
+                || RotClientUiDraw.hitBackButton(mouseX, mouseY, panelX + 8, panelY + 5)) {
+            onClose();
+            return true;
+        }
         int svX = panelX + 20;
         int svY = panelY + 52;
         int hueY = svY + SV_SIZE + 10;

@@ -22,33 +22,31 @@ public final class CustomTooltipRuntime {
         lastIdentity = "";
     }
 
-    public static boolean mouseScrolled(double horizontalAmount, double verticalAmount, ItemStack hovered) {
+    public static boolean mouseScrolled(
+            double horizontalAmount,
+            double verticalAmount,
+            ItemStack hovered,
+            boolean storageOverlay,
+            boolean shiftHeld) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.customTooltipEnabled) {
             return false;
         }
         if (hovered == null || hovered.isEmpty()) {
-            if (lastIdentity.isEmpty()) {
-                return false;
-            }
+            clear();
+            return false;
         }
-        Minecraft client = Minecraft.getInstance();
-        boolean horizontalHeld = client != null
-                && client.getWindow() != null
-                && QolKeybindNames.isBoundDown(
-                        client.getWindow().handle(), qol.customTooltipHorizontalKey);
         int hDelta = 0;
         int vDelta = 0;
-        if (qol.customTooltipHorizontal && horizontalHeld) {
+        if (CustomTooltipPolicy.panTooltipHorizontally(
+                storageOverlay, shiftHeld, qol.customTooltipHorizontal)) {
             hDelta = (int) Math.round(horizontalAmount != 0.0D ? horizontalAmount : verticalAmount);
             if (hDelta == 0 && verticalAmount != 0.0D) {
                 hDelta = verticalAmount > 0.0D ? 1 : -1;
             }
-        } else if (qol.customTooltipVertical) {
-            vDelta = (int) Math.round(verticalAmount);
-            if (vDelta == 0 && verticalAmount != 0.0D) {
-                vDelta = verticalAmount > 0.0D ? 1 : -1;
-            }
+        } else if (qol.customTooltipVertical
+                && CustomTooltipPolicy.panTooltipVertically(storageOverlay, shiftHeld)) {
+            vDelta = CustomTooltipPolicy.verticalWheelDelta(verticalAmount);
         }
         if (hDelta == 0 && vDelta == 0) {
             return false;
@@ -60,6 +58,10 @@ public final class CustomTooltipRuntime {
                 vertical, vDelta, qol.customTooltipVerticalSpeed,
                 qol.customTooltipVertical, qol.customTooltipInfinite, 2000);
         return true;
+    }
+
+    public static boolean mouseScrolled(double horizontalAmount, double verticalAmount, ItemStack hovered) {
+        return mouseScrolled(horizontalAmount, verticalAmount, hovered, false, false);
     }
 
     public static boolean shouldStealWheel(boolean overOccupiedSlot) {
@@ -74,21 +76,44 @@ public final class CustomTooltipRuntime {
     }
 
     public static Vector2ic afterScreenClamp(Vector2ic clamped) {
+        return afterScreenClamp(clamped, 0, 0, 0, 0);
+    }
+
+    public static Vector2ic afterScreenClamp(
+            Vector2ic clamped,
+            int screenWidth,
+            int screenHeight,
+            int tooltipWidth,
+            int tooltipHeight) {
         if (clamped == null || (horizontal == 0 && vertical == 0)) {
             return clamped;
         }
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            return new Vector2i(
+                    CustomTooltipPolicy.panAfterClamp(clamped.x(), horizontal),
+                    CustomTooltipPolicy.panAfterClamp(clamped.y(), vertical));
+        }
+        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        boolean infinite = qol != null && qol.customTooltipInfinite;
         return new Vector2i(
-                CustomTooltipPolicy.panAfterClamp(clamped.x(), horizontal),
-                CustomTooltipPolicy.panAfterClamp(clamped.y(), vertical));
+                CustomTooltipPolicy.keepOnScreen(
+                        clamped.x(), horizontal, screenWidth, tooltipWidth, infinite),
+                CustomTooltipPolicy.keepOnScreen(
+                        clamped.y(), vertical, screenHeight, tooltipHeight, infinite));
     }
 
     public static void beforeTooltip(ItemStack hovered) {
+        if (hovered == null || hovered.isEmpty()) {
+            clear();
+            return;
+        }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.customTooltipEnabled) {
+            clear();
             return;
         }
         String identity = AutoClickerItemIdentity.identify(hovered);
-        if (qol.customTooltipReset && !identity.equals(lastIdentity)) {
+        if (!identity.equals(lastIdentity)) {
             horizontal = 0;
             vertical = 0;
         }

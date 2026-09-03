@@ -42,6 +42,8 @@ public final class SlayerFightPolicy {
     public static final long SITTING_BEACON_MILLIS = 5_000L;
     public static final long LASER_DURATION_MILLIS = 8_000L;
     public static final long LASER_REARM_MILLIS = 10_000L;
+    public static final int YANG_GLYPH_BEAM_HEIGHT = 80;
+    public static final int YANG_GLYPH_SIT_SCAN = 3;
     public static final int MIN_LINE_WIDTH = 1;
     public static final int MAX_LINE_WIDTH = 10;
     public static final int DEFAULT_LINE_WIDTH = 3;
@@ -50,7 +52,14 @@ public final class SlayerFightPolicy {
     static final String NUKEKUBI_TEXTURE_FRAGMENT = "ZWIwNzU5NGUyZGYy";
     private static final Pattern FORMAT = Pattern.compile("§[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
     private static final Pattern SIDEBAR_QUEST = Pattern.compile(
-            "(?i).*(revenant horror|tarantula broodfather|sven packmaster|voidgloom seraph|inferno demonlord|riftstalker bloodfiend)\\s+(v|iv|iii|ii|i).*");
+            "(?i).*(revenant horror|tarantula broodfather|sven packmaster|voidgloom seraph|"
+                    + "inferno demonlord|riftstalker bloodfiend|"
+                    + "enderman slayer|zombie slayer|spider slayer|wolf slayer|"
+                    + "blaze slayer|vampire slayer|"
+                    + "enderman|zombie|spider|wolf|blaze|vampire)"
+                    + "\\s*(iv|iii|ii|v|i)\\b.*");
+    private static final Pattern POWER_ORB = Pattern.compile(
+            "(?i).*(?:overflux|plasmaflux|mana\\s*flux|power\\s*orb|\\bradiant\\b).*");
     private static final Pattern VOIDGLOOM_HITS = Pattern.compile(
             "(?i).*(?:hits?:\\s*(\\d+)|\\b(\\d+)\\s+hits?\\b).*");
     private static final Pattern VOIDGLOOM_LASER = Pattern.compile("(?i).*(laser|immune).*");
@@ -73,6 +82,9 @@ public final class SlayerFightPolicy {
     public static Optional<Marker> markerFromStand(String hoverName, String helmetItemName) {
         String name = normalize(hoverName).toLowerCase(Locale.ROOT);
         String helmet = normalize(helmetItemName).toLowerCase(Locale.ROOT);
+        if (isPowerOrbHologram(hoverName)) {
+            return Optional.empty();
+        }
         if (helmet.equals("beacon") || name.equals("beacon") || name.contains("yang glyph")) {
             return Optional.of(Marker.BEACON);
         }
@@ -107,6 +119,20 @@ public final class SlayerFightPolicy {
             return Optional.of(Marker.FIRE_PILLAR);
         }
         return Optional.empty();
+    }
+
+    public static Optional<SlayerPolicy.SlayerType> familyForMarker(Marker marker) {
+        if (marker == null) {
+            return Optional.empty();
+        }
+        return switch (marker) {
+            case BEACON, NUKEKUBI -> Optional.of(SlayerPolicy.SlayerType.VOIDGLOOM);
+            case EGG_SAC, INVINCIBLE -> Optional.of(SlayerPolicy.SlayerType.TARANTULA);
+            case BOOM -> Optional.of(SlayerPolicy.SlayerType.REVENANT);
+            case PUP -> Optional.of(SlayerPolicy.SlayerType.SVEN);
+            case BLOOD_ICHOR, KILLER_SPRING, TWINCLAWS -> Optional.of(SlayerPolicy.SlayerType.VAMPIRE);
+            case FIRE_PILLAR -> Optional.of(SlayerPolicy.SlayerType.INFERNO);
+        };
     }
 
     public static boolean isPupName(String raw) {
@@ -204,12 +230,24 @@ public final class SlayerFightPolicy {
         return normalize(itemName).equalsIgnoreCase("Beacon");
     }
 
+    /**
+     * Power orbs (Radiant / Mana Flux / Overflux / Plasmaflux) are armor stands
+     * that also wear a Beacon. They are not Yang Glyphs.
+     */
+    public static boolean isPowerOrbHologram(String raw) {
+        String text = normalize(raw);
+        return !text.isBlank() && POWER_ORB.matcher(text).matches();
+    }
+
     public static boolean isNukekubiTexture(String raw) {
         return raw != null
                 && raw.toUpperCase(Locale.ROOT).contains(NUKEKUBI_TEXTURE_FRAGMENT.toUpperCase(Locale.ROOT));
     }
 
     public static VoidgloomPhase voidgloomPhase(String hologram) {
+        if (isFirePillarHologram(hologram)) {
+            return VoidgloomPhase.UNKNOWN;
+        }
         String text = normalize(hologram);
         if (text.isEmpty()) {
             return VoidgloomPhase.UNKNOWN;
@@ -231,6 +269,9 @@ public final class SlayerFightPolicy {
     }
 
     public static Optional<Integer> hitsRemaining(String hologram) {
+        if (isFirePillarHologram(hologram)) {
+            return Optional.empty();
+        }
         Matcher matcher = VOIDGLOOM_HITS.matcher(normalize(hologram));
         if (!matcher.matches()) {
             return Optional.empty();
@@ -286,6 +327,18 @@ public final class SlayerFightPolicy {
         return String.format(Locale.ROOT, "%.1fs", remainingSeconds);
     }
 
+    /**
+     * A thrown Yang Glyph armor stand that has barely moved after traveling
+     * has landed, even if the beacon block packet is late.
+     */
+    public static boolean flyingBeaconLanded(double pathLengthSqr, double lastStepSqr) {
+        return Double.isFinite(pathLengthSqr)
+                && Double.isFinite(lastStepSqr)
+                && pathLengthSqr >= 4.0D
+                && lastStepSqr >= 0.0D
+                && lastStepSqr <= 0.09D;
+    }
+
     public static boolean shouldHideVoidgloomParticle(String particleId) {
         String id = particleId == null ? "" : particleId.trim().toLowerCase(Locale.ROOT);
         return id.contains("large_smoke")
@@ -298,18 +351,58 @@ public final class SlayerFightPolicy {
         if (lines == null) {
             return Optional.empty();
         }
-        for (String line : lines) {
-            Matcher matcher = SIDEBAR_QUEST.matcher(normalize(line));
-            if (!matcher.matches()) {
-                continue;
+        for (int i = 0; i < lines.size(); i++) {
+            Optional<QuestRef> quest = questFromLine(normalize(lines.get(i)));
+            if (quest.isPresent()) {
+                return quest;
             }
-            Optional<SlayerPolicy.SlayerType> type = SlayerPolicy.slayerType(matcher.group(1));
-            if (type.isEmpty()) {
-                continue;
+            if (i + 1 < lines.size()) {
+                quest = questFromLine(normalize(lines.get(i)) + " " + normalize(lines.get(i + 1)));
+                if (quest.isPresent()) {
+                    return quest;
+                }
             }
-            return Optional.of(new QuestRef(type.get(), roman(matcher.group(2))));
         }
         return Optional.empty();
+    }
+
+    private static Optional<QuestRef> questFromLine(String line) {
+        Matcher matcher = SIDEBAR_QUEST.matcher(line);
+        if (!matcher.matches()) {
+            return Optional.empty();
+        }
+        Optional<SlayerPolicy.SlayerType> type = SlayerPolicy.slayerType(matcher.group(1));
+        if (type.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new QuestRef(type.get(), roman(matcher.group(2))));
+    }
+
+    public static String romanLabel(int tier) {
+        return switch (Math.max(0, tier)) {
+            case 5 -> " V";
+            case 4 -> " IV";
+            case 3 -> " III";
+            case 2 -> " II";
+            case 1 -> " I";
+            default -> "";
+        };
+    }
+
+    public static boolean sidebarHasSlayerQuest(List<String> lines) {
+        if (lines == null) {
+            return false;
+        }
+        for (String line : lines) {
+            String text = normalize(line).toLowerCase(Locale.ROOT);
+            if (text.contains("slayer quest")
+                    || text.contains("spawn the boss")
+                    || text.contains("slay the boss")
+                    || text.contains("kill the boss")) {
+                return true;
+            }
+        }
+        return questFromSidebar(lines).isPresent();
     }
 
     public static boolean wrongQuest(
@@ -320,20 +413,23 @@ public final class SlayerFightPolicy {
 
     public static Optional<SlayerPolicy.SlayerType> familyFromMobName(String raw) {
         String name = normalize(raw).toLowerCase(Locale.ROOT);
-        if (name.contains("revenant") || name.contains("zombie") || name.contains("atoned")) {
+        if (name.contains("revenant") || name.contains("atoned")) {
             return Optional.of(SlayerPolicy.SlayerType.REVENANT);
         }
-        if (name.contains("tarantula") || name.contains("brood") || name.contains("spider")) {
+        if (name.contains("tarantula") || name.contains("broodfather") || name.contains("conjoined")) {
             return Optional.of(SlayerPolicy.SlayerType.TARANTULA);
         }
-        if (name.contains("sven") || name.contains("wolf") || name.contains("packmaster")) {
+        if (name.contains("sven") || name.contains("packmaster") || name.contains("pack enforcer")
+                || name.contains("sven follower") || name.contains("sven alpha")) {
             return Optional.of(SlayerPolicy.SlayerType.SVEN);
         }
-        if (name.contains("voidgloom") || name.contains("enderman") || name.contains("seraph")) {
+        if (name.contains("voidgloom") || name.contains("seraph") || name.contains("voidling")
+                || name.contains("voidcrazed")) {
             return Optional.of(SlayerPolicy.SlayerType.VOIDGLOOM);
         }
-        if (name.contains("inferno") || name.contains("blaze") || name.contains("quazii")
-                || name.contains("typhoeus")) {
+        if (name.contains("inferno") || name.contains("demonlord") || name.contains("quazii")
+                || name.contains("typhoeus") || name.contains("flare demon")
+                || name.contains("kindleheart") || name.contains("burningsoul")) {
             return Optional.of(SlayerPolicy.SlayerType.INFERNO);
         }
         if (name.contains("bloodfiend") || name.contains("vampire") || name.contains("riftstalker")) {

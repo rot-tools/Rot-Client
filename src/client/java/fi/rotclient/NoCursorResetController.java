@@ -44,7 +44,7 @@ public final class NoCursorResetController {
             savedY = currentY;
             transitionEpochMs = nowMs;
             pendingRestore = true;
-            remainingRestores = 2;
+            remainingRestores = 6;
         }
     }
 
@@ -54,7 +54,7 @@ public final class NoCursorResetController {
         savedY = currentY;
         transitionEpochMs = nowMs;
         pendingRestore = true;
-        remainingRestores = 2;
+        remainingRestores = 6;
     }
 
     public boolean consumeRestore(long nowMs) {

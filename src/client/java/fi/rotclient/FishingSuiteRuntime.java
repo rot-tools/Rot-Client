@@ -247,6 +247,9 @@ public final class FishingSuiteRuntime {
         if (titleTicks > 0) {
             titleTicks--;
         }
+        if (!hudVisible(qol) && !extras.fishingHotspotsEnabled) {
+            return;
+        }
         pruneDead(client);
         scanWorld(client, qol, extras);
         if (autoDelay > 0) {
@@ -272,7 +275,8 @@ public final class FishingSuiteRuntime {
             return;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        Vec3 eye = player.getEyePosition();
+        float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        Vec3 eye = player.getEyePosition(partialTick);
         if (extras.fishingCreaturesEnabled && extras.fishingCreaturesRareEsp) {
             for (LiveCreature live : LIVE.values()) {
                 Entity entity = client.level.getEntity(live.entityId());
@@ -287,7 +291,11 @@ public final class FishingSuiteRuntime {
                         extras.fishingCreaturesHideCommon, live.creature())) {
                     continue;
                 }
-                AABB box = entity.getBoundingBox().inflate(0.15D);
+                EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                        entity.getX(), entity.getY(), entity.getZ(),
+                        entity.xo, entity.yo, entity.zo,
+                        partialTick);
+                AABB box = entity.getBoundingBox().move(offset.x(), offset.y(), offset.z()).inflate(0.15D);
                 Gizmos.cuboid(
                         box,
                         GizmoStyle.strokeAndFill(

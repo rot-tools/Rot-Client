@@ -11,6 +11,8 @@ public final class RotClientUiDraw {
     static final int RADIUS_SM = 4;
     static final int RADIUS_MD = 8;
     static final int BUTTON_HEIGHT = 26;
+    static final int BACK_BUTTON_WIDTH = 28;
+    static final int SCRIM_COLOR = 0x99000000;
     static final int METRIC_CARD_HEIGHT = 56;
     static final int SCROLLBAR_WIDTH = 8;
     static final int SCROLLBAR_HIT_WIDTH = 12;
@@ -252,6 +254,19 @@ public final class RotClientUiDraw {
             int height,
             String title,
             String subtitle) {
+        drawHeaderBar(graphics, font, x, y, width, height, title, subtitle, false);
+    }
+
+    static void drawHeaderBar(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int x,
+            int y,
+            int width,
+            int height,
+            String title,
+            String subtitle,
+            boolean backArrow) {
         roundedFill(
                 graphics,
                 x,
@@ -264,10 +279,34 @@ public final class RotClientUiDraw {
         if (font == null) {
             return;
         }
-        glyph(graphics, font, title == null ? "" : title, x + 12, y + 8, RotClientTheme.TEXT, true);
+        int textX = x + (backArrow ? 40 : 12);
+        glyph(graphics, font, title == null ? "" : title, textX, y + 8, RotClientTheme.TEXT, true);
         if (subtitle != null && !subtitle.isBlank()) {
-            glyph(graphics, font, subtitle, x + 12, y + 22, RotClientTheme.TEXT_MUTED, false);
+            glyph(graphics, font, subtitle, textX, y + 22, RotClientTheme.TEXT_MUTED, false);
         }
+    }
+
+    static void drawScrim(
+            GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
+        if (graphics == null || width <= 0 || height <= 0) {
+            return;
+        }
+        graphics.fill(x, y, x + width, y + height, SCRIM_COLOR);
+    }
+
+    static void drawBackButton(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int mouseX,
+            int mouseY,
+            int x,
+            int y) {
+        drawButton(
+                graphics, font, mouseX, mouseY, x, y, BACK_BUTTON_WIDTH, "←", false, true);
+    }
+
+    static boolean hitBackButton(int mouseX, int mouseY, int x, int y) {
+        return inside(mouseX, mouseY, x, y, BACK_BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 
     static void drawButton(
@@ -281,24 +320,43 @@ public final class RotClientUiDraw {
             String label,
             boolean accent,
             boolean enabled) {
-        boolean hover = enabled && inside(mouseX, mouseY, x, y, width, BUTTON_HEIGHT);
+        drawButton(
+                graphics, font, mouseX, mouseY, x, y, width, BUTTON_HEIGHT,
+                label, accent, enabled);
+    }
+
+    static void drawButton(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int mouseX,
+            int mouseY,
+            int x,
+            int y,
+            int width,
+            int height,
+            String label,
+            boolean accent,
+            boolean enabled) {
+        int safeHeight = Math.max(16, height);
+        boolean hover = enabled && inside(mouseX, mouseY, x, y, width, safeHeight);
         int fill = !enabled
                 ? RotClientTheme.BUTTON_DISABLED
                 : (accent
                         ? RotClientTheme.BORDER_BRIGHT
                         : (hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON));
-        roundedFill(graphics, x, y, x + width, y + BUTTON_HEIGHT, fill, RADIUS_SM);
+        roundedFill(graphics, x, y, x + width, y + safeHeight, fill, RADIUS_SM);
         if (font != null && label != null) {
             int text = !enabled
                     ? RotClientTheme.TEXT_MUTED
                     : (accent ? 0xFF111118 : RotClientTheme.BUTTON_TEXT);
             String shown = ellipsize(font, label, width - 10);
+            int textY = y + Math.max(2, (safeHeight - 8) / 2);
             glyph(
                     graphics,
                     font,
-                    ellipsizeAndHover(font, label, width - 10, x, y, BUTTON_HEIGHT),
+                    ellipsizeAndHover(font, label, width - 10, x, y, safeHeight),
                     x + (width - RotClientFonts.width(font, shown)) / 2,
-                    y + 8,
+                    textY,
                     text,
                     true);
         }

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 final class DeferredFeaturesWiringTest {
     @Test
     void deferredFeaturesStayOnExistingParents() {
-        assertEquals(119, QolUtilityCatalog.modules().size());
+        assertEquals(124, QolUtilityCatalog.modules().size());
         for (String settingId : List.of(
                 "qol.render_optimizer.full_text_shadow",
                 "qol.custom_resource_pack.gameplay_font",

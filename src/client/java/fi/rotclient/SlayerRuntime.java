@@ -29,14 +29,18 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+
+import com.mojang.authlib.properties.Property;
 
 import java.util.ArrayList;
 import java.math.BigDecimal;
@@ -61,6 +65,8 @@ public final class SlayerRuntime {
             new SlayerMechanicsPolicy.DaggerSwapState();
     private static final SlayerMechanicsPolicy.SoulcryState SOULCRY =
             new SlayerMechanicsPolicy.SoulcryState();
+    private static final SlayerMechanicsPolicy.SoulcryAbilityGate SOULCRY_ABILITY =
+            new SlayerMechanicsPolicy.SoulcryAbilityGate();
     private static final SlayerMechanicsPolicy.VengeanceTimer VENGEANCE =
             new SlayerMechanicsPolicy.VengeanceTimer();
     private static final SlayerProgressPolicy.ThresholdState PROGRESS_THRESHOLD =
@@ -71,7 +77,6 @@ public final class SlayerRuntime {
     private static int scanCooldown;
     private static int daggerUseCooldown;
     private static int lastDaggerTargetEntityId = Integer.MIN_VALUE;
-    private static int soulcryUseCooldown;
     /** A carry boss only activates the local fade after the player has attacked it. */
     private static int lastAttackedCarryBossEntityId = Integer.MIN_VALUE;
     private static SlayerDropScalePolicy.Window dropScaleWindow;
@@ -80,6 +85,10 @@ public final class SlayerRuntime {
     private static final Set<Integer> SEEN_BEACON_STANDS = new HashSet<>();
     private static final Map<Long, Long> SITTING_BEACONS = new HashMap<>();
     private static final Map<Integer, List<Vec3>> FLYING_BEACON_PATHS = new HashMap<>();
+    private static final List<Vec3> YANG_GLYPH_BEAMS = new ArrayList<>();
+    private static final double MIN_MARKER_SIZE = 0.65D;
+    private static boolean lastOwnedHeldBeacon;
+    private static long yangGlyphThrownUntilMillis;
     private static SlayerFightPolicy.VoidgloomPhase voidgloomPhase =
             SlayerFightPolicy.VoidgloomPhase.UNKNOWN;
     private static int voidgloomHits = -1;
@@ -117,6 +126,15 @@ public final class SlayerRuntime {
     private static long lastFirePitsMillis;
     private static long lastFirePillarWarnMillis;
     private static long lastQuestWarningMillis;
+    private static long lastTimeMessageAtMillis;
+    private static long lastMinibossAlertAtMillis;
+    private static SlayerSessionEngine.Snapshot overlaySnapshot;
+    private static SlayerFightPolicy.QuestRef latestQuest;
+
+    private static long fadeSnapshotTick = Long.MIN_VALUE;
+    private static SlayerSessionEngine.Snapshot fadeSnapshot;
+    private static long scanOwnedAt;
+    private static Vec3[] scanOwnedPositions;
 
     private record FightMarker(
             AABB box,
@@ -125,12 +143,10 @@ public final class SlayerRuntime {
             boolean line,
             String label,
             int lineColor,
-            float lineWidth) {
+            float lineWidth,
+            int entityId,
+            double inflate) {
     }
-    private static final Pattern RNG_SELECTION = Pattern.compile(
-            "(?i)^You set your .* RNG Meter to drop (?<item>.*)!$");
-    private static final Pattern RNG_XP = Pattern.compile(
-            "(?i).*RNG Meter - (?<xp>[\\d,]+) Stored XP.*");
     private static final Pattern MAGIC_FIND = Pattern.compile(
             "(?i).*(?:RARE DROP!|VERY RARE DROP!|CRAZY RARE DROP!|INSANE DROP!).*\\(\\+(?<mf>\\d+)% .*Magic Find\\).*");
     private static SlayerRngCatalog.Entry selectedRngDrop;
@@ -168,6 +184,8 @@ public final class SlayerRuntime {
             return;
         }
         featuresWereEnabled = true;
+        syncSidebarQuest(settings);
+        overlaySnapshot = ENGINE.viewSnapshot();
         if (!settings.slayerCocoonAlertEnabled) {
             COCOON_TIMER.reset();
         }
@@ -208,6 +226,18 @@ public final class SlayerRuntime {
             alertCocoon(Minecraft.getInstance(), settings);
         }
         String line = message.getString();
+        if (SlayerMinibossAlertPolicy.shouldAnnounce(
+                settings.slayerMinibossAlertEnabled,
+                SlayerMinibossAlertPolicy.isSpawnChat(line),
+                now,
+                lastMinibossAlertAtMillis)) {
+            lastMinibossAlertAtMillis = now;
+            alertMiniboss(
+                    Minecraft.getInstance(),
+                    settings,
+                    SlayerMinibossAlertPolicy.spawnFromChat(line).orElse(null));
+        }
+        SlayerMechanicsPolicy.abilityCooldownTicks(line).ifPresent(SOULCRY_ABILITY::observeRemaining);
         if (settings.slayerInfernoEnabled
                 && settings.slayerInfernoGummyWarning
                 && SlayerPolishPolicy.isGummyConsumeChat(line)) {
@@ -231,6 +261,7 @@ public final class SlayerRuntime {
             scheduleAutoStart(settings);
         }
         if (settings.slayerTarantulaEnabled
+                && localQuestFamily(SlayerPolicy.SlayerType.TARANTULA)
                 && SlayerFightPolicy.isHatchlingsChat(line)) {
             lastHatchlingsMillis = now;
             tarantulaInvincible = true;
@@ -240,7 +271,7 @@ public final class SlayerRuntime {
         }
         if (settings.slayerDropsEnabled) {
             SlayerPolicy.dropObservation(line).ifPresent(drop ->
-                    SlayerRngCatalog.byDisplay(drop.displayName()).ifPresent(entry -> {
+                    SlayerRngCatalog.resolve(drop.displayName()).ifPresent(entry -> {
                         boolean selected = SlayerDropScalePolicy.selected(
                                 settings.slayerDropFilter, entry.skyBlockId());
                         ENGINE.observeDrop(entry.display(), selected, now);
@@ -268,7 +299,7 @@ public final class SlayerRuntime {
         String line = message.getString().replaceAll("§.", "").trim();
         return SlayerRngMeterPolicy.shouldHideChat(
                 settings.slayerDropsRngHideChat,
-                RNG_XP.matcher(line).matches(),
+                SlayerRngMeterPolicy.chatStoredXp(line).isPresent(),
                 selectedRngDrop != null && selectedRngDrop.requiredXp() > 0L);
     }
 
@@ -306,7 +337,14 @@ public final class SlayerRuntime {
         lastRngStoredXp = -1L;
         lastMagicFind = null;
         lastRngEmptyWarningMillis = 0L;
+        lastMinibossAlertAtMillis = 0L;
+        fadeSnapshot = null;
+        fadeSnapshotTick = Long.MIN_VALUE;
+        scanOwnedPositions = null;
         lastAttackedCarryBossEntityId = Integer.MIN_VALUE;
+        latestQuest = null;
+        overlaySnapshot = null;
+        lastTimeMessageAtMillis = 0L;
         resetProgress();
     }
 
@@ -320,21 +358,19 @@ public final class SlayerRuntime {
             resetProgress();
             return;
         }
-        boolean activeQuest = ENGINE.questState() == SlayerSessionEngine.QuestState.ACTIVE;
-        if (message == null || !activeQuest) {
-            if (!activeQuest) {
-                resetProgress();
-            }
+        if (message == null) {
             return;
         }
-        SlayerProgressPolicy.parse(message.getString()).ifPresent(progress -> {
+        boolean questVisible = ENGINE.questState() == SlayerSessionEngine.QuestState.ACTIVE
+                || latestQuest != null;
+        SlayerProgressPolicy.parse(message.getString(), questVisible).ifPresent(progress -> {
             latestProgress = progress;
             if (!settings.slayerProgressBossWarning) {
                 PROGRESS_THRESHOLD.reset();
                 return;
             }
             if (PROGRESS_THRESHOLD.observe(
-                    activeQuest,
+                    questVisible,
                     progress,
                     settings.slayerProgressWarningPercent,
                     settings.slayerProgressWarningRepeat)) {
@@ -395,7 +431,7 @@ public final class SlayerRuntime {
                 || !(target instanceof LivingEntity)) {
             return false;
         }
-        SlayerSessionEngine.Snapshot snapshot = ENGINE.snapshot(System.currentTimeMillis());
+        SlayerSessionEngine.Snapshot snapshot = fadeSnapshot(client);
         boolean targetIsTrackedBoss = snapshot.activeBosses().stream()
                 .anyMatch(active -> active.entityId() == target.getId());
         boolean verifiedFightActive = hasOwnedBoss(snapshot) || hasAttackedCarryBoss(snapshot);
@@ -439,7 +475,7 @@ public final class SlayerRuntime {
                 || client == null || client.player == null || !(target instanceof LivingEntity)) {
             return false;
         }
-        SlayerSessionEngine.Snapshot snapshot = ENGINE.snapshot(System.currentTimeMillis());
+        SlayerSessionEngine.Snapshot snapshot = fadeSnapshot(client);
         SlayerPolicy.SlayerType activeType = activeFadeType(snapshot);
         boolean tracked = snapshot.activeBosses().stream()
                 .anyMatch(active -> active.entityId() == target.getId());
@@ -483,14 +519,16 @@ public final class SlayerRuntime {
         }
         long now = System.currentTimeMillis();
         SlayerSessionEngine.Snapshot snapshot = ENGINE.snapshot(now);
-        SlayerSessionEngine.ActiveBoss boss = snapshot.activeBosses().stream()
-                .filter(SlayerSessionEngine.ActiveBoss::owned)
-                .findFirst()
-                .orElseGet(() -> snapshot.activeBosses().stream().findFirst().orElse(null));
+        SlayerSessionEngine.ActiveBoss boss = primaryOwnedBoss(snapshot);
         List<String> lines = new ArrayList<>();
         lines.add("SLAYER");
         if (boss == null) {
+            if (latestQuest != null) {
+                lines.add(latestQuest.type().displayName()
+                        + SlayerFightPolicy.romanLabel(latestQuest.tier()));
+            }
             lines.add(snapshot.questState() == SlayerSessionEngine.QuestState.ACTIVE
+                    || latestQuest != null
                     ? "Quest active"
                     : "No active Slayer boss");
             if (settings.slayerDisplayKillTime && snapshot.lastKillDurationMillis() > 0L) {
@@ -499,7 +537,11 @@ public final class SlayerRuntime {
             return lines;
         }
         SlayerPolicy.EntityDescriptor descriptor = boss.descriptor();
-        lines.add(descriptor.displayName() + tierSuffix(descriptor.tier()));
+        int tier = descriptor.tier();
+        if (tier <= 0 && latestQuest != null && latestQuest.type() == descriptor.type()) {
+            tier = latestQuest.tier();
+        }
+        lines.add(descriptor.displayName() + tierSuffix(tier));
         if (!descriptor.owner().isBlank()) {
             lines.add((boss.owned() ? "Your boss · " : "Owner: ") + descriptor.owner());
         }
@@ -627,8 +669,10 @@ public final class SlayerRuntime {
         }
         SlayerProgressPolicy.Progress progress = latestProgress;
         if (progress == null) {
-            return editorOpen
-                    ? List.of("SLAYER PROGRESS", "Waiting for Combat XP")
+            boolean questActive = ENGINE.questState() == SlayerSessionEngine.QuestState.ACTIVE
+                    || latestQuest != null;
+            return editorOpen || questActive
+                    ? List.of("SLAYER PROGRESS", "Waiting for quest XP")
                     : List.of();
         }
         List<String> lines = new ArrayList<>();
@@ -648,11 +692,13 @@ public final class SlayerRuntime {
     static List<String> rngLines(boolean editorOpen) {
         QolSkyblockExtras settings = settings();
         if (!settings.slayerDropsEnabled || !settings.slayerDropsRngHud) return List.of();
-        if (selectedRngDrop == null || selectedRngDrop.requiredXp() <= 0L || lastRngStoredXp < 0L) {
+        if (selectedRngDrop == null) {
             return editorOpen ? List.of("RNG METER", "Waiting for selected drop") : List.of();
         }
-        String progress = String.format(Locale.ROOT, "%,d / %,d XP", lastRngStoredXp, selectedRngDrop.requiredXp());
-        if (settings.slayerDropsShowChance) {
+        String progress = lastRngStoredXp < 0L
+                ? "Stored XP pending"
+                : String.format(Locale.ROOT, "%,d / %,d XP", lastRngStoredXp, selectedRngDrop.requiredXp());
+        if (settings.slayerDropsShowChance && lastRngStoredXp >= 0L && selectedRngDrop.requiredXp() > 0L) {
             if (lastMagicFind == null) {
                 progress += " · Magic Find pending";
             } else {
@@ -882,15 +928,16 @@ public final class SlayerRuntime {
     public static boolean shouldHideSvenPupHologram(Entity entity) {
         QolSkyblockExtras settings = settings();
         if (!settings.slayerSvenEnabled || !settings.slayerSvenHidePupNametags
-                || !(entity instanceof ArmorStand)) {
+                || !(entity instanceof ArmorStand)
+                || !localQuestFamily(SlayerPolicy.SlayerType.SVEN)) {
             return false;
         }
         return SlayerFightPolicy.isPupName(name(entity));
     }
 
     private static boolean inSvenSoundArea() {
-        if (ENGINE.snapshot(System.currentTimeMillis()).activeBosses().stream()
-                .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.SVEN)) {
+        long now = System.currentTimeMillis();
+        if (hasOwnedBossOfType(SlayerPolicy.SlayerType.SVEN, now)) {
             return true;
         }
         return SlayerFightPolicy.isSvenSoundArea(SkyBlockSidebar.text());
@@ -898,14 +945,12 @@ public final class SlayerRuntime {
 
     private static boolean inTarantulaSoundArea() {
         long now = System.currentTimeMillis();
-        boolean infernoActive = ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO)
+        boolean infernoActive = hasOwnedBossOfType(SlayerPolicy.SlayerType.INFERNO, now)
                 || SlayerFightPolicy.isInfernoFightArea(SkyBlockSidebar.text());
         if (infernoActive) {
             return false;
         }
-        if (ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.TARANTULA)) {
+        if (hasOwnedBossOfType(SlayerPolicy.SlayerType.TARANTULA, now)) {
             return true;
         }
         return SlayerFightPolicy.isTarantulaSoundArea(SkyBlockSidebar.text());
@@ -913,8 +958,7 @@ public final class SlayerRuntime {
 
     private static boolean inVampireSoundArea() {
         long now = System.currentTimeMillis();
-        if (ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.VAMPIRE)) {
+        if (hasOwnedBossOfType(SlayerPolicy.SlayerType.VAMPIRE, now)) {
             return true;
         }
         return SlayerFightPolicy.isVampireSoundArea(SkyBlockSidebar.text());
@@ -933,13 +977,12 @@ public final class SlayerRuntime {
         if (client == null || client.level == null) {
             return false;
         }
-        AABB area = new AABB(x - 3.0D, y - 3.0D, z - 3.0D, x + 3.0D, y + 3.0D, z + 3.0D);
-        for (EnderMan enderman : client.level.getEntitiesOfClass(EnderMan.class, area)) {
-            if (enderman != null && enderman.isAlive()) {
-                return true;
-            }
+        Vec3 owned = ownedBossPosition(
+                client.level, SlayerPolicy.SlayerType.VOIDGLOOM, System.currentTimeMillis());
+        if (owned == null) {
+            return false;
         }
-        return false;
+        return owned.distanceTo(new Vec3(x, y, z)) <= 6.0D;
     }
 
     public static boolean shouldHideSpawnNametag(Entity entity) {
@@ -965,8 +1008,13 @@ public final class SlayerRuntime {
         if (client == null || client.level == null) {
             return false;
         }
-        long now = System.currentTimeMillis();
-        for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+        SlayerSessionEngine.Snapshot snapshot = overlaySnapshot != null
+                ? overlaySnapshot
+                : ENGINE.viewSnapshot();
+        for (SlayerSessionEngine.ActiveBoss active : snapshot.activeBosses()) {
+            if (!active.owned()) {
+                continue;
+            }
             Entity boss = client.level.getEntity(active.entityId());
             if (boss != null && boss.distanceTo(entity) <= SlayerPolishPolicy.DAMAGE_SPLASH_RANGE) {
                 return true;
@@ -1019,6 +1067,14 @@ public final class SlayerRuntime {
         }
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.level == null) {
+            return false;
+        }
+        Vec3 owned = ownedBossPosition(
+                client.level, SlayerPolicy.SlayerType.INFERNO, System.currentTimeMillis());
+        if (owned == null) {
+            return false;
+        }
+        if (owned.distanceTo(new Vec3(x, y, z)) > 8.0D) {
             return false;
         }
         AABB area = new AABB(x - 3.0D, y - 3.0D, z - 3.0D, x + 3.0D, y + 3.0D, z + 3.0D);
@@ -1086,11 +1142,19 @@ public final class SlayerRuntime {
                 settings.slayerHighlightsDemon,
                 settings.slayerHighlightsTargetLines,
                 settings.slayerHighlightsTargetLineDistance);
-        Vec3 eye = player.getEyePosition();
+        float partialTick = partialTick(client);
+        Vec3 eye = player.getEyePosition(partialTick);
         if (settings.slayerHighlightsEnabled) {
+            int drawn = 0;
             for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(System.currentTimeMillis()).activeBosses()) {
-                SlayerPolicy.EntityRole role = active.descriptor().role();
-                if (!SlayerHighlightPolicy.shouldHighlight(role, active.owned(), highlightOptions)) {
+                if (drawn >= 24) {
+                    break;
+                }
+                SlayerPolicy.EntityDescriptor descriptor = active.descriptor();
+                SlayerPolicy.EntityRole role = descriptor.role();
+                boolean localFamily = localQuestFamily(descriptor.type());
+                if (!SlayerHighlightPolicy.shouldHighlight(
+                        role, descriptor.type(), active.owned(), localFamily, highlightOptions)) {
                     continue;
                 }
                 Entity entity = client.level.getEntity(active.entityId());
@@ -1100,11 +1164,11 @@ public final class SlayerRuntime {
                 int color = color(settings, role);
                 if (settings.slayerInfernoEnabled
                         && settings.slayerInfernoColorByAttunement
-                        && active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO) {
-                    color = SlayerFightPolicy.attunementColor(active.descriptor().attunement());
+                        && descriptor.type() == SlayerPolicy.SlayerType.INFERNO) {
+                    color = SlayerFightPolicy.attunementColor(descriptor.attunement());
                 }
                 float width = (float) width(settings, role);
-                AABB box = entity.getBoundingBox().inflate(0.05D);
+                AABB box = interpolatedBox(entity, partialTick, 0.05D);
                 var props = Gizmos.cuboid(box, GizmoStyle.strokeAndFill(
                         color, width, withAlpha(color, 0x33)));
                 if (!settings.slayerHighlightsDepth) {
@@ -1112,7 +1176,9 @@ public final class SlayerRuntime {
                 }
                 if (SlayerHighlightPolicy.shouldDrawTargetLine(
                         role,
+                        descriptor.type(),
                         active.owned(),
+                        localFamily,
                         eye.distanceTo(box.getCenter()),
                         highlightOptions)) {
                     var line = Gizmos.line(
@@ -1124,16 +1190,18 @@ public final class SlayerRuntime {
                         line.setAlwaysOnTop();
                     }
                 }
+                drawn++;
             }
         }
         if (settings.slayerDropsEnabled && (settings.slayerDropsGroundHighlight || settings.slayerDropsGroundLabels)) {
             Map<String, BigDecimal> prices = settings.slayerDropsGroundLabels ? slayerUnitPrices() : Map.of();
-            for (Entity entity : client.level.entitiesForRendering()) {
-                if (!(entity instanceof ItemEntity item) || player.distanceTo(item) > 24.0D) continue;
+            AABB search = player.getBoundingBox().inflate(24.0D);
+            for (Entity entity : client.level.getEntities(player, search)) {
+                if (!(entity instanceof ItemEntity item)) continue;
                 String id = AutoClickerItemIdentity.skyBlockId(item.getItem());
                 if (!SlayerItemProfitPolicy.isKnownSlayerDropId(id)) continue;
                 if (settings.slayerDropsGroundHighlight) {
-                    var props = Gizmos.cuboid(item.getBoundingBox().inflate(0.15D),
+                    var props = Gizmos.cuboid(interpolatedBox(item, partialTick, 0.15D),
                             GizmoStyle.strokeAndFill(0xFF51E6A8, 2.0F, 0x3351E6A8));
                     if (!settings.slayerHighlightsDepth) props.setAlwaysOnTop();
                 }
@@ -1162,20 +1230,47 @@ public final class SlayerRuntime {
             }
         }
         for (FightMarker marker : FIGHT_MARKERS) {
-            var props = Gizmos.cuboid(marker.box(), GizmoStyle.strokeAndFill(
+            AABB box = marker.box();
+            Vec3 target = marker.target();
+            if (marker.entityId() != Integer.MIN_VALUE) {
+                Entity tracked = client.level.getEntity(marker.entityId());
+                if (tracked == null) {
+                    continue;
+                }
+                box = interpolatedMarkerBox(tracked, partialTick, marker.inflate());
+                target = box.getCenter();
+            }
+            var props = Gizmos.cuboid(box, GizmoStyle.strokeAndFill(
                     marker.color(), 2.0F, withAlpha(marker.color(), 0x33)));
             props.setAlwaysOnTop();
             if (marker.line()) {
-                Gizmos.line(eye, marker.target(), marker.lineColor(), marker.lineWidth()).setAlwaysOnTop();
+                Gizmos.line(eye, target, marker.lineColor(), marker.lineWidth()).setAlwaysOnTop();
             }
             if (marker.label() != null && !marker.label().isBlank()) {
                 var text = Gizmos.billboardTextOverBlock(
                         marker.label(),
-                        BlockPos.containing(marker.target()),
+                        BlockPos.containing(target),
                         0,
                         marker.color(),
                         0.85F);
                 text.setAlwaysOnTop();
+            }
+        }
+        if (settings.slayerVoidgloomEnabled
+                && (settings.slayerVoidgloomHighlightBeacon || settings.slayerVoidgloomBeaconTimer)) {
+            int glyphColor = settings.slayerVoidgloomBeaconColor;
+            double beamTop = SlayerFightPolicy.YANG_GLYPH_BEAM_HEIGHT;
+            for (Vec3 pos : YANG_GLYPH_BEAMS) {
+                var pillar = Gizmos.cuboid(
+                        new AABB(pos.x - 0.22D, pos.y, pos.z - 0.22D,
+                                pos.x + 0.22D, pos.y + beamTop, pos.z + 0.22D),
+                        GizmoStyle.strokeAndFill(glyphColor, 1.8F, withAlpha(glyphColor, 0x55)));
+                pillar.setAlwaysOnTop();
+                Gizmos.line(
+                        new Vec3(pos.x, pos.y, pos.z),
+                        new Vec3(pos.x, pos.y + beamTop, pos.z),
+                        glyphColor,
+                        4.0F).setAlwaysOnTop();
             }
         }
         if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersIchorBeam) {
@@ -1220,17 +1315,52 @@ public final class SlayerRuntime {
         String localName = player.getGameProfile().name();
         SlayerMechanicsPolicy.AttunementDisplay observedAttunement = null;
         Set<Integer> seenDamageEntities = new HashSet<>();
-        for (Entity entity : level.entitiesForRendering()) {
+        AABB search = player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+        Map<Integer, List<String>> linesByEntity = new HashMap<>();
+        Map<Integer, Entity> hosts = new HashMap<>();
+        for (Entity entity : level.getEntities(player, search)) {
             if (settings.slayerVengeanceDamageEnabled && entity instanceof ArmorStand) {
                 seenDamageEntities.add(entity.getId());
                 reportVengeanceDamage(client, settings, entity);
             }
-            SlayerPolicy.EntityDescriptor descriptor = descriptor(level, entity);
+            if (isNameHologram(entity)) {
+                if (!SlayerPolicy.isSlayerHologram(name(entity))) {
+                    continue;
+                }
+                Entity host = nearestSlayerHost(level, entity);
+                if (host == null) {
+                    continue;
+                }
+                hosts.put(host.getId(), host);
+                linesByEntity.computeIfAbsent(host.getId(), id -> new ArrayList<>()).add(name(entity));
+                continue;
+            }
+            if (isSlayerHost(entity)) {
+                hosts.putIfAbsent(entity.getId(), entity);
+                for (Entity passenger : entity.getPassengers()) {
+                    if (isNameHologram(passenger)) {
+                        linesByEntity.computeIfAbsent(entity.getId(), id -> new ArrayList<>())
+                                .add(name(passenger));
+                    }
+                }
+            }
+        }
+        long now = System.currentTimeMillis();
+        for (Entity entity : hosts.values()) {
+            List<String> lines = linesByEntity.getOrDefault(entity.getId(), List.of());
+            if (lines.isEmpty()) {
+                String self = name(entity);
+                if (self.isBlank()) {
+                    continue;
+                }
+                lines = List.of(self);
+            }
+            SlayerPolicy.EntityDescriptor descriptor = SlayerPolicy.classifyHolograms(lines).orElse(null);
             if (descriptor == null) {
                 continue;
             }
             SlayerSessionEngine.SpawnResult spawn = ENGINE.observeEntity(
-                    entity.getId(), descriptor, localName, System.currentTimeMillis());
+                    entity.getId(), descriptor, localName, now);
             boolean owned = descriptor.owner().equalsIgnoreCase(localName);
             if (owned && descriptor.role() == SlayerPolicy.EntityRole.BOSS
                     && descriptor.type() == SlayerPolicy.SlayerType.INFERNO) {
@@ -1253,9 +1383,9 @@ public final class SlayerRuntime {
                 continue;
             }
             if (descriptor.role() == SlayerPolicy.EntityRole.MINIBOSS
-                    && settings.slayerMinibossAlertEnabled
-                    && entity.distanceToSqr(player) <= settings.slayerMinibossAlertDistance
-                    * settings.slayerMinibossAlertDistance) {
+                    && SlayerMinibossAlertPolicy.shouldAnnounceNearbyHost(
+                    spawn.owned(),
+                    localQuestFamily(descriptor.type()))) {
                 alertMiniboss(client, settings, descriptor);
             }
             if (descriptor.role() == SlayerPolicy.EntityRole.BOSS
@@ -1302,33 +1432,29 @@ public final class SlayerRuntime {
     }
 
     private static SlayerPolicy.EntityDescriptor descriptor(ClientLevel level, Entity entity) {
-        if (entity instanceof ArmorStand || entity instanceof Guardian) {
+        if (!(entity instanceof LivingEntity) || entity instanceof ArmorStand) {
             return null;
         }
+        List<String> lines = new ArrayList<>();
         Entity typeTag = level.getEntity(entity.getId() + 1);
         Entity ownerTag = level.getEntity(entity.getId() + 3);
-        String typeText = name(typeTag);
-        String ownerText = name(ownerTag);
-        var attached = SlayerPolicy.classifyTag(typeText, ownerText);
-        if (attached.isPresent()) {
-            return attached.get();
+        if (isNameHologram(typeTag) && hologramBelongsTo(entity, typeTag)) {
+            lines.add(name(typeTag));
         }
-        List<Entity> nearbyTags = attachedNameEntities(level, entity);
-        String nearbyOwner = nearbyTags.stream()
-                .map(SlayerRuntime::name)
-                .filter(value -> value.toLowerCase(Locale.ROOT).contains("spawned by:"))
-                .findFirst()
-                .orElse(ownerText);
-        for (Entity nearby : nearbyTags) {
-            attached = SlayerPolicy.classifyTag(name(nearby), nearbyOwner);
-            if (attached.isPresent()) {
-                return attached.get();
+        if (isNameHologram(ownerTag) && hologramBelongsTo(entity, ownerTag)) {
+            lines.add(name(ownerTag));
+        }
+        for (Entity nearby : attachedNameEntities(level, entity)) {
+            String line = name(nearby);
+            if (!line.isBlank()) {
+                lines.add(line);
             }
         }
-        if (entity instanceof LivingEntity) {
-            return SlayerPolicy.classifyTag(name(entity), ownerText).orElse(null);
+        String self = name(entity);
+        if (!self.isBlank()) {
+            lines.add(self);
         }
-        return null;
+        return SlayerPolicy.classifyHolograms(lines).orElse(null);
     }
 
     private static String attachedAttunementLine(ClientLevel level, Entity entity) {
@@ -1347,7 +1473,7 @@ public final class SlayerRuntime {
         // Hypixel holograms sit above the mob, often a few blocks up and
         // slightly offset. A 0×1×0 inflate missed those stands, so bosses,
         // demons, attunement, vengeance, soulcry, and lasers never classified.
-        AABB box = entity.getBoundingBox().inflate(1.5D, 3.0D, 1.5D);
+        AABB box = entity.getBoundingBox().inflate(0.9D, 2.8D, 0.9D);
         for (Entity nearby : level.getEntities(entity, box)) {
             if (isNameHologram(nearby)) {
                 attached.add(nearby);
@@ -1365,6 +1491,207 @@ public final class SlayerRuntime {
     private static boolean isNameHologram(Entity entity) {
         return entity instanceof ArmorStand
                 && (entity.hasCustomName() || !name(entity).isBlank());
+    }
+
+    private static boolean isSlayerHost(Entity entity) {
+        return entity instanceof LivingEntity
+                && !(entity instanceof ArmorStand)
+                && !(entity instanceof LocalPlayer);
+    }
+
+    private static boolean hologramBelongsTo(Entity host, Entity hologram) {
+        if (host == null || hologram == null) {
+            return false;
+        }
+        if (hologram.getVehicle() == host) {
+            return true;
+        }
+        double dx = host.getX() - hologram.getX();
+        double dz = host.getZ() - hologram.getZ();
+        return dx * dx + dz * dz <= 1.0D;
+    }
+
+    private static Entity nearestSlayerHost(ClientLevel level, Entity hologram) {
+        if (hologram.getVehicle() instanceof LivingEntity vehicle && isSlayerHost(vehicle)) {
+            return vehicle;
+        }
+        Entity best = null;
+        double bestDist = Double.MAX_VALUE;
+        AABB box = hologram.getBoundingBox().inflate(0.9D, 2.8D, 0.9D);
+        for (Entity nearby : level.getEntities(hologram, box)) {
+            if (!isSlayerHost(nearby) || !hologramBelongsTo(nearby, hologram)) {
+                continue;
+            }
+            double dist = nearby.distanceToSqr(hologram);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = nearby;
+            }
+        }
+        return best;
+    }
+
+    private static void syncSidebarQuest(QolSkyblockExtras settings) {
+        List<String> lines = List.of(SkyBlockSidebar.text().split("\n"));
+        boolean visible = SlayerFightPolicy.sidebarHasSlayerQuest(lines);
+        long now = System.currentTimeMillis();
+        ENGINE.observeQuestVisible(visible, now);
+        Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(lines);
+        if (quest.isPresent()) {
+            latestQuest = quest.get();
+        } else if (!visible && ENGINE.questState() != SlayerSessionEngine.QuestState.ACTIVE) {
+            latestQuest = null;
+        }
+        if (!settings.slayerProgressEnabled) {
+            return;
+        }
+        for (String line : lines) {
+            SlayerProgressPolicy.parse(line, visible).ifPresent(progress -> latestProgress = progress);
+        }
+    }
+
+    private static boolean localQuestFamily(SlayerPolicy.SlayerType type) {
+        if (type != null && latestQuest != null && latestQuest.type() == type) {
+            return true;
+        }
+        if (ENGINE.questState() != SlayerSessionEngine.QuestState.ACTIVE) {
+            return false;
+        }
+        SlayerSessionEngine.Snapshot snapshot = overlaySnapshot != null
+                ? overlaySnapshot
+                : ENGINE.viewSnapshot();
+        return snapshot.activeBosses().stream()
+                .anyMatch(active -> active.owned() && active.descriptor().type() == type);
+    }
+
+    private static Vec3 ownedBossPosition(
+            ClientLevel level,
+            SlayerPolicy.SlayerType type,
+            long now) {
+        SlayerSessionEngine.Snapshot snapshot = overlaySnapshot != null
+                ? overlaySnapshot
+                : ENGINE.snapshot(now);
+        for (SlayerSessionEngine.ActiveBoss active : snapshot.activeBosses()) {
+            if (!active.owned()
+                    || active.descriptor().role() != SlayerPolicy.EntityRole.BOSS
+                    || active.descriptor().type() != type) {
+                continue;
+            }
+            Entity entity = level.getEntity(active.entityId());
+            if (entity != null) {
+                return entity.position();
+            }
+        }
+        return null;
+    }
+
+    private static SlayerSessionEngine.ActiveBoss primaryOwnedBoss(
+            SlayerSessionEngine.Snapshot snapshot) {
+        if (snapshot == null) {
+            return null;
+        }
+        List<SlayerSessionEngine.ActiveBoss> owned = snapshot.activeBosses().stream()
+                .filter(SlayerSessionEngine.ActiveBoss::owned)
+                .filter(active -> active.descriptor().role() == SlayerPolicy.EntityRole.BOSS)
+                .toList();
+        if (owned.isEmpty()) {
+            return null;
+        }
+        if (latestQuest != null) {
+            for (SlayerSessionEngine.ActiveBoss boss : owned) {
+                if (boss.descriptor().type() == latestQuest.type()) {
+                    return boss;
+                }
+            }
+        }
+        return owned.getFirst();
+    }
+
+    private static boolean nearOwnedBoss(
+            ClientLevel level,
+            SlayerPolicy.SlayerType type,
+            Entity entity,
+            long now) {
+        if (level == null || type == null || entity == null) {
+            return false;
+        }
+        Vec3 owned = scanOwnedAt == now && scanOwnedPositions != null
+                ? cachedOwnedPosition(type)
+                : ownedBossPosition(level, type, now);
+        Minecraft client = Minecraft.getInstance();
+        double playerDistance = client != null && client.player != null
+                ? entity.distanceTo(client.player)
+                : Double.NaN;
+        return SlayerHighlightPolicy.shouldDrawLocalFightMarker(
+                owned != null,
+                owned == null ? Double.NaN : entity.position().distanceTo(owned),
+                localQuestFamily(type),
+                playerDistance);
+    }
+
+    private static boolean hasOwnedBossOfType(SlayerPolicy.SlayerType type, long now) {
+        SlayerSessionEngine.Snapshot snapshot = overlaySnapshot != null
+                ? overlaySnapshot
+                : ENGINE.snapshot(now);
+        return snapshot.activeBosses().stream().anyMatch(active ->
+                active.owned()
+                        && active.descriptor().role() == SlayerPolicy.EntityRole.BOSS
+                        && active.descriptor().type() == type);
+    }
+
+    private static void cacheOwnedBossPositions(ClientLevel level, long now) {
+        SlayerPolicy.SlayerType[] types = SlayerPolicy.SlayerType.values();
+        scanOwnedPositions = new Vec3[types.length];
+        for (SlayerPolicy.SlayerType type : types) {
+            scanOwnedPositions[type.ordinal()] = ownedBossPosition(level, type, now);
+        }
+        scanOwnedAt = now;
+    }
+
+    private static Vec3 cachedOwnedPosition(SlayerPolicy.SlayerType type) {
+        if (type == null || scanOwnedPositions == null || type.ordinal() >= scanOwnedPositions.length) {
+            return null;
+        }
+        return scanOwnedPositions[type.ordinal()];
+    }
+
+    private static SlayerSessionEngine.Snapshot fadeSnapshot(Minecraft client) {
+        long tick = client.player != null ? client.player.tickCount : Long.MIN_VALUE;
+        if (fadeSnapshot == null || fadeSnapshotTick != tick) {
+            fadeSnapshotTick = tick;
+            fadeSnapshot = ENGINE.snapshot(System.currentTimeMillis());
+        }
+        return fadeSnapshot;
+    }
+
+    private static float partialTick(Minecraft client) {
+        return client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+    }
+
+    private static AABB interpolatedBox(Entity entity, float partialTick, double inflate) {
+        EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                entity.getX(), entity.getY(), entity.getZ(),
+                entity.xo, entity.yo, entity.zo,
+                partialTick);
+        return entity.getBoundingBox().move(offset.x(), offset.y(), offset.z()).inflate(inflate);
+    }
+
+    private static AABB interpolatedMarkerBox(Entity entity, float partialTick, double inflate) {
+        AABB box = interpolatedBox(entity, partialTick, inflate);
+        if (box.getXsize() >= MIN_MARKER_SIZE
+                && box.getYsize() >= MIN_MARKER_SIZE
+                && box.getZsize() >= MIN_MARKER_SIZE) {
+            return box;
+        }
+        EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                entity.getX(), entity.getY(), entity.getZ(),
+                entity.xo, entity.yo, entity.zo,
+                partialTick);
+        double half = MIN_MARKER_SIZE / 2.0D;
+        double cx = entity.getX() + offset.x();
+        double cy = entity.getY() + offset.y() + half;
+        double cz = entity.getZ() + offset.z();
+        return new AABB(cx - half, cy - half, cz - half, cx + half, cy + half, cz + half);
     }
 
     private static void reapRemoved(ClientLevel level) {
@@ -1422,11 +1749,7 @@ public final class SlayerRuntime {
     }
 
     private static SlayerPolicy.SlayerType activeFadeType(SlayerSessionEngine.Snapshot snapshot) {
-        SlayerSessionEngine.ActiveBoss owned = snapshot.activeBosses().stream()
-                .filter(active -> active.owned()
-                        && active.descriptor().role() == SlayerPolicy.EntityRole.BOSS)
-                .findFirst()
-                .orElse(null);
+        SlayerSessionEngine.ActiveBoss owned = primaryOwnedBoss(snapshot);
         if (owned != null) {
             return owned.descriptor().type();
         }
@@ -1458,14 +1781,18 @@ public final class SlayerRuntime {
             Minecraft client,
             QolSkyblockExtras settings,
             SlayerPolicy.EntityDescriptor descriptor) {
-        String configured = descriptor.bigMiniboss()
+        if (client == null || client.player == null) {
+            return;
+        }
+        boolean big = descriptor != null && descriptor.bigMiniboss();
+        String configured = big
                 ? settings.slayerBigMinibossAlertText
                 : settings.slayerMinibossAlertText;
         String text = configured == null || configured.isBlank()
-                ? descriptor.displayName() + " spawned!"
+                ? (descriptor == null ? "Miniboss spawned!" : descriptor.displayName() + " spawned!")
                 : configured;
         if (settings.slayerMinibossAlertMessage) {
-            client.player.sendSystemMessage(RotClientChat.message(text));
+            client.player.sendSystemMessage(RotClientChat.message(text, false, 0));
         }
         if (settings.slayerMinibossAlertTitle) {
             client.gui.hud.setTimes(10, 30, 10);
@@ -1593,15 +1920,18 @@ public final class SlayerRuntime {
 
     private static void resetAdditionalMechanics() {
         SOULCRY.reset();
+        SOULCRY_ABILITY.reset();
         VENGEANCE.reset();
         lastAttunement = null;
-        soulcryUseCooldown = 0;
         dropScaleWindow = null;
         SEEN_VENGEANCE_DAMAGE.clear();
         FIGHT_MARKERS.clear();
         SEEN_BEACON_STANDS.clear();
         SITTING_BEACONS.clear();
         FLYING_BEACON_PATHS.clear();
+        YANG_GLYPH_BEAMS.clear();
+        lastOwnedHeldBeacon = false;
+        yangGlyphThrownUntilMillis = 0L;
         voidgloomPhase = SlayerFightPolicy.VoidgloomPhase.UNKNOWN;
         voidgloomHits = -1;
         voidgloomHealth = "";
@@ -1635,9 +1965,7 @@ public final class SlayerRuntime {
     }
 
     private static void tickSoulcry(Minecraft client, QolSkyblockExtras settings) {
-        if (soulcryUseCooldown > 0) {
-            soulcryUseCooldown--;
-        }
+        SOULCRY_ABILITY.tick();
         if (!settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
                 || client == null || client.player == null || client.level == null
                 || (client.gui != null && client.gui.screen() != null)) {
@@ -1665,6 +1993,10 @@ public final class SlayerRuntime {
             SOULCRY.reset();
             return;
         }
+        if (!SOULCRY_ABILITY.ready(heldItemOnCooldown(client, held))) {
+            SOULCRY.reset();
+            return;
+        }
         int min = SlayerMechanicsPolicy.clampSoulcryDelay(settings.slayerAutoSoulcryMinDelay);
         int max = Math.max(min,
                 SlayerMechanicsPolicy.clampSoulcryDelay(settings.slayerAutoSoulcryMaxDelay));
@@ -1673,10 +2005,10 @@ public final class SlayerRuntime {
             return;
         }
         SOULCRY.tick();
-        if (SOULCRY.ready() && soulcryUseCooldown <= 0) {
+        if (SOULCRY.ready()) {
             useHeldItem(client);
             SOULCRY.complete();
-            soulcryUseCooldown = 2;
+            SOULCRY_ABILITY.markUsed();
         }
     }
 
@@ -1685,7 +2017,7 @@ public final class SlayerRuntime {
             Entity entity,
             QolSkyblockExtras settings) {
         if (client == null || client.player == null || client.level == null
-                || entity == null || soulcryUseCooldown > 0) {
+                || entity == null) {
             return;
         }
         SlayerPolicy.EntityDescriptor descriptor = descriptor(client.level, entity);
@@ -1702,8 +2034,18 @@ public final class SlayerRuntime {
                 || (settings.slayerAutoSoulcryCheckMana && !hasSoulcryMana(held))) {
             return;
         }
+        if (!SOULCRY_ABILITY.ready(heldItemOnCooldown(client, held))) {
+            return;
+        }
         useHeldItem(client);
-        soulcryUseCooldown = 2;
+        SOULCRY_ABILITY.markUsed();
+    }
+
+    private static boolean heldItemOnCooldown(Minecraft client, ItemStack held) {
+        if (client == null || client.player == null || held == null || held.isEmpty()) {
+            return false;
+        }
+        return client.player.getCooldowns().isOnCooldown(held);
     }
 
     private static boolean hasSoulcryMana(ItemStack held) {
@@ -1780,7 +2122,20 @@ public final class SlayerRuntime {
         if (client == null || client.player == null || result.descriptor() == null) {
             return;
         }
+        long now = System.currentTimeMillis();
         long duration = Math.max(0L, result.durationMillis());
+        boolean announce = SlayerTimeMessagePolicy.shouldAnnounce(
+                settings.slayerTimeMessagesEnabled,
+                true,
+                result.bossKilled(),
+                result.owned(),
+                result.descriptor().role(),
+                duration,
+                now,
+                lastTimeMessageAtMillis);
+        if (!announce) {
+            return;
+        }
         if (settings.slayerPersonalBests == null) {
             settings.slayerPersonalBests = new java.util.LinkedHashMap<>();
         }
@@ -1792,15 +2147,16 @@ public final class SlayerRuntime {
             settings.slayerPersonalBests.put(key, duration);
             RotClientClient.save();
         }
+        lastTimeMessageAtMillis = now;
         if (settings.slayerTimeMessagesTimeToKill) {
             String message = settings.slayerTimeMessagesCompact
                     ? result.descriptor().displayName() + " · " + duration(duration)
                     : result.descriptor().displayName() + " defeated in " + duration(duration) + '.';
-            client.player.sendSystemMessage(RotClientChat.message(message));
+            client.player.sendSystemMessage(RotClientChat.message(message, false, 0));
         }
         if (settings.slayerTimeMessagesPersonalBest && personalBest) {
             client.player.sendSystemMessage(RotClientChat.message(
-                    "New personal best · " + duration(duration) + '.'));
+                    "New personal best · " + duration(duration) + '.', false, 0));
         }
     }
 
@@ -1863,40 +2219,42 @@ public final class SlayerRuntime {
     }
 
     private static void observeRng(String line, QolSkyblockExtras settings) {
-        Matcher selection = RNG_SELECTION.matcher(line.replaceAll("§.", "").trim());
-        if (selection.matches() && settings.slayerDropsDetectAutomatically) {
-            selectedRngDrop = SlayerRngCatalog.byDisplay(selection.group("item")).orElse(null);
+        String plain = line.replaceAll("§.", "").trim();
+        if (settings.slayerDropsDetectAutomatically) {
+            SlayerRngMeterPolicy.chatSelection(plain).ifPresent(item ->
+                    SlayerRngCatalog.resolve(item).ifPresent(entry -> selectedRngDrop = entry));
         }
-        Matcher mf = MAGIC_FIND.matcher(line.replaceAll("§.", "").trim());
+        Matcher mf = MAGIC_FIND.matcher(plain);
         if (mf.matches()) {
             try { lastMagicFind = Integer.parseInt(mf.group("mf")); } catch (NumberFormatException ignored) {}
         }
-        Matcher xp = RNG_XP.matcher(line.replaceAll("§.", "").trim());
-        if (!xp.matches()) return;
+        Optional<Long> storedXp = SlayerRngMeterPolicy.chatStoredXp(plain);
+        if (storedXp.isEmpty()) {
+            return;
+        }
         if (SlayerRngMeterPolicy.shouldWarnEmpty(
                 settings.slayerDropsRngWarnEmpty, true, selectedRngDrop != null)) {
             warnEmptyRngMeter(Minecraft.getInstance());
             return;
         }
-        if (selectedRngDrop == null || selectedRngDrop.requiredXp() <= 0L) return;
-        try {
-            long stored = Long.parseLong(xp.group("xp").replace(",", ""));
-            lastRngStoredXp = Math.max(0L, stored);
-            Minecraft client = Minecraft.getInstance();
-            if (client.player != null && settings.slayerDropsShowChance) {
-                if (lastMagicFind == null) {
-                    client.player.sendSystemMessage(RotClientChat.message(String.format(Locale.ROOT,
-                            "RNG Meter · %s · %,d/%,d XP · Magic Find pending",
-                            selectedRngDrop.display(), stored, selectedRngDrop.requiredXp())));
-                } else {
-                    double chance = SlayerCarryPolicy.rngChancePercent(stored, selectedRngDrop.requiredXp(),
-                            selectedRngDrop.baseChancePercent(), lastMagicFind);
-                    client.player.sendSystemMessage(RotClientChat.message(String.format(Locale.ROOT,
-                            "RNG Meter · %s · %,d/%,d XP · %.5f%% [✯%d]",
-                            selectedRngDrop.display(), stored, selectedRngDrop.requiredXp(), chance, lastMagicFind)));
-                }
+        if (selectedRngDrop == null || selectedRngDrop.requiredXp() <= 0L) {
+            return;
+        }
+        lastRngStoredXp = Math.max(0L, storedXp.get());
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null && settings.slayerDropsShowChance) {
+            if (lastMagicFind == null) {
+                client.player.sendSystemMessage(RotClientChat.message(String.format(Locale.ROOT,
+                        "RNG Meter · %s · %,d/%,d XP · Magic Find pending",
+                        selectedRngDrop.display(), lastRngStoredXp, selectedRngDrop.requiredXp())));
+            } else {
+                double chance = SlayerCarryPolicy.rngChancePercent(lastRngStoredXp, selectedRngDrop.requiredXp(),
+                        selectedRngDrop.baseChancePercent(), lastMagicFind);
+                client.player.sendSystemMessage(RotClientChat.message(String.format(Locale.ROOT,
+                        "RNG Meter · %s · %,d/%,d XP · %.5f%% [✯%d]",
+                        selectedRngDrop.display(), lastRngStoredXp, selectedRngDrop.requiredXp(), chance, lastMagicFind)));
             }
-        } catch (NumberFormatException ignored) {}
+        }
     }
 
     private static void warnEmptyRngMeter(Minecraft client) {
@@ -1983,6 +2341,7 @@ public final class SlayerRuntime {
         firePillarHits = -1;
         ownedInfernoTier = 0;
         ICHOR_BEAMS.clear();
+        YANG_GLYPH_BEAMS.clear();
         if (!fightOverlaysEnabled(settings) || client.level == null || client.player == null) {
             SITTING_BEACONS.clear();
             FLYING_BEACON_PATHS.clear();
@@ -1990,36 +2349,40 @@ public final class SlayerRuntime {
         }
         ClientLevel level = client.level;
         long now = System.currentTimeMillis();
+        cacheOwnedBossPositions(level, now);
         for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
             if (active.owned() && active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO) {
                 ownedInfernoTier = Math.max(ownedInfernoTier, active.descriptor().tier());
             }
         }
-        boolean fightingVoidgloom = ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.VOIDGLOOM);
-        boolean nearOwnedSven = ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.owned()
-                        && active.descriptor().type() == SlayerPolicy.SlayerType.SVEN
-                        && level.getEntity(active.entityId()) != null
-                        && client.player.distanceTo(level.getEntity(active.entityId())) <= 24.0F);
+        boolean fightingVoidgloom = cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM) != null
+                || localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM)
+                || now < yangGlyphThrownUntilMillis;
+        Vec3 ownedSven = cachedOwnedPosition(SlayerPolicy.SlayerType.SVEN);
+        boolean nearOwnedSven = ownedSven != null
+                && client.player.position().distanceTo(ownedSven) <= 24.0D;
         Set<Integer> liveBeacons = new HashSet<>();
         Set<Long> liveSitting = new HashSet<>();
-        for (Entity entity : level.entitiesForRendering()) {
+        AABB search = client.player.getBoundingBox().inflate(48.0D, 32.0D, 48.0D);
+        for (Entity entity : level.getEntities(client.player, search)) {
             if (entity instanceof ArmorStand stand) {
-                observeStandMarker(client, settings, stand, liveBeacons, liveSitting, fightingVoidgloom);
+                observeStandMarker(
+                        client, settings, stand, liveBeacons, liveSitting,
+                        fightingVoidgloom, now);
             }
             if (entity instanceof Wolf wolf
                     && settings.slayerSvenEnabled
                     && settings.slayerSvenHighlightPups
-                    && (SlayerFightPolicy.isPupName(name(wolf))
-                    || (wolf.isBaby() && nearOwnedSven))) {
-                addMarker(wolf.getBoundingBox(),
+                    && nearOwnedSven
+                    && (SlayerFightPolicy.isPupName(name(wolf)) || wolf.isBaby())) {
+                addTrackedMarker(wolf, 0.0D,
                         settings.slayerSvenPupColor,
                         settings.slayerSvenPupLine,
                         settings.slayerSvenWorldLabels ? "Sven Pup" : "");
             }
             if (settings.slayerSvenEnabled
                     && settings.slayerSvenHowlWarning
+                    && nearOwnedSven
                     && SlayerFightPolicy.isHowlHologram(name(entity))) {
                 long nowHowl = System.currentTimeMillis();
                 if (nowHowl - lastHowlMillis > 2_000L) {
@@ -2027,26 +2390,32 @@ public final class SlayerRuntime {
                     showFightTitle(client, "Howl");
                 }
             }
-            if (settings.slayerVoidgloomEnabled) {
+            if (settings.slayerVoidgloomEnabled
+                    && nearOwnedBoss(level, SlayerPolicy.SlayerType.VOIDGLOOM, entity, now)) {
                 observeVoidgloomEntity(client, settings, entity, now);
             }
             if (settings.slayerRevenantEnabled
-                    && SlayerFightPolicy.isBoomHologram(name(entity))) {
+                    && SlayerFightPolicy.isBoomHologram(name(entity))
+                    && nearOwnedBoss(level, SlayerPolicy.SlayerType.REVENANT, entity, now)) {
                 revenantBoomActive = true;
             }
-            if (settings.slayerTarantulaEnabled) {
+            if (settings.slayerTarantulaEnabled
+                    && nearOwnedBoss(level, SlayerPolicy.SlayerType.TARANTULA, entity, now)) {
                 observeTarantulaEntity(entity);
             }
-            if (settings.slayerVampireMarkersEnabled) {
+            if (settings.slayerVampireMarkersEnabled
+                    && nearOwnedBoss(level, SlayerPolicy.SlayerType.VAMPIRE, entity, now)) {
                 observeVampireEntity(client, settings, entity, now);
             }
-            if (settings.slayerInfernoEnabled) {
+            if (settings.slayerInfernoEnabled
+                    && nearOwnedBoss(level, SlayerPolicy.SlayerType.INFERNO, entity, now)) {
                 observeInfernoEntity(client, settings, entity, now);
             }
         }
+        adoptBeaconsNearFlyingPaths(level, liveSitting, now);
         SEEN_BEACON_STANDS.retainAll(liveBeacons);
-        SITTING_BEACONS.keySet().retainAll(liveSitting);
         FLYING_BEACON_PATHS.keySet().retainAll(liveBeacons);
+        pruneAndPaintSittingBeacons(level, settings, now, liveSitting);
         if (settings.slayerVoidgloomEnabled && settings.slayerVoidgloomLineToBoss) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomBossLineWidth);
             for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
@@ -2055,7 +2424,7 @@ public final class SlayerRuntime {
                 }
                 Entity boss = level.getEntity(active.entityId());
                 if (boss != null) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             0xFF55FFFF, true, "", 0xFF55FFFF, bossWidth);
                 }
             }
@@ -2067,7 +2436,7 @@ public final class SlayerRuntime {
                 }
                 Entity boss = level.getEntity(active.entityId());
                 if (boss != null) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             settings.slayerSvenPupColor, true, "");
                 }
             }
@@ -2079,7 +2448,7 @@ public final class SlayerRuntime {
                 }
                 Entity boss = level.getEntity(active.entityId());
                 if (boss != null) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             settings.slayerRevenantBoomColor, true, "");
                 }
             }
@@ -2088,12 +2457,12 @@ public final class SlayerRuntime {
                 && settings.slayerRevenantBoomHighlight
                 && revenantBoomActive) {
             for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
-                if (active.descriptor().type() != SlayerPolicy.SlayerType.REVENANT) {
+                if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.REVENANT) {
                     continue;
                 }
                 Entity boss = level.getEntity(active.entityId());
                 if (boss != null) {
-                    addMarker(boss.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(boss, 0.2D,
                             settings.slayerRevenantBoomColor,
                             false,
                             settings.slayerRevenantWorldLabels ? "BOOM" : "");
@@ -2103,7 +2472,7 @@ public final class SlayerRuntime {
         if (settings.slayerTarantulaEnabled) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerTarantulaBossLineWidth);
             for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
-                if (active.descriptor().type() != SlayerPolicy.SlayerType.TARANTULA) {
+                if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.TARANTULA) {
                     continue;
                 }
                 Entity boss = level.getEntity(active.entityId());
@@ -2121,12 +2490,12 @@ public final class SlayerRuntime {
                     }
                 }
                 if (settings.slayerTarantulaLineToBoss && active.owned()) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             settings.slayerTarantulaEggColor, true, "",
                             settings.slayerTarantulaEggColor, bossWidth);
                 }
                 if (settings.slayerTarantulaHighlightInvincible && tarantulaInvincible) {
-                    addMarker(boss.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(boss, 0.2D,
                             settings.slayerTarantulaInvincibleColor,
                             false,
                             settings.slayerTarantulaWorldLabels
@@ -2154,12 +2523,12 @@ public final class SlayerRuntime {
                     }
                 }
                 if (settings.slayerVampireMarkersLineToBoss) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             settings.slayerVampireMarkersIchorColor, true, "",
                             settings.slayerVampireMarkersIchorColor, bossWidth);
                 }
                 if (vampireSteakReady) {
-                    addMarker(boss.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(boss, 0.2D,
                             settings.slayerVampireMarkersSteakColor,
                             false,
                             settings.slayerVampireMarkersWorldLabels ? "Steak!" : "");
@@ -2183,14 +2552,13 @@ public final class SlayerRuntime {
                         ? SlayerFightPolicy.attunementColor(active.descriptor().attunement())
                         : settings.slayerInfernoPillarColor;
                 if (settings.slayerInfernoLineToBoss || settings.slayerInfernoColorByAttunement) {
-                    addMarker(boss.getBoundingBox().inflate(0.05D),
+                    addTrackedMarker(boss, 0.05D,
                             color,
                             settings.slayerInfernoLineToBoss,
                             "");
                 }
             }
-            if (!ENGINE.snapshot(now).activeBosses().stream()
-                    .anyMatch(active -> active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO)) {
+            if (!hasOwnedBossOfType(SlayerPolicy.SlayerType.INFERNO, now)) {
                 infernoMaxHealth = 0.0D;
                 lastInfernoHealth = 0.0D;
             }
@@ -2210,7 +2578,7 @@ public final class SlayerRuntime {
                 showFightTitle(client, "Mania");
             }
             if (settings.slayerVampireMarkersWorldLabels) {
-                addMarker(entity.getBoundingBox().inflate(0.2D),
+                addTrackedMarker(entity, 0.2D,
                         settings.slayerVampireMarkersSteakColor, false, "Mania");
             }
         }
@@ -2224,7 +2592,7 @@ public final class SlayerRuntime {
         if (settings.slayerVampireMarkersChalice
                 && SlayerPolishPolicy.isChaliceHologram(hologram)
                 && inVampireSoundArea()) {
-            addMarker(entity.getBoundingBox().inflate(0.25D),
+            addTrackedMarker(entity, 0.25D,
                     settings.slayerVampireMarkersChaliceColor,
                     false,
                     settings.slayerVampireMarkersWorldLabels ? "Chalice" : "");
@@ -2288,6 +2656,9 @@ public final class SlayerRuntime {
         if (phase != SlayerFightPolicy.VoidgloomPhase.UNKNOWN) {
             voidgloomPhase = phase;
         }
+        if (phase == SlayerFightPolicy.VoidgloomPhase.BEACON) {
+            yangGlyphThrownUntilMillis = Math.max(yangGlyphThrownUntilMillis, now + 8_000L);
+        }
         SlayerFightPolicy.hitsRemaining(hologram).ifPresent(hits -> voidgloomHits = hits);
         SlayerFightPolicy.compactHealth(hologram).ifPresent(health -> voidgloomHealth = health);
         if (!(entity instanceof EnderMan enderman)) {
@@ -2297,13 +2668,20 @@ public final class SlayerRuntime {
                 .anyMatch(active -> active.owned()
                         && active.entityId() == enderman.getId()
                         && active.descriptor().type() == SlayerPolicy.SlayerType.VOIDGLOOM);
-        if (settings.slayerVoidgloomHighlightHeld && holdingBeacon(enderman)) {
-            addMarker(enderman.getBoundingBox().inflate(0.12D),
+        if (settings.slayerVoidgloomHighlightHeld && ownedVoidgloom && holdingBeacon(enderman)) {
+            addTrackedMarker(enderman, 0.12D,
                     settings.slayerVoidgloomBeaconColor,
                     settings.slayerVoidgloomBeaconLine,
                     settings.slayerVoidgloomWorldLabels ? "Yang Glyph" : "",
                     settings.slayerVoidgloomLineColor,
                     SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth));
+        }
+        boolean holding = holdingBeacon(enderman);
+        if (ownedVoidgloom && lastOwnedHeldBeacon && !holding) {
+            yangGlyphThrownUntilMillis = now + 8_000L;
+        }
+        if (ownedVoidgloom) {
+            lastOwnedHeldBeacon = holding;
         }
         if (ownedVoidgloom
                 && (settings.slayerVoidgloomLaserTimer || settings.slayerVoidgloomLaserHealth)
@@ -2316,7 +2694,7 @@ public final class SlayerRuntime {
                 label = label.isBlank() ? voidgloomHealth : label + " · " + voidgloomHealth;
             }
             if (!label.isBlank()) {
-                addMarker(enderman.getBoundingBox().inflate(0.08D),
+                addTrackedMarker(enderman, 0.08D,
                         0xFF55FFFF,
                         false,
                         label);
@@ -2427,9 +2805,13 @@ public final class SlayerRuntime {
             ArmorStand stand,
             Set<Integer> liveBeacons,
             Set<Long> liveSitting,
-            boolean fightingVoidgloom) {
+            boolean fightingVoidgloom,
+            long now) {
         ItemStack helmet = stand.getItemBySlot(EquipmentSlot.HEAD);
         String helmetName = helmet.isEmpty() ? "" : helmet.getHoverName().getString();
+        if (nearPowerOrb(client.level, stand)) {
+            return;
+        }
         var marker = SlayerFightPolicy.markerFromStand(name(stand), helmetName);
         if (marker.isEmpty() && !helmet.isEmpty() && helmet.is(Items.BEACON)) {
             marker = Optional.of(SlayerFightPolicy.Marker.BEACON);
@@ -2440,30 +2822,45 @@ public final class SlayerRuntime {
         if (marker.isEmpty()) {
             return;
         }
-        long now = System.currentTimeMillis();
+        Optional<SlayerPolicy.SlayerType> family = SlayerFightPolicy.familyForMarker(marker.get());
+        if (marker.get() == SlayerFightPolicy.Marker.BEACON) {
+            if (!nearYangGlyph(client.level, stand, now)
+                    && !fightingVoidgloom) {
+                return;
+            }
+        } else if (family.isPresent()
+                && !nearOwnedBoss(client.level, family.get(), stand, now)) {
+            return;
+        }
         switch (marker.get()) {
             case BEACON -> {
                 if (!settings.slayerVoidgloomEnabled) {
                     return;
                 }
                 liveBeacons.add(stand.getId());
+                yangGlyphThrownUntilMillis = Math.max(yangGlyphThrownUntilMillis, now + 8_000L);
                 boolean drawBeacon = settings.slayerVoidgloomHighlightBeacon
                         || settings.slayerVoidgloomBeaconLine
                         || settings.slayerVoidgloomBeaconTimer
                         || settings.slayerVoidgloomBeaconPath
-                        || settings.slayerVoidgloomWorldLabels;
+                        || settings.slayerVoidgloomWorldLabels
+                        || settings.slayerVoidgloomPhaseDisplay;
                 String flyingLabel = settings.slayerVoidgloomWorldLabels ? "Beacon" : "";
-                boolean sitting = false;
-                if (drawBeacon) {
-                    addMarker(stand.getBoundingBox().inflate(0.2D),
+                rememberFlyingBeacon(stand);
+                boolean sitting = highlightSittingBeacon(
+                        client.level, stand, liveSitting, now)
+                        || adoptLandedFlyingBeacon(stand, liveSitting, now);
+                if (sitting) {
+                    FLYING_BEACON_PATHS.remove(stand.getId());
+                }
+                if (drawBeacon && !sitting) {
+                    addTrackedMarker(stand, 0.2D,
                             settings.slayerVoidgloomBeaconColor,
                             settings.slayerVoidgloomBeaconLine,
                             flyingLabel,
                             settings.slayerVoidgloomLineColor,
                             SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth));
-                    sitting = highlightSittingBeacon(client.level, stand, settings, liveSitting, now);
                 }
-                recordFlyingBeaconPath(stand, sitting, settings);
                 if (settings.slayerVoidgloomBeaconWarning
                         && SEEN_BEACON_STANDS.add(stand.getId())
                         && now - lastBeaconWarningMillis > 1_500L) {
@@ -2475,10 +2872,15 @@ public final class SlayerRuntime {
                 }
             }
             case NUKEKUBI -> {
-                if (settings.slayerVoidgloomEnabled && settings.slayerVoidgloomHighlightNukekubi) {
-                    addMarker(stand.getBoundingBox().inflate(0.15D),
+                if (!settings.slayerVoidgloomEnabled) {
+                    return;
+                }
+                boolean drawBox = settings.slayerVoidgloomHighlightNukekubi;
+                boolean drawLine = settings.slayerVoidgloomNukekubiLine;
+                if (drawBox || drawLine) {
+                    addTrackedMarker(stand, 0.55D,
                             settings.slayerVoidgloomNukekubiColor,
-                            settings.slayerVoidgloomNukekubiLine,
+                            drawLine,
                             settings.slayerVoidgloomWorldLabels ? "Nukekubi Skull" : "",
                             settings.slayerVoidgloomNukekubiColor,
                             SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth));
@@ -2495,7 +2897,7 @@ public final class SlayerRuntime {
                         label = SlayerFightPolicy.eggHitsLabel(name(stand)).orElse(
                                 settings.slayerTarantulaWorldLabels ? "Egg Sac" : "");
                     }
-                    addMarker(stand.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(stand, 0.2D,
                             settings.slayerTarantulaEggColor, false, label);
                 }
             }
@@ -2505,7 +2907,7 @@ public final class SlayerRuntime {
                 }
                 tarantulaInvincible = true;
                 if (settings.slayerTarantulaHighlightInvincible) {
-                    addMarker(stand.getBoundingBox().inflate(0.35D),
+                    addTrackedMarker(stand, 0.35D,
                             settings.slayerTarantulaInvincibleColor,
                             false,
                             settings.slayerTarantulaWorldLabels
@@ -2519,7 +2921,7 @@ public final class SlayerRuntime {
                 }
                 revenantBoomActive = true;
                 if (settings.slayerRevenantBoomHighlight) {
-                    addMarker(stand.getBoundingBox().inflate(0.25D),
+                    addTrackedMarker(stand, 0.25D,
                             settings.slayerRevenantBoomColor,
                             false,
                             settings.slayerRevenantWorldLabels ? "BOOM" : "");
@@ -2534,7 +2936,7 @@ public final class SlayerRuntime {
             }
             case PUP -> {
                 if (settings.slayerSvenEnabled && settings.slayerSvenHighlightPups) {
-                    addMarker(stand.getBoundingBox().inflate(0.15D),
+                    addTrackedMarker(stand, 0.15D,
                             settings.slayerSvenPupColor,
                             settings.slayerSvenPupLine,
                             settings.slayerSvenWorldLabels ? "Sven Pup" : "");
@@ -2542,7 +2944,7 @@ public final class SlayerRuntime {
             }
             case BLOOD_ICHOR -> {
                 if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersBloodIchor) {
-                    addMarker(stand.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(stand, 0.2D,
                             settings.slayerVampireMarkersIchorColor,
                             true,
                             settings.slayerVampireMarkersWorldLabels ? "Blood Ichor" : "");
@@ -2553,7 +2955,7 @@ public final class SlayerRuntime {
             }
             case KILLER_SPRING -> {
                 if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersKillerSpring) {
-                    addMarker(stand.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(stand, 0.2D,
                             settings.slayerVampireMarkersSpringColor,
                             true,
                             settings.slayerVampireMarkersWorldLabels ? "Killer Spring" : "");
@@ -2565,7 +2967,7 @@ public final class SlayerRuntime {
                 }
                 vampireTwinclawsActive = true;
                 if (settings.slayerVampireMarkersWorldLabels) {
-                    addMarker(stand.getBoundingBox().inflate(0.2D),
+                    addTrackedMarker(stand, 0.2D,
                             settings.slayerVampireMarkersIchorColor, false, "Twinclaws");
                 }
                 if (!settings.slayerVampireMarkersTwinclaws) {
@@ -2590,7 +2992,7 @@ public final class SlayerRuntime {
                     String label = settings.slayerInfernoWorldLabels
                             ? (firePillarSeconds >= 0 ? firePillarSeconds + "s Fire Pillar" : "Fire Pillar")
                             : "";
-                    addMarker(stand.getBoundingBox().inflate(0.35D),
+                    addTrackedMarker(stand, 0.35D,
                             settings.slayerInfernoPillarColor,
                             true,
                             label);
@@ -2613,64 +3015,278 @@ public final class SlayerRuntime {
         if (helmet.isEmpty()) {
             return false;
         }
-        if (SlayerFightPolicy.isNukekubiTexture(helmet.toString())) {
+        if (SlayerFightPolicy.isNukekubiTexture(skullTexture(helmet))) {
             return true;
         }
-        return fightingVoidgloom && stand.isMarker() && helmet.is(Items.PLAYER_HEAD);
+        return (fightingVoidgloom || localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM))
+                && stand.isMarker()
+                && helmet.is(Items.PLAYER_HEAD);
+    }
+
+    private static String skullTexture(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return "";
+        }
+        ResolvableProfile profile = stack.get(DataComponents.PROFILE);
+        if (profile == null || profile.partialProfile() == null) {
+            return stack.toString();
+        }
+        StringBuilder out = new StringBuilder();
+        for (Property property : profile.partialProfile().properties().get("textures")) {
+            out.append(property.value());
+        }
+        return out.length() == 0 ? stack.toString() : out.toString();
+    }
+
+    private static boolean nearPowerOrb(ClientLevel level, Entity stand) {
+        if (level == null || stand == null) {
+            return false;
+        }
+        if (SlayerFightPolicy.isPowerOrbHologram(name(stand))) {
+            return true;
+        }
+        AABB box = stand.getBoundingBox().inflate(2.8D, 3.5D, 2.8D);
+        for (ArmorStand other : level.getEntitiesOfClass(ArmorStand.class, box)) {
+            if (other != stand && SlayerFightPolicy.isPowerOrbHologram(name(other))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean highlightSittingBeacon(
             ClientLevel level,
             ArmorStand stand,
-            QolSkyblockExtras settings,
             Set<Long> liveSitting,
             long now) {
         boolean found = false;
-        float lineWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth);
         BlockPos origin = stand.blockPosition();
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dy = -2; dy <= 2; dy++) {
-                for (int dz = -2; dz <= 2; dz++) {
+        int scan = SlayerFightPolicy.YANG_GLYPH_SIT_SCAN;
+        for (int dx = -scan; dx <= scan; dx++) {
+            for (int dy = -scan; dy <= scan; dy++) {
+                for (int dz = -scan; dz <= scan; dz++) {
                     BlockPos pos = origin.offset(dx, dy, dz);
                     if (!level.getBlockState(pos).is(Blocks.BEACON)) {
                         continue;
                     }
                     found = true;
-                    long key = pos.asLong();
-                    liveSitting.add(key);
-                    long started = SITTING_BEACONS.computeIfAbsent(key, ignored -> now);
-                    double remaining = SlayerFightPolicy.remainingSeconds(
-                            started, now, SlayerFightPolicy.SITTING_BEACON_MILLIS);
-                    sittingBeaconRemaining = Math.max(sittingBeaconRemaining, remaining);
-                    String label = "";
-                    if (settings.slayerVoidgloomBeaconTimer && remaining > 0.0D) {
-                        label = "Beacon " + SlayerFightPolicy.countdownLabel(remaining);
-                    } else if (settings.slayerVoidgloomWorldLabels) {
-                        label = "Beacon";
-                    }
-                    addMarker(new AABB(
-                                    pos.getX(), pos.getY(), pos.getZ(),
-                                    pos.getX() + 1.0D, pos.getY() + 1.0D, pos.getZ() + 1.0D),
-                            settings.slayerVoidgloomBeaconColor,
-                            settings.slayerVoidgloomBeaconLine,
-                            label,
-                            settings.slayerVoidgloomLineColor,
-                            lineWidth);
+                    adoptSittingBeacon(pos, now, liveSitting);
                 }
             }
         }
         return found;
     }
 
-    private static void recordFlyingBeaconPath(
+    private static boolean adoptLandedFlyingBeacon(
             ArmorStand stand,
-            boolean sitting,
-            QolSkyblockExtras settings) {
-        int id = stand.getId();
-        if (!settings.slayerVoidgloomBeaconPath || sitting) {
-            FLYING_BEACON_PATHS.remove(id);
+            Set<Long> liveSitting,
+            long now) {
+        List<Vec3> path = FLYING_BEACON_PATHS.get(stand.getId());
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        Vec3 last = path.get(path.size() - 1);
+        Vec3 first = path.get(0);
+        Vec3 here = stand.position();
+        if (!SlayerFightPolicy.flyingBeaconLanded(
+                first.distanceToSqr(here), last.distanceToSqr(here))) {
+            return false;
+        }
+        adoptSittingBeacon(stand.blockPosition(), now, liveSitting);
+        return true;
+    }
+
+    private static void adoptBeaconsNearFlyingPaths(
+            ClientLevel level,
+            Set<Long> liveSitting,
+            long now) {
+        if (level == null) {
             return;
         }
+        int scan = SlayerFightPolicy.YANG_GLYPH_SIT_SCAN;
+        for (List<Vec3> path : FLYING_BEACON_PATHS.values()) {
+            if (path == null || path.isEmpty()) {
+                continue;
+            }
+            Vec3 last = path.get(path.size() - 1);
+            BlockPos origin = BlockPos.containing(last);
+            for (int dx = -scan; dx <= scan; dx++) {
+                for (int dy = -scan; dy <= scan; dy++) {
+                    for (int dz = -scan; dz <= scan; dz++) {
+                        BlockPos pos = origin.offset(dx, dy, dz);
+                        if (level.getBlockState(pos).is(Blocks.BEACON)) {
+                            adoptSittingBeacon(pos, now, liveSitting);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void adoptSittingBeacon(BlockPos pos, long now, Set<Long> liveSitting) {
+        if (pos == null) {
+            return;
+        }
+        long key = pos.asLong();
+        if (liveSitting != null) {
+            liveSitting.add(key);
+        }
+        SITTING_BEACONS.putIfAbsent(key, now);
+    }
+
+    private static void pruneAndPaintSittingBeacons(
+            ClientLevel level,
+            QolSkyblockExtras settings,
+            long now,
+            Set<Long> liveSitting) {
+        if (level == null) {
+            return;
+        }
+        SITTING_BEACONS.entrySet().removeIf(entry -> {
+            BlockPos pos = BlockPos.of(entry.getKey());
+            if (level.getBlockState(pos).is(Blocks.BEACON) || liveSitting.contains(entry.getKey())) {
+                return false;
+            }
+            long age = now - entry.getValue();
+            return age > SlayerFightPolicy.SITTING_BEACON_MILLIS + 400L;
+        });
+        sittingBeaconRemaining = 0.0D;
+        boolean draw = settings.slayerVoidgloomEnabled
+                && (settings.slayerVoidgloomHighlightBeacon
+                || settings.slayerVoidgloomBeaconTimer
+                || settings.slayerVoidgloomBeaconLine
+                || settings.slayerVoidgloomWorldLabels);
+        float lineWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth);
+        for (Map.Entry<Long, Long> entry : SITTING_BEACONS.entrySet()) {
+            BlockPos pos = BlockPos.of(entry.getKey());
+            boolean beaconBlock = level.getBlockState(pos).is(Blocks.BEACON);
+            if (!beaconBlock && !liveSitting.contains(entry.getKey())) {
+                continue;
+            }
+            double remaining = SlayerFightPolicy.remainingSeconds(
+                    entry.getValue(), now, SlayerFightPolicy.SITTING_BEACON_MILLIS);
+            sittingBeaconRemaining = Math.max(sittingBeaconRemaining, remaining);
+            if (!draw) {
+                continue;
+            }
+            String label = "";
+            if (settings.slayerVoidgloomBeaconTimer && remaining > 0.0D) {
+                label = "Yang Glyph " + SlayerFightPolicy.countdownLabel(remaining);
+            } else if (settings.slayerVoidgloomWorldLabels) {
+                label = "Yang Glyph";
+            }
+            addMarker(new AABB(
+                            pos.getX(), pos.getY(), pos.getZ(),
+                            pos.getX() + 1.0D, pos.getY() + 1.0D, pos.getZ() + 1.0D),
+                    settings.slayerVoidgloomBeaconColor,
+                    settings.slayerVoidgloomBeaconLine,
+                    label,
+                    settings.slayerVoidgloomLineColor,
+                    lineWidth);
+            YANG_GLYPH_BEAMS.add(Vec3.atCenterOf(pos));
+        }
+    }
+
+    static void onBlockUpdate(BlockPos pos, BlockState newState) {
+        if (pos == null || newState == null) {
+            return;
+        }
+        QolSkyblockExtras extras = settings();
+        if (!extras.slayerVoidgloomEnabled) {
+            return;
+        }
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        boolean localVoidgloom = localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM)
+                || cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM) != null
+                || now < yangGlyphThrownUntilMillis
+                || !FLYING_BEACON_PATHS.isEmpty()
+                || !SEEN_BEACON_STANDS.isEmpty();
+        if (!localVoidgloom) {
+            return;
+        }
+        if (client.player.distanceToSqr(Vec3.atCenterOf(pos)) > 64.0D * 64.0D) {
+            return;
+        }
+        long key = pos.asLong();
+        if (newState.is(Blocks.BEACON)) {
+            SITTING_BEACONS.putIfAbsent(key, now);
+            yangGlyphThrownUntilMillis = 0L;
+        } else {
+            SITTING_BEACONS.remove(key);
+        }
+    }
+
+    static void observeContainer(AbstractContainerScreen<?> screen) {
+        QolSkyblockExtras extras = settings();
+        if (!extras.slayerDropsEnabled || screen == null) {
+            return;
+        }
+        String title = screen.getTitle().getString();
+        List<SlayerRngMeterPolicy.SlotView> slots = new ArrayList<>();
+        List<Slot> menuSlots = screen.getMenu().slots;
+        Object playerInventory = Minecraft.getInstance().player == null
+                ? null
+                : Minecraft.getInstance().player.getInventory();
+        for (int i = 0; i < menuSlots.size(); i++) {
+            Slot slot = menuSlots.get(i);
+            if (slot == null || slot.container == playerInventory) {
+                continue;
+            }
+            ItemStack stack = slot.getItem();
+            if (stack.isEmpty()) {
+                continue;
+            }
+            slots.add(new SlayerRngMeterPolicy.SlotView(
+                    i,
+                    stack.getHoverName().getString(),
+                    InventoryChromeRuntime.loreLines(stack)));
+        }
+        SlayerRngMeterPolicy.fromRngMeterInventory(title, slots).ifPresent(SlayerRuntime::applyRngSelection);
+        SlayerRngMeterPolicy.fromSlayerMenu(title, slots).ifPresent(SlayerRuntime::applyRngSelection);
+    }
+
+    private static void applyRngSelection(SlayerRngMeterPolicy.Selection selection) {
+        if (selection == null) {
+            return;
+        }
+        if (!selection.hasItem()) {
+            selectedRngDrop = null;
+            lastRngStoredXp = -1L;
+            return;
+        }
+        SlayerRngCatalog.resolve(selection.itemName()).ifPresent(entry -> {
+            selectedRngDrop = entry;
+            if (selection.storedXp() >= 0L) {
+                lastRngStoredXp = selection.storedXp();
+            }
+        });
+    }
+
+    private static boolean nearYangGlyph(ClientLevel level, Entity entity, long now) {
+        if (level == null || entity == null) {
+            return false;
+        }
+        Vec3 owned = scanOwnedAt == now && scanOwnedPositions != null
+                ? cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM)
+                : ownedBossPosition(level, SlayerPolicy.SlayerType.VOIDGLOOM, now);
+        Minecraft client = Minecraft.getInstance();
+        double playerDistance = client != null && client.player != null
+                ? entity.distanceTo(client.player)
+                : Double.NaN;
+        return SlayerHighlightPolicy.shouldTrackYangGlyph(
+                owned != null,
+                owned == null ? Double.NaN : entity.position().distanceTo(owned),
+                localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM)
+                        || now < yangGlyphThrownUntilMillis,
+                playerDistance);
+    }
+
+    private static void rememberFlyingBeacon(ArmorStand stand) {
+        int id = stand.getId();
         Vec3 point = stand.getEyePosition();
         List<Vec3> path = FLYING_BEACON_PATHS.computeIfAbsent(id, ignored -> new ArrayList<>());
         if (path.isEmpty() || path.get(path.size() - 1).distanceToSqr(point) >= 0.04D) {
@@ -2696,7 +3312,35 @@ public final class SlayerRuntime {
             String label,
             int lineColor,
             float lineWidth) {
-        FIGHT_MARKERS.add(new FightMarker(box, box.getCenter(), color, line, label, lineColor, lineWidth));
+        FIGHT_MARKERS.add(new FightMarker(
+                box, box.getCenter(), color, line, label, lineColor, lineWidth,
+                Integer.MIN_VALUE, 0.0D));
+    }
+
+    private static void addTrackedMarker(
+            Entity entity,
+            double inflate,
+            int color,
+            boolean line,
+            String label) {
+        addTrackedMarker(entity, inflate, color, line, label, color, 2.0F);
+    }
+
+    private static void addTrackedMarker(
+            Entity entity,
+            double inflate,
+            int color,
+            boolean line,
+            String label,
+            int lineColor,
+            float lineWidth) {
+        if (entity == null) {
+            return;
+        }
+        AABB box = entity.getBoundingBox().inflate(inflate);
+        FIGHT_MARKERS.add(new FightMarker(
+                box, box.getCenter(), color, line, label, lineColor, lineWidth,
+                entity.getId(), inflate));
     }
 
     private static void showFightTitle(Minecraft client, String text) {

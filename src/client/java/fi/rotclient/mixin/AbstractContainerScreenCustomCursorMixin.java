@@ -1,6 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.InventoryChromeRuntime;
+import fi.rotclient.ItemRarityRuntime;
 import fi.rotclient.SkyBlockMenuHighlightRuntime;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -26,6 +27,8 @@ abstract class AbstractContainerScreenCustomCursorMixin {
         AbstractContainerScreen<?> container = (AbstractContainerScreen<?>) (Object) this;
         AbstractContainerScreenAccessor pos = (AbstractContainerScreenAccessor) container;
         InventoryChromeRuntime.afterForeground(
+                container, graphics, pos.rotclient$leftPos(), pos.rotclient$topPos());
+        ItemRarityRuntime.afterContainerContents(
                 container, graphics, pos.rotclient$leftPos(), pos.rotclient$topPos());
         if (!(container instanceof InventoryScreen)) {
             SkyBlockMenuHighlightRuntime.afterContainerContents(

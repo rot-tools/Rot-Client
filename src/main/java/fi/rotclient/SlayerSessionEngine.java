@@ -86,6 +86,7 @@ public final class SlayerSessionEngine {
     private final List<Carry> carries = new ArrayList<>();
     private QuestState questState = QuestState.IDLE;
     private long sessionStartedAtMillis;
+    private long lastOwnedBossKillMillis;
     private int bossesKilled;
     private long totalKillDurationMillis;
     private long lastKillDurationMillis;
@@ -160,6 +161,10 @@ public final class SlayerSessionEngine {
             return SpawnResult.ignored(descriptor);
         }
         boolean owned = samePlayer(descriptor.owner(), localPlayer);
+        if (descriptor.role() == SlayerPolicy.EntityRole.BOSS && owned
+                && hasOwnedBossOfType(descriptor.type(), entityId)) {
+            return SpawnResult.ignored(descriptor);
+        }
         ActiveBoss observed = new ActiveBoss(entityId, descriptor, owned, Math.max(0L, nowMillis));
         active.put(entityId, observed);
         ensureSessionStarted(nowMillis);
@@ -179,8 +184,21 @@ public final class SlayerSessionEngine {
         if (descriptor.role() != SlayerPolicy.EntityRole.BOSS) {
             return new DeathResult(false, removed.owned(), descriptor, duration, "");
         }
+        if (removed.owned()
+                && duration < SlayerTimeMessagePolicy.MIN_KILL_DURATION_MILLIS
+                && lastOwnedBossKillMillis > 0L
+                && nowMillis - lastOwnedBossKillMillis < 2_000L) {
+            return new DeathResult(false, true, descriptor, duration, "");
+        }
         String completedCarryPlayer = recordDeath(removed, nowMillis);
         return new DeathResult(true, removed.owned(), descriptor, duration, completedCarryPlayer);
+    }
+
+    public synchronized void observeQuestVisible(boolean visible, long nowMillis) {
+        if (visible && questState != QuestState.ACTIVE) {
+            questState = QuestState.ACTIVE;
+            ensureSessionStarted(nowMillis);
+        }
     }
 
     public synchronized boolean addCarry(
@@ -316,7 +334,7 @@ public final class SlayerSessionEngine {
             bossesSinceLastDrop++;
             totalKillDurationMillis += duration;
             lastKillDurationMillis = duration;
-            questState = QuestState.IDLE;
+            lastOwnedBossKillMillis = nowMillis;
         }
         return completeMatchingCarry(descriptor, nowMillis);
     }
@@ -352,6 +370,20 @@ public final class SlayerSessionEngine {
         if (sessionStartedAtMillis <= 0L) {
             sessionStartedAtMillis = Math.max(1L, nowMillis);
         }
+    }
+
+    private boolean hasOwnedBossOfType(SlayerPolicy.SlayerType type, int exceptEntityId) {
+        for (ActiveBoss existing : active.values()) {
+            if (existing.entityId() == exceptEntityId) {
+                continue;
+            }
+            if (existing.owned()
+                    && existing.descriptor().role() == SlayerPolicy.EntityRole.BOSS
+                    && existing.descriptor().type() == type) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean samePlayer(String left, String right) {

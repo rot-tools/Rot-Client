@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>A client-side Fabric companion for Hypixel SkyBlock</b><br>
-  One dashboard for quality-of-life modules, HUD layout, mining, and sessions.<br>
+  One dashboard for quality-of-life modules, Visuals, mining, and sessions.<br>
   Built for Minecraft <code>26.2</code>.
 </p>
 
@@ -21,6 +21,7 @@
 
 <p align="center">
   <a href="#install">Install</a> ·
+  <a href="#playtest-jar">Playtest JAR</a> ·
   <a href="#in-game">Using the client</a> ·
   <a href="#features">Features</a> ·
   <a href="#commands">Commands</a> ·
@@ -39,45 +40,62 @@ endorsed by, or approved by Hypixel.
 
 **Requires** Minecraft `26.2`, Java `25`, [Fabric Loader](https://fabricmc.net/use/) `0.19.3` or newer, and [Fabric API](https://modrinth.com/mod/fabric-api) `0.155.2+26.2`. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 
+### Playtest JAR
+
+Testers do not need to build. Each green push to the default branch replaces
+the [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
+pre-release:
+
+1. Open [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest).
+2. Download `RotClient-2.0.1+mc26.2.jar` only. Skip `-sources.jar`.
+3. Put that file in the instance `mods/` folder. Keep exactly one Rot Client JAR.
+   Remove any legacy MiningTracker JAR.
+
+The same JAR is also attached as artifact `RotClient-playable` on the matching
+green [Build](https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml)
+run if you need a specific commit.
+
+### Build from source
+
 1. Install Fabric Loader and Fabric API for Minecraft 26.2.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy only `RotClient-2.0.1+mc26.2.jar` from `build/libs/` into the instance `mods/` folder.
-4. Keep exactly one Rot Client JAR. Remove any legacy MiningTracker JAR.
+3. Copy only `RotClient-2.0.1+mc26.2.jar` from `build/libs/` into `mods/`.
 
 Rot Client includes bounded migration for supported legacy MiningTracker
 configuration data. Back up the instance before upgrading. Never copy runtime
 configuration or session files into this repository.
-
-Playable builds from GitHub Actions are attached to each green [Build](https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml) run.
 
 ## In game
 
 | Action | What it does |
 | --- | --- |
 | **Right Shift** | Opens the dashboard (Click GUI key, rebindable) |
-| **Overview** | Four cards: Quality of life, Look & HUD, Mining tracker, Sessions |
+| **Sidebar** | Overview, Visuals (Appearance and HUD Elements Editor), then Modules |
+| **Overview** | Session / tracker / powder chips, then Go-to cards: Modules, Visuals, Mining, Events |
 | `/rot` or `/rot ui` | Same dashboard |
 | `/rot qol` | QoL module catalog |
-| `/rot edit` | HUD layout editor |
+| `/rot edit` | HUD Elements Editor (world overlay placement) |
 | `/rot help` | Command list |
 
 Search the dashboard address bar to jump to a module. Most utilities stay off until you enable them.
 
 ## Features
 
-**119** quality-of-life modules ship in one catalog, grouped by task. Wired means a catalog entry, saved settings, a runtime bridge, and automated contracts. The module-by-module table lives in [QoL Utilities](docs/QOL_UTILITIES.md).
+**124** quality-of-life modules ship in one catalog, grouped by task. Wired means a catalog entry, saved settings, a runtime bridge, and automated contracts. The module-by-module table lives in [QoL Utilities](docs/QOL_UTILITIES.md).
 
 | Area | What you get |
 | --- | --- |
-| **Interface** | Click GUI, inventory and storage overlays, inventory buttons, HUD editor, custom cursor |
+| **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Hotkey macros, wardrobe swapper, chat commands, auto sprint, inventory walk, market guard |
-| **HUD & display** | Player, pet, performance, and skill overlays plus item tooltip extras |
+| **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
 | **Render** | Fullbright, viewmodel, player size, camera, Free Camera, legacy textures |
-| **Combat** | Auto clicker, trajectories, etherwarp helper, Diana helper, mob highlight |
+| **Combat** | Auto clicker, trajectories, etherwarp helper, mob highlight |
+| **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
 | **Dungeons** | HUD and map, ESP, secret hitboxes, terminals, puzzles, F7 helpers, reward reels |
+| **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | World scanner, commissions, Scatha, Glacite, HOTM helpers |
-| **Fishing & foraging** | Bite helpers, sea creatures, trophy, tree HUD, audio cues |
+| **Fishing, foraging & garden** | Bite helpers, sea creatures, trophy, tree HUD, farm keys |
 
 Dungeon cheat-tagged options (auto terminals, auto Simon, auto I4, and similar) stay off even after you enable the parent module, until you opt in separately.
 
@@ -96,7 +114,7 @@ The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/Min
 | Command | Purpose |
 | --- | --- |
 | `/rot`, `/rot ui`, `/rot qol`, `/rot help` | Dashboard, QoL catalog, help |
-| `/rot edit` | HUD layout editor |
+| `/rot edit` | HUD Elements Editor |
 | `/rot toggle`, `reset`, `status` | Selected mining tracker |
 | `/rot target <material>` | Select a supported material |
 | `/rot session ...` | Pause, resume, reset, copy, or save Current Session |
@@ -131,6 +149,7 @@ A green build proves packaging. It does not prove in-game correctness. See [Cont
 ## Docs
 
 - [Changelog](CHANGELOG.md)
+- [Code walkthrough](docs/CODE_WALKTHROUGH.md) — how the JAR is organized, Policy/Runtime/Mixin, and the build-to-play loop
 - [Project state](docs/PROJECT_STATE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [QoL utilities](docs/QOL_UTILITIES.md)

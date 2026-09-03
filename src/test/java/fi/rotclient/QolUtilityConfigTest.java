@@ -16,6 +16,11 @@ final class QolUtilityConfigTest {
 
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
             for (QolUtilityCatalog.SettingDef setting : module.settings()) {
+                if (MiningTrackerCatalogPolicy.isTrackerOwnedSetting(setting.id())
+                        && setting.type() != QolUtilityCatalog.SettingType.ACTION
+                        && setting.type() != QolUtilityCatalog.SettingType.SECTION) {
+                    continue;
+                }
                 boolean supported = switch (setting.type()) {
                     case TOGGLE -> config.readBoolean(setting.id()) != null;
                     case ENUM -> !setting.enumOptions().isEmpty()
@@ -41,7 +46,12 @@ final class QolUtilityConfigTest {
     void everyInternallyOwnedToggleableModuleRoundTripsAndResets() {
         QolUtilityConfig config = new QolUtilityConfig();
         List<String> unsupported = new ArrayList<>();
-        List<String> external = List.of("qol.fullbright", "qol.auto_sprint", "qol.camera");
+        List<String> external = List.of(
+                "qol.fullbright",
+                "qol.auto_sprint",
+                "qol.camera",
+                "qol.mining_tracker",
+                "qol.powder_chest");
 
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
             if (!module.toggleable() || external.contains(module.id())) {
@@ -167,11 +177,22 @@ final class QolUtilityConfigTest {
         config.writeColor("qol.inventory_overlay.chrome_panel", 0x80FF0000);
         assertEquals(0x80FF0000, config.readColor("qol.inventory_overlay.chrome_panel"));
         assertTrue(config.resetModuleToDefaults("qol.inventory_overlay"));
-        assertEquals(0, config.inventoryChromePanel);
-        assertEquals(0, config.inventoryChromeHeader);
-        assertEquals(0, config.inventoryChromeMain);
-        assertEquals(0, config.inventoryChromeHotbar);
-        assertEquals(0, config.inventoryChromeBorder);
+        assertEquals(InventoryOverlayPolicy.DEFAULT_INV_PANEL, config.inventoryChromePanel);
+        assertEquals(InventoryOverlayPolicy.DEFAULT_INV_HEADER, config.inventoryChromeHeader);
+        assertEquals(InventoryOverlayPolicy.DEFAULT_INV_MAIN, config.inventoryChromeMain);
+        assertEquals(InventoryOverlayPolicy.DEFAULT_INV_HOTBAR, config.inventoryChromeHotbar);
+        assertEquals(InventoryOverlayPolicy.DEFAULT_INV_BORDER, config.inventoryChromeBorder);
+        assertTrue(config.petHudEnabled);
+        assertTrue(config.readBoolean("qol.pet_hud.show_background"));
+        config.writeBoolean("qol.pet_hud.show_background", false);
+        assertFalse(config.readBoolean("qol.pet_hud.show_background"));
+        assertTrue(config.resetModuleToDefaults("qol.pet_hud"));
+        assertTrue(config.readBoolean("qol.pet_hud.show_background"));
+        assertTrue(config.readBoolean("qol.performance_hud.show_background"));
+        config.writeBoolean("qol.performance_hud.show_background", false);
+        assertFalse(config.readBoolean("qol.performance_hud.show_background"));
+        assertTrue(config.resetModuleToDefaults("qol.performance_hud"));
+        assertTrue(config.readBoolean("qol.performance_hud.show_background"));
     }
 
     @Test

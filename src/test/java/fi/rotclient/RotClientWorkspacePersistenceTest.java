@@ -48,7 +48,7 @@ final class RotClientWorkspacePersistenceTest {
         assertEquals(42, loaded.tabs.get(1).scrollPixels);
         assertEquals(RotClientWorkspaceConfig.SCHEMA_VERSION, loaded.schemaVersion);
         assertEquals(
-                List.of(RotClientSidebarNav.SECTION_SESSIONS),
+                List.of(RotClientSidebarNav.SECTION_QOL),
                 loaded.expandedSidebarSections);
     }
 
@@ -201,5 +201,24 @@ final class RotClientWorkspacePersistenceTest {
         assertEquals(
                 RotClientWorkspaceRoute.OVERVIEW.id(),
                 config.tabs.get(0).route);
+    }
+
+    @Test
+    void resetViewToDefaultReturnsActiveTabToOverviewAndClearsQol() {
+        RotClientWorkspaceConfig config = RotClientWorkspaceConfig.defaults();
+        RotClientWorkspaceTab tab = config.activeTab();
+        tab.route = RotClientWorkspaceRoute.QOL_SETTINGS.id();
+        tab.qolGroup = "DUNGEONS";
+        tab.qolModuleId = "qol.terminal";
+        tab.scrollPixels = 80;
+        config.expandedSidebarSections = List.of();
+        config.resetViewToDefault();
+        assertEquals(RotClientWorkspaceRoute.OVERVIEW.id(), tab.route);
+        assertEquals("", tab.qolGroup);
+        assertEquals("", tab.qolModuleId);
+        assertEquals(0, tab.scrollPixels);
+        assertEquals(
+                RotClientSidebarNav.defaultExpandedSections(),
+                config.expandedSidebarSections);
     }
 }

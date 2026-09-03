@@ -350,7 +350,8 @@ public final class QolNumberSettings {
                             FreecamPolicy.MAX_SPEED,
                             0.1D,
                             true);
-            case "qol.hud_layout.scale" -> new Spec(0.6D, 2.5D, 0.05D, true);
+            case "qol.hud_layout.scale",
+                 "rotclient.hud_style.scale" -> new Spec(0.6D, 2.5D, 0.05D, true);
             case "qol.custom_cursor.size" -> new Spec(0.6D, 2.4D, 0.05D, true);
             case "qol.stall_market.sell_threshold" ->
                     new Spec(0.0D, 2_000_000_000D, 10_000D, true);

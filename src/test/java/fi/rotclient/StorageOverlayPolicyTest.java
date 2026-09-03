@@ -20,6 +20,10 @@ class StorageOverlayPolicyTest {
                 StorageOverlayPolicy.pageFromTitle("Ender Chest ✦ (3/9)").orElseThrow());
         assertEquals(new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.BACKPACK, 4),
                 StorageOverlayPolicy.pageFromTitle("Greater Backpack ✦ (Slot #4)").orElseThrow());
+        assertEquals(new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.BACKPACK, 1),
+                StorageOverlayPolicy.pageFromTitle("Greater Backpack").orElseThrow());
+        assertEquals(new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.BACKPACK, 1),
+                StorageOverlayPolicy.pageFromTitle("Backpack").orElseThrow());
         assertTrue(StorageOverlayPolicy.pageFromTitle("Chest").isEmpty());
     }
 
@@ -55,11 +59,11 @@ class StorageOverlayPolicyTest {
         assertTrue(layout.panelX() > 0);
         assertEquals(960 / 2 - layout.panelWidth() / 2, layout.panelX());
         assertEquals(960 / 2 - StorageOverlayPolicy.PLAYER_WIDTH / 2, layout.playerX());
-        assertArrayEquals(new int[] {layout.playerX() + 12, layout.playerY() + 67},
+        assertArrayEquals(new int[] {layout.playerX() + 12, layout.playerY() + 74},
                 StorageOverlayPolicy.playerSlotPosition(layout.playerX(), layout.playerY(), 0));
-        assertArrayEquals(new int[] {13, 40},
+        assertArrayEquals(new int[] {13, 42},
                 StorageOverlayPolicy.contentSlotPosition(10, 20, 0));
-        assertArrayEquals(new int[] {13, 58},
+        assertArrayEquals(new int[] {13, 60},
                 StorageOverlayPolicy.contentSlotPosition(10, 20, 9));
         assertEquals(9, StorageOverlayPolicy.playerInventoryIndex(0));
         assertEquals(0, StorageOverlayPolicy.playerInventoryIndex(27));
@@ -143,5 +147,166 @@ class StorageOverlayPolicyTest {
                 layout.innerY(),
                 layout.innerWidth(),
                 layout.innerHeight()));
+    }
+
+    @Test
+    void emptyPageTicksDoNotWipeAKnownPreview() {
+        assertTrue(StorageOverlayPolicy.shouldKeepExistingCache(true, true));
+        assertFalse(StorageOverlayPolicy.shouldKeepExistingCache(true, false));
+        assertFalse(StorageOverlayPolicy.shouldKeepExistingCache(false, true));
+        assertTrue(StorageOverlayPolicy.incomingIsPlaceholder(true, false, false));
+        assertFalse(StorageOverlayPolicy.incomingIsPlaceholder(true, true, false));
+        assertTrue(StorageOverlayPolicy.incomingIsPlaceholder(true, false, true));
+    }
+
+    @Test
+    void overlayClicksStayInsideTheReplacementGui() {
+        var layout = StorageOverlayPolicy.layout(960, 540, 3, 5, 324);
+        assertTrue(StorageOverlayPolicy.isClickInsideOverlay(
+                layout, layout.panelX() + 8, layout.panelY() + 8));
+        assertTrue(StorageOverlayPolicy.isClickInsideOverlay(
+                layout, layout.playerX() + 10, layout.playerY() + 10));
+        assertFalse(StorageOverlayPolicy.isClickInsideOverlay(
+                layout, 2, 2));
+        assertTrue(StorageOverlayPolicy.shouldSuppressOutsideClick(
+                true, layout, layout.innerX() + 4, layout.innerY() + 4));
+        assertFalse(StorageOverlayPolicy.shouldSuppressOutsideClick(
+                false, layout, layout.innerX() + 4, layout.innerY() + 4));
+        assertTrue(StorageOverlayPolicy.shouldPinScreenOnClose(true, false, true));
+        assertFalse(StorageOverlayPolicy.shouldPinScreenOnClose(true, true, true));
+        assertFalse(StorageOverlayPolicy.shouldPinScreenOnClose(true, false, false));
+        assertTrue(StorageOverlayPolicy.cacheFingerprintUnchanged("a", "a"));
+        assertFalse(StorageOverlayPolicy.cacheFingerprintUnchanged("a", "b"));
+    }
+
+    @Test
+    void inventorySitsBelowTheStoragePanelWithAVisibleSlotGridAndSearchBox() {
+        var layout = StorageOverlayPolicy.layout(960, 540, 3, 5, 324);
+        assertTrue(layout.playerY() >= layout.panelY() + layout.panelHeight() + StorageOverlayPolicy.PLAYER_GAP);
+        assertTrue(StorageOverlayPolicy.insideSearchField(
+                layout, layout.searchX() + 4, layout.searchY() + 4));
+        assertEquals(StorageOverlayPolicy.pageHeight(5), StorageOverlayPolicy.emptyPageHeight());
+        assertEquals(45, StorageOverlayPolicy.defaultEmptySlotCount());
+        assertEquals("Warden", StorageOverlayPolicy.appendSearchChar("Warde", "n"));
+        assertEquals("Warde", StorageOverlayPolicy.deleteSearchChar("Warden"));
+        assertTrue(StorageOverlayPolicy.searching("pickaxe"));
+        assertFalse(StorageOverlayPolicy.searching("  "));
+        assertTrue(StorageOverlayPolicy.isClickInsideOverlay(
+                layout, layout.searchX() + 2, layout.searchY() + 2));
+        assertTrue(StorageOverlayPolicy.overScrollBar(
+                layout, layout.scrollBarX() + 1, layout.scrollBarY() + 8));
+        assertFalse(StorageOverlayPolicy.overScrollBar(
+                layout, layout.panelX() + 4, layout.innerY() + 8));
+        assertTrue(StorageOverlayPolicy.scrollBarTrackBottom(layout)
+                > layout.scrollBarY());
+        int rows = 3;
+        int cardHeight = StorageOverlayPolicy.pageHeight(rows);
+        int[] lastSlot = StorageOverlayPolicy.contentSlotPosition(0, 0, rows * 9 - 1);
+        assertTrue(lastSlot[1] + StorageOverlayPolicy.SLOT_SIZE
+                <= cardHeight - StorageOverlayPolicy.CARD_BOTTOM_PAD + 1);
+        assertEquals(5, StorageOverlayPolicy.slotRows(0, true));
+        assertEquals(3, StorageOverlayPolicy.slotRows(3, false));
+        assertEquals(27, StorageOverlayPolicy.defaultDirectory().size());
+        assertFalse(StorageOverlayPolicy.isPhysicalSelectorSlot(
+                StorageOverlayPolicy.COMMAND_SELECTOR_SLOT));
+    }
+
+    @Test
+    void searchGlowTravelsAroundTheSlotClockwise() {
+        int perimeter = StorageOverlayPolicy.searchGlowPerimeter(18);
+        assertEquals(68, perimeter);
+        assertEquals(0, StorageOverlayPolicy.searchGlowHead(0L, perimeter));
+        int later = StorageOverlayPolicy.searchGlowHead(
+                StorageOverlayPolicy.SEARCH_GLOW_PERIOD_MS / 2, perimeter);
+        assertTrue(later > 0);
+        assertTrue(later < perimeter);
+        int[] start = StorageOverlayPolicy.searchGlowPixel(10, 20, 18, 0);
+        assertArrayEquals(new int[] {10, 20}, start);
+        for (int i = 0; i < perimeter; i++) {
+            int[] pixel = StorageOverlayPolicy.searchGlowPixel(10, 20, 18, i);
+            assertTrue(pixel[0] >= 10 && pixel[0] < 28);
+            assertTrue(pixel[1] >= 20 && pixel[1] < 38);
+        }
+        int[] inward = StorageOverlayPolicy.searchGlowInward(10, 20, 18, 10, 20);
+        assertArrayEquals(new int[] {11, 21}, inward);
+        int headColor = StorageOverlayPolicy.searchGlowColor(0, 18);
+        int tailColor = StorageOverlayPolicy.searchGlowColor(17, 18);
+        assertEquals(0xFF, (headColor >> 24) & 0xFF);
+        assertTrue(((headColor >> 16) & 0xFF) > 0x80);
+        assertTrue((tailColor & 0xFF) > 0x40);
+    }
+
+    @Test
+    void searchCaretStaysInsideTheFieldAndClipsFromTheStart() {
+        assertEquals("SSSS", StorageOverlayPolicy.clipSearchFromEnd(
+                "XXXXSSSS", 4, String::length));
+        assertEquals("abc", StorageOverlayPolicy.clipSearchFromEnd(
+                "abc", 10, String::length));
+        assertEquals("", StorageOverlayPolicy.clipSearchFromEnd("abc", 0, String::length));
+        int caret = StorageOverlayPolicy.searchCaretX(10, 4, 40, 200);
+        assertTrue(caret >= 14);
+        assertTrue(caret <= 10 + 40 - 4 - 1);
+        assertEquals(14, StorageOverlayPolicy.searchCaretX(10, 4, 40, 0));
+    }
+
+    @Test
+    void closeButtonAndOutsideClicksDismissTheOverlay() {
+        var layout = StorageOverlayPolicy.layout(960, 540, 3, 5, 324);
+        assertTrue(StorageOverlayPolicy.overCloseButton(
+                layout, layout.closeX() + 2, layout.closeY() + 2));
+        assertFalse(StorageOverlayPolicy.overCloseButton(
+                layout, layout.innerX() + 8, layout.innerY() + 8));
+        assertTrue(StorageOverlayPolicy.shouldCloseOnOutsideClick(true, layout, 2, 2));
+        assertFalse(StorageOverlayPolicy.shouldCloseOnOutsideClick(
+                true, layout, layout.panelX() + 8, layout.panelY() + 8));
+        assertFalse(StorageOverlayPolicy.shouldCloseOnOutsideClick(
+                true, layout, layout.playerX() + 10, layout.playerY() + 10));
+        assertFalse(StorageOverlayPolicy.shouldCloseOnOutsideClick(false, layout, 2, 2));
+        assertTrue(layout.closeX() + layout.closeSize() <= layout.panelX() + layout.panelWidth());
+        assertTrue(layout.searchX() + layout.searchWidth() <= layout.closeX());
+    }
+
+    @Test
+    void pageValueUsesBazaarUnitPricesAndSitsOnTheCardHeader() {
+        var lines = java.util.List.of(
+                new StorageOverlayPolicy.MarketLine("ENCHANTED_DIAMOND", 2),
+                new StorageOverlayPolicy.MarketLine("MISSING", 8),
+                new StorageOverlayPolicy.MarketLine("", 4));
+        assertEquals(2500.0D, StorageOverlayPolicy.instantSellTotal(
+                lines, java.util.Map.of("ENCHANTED_DIAMOND", 1250.0D)));
+        assertEquals(0.0D, StorageOverlayPolicy.instantSellTotal(lines, java.util.Map.of()));
+        assertEquals("Total value: 2.5k", StorageOverlayPolicy.pageValueLabel(2500.0D));
+        assertEquals("No AH/BZ prices yet", StorageOverlayPolicy.pageValueLabel(0.0D));
+        assertEquals(40.0D, StorageOverlayPolicy.marketUnitValue(0, 0, 40));
+        assertEquals(25.0D, StorageOverlayPolicy.marketUnitValue(90, 25, 0));
+        assertEquals(12.0D, StorageOverlayPolicy.marketUnitValue(12, 0, 0));
+        assertEquals(0.0D, StorageOverlayPolicy.marketUnitValue(0, 0, 0));
+        int[] icon = StorageOverlayPolicy.valueIconPosition(10, 20, 166);
+        assertEquals(10 + 166 - StorageOverlayPolicy.VALUE_ICON_SIZE - 3, icon[0]);
+        assertTrue(StorageOverlayPolicy.overValueIcon(10, 20, 166, icon[0] + 2, icon[1] + 2));
+        assertFalse(StorageOverlayPolicy.overValueIcon(10, 20, 166, 12, 22));
+        assertTrue(StorageOverlayPolicy.headerLabelMaxWidth(166) < 166);
+    }
+
+    @Test
+    void leftoverOverlayStateDoesNotStealTheDashboardCursorOrWheel() {
+        assertTrue(StorageOverlayPolicy.shouldKeepCursorOnScreenChange(
+                true, false, true, true, false));
+        assertFalse(StorageOverlayPolicy.shouldKeepCursorOnScreenChange(
+                true, false, true, false, false));
+        assertFalse(StorageOverlayPolicy.shouldKeepUngrabbedCursor(true, false, false));
+        assertTrue(StorageOverlayPolicy.shouldKeepUngrabbedCursor(true, true, false));
+        assertFalse(StorageOverlayPolicy.shouldStealOverlayWheel(false, true));
+        assertTrue(StorageOverlayPolicy.shouldStealOverlayWheel(true, true));
+        assertTrue(StorageOverlayPolicy.shouldStealOverlayWheel(true, false, true, true));
+        assertFalse(StorageOverlayPolicy.shouldStealOverlayWheel(true, true, false, true));
+        assertTrue(StorageOverlayPolicy.shouldStealOverlayWheel(true, true, true, true));
+        assertTrue(CustomTooltipPolicy.panTooltipVertically(false, false));
+        assertFalse(CustomTooltipPolicy.panTooltipVertically(true, false));
+        assertTrue(CustomTooltipPolicy.panTooltipVertically(true, true));
+        assertTrue(CustomTooltipPolicy.panTooltipHorizontally(false, true, true));
+        assertFalse(CustomTooltipPolicy.panTooltipHorizontally(true, true, true));
+        assertTrue(CustomTooltipPolicy.storageOverlayTakesWheel(true, false));
+        assertFalse(CustomTooltipPolicy.storageOverlayTakesWheel(true, true));
     }
 }

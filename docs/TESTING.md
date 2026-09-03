@@ -368,7 +368,7 @@ The current gemstone pipeline emits these core markers:
 
 ### QoL checkpoint validation
 
-The current catalog contains 119 wired modules. Before claiming a module runtime
+The current catalog contains 124 wired modules. Before claiming a module runtime
 verified, test its switch, settings drawer, reset behavior, persistence across
 restart, and the exact visual/input effect. Start with UI move/resize/snap,
 Inventory Overlay, Price/Info Tooltips, Viewmodel, Item Scale, Experiments,

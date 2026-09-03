@@ -7,7 +7,6 @@ import net.minecraft.gizmos.GizmoStyle;
 import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.phys.AABB;
 
@@ -277,17 +276,22 @@ public final class MiningLeftoverRuntime {
         if (!mobs && !goblin) {
             return;
         }
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand stand)) {
-                continue;
-            }
+        float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        AABB search = client.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
             String name = stand.getName().getString();
             boolean commission = mobs && MiningLeftoverPolicy.isCommissionMob(name);
             boolean raid = goblin && name.toLowerCase().contains("goblin");
             if (!commission && !raid) {
                 continue;
             }
-            AABB box = stand.getBoundingBox().inflate(0.2D, 0.6D, 0.2D);
+            EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                    stand.getX(), stand.getY(), stand.getZ(),
+                    stand.xo, stand.yo, stand.zo,
+                    partialTick);
+            AABB box = stand.getBoundingBox()
+                    .move(offset.x(), offset.y(), offset.z())
+                    .inflate(0.2D, 0.6D, 0.2D);
             Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FF55, 2.0F)).setAlwaysOnTop();
         }
     }
@@ -300,10 +304,8 @@ public final class MiningLeftoverRuntime {
         int px = player.blockPosition().getX();
         int py = player.blockPosition().getY();
         int pz = player.blockPosition().getZ();
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand stand)) {
-                continue;
-            }
+        AABB search = player.getBoundingBox().inflate(6.0D, 6.0D, 6.0D);
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
             MiningLeftoverPolicy.WormKind kind = MiningLeftoverPolicy.wormKind(stand.getName().getString());
             if (kind == MiningLeftoverPolicy.WormKind.NONE || !seenWorms.add(stand.getId())) {
                 continue;

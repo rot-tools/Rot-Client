@@ -17,6 +17,12 @@ final class InventoryOverlayPolicyTest {
         assertTrue(InventoryOverlayPolicy.isEquipmentMenu("Stats & Equipment"));
         assertTrue(InventoryOverlayPolicy.isEquipmentMenu("§aStats & Equipment"));
         assertFalse(InventoryOverlayPolicy.isEquipmentMenu("(2/2) Equipment Sets"));
+        assertTrue(InventoryOverlayPolicy.isEquipmentSetsMenu("(2/2) Equipment Sets"));
+        assertTrue(InventoryOverlayPolicy.isEquipmentSetsMenu("§a(1/4) Equipment Sets"));
+        assertEquals(0, InventoryOverlayPolicy.equipmentSetsColumn(36, "lime_dye").orElse(-1));
+        assertTrue(InventoryOverlayPolicy.isEquipmentSetsPieceSlot(0, 0));
+        assertTrue(InventoryOverlayPolicy.isEquipmentSetsPieceSlot(27, 0));
+        assertFalse(InventoryOverlayPolicy.isEquipmentSetsPieceSlot(36, 0));
         assertFalse(InventoryOverlayPolicy.isEquipmentMenu("Pets"));
     }
 
@@ -99,12 +105,16 @@ final class InventoryOverlayPolicyTest {
     @Test
     void wrenchSitsInTheInventoryTopRightAndSlidersRewriteChannels() {
         InventoryOverlayPolicy.Rect wrench = InventoryOverlayPolicy.wrenchRect(40, 20, 176);
-        assertEquals(40 + 176 - 16 - 4, wrench.x());
-        assertEquals(20 + 4, wrench.y());
+        assertEquals(40 + 176 - InventoryOverlayPolicy.WRENCH_SIZE - InventoryOverlayPolicy.WRENCH_GAP, wrench.x());
+        assertEquals(20 + InventoryOverlayPolicy.WRENCH_GAP, wrench.y());
+        assertEquals(12, wrench.width());
+        assertEquals(12, wrench.height());
         assertTrue(InventoryOverlayPolicy.hitWrench(40, 20, 176, wrench.x() + 1, wrench.y() + 1));
         assertFalse(InventoryOverlayPolicy.hitWrench(40, 20, 176, 40 + 176 + 8, 20 + 4));
         assertEquals(0xAA, InventoryOverlayPolicy.channelValue(0xAA112233, 3));
         assertEquals(0xCC001122, InventoryOverlayPolicy.withChannel(0xAA001122, 3, 0xCC));
+        assertEquals(0xE0112233, InventoryOverlayPolicy.withChannelEnsuringVisible(0x00112233, 0, 0x11));
+        assertEquals(0x00112233, InventoryOverlayPolicy.withChannelEnsuringVisible(0x00112233, 3, 0));
         InventoryOverlayPolicy.Rect slider = new InventoryOverlayPolicy.Rect(0, 0, 256, 10);
         assertEquals(0, InventoryOverlayPolicy.sliderValue(slider, 0));
         assertEquals(255, InventoryOverlayPolicy.sliderValue(slider, 255));
@@ -124,5 +134,100 @@ final class InventoryOverlayPolicyTest {
                 wrench.x(), wrench.y(), 640, 360);
         assertEquals(wrench.x() + InventoryOverlayPolicy.WRENCH_SIZE + 6, editor.x());
         assertTrue(editor.x() > wrench.x());
+        assertEquals(248, editor.width());
+        assertEquals(
+                InventoryOverlayPolicy.DEFAULT_INV_PANEL,
+                InventoryOverlayPolicy.defaultChromeColor(
+                        InventoryOverlayPolicy.ChromeColorRole.INV_PANEL));
+        assertEquals(
+                InventoryOverlayPolicy.DEFAULT_STORAGE_CARD,
+                InventoryOverlayPolicy.defaultChromeColor(
+                        InventoryOverlayPolicy.ChromeColorRole.STORAGE_CARD));
+        InventoryOverlayPolicy.Rect row = InventoryOverlayPolicy.editorRowRect(editor, 0);
+        InventoryOverlayPolicy.Rect reset = InventoryOverlayPolicy.editorResetRect(row);
+        InventoryOverlayPolicy.Rect swatch = InventoryOverlayPolicy.editorSwatchRect(row);
+        assertTrue(reset.x() + reset.width() <= swatch.x());
+        assertTrue(reset.contains(reset.x() + 1, reset.y() + 1));
+        InventoryOverlayPolicy.Rect mascot = InventoryOverlayPolicy.mascotCoverRect(40, 20, 176);
+        assertEquals(40 + 140, mascot.x());
+        assertEquals(20 + 50, mascot.y());
+        assertTrue(mascot.x() + mascot.width() >= 40 + 176);
+        assertEquals(34, mascot.height());
+    }
+
+    @Test
+    void chromeSkipsPlayerPreview() {
+        int left = 40;
+        int top = 20;
+        InventoryOverlayPolicy.Rect player = InventoryOverlayPolicy.playerPreviewRect(left, top);
+        assertEquals(left + 26, player.x());
+        assertEquals(top + 8, player.y());
+        assertEquals(49, player.width());
+        assertEquals(70, player.height());
+        InventoryOverlayPolicy.Rect crafting = InventoryOverlayPolicy.craftingGridRect(left, top);
+        assertEquals(left + 97, crafting.x());
+        assertEquals(top + 6, crafting.y());
+        assertTrue(crafting.x() + crafting.width() >= left + 154 + 18);
+        assertTrue(crafting.y() + crafting.height() >= top + 36 + 18);
+
+        List<InventoryOverlayPolicy.Rect> header = InventoryOverlayPolicy.chromeFillRects(
+                InventoryOverlayPolicy.ChromeRegion.HEADER, left, top, 176, 166);
+        List<InventoryOverlayPolicy.Rect> panel = InventoryOverlayPolicy.chromeFillRects(
+                InventoryOverlayPolicy.ChromeRegion.PANEL, left, top, 176, 166);
+        assertFalse(covers(header, player.x() + 8, player.y() + 8));
+        assertFalse(covers(panel, player.x() + 8, player.y() + 8));
+        assertTrue(covers(header, left + InventoryOverlayPolicy.ARMOR_COLUMN_X + 2, top + 10));
+        assertTrue(covers(header, left + InventoryOverlayPolicy.EQUIPMENT_COLUMN_X + 2, top + 10));
+        assertTrue(covers(header, left + InventoryOverlayPolicy.CRAFT_INPUT_X + 2, top + 20));
+        assertTrue(covers(panel, left + 10, top + 90));
+        assertEquals(0xFF7A628C, InventoryOverlayPolicy.DEFAULT_SLOT_BORDER);
+        assertEquals(0xFF100C14, InventoryOverlayPolicy.DEFAULT_SLOT_WELL);
+    }
+
+    @Test
+    void survivalSlotsCoverArmorCraftingBackpackAndHotbar() {
+        int left = 40;
+        int top = 20;
+        List<InventoryOverlayPolicy.Rect> withOffhand =
+                InventoryOverlayPolicy.survivalSlotRects(left, top, true);
+        List<InventoryOverlayPolicy.Rect> withoutOffhand =
+                InventoryOverlayPolicy.survivalSlotRects(left, top, false);
+        assertEquals(46, withOffhand.size());
+        assertEquals(45, withoutOffhand.size());
+        assertEquals(InventoryOverlayPolicy.slotRect(left, top, 8, 8), withOffhand.get(0));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 98, 18)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 116, 36)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 154, 28)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 8, 84)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 152, 120)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 8, 142)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 152, 142)));
+        assertTrue(withOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 77, 62)));
+        assertFalse(withoutOffhand.contains(
+                InventoryOverlayPolicy.slotRect(left, top, 77, 62)));
+        for (InventoryOverlayPolicy.Rect slot : withoutOffhand) {
+            InventoryOverlayPolicy.Rect player =
+                    InventoryOverlayPolicy.playerPreviewRect(left, top);
+            assertFalse(
+                    player.contains(slot.x() + 2, slot.y() + 2),
+                    "vanilla slot overlaps player preview: " + slot);
+        }
+    }
+
+    private static boolean covers(List<InventoryOverlayPolicy.Rect> rects, int x, int y) {
+        for (InventoryOverlayPolicy.Rect rect : rects) {
+            if (rect.contains(x, y)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

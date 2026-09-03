@@ -26,7 +26,7 @@ final class RotClientSidebarNav {
     static final int HEADER_HIT_HEIGHT = SECTION_LABEL_HEIGHT + 2;
 
     private static final Set<String> KNOWN_SECTIONS = Set.of(
-            SECTION_MINING, SECTION_SESSIONS, SECTION_SETTINGS, SECTION_QOL);
+            SECTION_SETTINGS, SECTION_QOL);
 
     enum HitTarget {
         NONE,
@@ -47,7 +47,10 @@ final class RotClientSidebarNav {
         QOL_FISHING,
         QOL_FORAGING,
         QOL_DUNGEONS,
+        QOL_KUUDRA,
+        QOL_EVENTS,
         QOL_MINING,
+        QOL_GARDEN,
         QOL_UTILITIES,
         QOL_HUD_DISPLAY,
         QOL_RENDER,
@@ -90,11 +93,11 @@ final class RotClientSidebarNav {
         }
 
         boolean analyticsVisible() {
-            return sessionsClipHeight() > 0 && analyticsY >= 0;
+            return miningClipHeight() > 0 && analyticsY >= 0;
         }
 
         boolean historyVisible() {
-            return sessionsClipHeight() > 0 && historyY >= 0;
+            return miningClipHeight() > 0 && historyY >= 0;
         }
 
         boolean appearanceVisible() {
@@ -110,11 +113,11 @@ final class RotClientSidebarNav {
         }
 
         int miningClipHeight() {
-            return RotClientEase.shownPixels(childStackHeight(3), miningOpen);
+            return RotClientEase.shownPixels(childStackHeight(5), miningOpen);
         }
 
         int sessionsClipHeight() {
-            return RotClientEase.shownPixels(childStackHeight(2), sessionsOpen);
+            return miningClipHeight();
         }
 
         int settingsClipHeight() {
@@ -145,13 +148,11 @@ final class RotClientSidebarNav {
 
         int contentHeight(int originY) {
             int bottom = overviewY + ITEM_HEIGHT;
-            bottom = Math.max(bottom, miningHeaderY + HEADER_HIT_HEIGHT);
+            if (miningHeaderY >= 0) {
+                bottom = Math.max(bottom, miningHeaderY + HEADER_HIT_HEIGHT);
+            }
             if (miningClipHeight() > 0 && trackerY >= 0) {
                 bottom = Math.max(bottom, trackerY + miningClipHeight());
-            }
-            bottom = Math.max(bottom, sessionsHeaderY + HEADER_HIT_HEIGHT);
-            if (sessionsClipHeight() > 0 && analyticsY >= 0) {
-                bottom = Math.max(bottom, analyticsY + sessionsClipHeight());
             }
             bottom = Math.max(bottom, settingsHeaderY + HEADER_HIT_HEIGHT);
             if (settingsClipHeight() > 0 && appearanceY >= 0) {
@@ -170,8 +171,7 @@ final class RotClientSidebarNav {
     }
 
     static List<String> defaultExpandedSections() {
-        return List.of(
-                SECTION_MINING, SECTION_SESSIONS, SECTION_SETTINGS, SECTION_QOL);
+        return List.of(SECTION_SETTINGS, SECTION_QOL);
     }
 
     static List<String> normalizeExpandedSections(Collection<String> raw) {
@@ -199,6 +199,9 @@ final class RotClientSidebarNav {
             return null;
         }
         String id = raw.trim().toLowerCase(Locale.ROOT);
+        if (SECTION_SESSIONS.equals(id) || SECTION_MINING.equals(id)) {
+            return SECTION_QOL;
+        }
         return KNOWN_SECTIONS.contains(id) ? id : null;
     }
 
@@ -241,7 +244,7 @@ final class RotClientSidebarNav {
     }
 
     static List<String> knownSections() {
-        return List.of(SECTION_MINING, SECTION_SESSIONS, SECTION_SETTINGS, SECTION_QOL);
+        return List.of(SECTION_SETTINGS, SECTION_QOL);
     }
 
     static int childStackHeight(int count) {
@@ -259,12 +262,12 @@ final class RotClientSidebarNav {
             int originY,
             Collection<String> expanded,
             ToDoubleFunction<String> openAmounts) {
-        boolean mining = isExpanded(expanded, SECTION_MINING);
-        boolean sessions = isExpanded(expanded, SECTION_SESSIONS);
+        boolean mining = false;
+        boolean sessions = false;
         boolean settings = isExpanded(expanded, SECTION_SETTINGS);
         boolean qol = isExpanded(expanded, SECTION_QOL);
-        double miningOpen = openAmount(openAmounts, SECTION_MINING, mining);
-        double sessionsOpen = openAmount(openAmounts, SECTION_SESSIONS, sessions);
+        double miningOpen = 0.0D;
+        double sessionsOpen = 0.0D;
         double settingsOpen = openAmount(openAmounts, SECTION_SETTINGS, settings);
         double qolOpen = openAmount(openAmounts, SECTION_QOL, qol);
 
@@ -272,18 +275,14 @@ final class RotClientSidebarNav {
         int overviewY = y;
         y += ITEM_HEIGHT + ITEM_GAP;
 
-        int miningHeaderY = y;
-        y += HEADER_HIT_HEIGHT + SECTION_GAP;
-        int trackerY = y;
-        int miningHudY = y + ITEM_HEIGHT + ITEM_GAP;
-        int powderY = y + 2 * (ITEM_HEIGHT + ITEM_GAP);
-        y += RotClientEase.shownPixels(childStackHeight(3), miningOpen);
+        int miningHeaderY = -1;
+        int trackerY = -1;
+        int miningHudY = -1;
+        int powderY = -1;
+        int analyticsY = -1;
+        int historyY = -1;
 
-        int sessionsHeaderY = y;
-        y += HEADER_HIT_HEIGHT + SECTION_GAP;
-        int analyticsY = y;
-        int historyY = y + ITEM_HEIGHT + ITEM_GAP;
-        y += RotClientEase.shownPixels(childStackHeight(2), sessionsOpen);
+        int sessionsHeaderY = -1;
 
         int settingsHeaderY = y;
         y += HEADER_HIT_HEIGHT + SECTION_GAP;
@@ -367,17 +366,14 @@ final class RotClientSidebarNav {
                 layout.trackerY(), layout.miningClipHeight())) {
             return HitTarget.POWDER_CHEST_TRACKER;
         }
-        if (inHeader(localX, localY, headerX, headerW, layout.sessionsHeaderY())) {
-            return HitTarget.SECTION_SESSIONS;
-        }
         if (inClippedItem(
                 localX, localY, itemX, itemW, layout.analyticsY(),
-                layout.analyticsY(), layout.sessionsClipHeight())) {
+                layout.trackerY(), layout.miningClipHeight())) {
             return HitTarget.ANALYTICS;
         }
         if (inClippedItem(
                 localX, localY, itemX, itemW, layout.historyY(),
-                layout.analyticsY(), layout.sessionsClipHeight())) {
+                layout.trackerY(), layout.miningClipHeight())) {
             return HitTarget.HISTORY;
         }
         if (inHeader(localX, localY, headerX, headerW, layout.settingsHeaderY())) {
@@ -422,7 +418,10 @@ final class RotClientSidebarNav {
             case QOL_FISHING -> QolUtilityCatalog.Group.FISHING;
             case QOL_FORAGING -> QolUtilityCatalog.Group.FORAGING;
             case QOL_DUNGEONS -> QolUtilityCatalog.Group.DUNGEONS;
+            case QOL_KUUDRA -> QolUtilityCatalog.Group.KUUDRA;
+            case QOL_EVENTS -> QolUtilityCatalog.Group.EVENTS;
             case QOL_MINING -> QolUtilityCatalog.Group.MINING;
+            case QOL_GARDEN -> QolUtilityCatalog.Group.GARDEN;
             case QOL_UTILITIES -> QolUtilityCatalog.Group.UTILITIES;
             case QOL_HUD_DISPLAY -> QolUtilityCatalog.Group.HUD_DISPLAY;
             case QOL_RENDER -> QolUtilityCatalog.Group.RENDER;
@@ -441,7 +440,10 @@ final class RotClientSidebarNav {
             case FISHING -> HitTarget.QOL_FISHING;
             case FORAGING -> HitTarget.QOL_FORAGING;
             case DUNGEONS -> HitTarget.QOL_DUNGEONS;
+            case KUUDRA -> HitTarget.QOL_KUUDRA;
+            case EVENTS -> HitTarget.QOL_EVENTS;
             case MINING -> HitTarget.QOL_MINING;
+            case GARDEN -> HitTarget.QOL_GARDEN;
             case UTILITIES -> HitTarget.QOL_UTILITIES;
             case HUD_DISPLAY -> HitTarget.QOL_HUD_DISPLAY;
             case RENDER -> HitTarget.QOL_RENDER;
@@ -455,11 +457,9 @@ final class RotClientSidebarNav {
         }
         return switch (module) {
             case NONE -> HitTarget.OVERVIEW;
-            case MINING_TRACKER -> HitTarget.TRACKER;
-            case POWDER_CHEST_TRACKER -> HitTarget.POWDER_CHEST_TRACKER;
-            case SESSION_ANALYTICS -> HitTarget.ANALYTICS;
-            case SESSION_HISTORY -> HitTarget.HISTORY;
-            case QOL_SETTINGS -> HitTarget.QOL_UTILITIES;
+            case MINING_TRACKER, POWDER_CHEST_TRACKER, SESSION_ANALYTICS, SESSION_HISTORY ->
+                    HitTarget.QOL_MINING;
+            case QOL_SETTINGS -> HitTarget.SECTION_QOL;
         };
     }
 
@@ -469,9 +469,8 @@ final class RotClientSidebarNav {
         }
         return switch (module) {
             case NONE -> null;
-            case MINING_TRACKER, POWDER_CHEST_TRACKER -> SECTION_MINING;
-            case SESSION_ANALYTICS, SESSION_HISTORY -> SECTION_SESSIONS;
-            case QOL_SETTINGS -> SECTION_QOL;
+            case MINING_TRACKER, POWDER_CHEST_TRACKER, SESSION_ANALYTICS, SESSION_HISTORY, QOL_SETTINGS ->
+                    SECTION_QOL;
         };
     }
 
@@ -493,8 +492,8 @@ final class RotClientSidebarNav {
             case APPEARANCE -> layout.appearanceY();
             case HUD_LAYOUT -> layout.hudLayoutY();
             case SECTION_QOL -> layout.qolHeaderY();
-            case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_MINING,
-                    QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE ->
+            case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
+                    QOL_GARDEN, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE ->
                     layout.qolPageY(groupForHitTarget(target));
         };
     }

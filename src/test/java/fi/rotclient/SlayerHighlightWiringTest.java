@@ -23,5 +23,21 @@ final class SlayerHighlightWiringTest {
         assertTrue(section.contains("SlayerHighlightPolicy.shouldHighlight"));
         assertTrue(section.contains("SlayerHighlightPolicy.shouldDrawTargetLine"));
         assertTrue(section.contains("Gizmos.line("));
+        assertTrue(section.contains("YANG_GLYPH_BEAMS"));
+    }
+
+    @Test
+    void yangGlyphTimerTracksThePlacedBeaconBlock() throws IOException {
+        String runtime = Files.readString(
+                Path.of("src/client/java/fi/rotclient/SlayerRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(runtime.contains("static void onBlockUpdate("));
+        assertTrue(runtime.contains("pruneAndPaintSittingBeacons("));
+        assertTrue(runtime.contains("nearPowerOrb("));
+        assertTrue(runtime.contains("observeContainer("));
+        assertTrue(runtime.contains("shouldTrackYangGlyph("));
+        assertTrue(runtime.contains("adoptSittingBeacon("));
+        assertTrue(runtime.contains("YANG_GLYPH_BEAM_HEIGHT"));
+        assertTrue(!runtime.contains("SITTING_BEACONS.keySet().retainAll(liveSitting)"));
     }
 }

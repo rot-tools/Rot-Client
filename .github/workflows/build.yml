@@ -3,6 +3,7 @@ name: Build
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      jar_filename: ${{ steps.playable_jar.outputs.filename }}
 
     steps:
       - name: Check out repository
@@ -68,13 +71,86 @@ jobs:
             exit 1
           fi
 
+          mkdir -p build/playable
+          cp "${playable[0]}" build/playable/
+          sha256sum "${playable[0]}" | sed 's#  build/libs/#  #' > build/playable/SHA256SUMS.txt
+
           echo "Playable JAR: ${playable[0]}"
-          echo "path=${playable[0]}" >> "$GITHUB_OUTPUT"
+          echo "path=build/playable/$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
           echo "filename=$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
 
       - name: Upload playable JAR
         uses: actions/upload-artifact@v7
         with:
-          name: RotClient-playable-${{ github.sha }}
-          path: ${{ steps.playable_jar.outputs.path }}
+          name: RotClient-playable
+          path: build/playable/
           if-no-files-found: error
+
+  publish-playtest:
+    name: Publish playtest JAR
+    needs: build
+    if: >-
+      github.event_name != 'pull_request'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: rot-client-playtest-release
+      cancel-in-progress: false
+
+    steps:
+      - name: Download playable JAR
+        uses: actions/download-artifact@v7
+        with:
+          name: RotClient-playable
+          path: dist
+
+      - name: Publish or replace the playtest pre-release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JAR_NAME: ${{ needs.build.outputs.jar_filename }}
+        run: |
+          set -euo pipefail
+          jar="dist/${JAR_NAME}"
+          sums="dist/SHA256SUMS.txt"
+          if [[ ! -f "$jar" || ! -f "$sums" ]]; then
+            echo "Missing playable JAR or checksum in dist/."
+            ls -la dist || true
+            exit 1
+          fi
+
+          notes="$(cat <<EOF
+          Latest playtest build from the default branch. This is not a versioned release.
+
+          - Commit: ${GITHUB_SHA}
+          - Playable JAR: ${JAR_NAME}
+          - Install only that file. Skip -sources.jar.
+
+          Automation (clickers, scanners, dungeon helpers, Free Camera, Terminal Simulator) stays opt-in and off by default.
+          EOF
+          )"
+
+          if gh release view playtest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            while IFS= read -r asset; do
+              [[ -z "$asset" ]] && continue
+              gh release delete-asset playtest "$asset" --repo "$GITHUB_REPOSITORY" --yes
+            done < <(gh release view playtest --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+            gh release upload playtest "$jar" "$sums" --repo "$GITHUB_REPOSITORY"
+            gh release edit playtest \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Latest playtest" \
+              --prerelease \
+              --latest=false \
+              --target "$GITHUB_SHA" \
+              --notes "$notes"
+          else
+            gh release create playtest "$jar" "$sums" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Latest playtest" \
+              --prerelease \
+              --latest=false \
+              --target "$GITHUB_SHA" \
+              --notes "$notes"
+          fi

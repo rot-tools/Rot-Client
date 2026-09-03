@@ -29,4 +29,18 @@ public final class HudLayerTogglePolicy {
         }
         return qol.toggleBooleanSetting(id);
     }
+
+    public static boolean enable(QolUtilityConfig qol, String id, boolean moduleToggle) {
+        if (isOn(qol, id, moduleToggle)) {
+            return false;
+        }
+        return toggle(qol, id, moduleToggle);
+    }
+
+    public static boolean disable(QolUtilityConfig qol, String id, boolean moduleToggle) {
+        if (!isOn(qol, id, moduleToggle)) {
+            return false;
+        }
+        return toggle(qol, id, moduleToggle);
+    }
 }

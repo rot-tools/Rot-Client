@@ -45,7 +45,7 @@ final class RotClientOmniboxPolicyTest {
                 RotClientSettingsIndex.findById("nav.mining_tracker");
         RotClientOmniboxPolicy.Decision decision = RotClientOmniboxPolicy.decide(
                 tracker,
-                List.of("overview", "mining_tracker"),
+                List.of("overview", "qol_settings"),
                 0,
                 false,
                 2,

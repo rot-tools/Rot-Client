@@ -575,6 +575,9 @@ final class BazaarPriceServiceTest {
                 () -> prices.byMaterial().put(
                         TrackedMaterial.GOLD,
                         prices.forMaterial(TrackedMaterial.GOLD)));
+        assertNotNull(prices.forProduct("GOLD_INGOT"));
+        assertNotNull(prices.forProduct("gold_ingot"));
+        assertEquals(1.2, prices.forProduct("GOLD_INGOT").instantSellPrice(), 0.0001);
     }
 
     private static BazaarPriceService.MarketPrices parseProducts(

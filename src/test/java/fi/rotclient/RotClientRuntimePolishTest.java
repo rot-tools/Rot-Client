@@ -22,10 +22,32 @@ final class RotClientRuntimePolishTest {
         assertTrue(ui.contains("\"by OgRudolf\""));
         // Product-level header must not identify the app as Mining Tracker.
         assertFalse(ui.contains("graphics.text(font, \"MINING TRACKER\", panelX + 16"));
-        assertTrue(ui.contains("\"Quality of life\""));
-        assertTrue(ui.contains("\"Mining tracker\""));
+        assertTrue(ui.contains("\"Modules\""));
+        assertTrue(ui.contains("\"HUD Elements Editor\""));
+        assertFalse(ui.contains("\"HUD Layout\""));
+        assertTrue(ui.contains("VisualsLandingNavPolicy.dismissOnUnhandledClick"));
+        assertTrue(ui.contains("goHome()"));
+        assertFalse(ui.contains("\"Look & HUD\""));
+        assertTrue(ui.contains("\"Mining\""));
+        assertTrue(ui.contains("\"Events\""));
+        assertTrue(ui.contains("OverviewLandingPolicy"));
+        String dashboard = Files.readString(
+                Path.of("src/client/java/fi/rotclient/QolUtilityDashboard.java"),
+                StandardCharsets.UTF_8);
+        int landingMiss = dashboard.indexOf(
+                "// Misses must not eat sidebar clicks or hit HUD & Display cards underneath.");
+        assertTrue(landingMiss >= 0);
+        String missBlock = dashboard.substring(landingMiss, landingMiss + 160);
+        assertTrue(missBlock.contains("return false;"));
+        assertFalse(missBlock.contains("return true;"));
         assertTrue(ui.contains("DashboardModule.MINING_TRACKER")
                 || ui.contains("selectedModule == DashboardModule.MINING_TRACKER"));
+        int lookHeader = ui.indexOf("case SECTION_SETTINGS");
+        int qolHeader = ui.indexOf("case SECTION_QOL");
+        assertTrue(lookHeader >= 0 && qolHeader > lookHeader);
+        String lookCase = ui.substring(lookHeader, qolHeader);
+        assertTrue(lookCase.contains("toggleSidebarSection"));
+        assertFalse(lookCase.contains("openAppearanceCustomizer"));
     }
 
     @Test
@@ -55,7 +77,18 @@ final class RotClientRuntimePolishTest {
         assertTrue(readme.contains("https://github.com/rot-tools/Rot-Client"));
         assertTrue(readme.contains(
                 "https://github.com/rot-tools/Rot-Client/issues"));
+        assertTrue(readme.contains(
+                "https://github.com/rot-tools/Rot-Client/releases/tag/playtest"));
+        assertTrue(readme.contains("HUD Elements Editor"));
+        assertTrue(readme.contains("Visuals"));
+        assertFalse(readme.contains("Look & HUD"));
         assertFalse(readme.contains("Rot Client contributors"));
+        String workflow = Files.readString(
+                Path.of(".github/workflows/build.yml"),
+                StandardCharsets.UTF_8);
+        assertTrue(workflow.contains("name: RotClient-playable"));
+        assertTrue(workflow.contains("gh release create playtest"));
+        assertTrue(workflow.contains("github.event.repository.default_branch"));
     }
 
     @Test

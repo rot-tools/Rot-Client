@@ -7,6 +7,52 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### Playtest JAR
+
+* Default-branch CI publishes `RotClient-2.0.1+mc26.2.jar` to the
+  [playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
+  pre-release so testers can download the latest playable build without
+  compiling. The same file is the `RotClient-playable` Actions artifact.
+
+### Dashboard and HUD Elements Editor
+
+* Sidebar Visuals holds Appearance and HUD Elements Editor. Those pages are
+  not Modules → HUD & Display cards. Clicking around an open Visuals landing
+  returns to Overview. The world editor shows only enabled overlays; right-click
+  hides, left-click moves, scroll scales. Ctrl+Z restores the last hide.
+
+### Storage Overlay
+
+* Page cards no longer draw extra empty slot rows into the next Ender Chest /
+  Backpack. Each card has its own header strip, then its slot grid.
+* `/storage` records which Ender Chests and Backpacks are unlocked, and each
+  opened page stores full item data (SkyBlock NBT and head textures) in
+  `rotclient-storage-cache.json`. The overlay reloads that cache when Storage
+  opens, including after a game restart, so cards are not empty Steve heads.
+  Disk writes are delayed off the click so opening a card does not hitch.
+* Each Ender Chest / Backpack header has a Rot-themed `$` icon. Hovering it
+  shows that page's bazaar instant-sell total.
+* The search caret uses the same UI font as the query and stays inside the
+  field when the text is long. Search-match glow is a full 2px purple-red
+  frame around each slot, with the traveling light clipped to that slot.
+* Close with the header `×`, or click outside the overlay and player
+  inventory, to return to normal play.
+* Search matches use a clockwise purple-to-red edge light around the item
+  instead of a flat green box.
+* Hovering the `$` icon shows that page's bazaar instant-sell total (all
+  bazaar products, not just Slayer IDs). The sum is also drawn next to `$`
+  on hover. Cache writes the full item stack and flushes when Minecraft
+  stops, so Steve-head placeholders do not replace known items.
+* Storage Overlay: a plain wheel always pages the overlay. Shift+wheel pans
+  the item tooltip. Other inventories: wheel pans the tooltip vertically,
+  Shift+wheel pans it sideways. Tooltip pan resets when the hovered item
+  changes so the box stays next to the cursor. Ctrl+left-click pins Missing
+  Enchants on that item.
+* The overlay scrollbar thumb can be dragged, and clicking the track pages
+  the list. Chrome, cards, search field, and slots now use the same
+  `RotClientTheme` dashboard palette (black / red / violet) instead of the
+  old teal panel.
+
 ### Custom Tooltip pan (26.2)
 
 * Hover-box scrolling no longer wraps a queued-frame setter. Minecraft 26.2

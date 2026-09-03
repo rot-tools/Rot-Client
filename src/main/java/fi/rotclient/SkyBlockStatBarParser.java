@@ -48,6 +48,13 @@ public final class SkyBlockStatBarParser {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern TOKEN = Pattern.compile(
             "(\\d[\\d,]*(?:\\.\\d+)?)(?:\\s*/\\s*(\\d[\\d,]*(?:\\.\\d+)?))?");
+    private static final Pattern SKILL_TICK = Pattern.compile(
+            "(?i)\\+\\s*[\\d,.]+(?:[kmb])?\\s+"
+                    + "(?:combat|mining|farming|foraging|enchanting|alchemy|fishing|"
+                    + "taming|carpentry|runecrafting|social|hunting)"
+                    + "(?:\\s*\\([^)]*\\))?");
+    private static final Pattern UNLABELED_PAIR = Pattern.compile(
+            "\\b[\\d,]+(?:\\.\\d+)?\\s*/\\s*[\\d,]+(?:\\.\\d+)?\\b");
     private static final List<Pattern> LOCATION_NAME_PATTERNS = locationNamePatterns();
 
     public record Stats(
@@ -279,12 +286,18 @@ public final class SkyBlockStatBarParser {
         if (hideVitality) {
             text = VITALITY.matcher(text).replaceAll("");
         }
+        if (hideHealth || hideDefense || hideMana || hideOverflow || hideSpeed || hideVitality) {
+            text = SKILL_TICK.matcher(text).replaceAll("");
+        }
+        if (hideHealth || hideMana) {
+            text = UNLABELED_PAIR.matcher(text).replaceAll("");
+        }
         text = text.replaceAll("\\s{2,}", " ").trim();
         if (text.isBlank()) {
             return Optional.empty();
         }
         if ((hideHealth || hideDefense || hideMana || hideOverflow || hideSpeed || hideVitality)
-                && text.matches("[\\d,./\\s]+")) {
+                && text.matches("[\\d,./+\\s]+")) {
             return Optional.empty();
         }
         return Optional.of(text);

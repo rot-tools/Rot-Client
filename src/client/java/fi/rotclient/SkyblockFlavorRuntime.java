@@ -16,10 +16,14 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,8 @@ public final class SkyblockFlavorRuntime {
     private static long lastQueueMs;
     private static String ministerName = "";
     private static long lastDetectorPingMs;
+    private static final List<Vec3> IMPLOSION_HOLDERS = new ArrayList<>();
+    private static int implosionCacheTick = Integer.MIN_VALUE;
 
     private SkyblockFlavorRuntime() {
     }
@@ -198,17 +204,19 @@ public final class SkyblockFlavorRuntime {
         if (!corpses && !rats) {
             return;
         }
-        for (Entity entity : client.level.entitiesForRendering()) {
+        float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        AABB search = client.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+        for (Entity entity : client.level.getEntities(client.player, search)) {
             if (corpses
                     && entity instanceof ArmorStand stand
                     && SkyblockFlavorPolicy.isCorpseStand(stand.getName().getString())) {
-                Gizmos.cuboid(stand.getBoundingBox().inflate(0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F))
+                Gizmos.cuboid(interpolatedBox(stand, partialTick, 0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F))
                         .setAlwaysOnTop();
             }
             if (rats
                     && entity instanceof Zombie zombie
                     && SkyblockFlavorPolicy.isHubRat(true, zombie.isBaby())) {
-                Gizmos.cuboid(zombie.getBoundingBox().inflate(0.08D), GizmoStyle.stroke(0xFFFFAA00, 2.0F))
+                Gizmos.cuboid(interpolatedBox(zombie, partialTick, 0.08D), GizmoStyle.stroke(0xFFFFAA00, 2.0F))
                         .setAlwaysOnTop();
             }
         }
@@ -220,26 +228,48 @@ public final class SkyblockFlavorRuntime {
         if (!qol.renderOptimizerEnabled || !extras.hideImplosionParticles) {
             return false;
         }
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.level == null) {
+        if (!SkyblockFlavorPolicy.isImplosionParticle(particleId)) {
             return false;
         }
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof net.minecraft.world.entity.player.Player player)) {
-                continue;
-            }
-            if (!SkyblockFlavorPolicy.isWitherBlade(
-                    AutoClickerItemIdentity.skyBlockId(player.getMainHandItem()))) {
-                continue;
-            }
-            double dx = player.getX() - x;
-            double dy = player.getY() - y;
-            double dz = player.getZ() - z;
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.level == null || client.player == null) {
+            return false;
+        }
+        refreshImplosionHolders(client);
+        for (Vec3 holder : IMPLOSION_HOLDERS) {
+            double dx = holder.x - x;
+            double dy = holder.y - y;
+            double dz = holder.z - z;
             if (SkyblockFlavorPolicy.hideImplosion(true, particleId, true, dx * dx + dy * dy + dz * dz)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static void refreshImplosionHolders(Minecraft client) {
+        int tick = client.player.tickCount;
+        if (implosionCacheTick == tick) {
+            return;
+        }
+        implosionCacheTick = tick;
+        IMPLOSION_HOLDERS.clear();
+        AABB search = client.player.getBoundingBox().inflate(8.0D);
+        for (Player player : client.level.getEntitiesOfClass(Player.class, search)) {
+            if (!SkyblockFlavorPolicy.isWitherBlade(
+                    AutoClickerItemIdentity.skyBlockId(player.getMainHandItem()))) {
+                continue;
+            }
+            IMPLOSION_HOLDERS.add(player.position());
+        }
+    }
+
+    private static AABB interpolatedBox(Entity entity, float partialTick, double inflate) {
+        EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                entity.getX(), entity.getY(), entity.getZ(),
+                entity.xo, entity.yo, entity.zo,
+                partialTick);
+        return entity.getBoundingBox().move(offset.x(), offset.y(), offset.z()).inflate(inflate);
     }
 
     public static Component rewriteNameTag(Component component) {

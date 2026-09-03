@@ -18,6 +18,14 @@ final class HudEditorAndCursorPolicyTest {
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.fishing_helper.open_hud_editor"));
         assertEquals(
+                "mining_tracker",
+                HudElementCatalog.focusIdForHudEditorSetting(
+                        "qol.mining_tracker.open_hud_editor"));
+        assertEquals(
+                "powder_chest",
+                HudElementCatalog.focusIdForHudEditorSetting(
+                        "qol.powder_chest.open_hud_editor"));
+        assertEquals(
                 "mining",
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.mining_helpers.open_hud_editor"));
@@ -87,9 +95,11 @@ final class HudEditorAndCursorPolicyTest {
         override.backgroundColor = 0x8800FF00;
         override.textColor = 0xFFFF0000;
         override.scale = 1.5F;
+        override.showTitle = Boolean.FALSE;
         config.extras().putHudStyle("diana", override);
         HudStyleState resolved = config.extras().resolvedHudStyle("diana");
         assertTrue(resolved.showBackground);
+        assertFalse(HudStylePolicy.titleVisible(resolved));
         assertEquals(0xFFFF0000, resolved.textColor);
         assertEquals(1.5F, resolved.scale, 0.001F);
         assertTrue(config.resetModuleToDefaults("qol.hud_layout"));

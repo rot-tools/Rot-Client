@@ -22,6 +22,41 @@ final class SlayerHighlightPolicyTest {
     }
 
     @Test
+    void voidgloomHighlightsStayOnTheLocalPlayersFight() {
+        assertLocalFightOnly(SlayerPolicy.SlayerType.VOIDGLOOM);
+        assertTrue(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 12.0D));
+        assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 28.1D));
+        assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(false, 4.0D));
+        assertTrue(SlayerHighlightPolicy.shouldDrawLocalFightMarker(false, Double.NaN, true, 12.0D));
+        assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(false, Double.NaN, true, 40.0D));
+        assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(false, Double.NaN, false, 4.0D));
+        assertTrue(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 40.0D, true, 8.0D));
+        assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 40.0D, true, 40.0D));
+        assertTrue(SlayerHighlightPolicy.shouldTrackYangGlyph(true, 40.0D, true, 35.0D));
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(true, 40.0D, true, 49.0D));
+    }
+
+    @Test
+    void everySlayerFamilyHighlightStaysOnTheLocalPlayersFight() {
+        for (SlayerPolicy.SlayerType type : SlayerPolicy.SlayerType.values()) {
+            assertLocalFightOnly(type);
+        }
+    }
+
+    private static void assertLocalFightOnly(SlayerPolicy.SlayerType type) {
+        SlayerHighlightPolicy.Options showOthers =
+                new SlayerHighlightPolicy.Options(false, true, true, true, true, 32.0D);
+        assertFalse(SlayerHighlightPolicy.shouldHighlight(
+                SlayerPolicy.EntityRole.BOSS, type, false, false, showOthers), type.name());
+        assertTrue(SlayerHighlightPolicy.shouldHighlight(
+                SlayerPolicy.EntityRole.BOSS, type, true, true, showOthers), type.name());
+        assertTrue(SlayerHighlightPolicy.shouldHighlight(
+                SlayerPolicy.EntityRole.MINIBOSS, type, false, true, OPTIONS), type.name());
+        assertFalse(SlayerHighlightPolicy.shouldHighlight(
+                SlayerPolicy.EntityRole.MINIBOSS, type, false, false, OPTIONS), type.name());
+    }
+
+    @Test
     void targetLinesRespectTheirOptInAndConfiguredRange() {
         assertFalse(SlayerHighlightPolicy.shouldDrawTargetLine(
                 SlayerPolicy.EntityRole.BOSS, true, 32.1D, OPTIONS));

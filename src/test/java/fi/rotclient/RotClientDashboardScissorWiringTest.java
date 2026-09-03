@@ -20,5 +20,7 @@ final class RotClientDashboardScissorWiringTest {
         String method = source.substring(start, end);
         assertTrue(method.contains("disableScissor()"));
         assertFalse(method.contains("enableScissor(left, sidebarTop"));
+        assertFalse(source.contains("layout.miningHeaderY()"));
+        assertFalse(source.contains("layout.miningOpen()"));
     }
 }

@@ -244,7 +244,7 @@ final class RotClientSettingsIndex {
 
         entries.add(new Entry(
                 "hud.edit_position",
-                "Edit HUD Layout",
+                "Open HUD Elements Editor",
                 "Move and scale Mining HUD, Client UI, and QoL HUD elements.",
                 "Mining HUD",
                 Destination.HUD_EDITOR,
@@ -291,10 +291,10 @@ final class RotClientSettingsIndex {
         }
         entries.add(new Entry(
                 "appearance.open",
-                "Appearance & GUI Customizer",
-                "Open colors, background, and chart appearance.",
                 "Appearance",
-                Destination.APPEARANCE,
+                "Open the Appearance submenu for dashboard, colors, background, charts, and reset.",
+                "Appearance",
+                Destination.QOL_SETTINGS,
                 List.of("theme", "colors", "background", "customizer", "gui",
                         "appearance", "reset")));
         entries.add(new Entry(
@@ -308,9 +308,9 @@ final class RotClientSettingsIndex {
         entries.add(new Entry(
                 "nav.mining_tracker",
                 "Mining Tracker",
-                "Open Mining Tracker settings and HUD toggles.",
+                "Open Mining Tracker in Modules.",
                 "Navigation",
-                Destination.MINING_TRACKER,
+                Destination.QOL_SETTINGS,
                 List.of("tracker", "target", "hud")));
         entries.add(new Entry(
                 "nav.session_analytics",
@@ -358,7 +358,7 @@ final class RotClientSettingsIndex {
                 label,
                 description,
                 "Mining HUD",
-                Destination.MINING_TRACKER,
+                Destination.QOL_SETTINGS,
                 List.of(aliases)));
     }
 

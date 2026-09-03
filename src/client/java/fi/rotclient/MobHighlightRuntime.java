@@ -22,6 +22,8 @@ import java.util.List;
  */
 public final class MobHighlightRuntime {
     private static boolean addKeyWasDown;
+    private static final List<Integer> MATCHED_IDS = new ArrayList<>();
+    private static int scanCooldown;
 
     private MobHighlightRuntime() {
     }
@@ -30,6 +32,7 @@ public final class MobHighlightRuntime {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.mobHighlightEnabled || client == null || client.getWindow() == null) {
             addKeyWasDown = false;
+            MATCHED_IDS.clear();
             return;
         }
         long window = client.getWindow().handle();
@@ -38,6 +41,34 @@ public final class MobHighlightRuntime {
             toggleLookedAt(client, qol);
         }
         addKeyWasDown = down;
+        refreshMatches(client, qol);
+    }
+
+    private static void refreshMatches(Minecraft client, QolUtilityConfig qol) {
+        LocalPlayer player = client.player;
+        if (player == null || client.level == null
+                || qol.mobHighlightNames == null || qol.mobHighlightNames.isEmpty()) {
+            MATCHED_IDS.clear();
+            return;
+        }
+        if (scanCooldown-- > 0) {
+            return;
+        }
+        scanCooldown = 2;
+        MATCHED_IDS.clear();
+        AABB search = player.getBoundingBox().inflate(64.0D);
+        for (Entity entity : client.level.getEntities(player, search)) {
+            if (entity == player || (entity instanceof Player && !(entity instanceof LocalPlayer))) {
+                continue;
+            }
+            if (!(entity instanceof LivingEntity) && !(entity instanceof ArmorStand)) {
+                continue;
+            }
+            String name = entityName(entity);
+            if (MobHighlightPolicy.matches(name, qol.mobHighlightNames)) {
+                MATCHED_IDS.add(entity.getId());
+            }
+        }
     }
 
     public static void renderGizmos() {
@@ -53,23 +84,21 @@ public final class MobHighlightRuntime {
         if (qol.mobHighlightRequireKey && !keyUnbound && !keyHeld) {
             return;
         }
-        if (qol.mobHighlightNames == null || qol.mobHighlightNames.isEmpty()) {
+        if (MATCHED_IDS.isEmpty()) {
             return;
         }
-        AABB search = player.getBoundingBox().inflate(64.0D);
-        List<Entity> entities = new ArrayList<>();
-        entities.addAll(client.level.getEntitiesOfClass(LivingEntity.class, search));
-        entities.addAll(client.level.getEntitiesOfClass(ArmorStand.class, search));
-        Vec3 eye = player.getEyePosition();
-        for (Entity entity : entities) {
-            if (entity == player || (entity instanceof Player && !(entity instanceof LocalPlayer))) {
+        float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        Vec3 eye = player.getEyePosition(partialTick);
+        for (int id : MATCHED_IDS) {
+            Entity entity = client.level.getEntity(id);
+            if (entity == null) {
                 continue;
             }
-            String name = entityName(entity);
-            if (!MobHighlightPolicy.matches(name, qol.mobHighlightNames)) {
-                continue;
-            }
-            AABB box = entity.getBoundingBox();
+            EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                    entity.getX(), entity.getY(), entity.getZ(),
+                    entity.xo, entity.yo, entity.zo,
+                    partialTick);
+            AABB box = entity.getBoundingBox().move(offset.x(), offset.y(), offset.z());
             var props = Gizmos.cuboid(
                     box,
                     GizmoStyle.strokeAndFill(

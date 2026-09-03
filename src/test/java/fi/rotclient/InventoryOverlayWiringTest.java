@@ -23,7 +23,18 @@ final class InventoryOverlayWiringTest {
         assertTrue(runtime.contains("snapshotStatsMenuPet"));
         assertTrue(runtime.contains("drawClickHint"));
         assertTrue(runtime.contains("renderColorEditor"));
+        assertTrue(runtime.contains("afterForeground"));
+        assertTrue(runtime.contains("drawPaintBucketIcon"));
+        assertTrue(runtime.contains("snapshotEquipmentSets"));
+        assertTrue(runtime.contains("paintChrome"));
+        assertTrue(!runtime.contains("mascotCoverRect"));
+        assertTrue(!runtime.contains("0xC008080C"));
+        assertTrue(runtime.contains("editorResetRect"));
+        assertTrue(runtime.contains("defaultChromeColor"));
         assertTrue(runtime.contains("extractInventoryBackground"));
+        assertTrue(runtime.contains("chromeFillRects"));
+        assertTrue(runtime.contains("survivalSlotRects"));
+        assertTrue(runtime.contains("drawSlotWell"));
         assertTrue(!runtime.contains("client.gui.setScreen(new InventoryChromeColorsScreen"));
         assertTrue(!runtime.contains("shouldShiftInventory"));
         assertTrue(!runtime.contains("renderPetInOffhand"));
@@ -45,6 +56,13 @@ final class InventoryOverlayWiringTest {
         assertTrue(mixin.contains("shouldHideOffhandSlot"));
         assertTrue(mixin.contains("extractSlot"));
         assertTrue(!mixin.contains("shouldShiftInventory"));
+
+        String buttons = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/InventoryButtonsRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(buttons.contains("RotClientTheme.BUTTON_HOVER"));
+        assertTrue(buttons.contains("RotClientTheme.drawOutline"));
+        assertTrue(!buttons.contains("0xD0182A38"));
 
         String dashboard = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/QolUtilityDashboard.java"),

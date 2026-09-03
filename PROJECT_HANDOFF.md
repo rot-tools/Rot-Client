@@ -17,7 +17,7 @@ the linked documents rather than in a growing handoff transcript.
 | Minecraft | `26.2` |
 | Java | `25` (Gradle toolchain provisions JDK 25) |
 | Runtime-verified baseline | Canonical Current Session mining accounting, restart/pause/resume, and Resume/Bazaar crash correction |
-| Current automated checkpoint | 119 wired QoL modules; Daily Reward Claim is dashboard-wired (default off); Dark SkyBlock Pack is bundled; Item Tooltips is one parent for missing/info/price/style; Wardrobe, Slayer, dungeon F7 leftovers, Storage Overlay, and Inventory Buttons automated-tested; group-wide Minecraft validation pending |
+| Current automated checkpoint | 124 wired QoL modules; Daily Reward Claim is dashboard-wired (default off); Dark SkyBlock Pack is bundled; Item Tooltips is one parent for missing/info/price/style; Wardrobe, Slayer, dungeon F7 leftovers, Storage Overlay, and Inventory Buttons automated-tested; group-wide Minecraft validation pending |
 | New privacy correction | Price Tooltip quote polling is inactive while the module is disabled |
 | Prior gemstone checkpoint | `0ee5115` — gemstone HUD and active-time validation |
 
@@ -54,7 +54,7 @@ the linked documents rather than in a growing handoff transcript.
   loot and `CURRENCY` powder with an independent HUD. Reward totals,
   Pause/Resume/Reset, disable/re-enable, and HUD positioning have controlled
   runtime evidence.
-- The Client UI includes a searchable QoL dashboard (`QolUtilityCatalog`, 119
+- The Client UI includes a searchable QoL dashboard (`QolUtilityCatalog`, 124
   wired modules across ten groups). Wired means catalogued, persisted,
   runtime-bridged, and automated-tested; it is not a group-wide runtime claim.
   Automation-style modules are opt-in, disabled by default, and scoped to a
@@ -96,7 +96,7 @@ Read these before changing behavior:
 ## Current phase
 
 `qol-utilities` is the public development branch. The mining tracker,
-Current Session, Powder Chest Tracker, bounded MOB ingest, and the 119-module
+Current Session, Powder Chest Tracker, bounded MOB ingest, and the 124-module
 QoL dashboard are implemented and automated-tested. Powder Chest and
 representative MOB paths now have controlled runtime evidence; Session History
 2.0, the latest MOB noise-filter correction, and the expanded QoL matrix still

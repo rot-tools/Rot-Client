@@ -181,6 +181,12 @@ final class ColumnStyleQolPolicyTest {
         assertEquals(-8, CustomTooltipPolicy.nextOffset(0, -1, 8, true, false, 100));
         assertEquals(0, CustomTooltipPolicy.nextOffset(100, 1, 8, true, true, 100));
         assertEquals(12, CustomTooltipPolicy.panAfterClamp(20, 8));
+        assertTrue(CustomTooltipPolicy.panTooltipVertically(false, false));
+        assertFalse(CustomTooltipPolicy.panTooltipVertically(true, false));
+        assertTrue(CustomTooltipPolicy.storageOverlayTakesWheel(true, false));
+        assertEquals(1, CustomTooltipPolicy.verticalWheelDelta(-1.0D));
+        assertEquals(-1, CustomTooltipPolicy.verticalWheelDelta(1.0D));
+        assertEquals(1, CustomTooltipPolicy.verticalWheelDelta(-0.2D));
     }
 
     @Test

@@ -74,6 +74,15 @@ final class RotClientWorkspace {
         markDirtyAndSave();
     }
 
+    /**
+     * Fresh Click GUI open: Overview, default sidebar accordion, no
+     * remembered QoL drawer. Does not move the dashboard window.
+     */
+    void resetToDefaultOpenState() {
+        config.resetViewToDefault();
+        markDirtyAndSave();
+    }
+
     void navigateActive(RotClientWorkspaceRoute route) {
         config.normalize();
         RotClientWorkspaceTab tab = activeTab();

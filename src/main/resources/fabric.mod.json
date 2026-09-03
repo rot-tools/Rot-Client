@@ -3,7 +3,7 @@
 	"id": "rotclient",
 	"version": "${version}",
 	"name": "Rot Client",
-	"description": "Client-side Fabric companion for Hypixel SkyBlock: dashboard, HUD editor, mining tracker, and a 119-module quality-of-life catalog.",
+	"description": "Client-side Fabric companion for Hypixel SkyBlock: dashboard, HUD editor, mining tracker, and a 124-module quality-of-life catalog.",
 	"authors": [
 		{
 			"name": "OgRudolf"

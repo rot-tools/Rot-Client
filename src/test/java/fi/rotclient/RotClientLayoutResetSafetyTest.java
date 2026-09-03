@@ -147,6 +147,8 @@ final class RotClientLayoutResetSafetyTest {
         assertTrue(editor.contains("CLIENT_UI"));
         assertTrue(editor.contains("clientUiNorm"));
         assertTrue(editor.contains("How to edit"));
+        assertTrue(editor.contains("HUD ELEMENTS EDITOR"));
+        assertFalse(editor.contains("LAYOUT EDITOR"));
         assertTrue(editor.contains("beginChromeDrag"));
 
         String home = Files.readString(

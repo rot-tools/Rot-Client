@@ -38,7 +38,10 @@ final class HudEditorChromePolicyTest {
         assertEquals(960 - 268, HudEditorChromePolicy.clampDragX(9000, 268, 960));
         assertFalse(HudEditorChromePolicy.isPlaced(
                 HudEditorChromePolicy.UNPLACED, HudEditorChromePolicy.UNPLACED));
-        assertEquals(6, HudEditorChromePolicy.helpLines().size());
+        assertEquals(7, HudEditorChromePolicy.helpLines().size());
         assertTrue(HudEditorChromePolicy.helpLines().get(0).contains("Drag"));
+        assertTrue(HudEditorChromePolicy.helpLines().stream().anyMatch(
+                line -> line.contains("Ctrl+Z")));
+        assertTrue(HudEditorChromePolicy.TITLE_HEIGHT > HudEditorChromePolicy.HELP_HEIGHT);
     }
 }

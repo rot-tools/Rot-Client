@@ -44,6 +44,7 @@ final class ColumnStyleQolWiringTest {
         assertTrue(source.contains("QolModuleKeybindRuntime.tick"));
         assertTrue(source.contains("SlayerRuntime.tick"));
         assertTrue(source.contains("SlayerRuntime.onChat"));
+        assertTrue(source.contains("SlayerRuntime.onBlockUpdate"));
         assertTrue(source.contains("SlayerRuntime.onEntityEvent"));
         assertTrue(source.contains("SlayerRuntime.onAttack"));
         assertTrue(source.contains("literal(\"slayer\")"));
@@ -54,8 +55,17 @@ final class ColumnStyleQolWiringTest {
                 "src/client/java/fi/rotclient/SlayerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(slayerRuntime.contains("AutoClickerRuntime.pulseUse"));
+        assertTrue(slayerRuntime.contains("SoulcryAbilityGate"));
+        assertTrue(slayerRuntime.contains("heldItemOnCooldown"));
+        assertTrue(!slayerRuntime.contains("soulcryUseCooldown"));
         assertTrue(slayerRuntime.contains("attachedAttunementLine"));
-        assertTrue(slayerRuntime.contains("inflate(1.5D, 3.0D, 1.5D)"));
+        assertTrue(slayerRuntime.contains("inflate(0.9D, 2.8D, 0.9D)"));
+        assertTrue(slayerRuntime.contains("familyForMarker"));
+        assertTrue(slayerRuntime.contains("nearOwnedBoss"));
+        assertTrue(slayerRuntime.contains("primaryOwnedBoss"));
+        assertTrue(slayerRuntime.contains("SlayerMinibossAlertPolicy"));
+        assertTrue(slayerRuntime.contains("interpolatedBox"));
+        assertTrue(slayerRuntime.contains("addTrackedMarker"));
         assertTrue(slayerRuntime.contains("isVengeanceStartTag"));
         assertFalse(slayerRuntime.contains("descriptor.role() != SlayerPolicy.EntityRole.DEMON"));
     }
@@ -93,14 +103,20 @@ final class ColumnStyleQolWiringTest {
         String overlay = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(overlay.contains("ItemRarityRuntime.afterContainerContents"));
+        assertTrue(!overlay.contains("ItemRarityRuntime.afterContainerContents"));
+        assertTrue(overlay.contains("paintSlotBackground"));
         assertTrue(!overlay.contains("method = \"mouseScrolled\""));
+        String rarityHost = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/AbstractContainerScreenCustomCursorMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(rarityHost.contains("ItemRarityRuntime.afterContainerContents"));
         String client = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/RotClientClient.java"),
                 StandardCharsets.UTF_8);
         assertTrue(client.contains("registerTooltipAndStorageScroll"));
         assertTrue(client.contains("ScreenMouseEvents.allowMouseScroll"));
-        assertTrue(client.contains("CustomTooltipRuntime.shouldStealWheel"));
+        assertTrue(client.contains("shouldStealOverlayWheel"));
+        assertTrue(client.contains("CustomTooltipPolicy.storageOverlayTakesWheel"));
         assertTrue(!client.contains("CustomTooltipRuntime.mouseScrolled"));
         assertTrue(client.contains("StorageOverlayRuntime.scroll"));
         String tooltipRuntime = Files.readString(Path.of(
@@ -113,7 +129,8 @@ final class ColumnStyleQolWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(mouseTooltip.contains("method = \"onScroll\""));
         assertTrue(mouseTooltip.contains("CustomTooltipRuntime.mouseScrolled"));
-        assertTrue(overlay.contains("MissingEnchantsRuntime.afterTooltip"));
+        assertTrue(mouseTooltip.contains("StorageOverlayRuntime.shouldReplaceVanilla"));
+        assertTrue(overlay.contains("MissingEnchantsRuntime.noteCtrlClick"));
         assertTrue(overlay.contains("MenuKeybindRuntime.shouldCancelContainerRender"));
         String packets = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/ClientPacketListenerMixin.java"),

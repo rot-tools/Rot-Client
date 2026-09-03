@@ -37,14 +37,15 @@ final class NoCursorResetPolicyTest {
     }
 
     @Test
-    void controllerRestoresTwiceWithoutPinningCursorForTheWholeTimeout() {
+    void controllerRestoresSeveralTimesWithoutPinningCursorForTheWholeTimeout() {
         NoCursorResetController controller = new NoCursorResetController();
         controller.onScreenChanging(
                 true, true, true, 120.0D, 80.0D, 1_000L, 150);
 
-        assertTrue(controller.consumeRestore(1_001L));
-        assertTrue(controller.consumeRestore(1_002L));
-        assertFalse(controller.consumeRestore(1_003L));
+        for (int i = 0; i < 6; i++) {
+            assertTrue(controller.consumeRestore(1_001L + i));
+        }
+        assertFalse(controller.consumeRestore(1_007L));
         assertEquals(120.0D, controller.savedX());
         assertEquals(80.0D, controller.savedY());
     }

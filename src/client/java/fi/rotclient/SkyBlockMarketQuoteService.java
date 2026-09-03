@@ -23,7 +23,15 @@ import java.util.concurrent.TimeUnit;
 final class SkyBlockMarketQuoteService {
     private static final URI BAZAAR = URI.create("https://api.hypixel.net/v2/skyblock/bazaar");
     private static final URI ITEMS = URI.create("https://api.hypixel.net/v2/resources/skyblock/items");
-    private static final URI LOWEST_BIN = URI.create("https://moulberry.codes/lowestbin.json");
+    /**
+     * Public NEU-id → coins maps. The legacy Moulberry lowestbin.json now
+     * fails with Cloudflare 525, so Elite and tricked.pro are tried first.
+     */
+    private static final URI[] LOWEST_BIN = {
+            URI.create("https://api.eliteskyblock.com/resources/auctions/neu"),
+            URI.create("https://lb.tricked.pro/lowestbins"),
+            URI.create("https://moulberry.codes/lowestbin.json")
+    };
 
     record Quotes(
             Map<String, Double> bazaarBuy,
@@ -82,7 +90,7 @@ final class SkyBlockMarketQuoteService {
             return;
         }
         started = true;
-        EXECUTOR.scheduleWithFixedDelay(SkyBlockMarketQuoteService::refresh, 2, 45, TimeUnit.SECONDS);
+        EXECUTOR.scheduleWithFixedDelay(SkyBlockMarketQuoteService::refresh, 0, 45, TimeUnit.SECONDS);
     }
 
     static Quotes current() {
@@ -90,12 +98,6 @@ final class SkyBlockMarketQuoteService {
     }
 
     private static void refresh() {
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (!PriceTooltipsPolicy.shouldFetchRemoteQuotes(extras.priceTooltipsEnabled)
-                && !(extras.stallMarketEnabled && extras.stallAhHighlight)
-                && !extras.iotaAddonsEnabled) {
-            return;
-        }
         Map<String, Double> buy = new HashMap<>();
         Map<String, Double> sell = new HashMap<>();
         Map<String, Double> npc = new HashMap<>();
@@ -168,13 +170,18 @@ final class SkyBlockMarketQuoteService {
     }
 
     private static void fetchLowestBin(Map<String, Double> bin) {
-        JsonObject root = getJson(LOWEST_BIN);
-        if (root == null) {
-            return;
-        }
-        for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-            String id = entry.getKey() == null ? "" : entry.getKey().toUpperCase(Locale.ROOT);
-            putPositive(bin, id, number(entry.getValue()));
+        for (URI uri : LOWEST_BIN) {
+            JsonObject root = getJson(uri);
+            if (root == null || root.entrySet().isEmpty()) {
+                continue;
+            }
+            for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
+                String id = entry.getKey() == null ? "" : entry.getKey().toUpperCase(Locale.ROOT);
+                putPositive(bin, id, number(entry.getValue()));
+            }
+            if (!bin.isEmpty()) {
+                return;
+            }
         }
     }
 

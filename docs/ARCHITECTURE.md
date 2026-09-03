@@ -251,8 +251,9 @@ Gemstone targets are selected through the searchable UI; there are no gemstone t
 
 QoL modules are defined in `QolUtilityCatalog` (Minecraft-free labels, groups, and setting types) and persisted through `QolUtilityConfig` inside `rotclient.json`. Client runtimes and mixins live under `src/client/java`. Policy classes that can be unit-tested stay in `src/main/java`.
 
-The dashboard currently exposes 72 modules across Utilities, Render, HUD &
-Display, Interface, Combat, Dungeons, Mining, Slayer, and Fishing.
+The dashboard currently exposes 124 modules across Combat, Slayer, Events,
+Dungeons, Kuudra, Mining, Fishing, Foraging, Garden, HUD & Display, Render,
+Interface, and Utilities.
 `QolUtilityCatalog` owns Minecraft-free metadata; `QolUtilityConfig` and
 `QolSkyblockExtras` own persisted values; pure `*Policy` classes stay in the
 main source set; `*Runtime` bridges and mixins stay in the client source set.

@@ -12,7 +12,7 @@ final class InventoryChromeColorsScreen extends Screen {
 
     private static final Row[] ROWS = {
             new Row("qol.inventory_overlay.chrome_panel", "Whole inventory"),
-            new Row("qol.inventory_overlay.chrome_header", "Top / crafting"),
+            new Row("qol.inventory_overlay.chrome_header", "Top / armor"),
             new Row("qol.inventory_overlay.chrome_main", "Main inventory"),
             new Row("qol.inventory_overlay.chrome_hotbar", "Hotbar"),
             new Row("qol.inventory_overlay.chrome_border", "Border"),

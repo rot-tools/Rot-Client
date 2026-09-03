@@ -61,6 +61,22 @@ final class RotClientWorkspaceConfig {
         return config;
     }
 
+    /**
+     * Opening the Click GUI always lands on Overview with a closed QoL
+     * drawer. Window placement is kept; last page / module is not.
+     */
+    void resetViewToDefault() {
+        normalize();
+        RotClientWorkspaceTab tab = activeTab();
+        tab.route = RotClientWorkspaceRoute.OVERVIEW.id();
+        tab.scrollPixels = 0;
+        tab.qolGroup = "";
+        tab.qolModuleId = "";
+        expandedSidebarSections = new ArrayList<>(
+                RotClientSidebarNav.defaultExpandedSections());
+        normalize();
+    }
+
     RotClientWorkspaceConfig copy() {
         RotClientWorkspaceConfig copy = new RotClientWorkspaceConfig();
         copy.schemaVersion = schemaVersion;

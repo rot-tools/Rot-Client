@@ -53,4 +53,43 @@ final class RenderHotPathWiringTest {
         assertTrue(runtime.contains("considerNamedEsp"));
         assertFalse(runtime.contains("named.addAll(client.level.getEntitiesOfClass(ArmorStand.class"));
     }
+
+    @Test
+    void overlaysClassifyOnTickAndLerpOnRender() throws Exception {
+        String slayer = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/SlayerRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(slayer.contains("interpolatedBox"));
+        assertFalse(slayer.contains("entitiesForRendering"));
+        String flavor = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/SkyblockFlavorRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(flavor.contains("refreshImplosionHolders"));
+        assertTrue(flavor.contains("IMPLOSION_HOLDERS"));
+        assertFalse(flavor.contains("entitiesForRendering"));
+        String kuudra = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/IotaKuudraRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(kuudra.contains("arenaSearch"));
+        assertTrue(kuudra.contains("kuudraBossId"));
+        assertFalse(kuudra.contains("entitiesForRendering"));
+        String leftover = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/MiningLeftoverRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertFalse(leftover.contains("entitiesForRendering"));
+        String assist = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/MiningAssistRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertFalse(assist.contains("entitiesForRendering"));
+        String highlight = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/MobHighlightRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(highlight.contains("MATCHED_IDS"));
+        assertTrue(highlight.contains("EntityLerpPolicy.renderOffset"));
+        String fishing = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/FishingSuiteRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(fishing.contains("!hudVisible(qol) && !extras.fishingHotspotsEnabled"));
+        assertTrue(fishing.contains("EntityLerpPolicy.renderOffset"));
+    }
 }

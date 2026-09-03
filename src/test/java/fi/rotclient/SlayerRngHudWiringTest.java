@@ -16,5 +16,8 @@ class SlayerRngHudWiringTest {
         assertTrue(source.contains("lastMagicFind = null"));
         assertTrue(source.contains("Magic Find pending"));
         assertTrue(source.contains("if (lastMagicFind == null)"));
+        assertTrue(source.contains("observeContainer("));
+        assertTrue(source.contains("SlayerRngCatalog.resolve"));
+        assertTrue(source.contains("SlayerRngMeterPolicy.chatSelection"));
     }
 }

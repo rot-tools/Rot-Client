@@ -104,28 +104,70 @@ public final class SlayerProgressPolicy {
         }
     }
 
+    /**
+     * Combat-skill totals such as {@code (19,896,487/0)} are not quest XP.
+     * Sidebar quest fractions stay well below this cap.
+     */
+    public static final long MAX_QUEST_XP = 500_000L;
+    private static final Pattern BARE_FRACTION = Pattern.compile(
+            "^\\s*" + AMOUNT + "\\s*/\\s*" + AMOUNT + "\\s*$");
+
     public static Optional<Progress> parse(String raw) {
+        return parse(raw, false);
+    }
+
+    /**
+     * @param questVisible when true, a short sidebar {@code 2,403/3,000} line
+     *                     is accepted. Action-bar health/mana pairs stay rejected.
+     */
+    public static Optional<Progress> parse(String raw, boolean questVisible) {
         if (raw == null || raw.isBlank()) {
             return Optional.empty();
         }
         String normalized = SlayerPolicy.normalize(raw);
         Matcher matcher = LABEL_THEN_FRACTION.matcher(normalized);
-        if (!matcher.find()) {
+        boolean labeled = matcher.find();
+        if (!labeled) {
             matcher = FRACTION_THEN_LABEL.matcher(normalized);
+            labeled = matcher.find();
+        }
+        if (!labeled) {
+            matcher = PARENTHESIZED_FRACTION.matcher(normalized);
             if (!matcher.find()) {
-                matcher = PARENTHESIZED_FRACTION.matcher(normalized);
-                if (!matcher.find()) {
-                    return Optional.empty();
-                }
+                return questVisible ? parseBareFraction(normalized) : Optional.empty();
             }
         }
         try {
             long earned = parseAmount(matcher.group(1));
             long required = parseAmount(matcher.group(2));
-            return required > 0L ? Optional.of(new Progress(earned, required)) : Optional.empty();
+            return toProgress(earned, required);
         } catch (IllegalArgumentException ignored) {
             return Optional.empty();
         }
+    }
+
+    static Optional<Progress> parseBareFraction(String normalized) {
+        Matcher matcher = BARE_FRACTION.matcher(normalized);
+        if (!matcher.matches()) {
+            return Optional.empty();
+        }
+        try {
+            long earned = parseAmount(matcher.group(1));
+            long required = parseAmount(matcher.group(2));
+            if (required < 100L || required % 50L != 0L) {
+                return Optional.empty();
+            }
+            return toProgress(earned, required);
+        } catch (IllegalArgumentException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<Progress> toProgress(long earned, long required) {
+        if (required <= 0L || required > MAX_QUEST_XP) {
+            return Optional.empty();
+        }
+        return Optional.of(new Progress(earned, required));
     }
 
     public static int clampThreshold(int thresholdPercent) {

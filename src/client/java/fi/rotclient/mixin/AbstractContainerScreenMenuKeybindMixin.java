@@ -4,6 +4,7 @@ import fi.rotclient.DungeonRuntime;
 import fi.rotclient.MenuKeybindRuntime;
 import fi.rotclient.StallMarketRuntime;
 import fi.rotclient.SlotBindsRuntime;
+import fi.rotclient.StorageOverlayRuntime;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -24,6 +25,10 @@ abstract class AbstractContainerScreenMenuKeybindMixin {
             KeyEvent event,
             CallbackInfoReturnable<Boolean> cir) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        if (StorageOverlayRuntime.keyPressed(event)) {
+            cir.setReturnValue(true);
+            return;
+        }
         if (SlotBindsRuntime.handleKeyPressed(screen, event.key(), hoveredSlot)
                 || DungeonRuntime.handleContainerKey(screen, event.key())
                 || MenuKeybindRuntime.handleKeyPressed(screen, event.key())) {

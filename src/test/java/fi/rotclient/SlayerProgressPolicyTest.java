@@ -48,6 +48,19 @@ final class SlayerProgressPolicyTest {
     }
 
     @Test
+    void rejectsCombatSkillTotalsAndAcceptsSidebarQuestFractions() {
+        assertTrue(SlayerProgressPolicy.parse(
+                "3,898/3,898 +408.2 Combat (19,896,487/0) 1,817/1,869 115/115").isEmpty());
+        assertTrue(SlayerProgressPolicy.parse("(19,896,487/0)").isEmpty());
+        assertTrue(SlayerProgressPolicy.parse("3,898/3,898", true).isEmpty());
+        SlayerProgressPolicy.Progress sidebar = SlayerProgressPolicy.parse("2,403/3,000", true)
+                .orElseThrow();
+        assertEquals(2_403L, sidebar.earnedXp());
+        assertEquals(3_000L, sidebar.requiredXp());
+        assertTrue(SlayerProgressPolicy.parse("2,403/3,000", false).isEmpty());
+    }
+
+    @Test
     void rejectsMalformedAndZeroTotalFractions() {
         assertTrue(SlayerProgressPolicy.parse("Combat XP: nope/3k").isEmpty());
         assertTrue(SlayerProgressPolicy.parse("Combat XP: 1k/0").isEmpty());

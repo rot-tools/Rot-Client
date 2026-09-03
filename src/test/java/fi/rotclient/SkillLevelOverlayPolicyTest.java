@@ -77,4 +77,10 @@ final class SkillLevelOverlayPolicyTest {
         assertTrue(skillLevel.isPresent());
         assertEquals(47, skillLevel.get().level());
     }
+
+    @Test
+    void levelDigitsSitOnTheItemWithoutAFillBox() {
+        assertEquals(9, SkillLevelOverlayPolicy.labelX(0, 8));
+        assertEquals(8, SkillLevelOverlayPolicy.labelY(0));
+    }
 }

@@ -107,7 +107,7 @@ final class WorldScannerRuntime {
         }
         double range = WorldScannerPolicy.clampEspRange(qol.worldScannerEspRange);
         double rangeSq = range * range;
-        Vec3 eye = player.getEyePosition();
+        Vec3 eye = player.getEyePosition(client.getDeltaTracker().getGameTimeDeltaPartialTick(true));
         for (WorldScannerPolicy.Hit hit : WAYPOINTS.values()) {
             WorldScannerEspSettings.Target target = targetFor(hit.name(), qol);
             if (target == null || !target.enabled) {

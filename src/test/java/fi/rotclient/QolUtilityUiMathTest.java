@@ -33,7 +33,7 @@ final class QolUtilityUiMathTest {
                 QolUtilityUiMath.moduleCardAction(
                         false, true, false, false, false, true, true, false, false));
         assertEquals(
-                QolUtilityUiMath.CardAction.TOGGLE_HUD,
+                QolUtilityUiMath.CardAction.OPEN_HUD_SETTINGS,
                 QolUtilityUiMath.moduleCardAction(
                         true, false, false, true, false, true, true, true, false));
         assertEquals(
@@ -158,7 +158,7 @@ final class QolUtilityUiMathTest {
                         .get(0)
                         .id());
         assertEquals(
-                List.of(share),
+                List.of(clicker, share),
                 QolUtilityUiMath.filterPageModules(
                         modules, QolUtilityUiMath.PageFilter.CHEAT, ignored -> false));
         assertEquals(
@@ -167,6 +167,12 @@ final class QolUtilityUiMathTest {
         assertEquals(
                 QolUtilityUiMath.PageFilter.CHEAT,
                 QolUtilityUiMath.hitPageFilter(170, 55, 8, 4));
+        assertEquals("Cheats", QolUtilityUiMath.cheatFilterLabel(0));
+        assertEquals("Cheats [8]", QolUtilityUiMath.cheatFilterLabel(8));
+        assertEquals("Cheats", QolUtilityUiMath.pageFilterChips(8, 4).get(2).label());
+        assertEquals(
+                QolUtilityUiMath.CHEAT_FILTER_CHIP_WIDTH,
+                QolUtilityUiMath.pageFilterChips(8, 4).get(2).width());
         assertEquals(QolUtilityUiMath.PAGE_HEADER_HEIGHT, 80);
     }
 }

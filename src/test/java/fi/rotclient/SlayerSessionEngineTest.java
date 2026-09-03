@@ -235,4 +235,70 @@ class SlayerSessionEngineTest {
         assertFalse(engine.onEntityDeath(91, 2_200L).bossKilled());
         assertEquals(0, engine.viewSnapshot().bossesKilled());
     }
+
+    @Test
+    void secondOwnedBossOfTheSameFamilyIsIgnoredAndMinibossDeathIsNotAKill() {
+        SlayerSessionEngine engine = new SlayerSessionEngine();
+        engine.onChat("SLAYER QUEST STARTED!", 1_000L);
+        SlayerPolicy.EntityDescriptor boss = SlayerPolicy.classifyTag(
+                "☠ Voidgloom Seraph II 12M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor extra = SlayerPolicy.classifyTag(
+                "☠ Voidgloom Seraph IV 210M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor mini = SlayerPolicy.classifyTag(
+                "Voidcrazed Maniac 12M❤", "Spawned by: LocalPlayer").orElseThrow();
+
+        assertTrue(engine.observeEntity(10, boss, "LocalPlayer", 2_000L).spawned());
+        assertFalse(engine.observeEntity(11, extra, "LocalPlayer", 2_100L).spawned());
+        assertTrue(engine.observeEntity(12, mini, "LocalPlayer", 2_200L).spawned());
+
+        SlayerSessionEngine.DeathResult miniDeath = engine.onEntityDeath(12, 3_000L);
+        assertFalse(miniDeath.bossKilled());
+        assertEquals(0, engine.snapshot(3_000L).bossesKilled());
+        assertEquals(SlayerSessionEngine.QuestState.ACTIVE, engine.questState());
+    }
+
+    @Test
+    void duplicateZeroSecondOwnedDeathDoesNotCountAsAnotherKill() {
+        SlayerSessionEngine engine = new SlayerSessionEngine();
+        engine.onChat("SLAYER QUEST STARTED!", 1_000L);
+        SlayerPolicy.EntityDescriptor boss = SlayerPolicy.classifyTag(
+                "☠ Voidgloom Seraph II 12M❤", "Owner: LocalPlayer").orElseThrow();
+        engine.observeEntity(20, boss, "LocalPlayer", 2_000L);
+        assertTrue(engine.onEntityDeath(20, 8_000L).bossKilled());
+
+        engine.observeEntity(21, boss, "LocalPlayer", 8_050L);
+        SlayerSessionEngine.DeathResult flicker = engine.onEntityDeath(21, 8_100L);
+        assertFalse(flicker.bossKilled());
+        assertEquals(1, engine.snapshot(8_100L).bossesKilled());
+        assertEquals(SlayerSessionEngine.QuestState.ACTIVE, engine.questState());
+    }
+
+    @Test
+    void oneOwnedBossIsKeptForEverySlayerFamily() {
+        SlayerSessionEngine engine = new SlayerSessionEngine();
+        engine.onChat("SLAYER QUEST STARTED!", 1_000L);
+        String[] tags = {
+                "☠ Revenant Horror III 400k❤",
+                "☠ Tarantula Broodfather III 900k❤",
+                "☠ Sven Packmaster III 750k❤",
+                "☠ Voidgloom Seraph III 50M❤",
+                "☠ Inferno Demonlord III 45M❤",
+                "☠ Riftstalker Bloodfiend III"
+        };
+        int entityId = 100;
+        for (String tag : tags) {
+            SlayerPolicy.EntityDescriptor first = SlayerPolicy.classifyTag(
+                    tag, "Owner: LocalPlayer").orElseThrow();
+            SlayerPolicy.EntityDescriptor extra = SlayerPolicy.classifyTag(
+                    tag, "Owner: LocalPlayer").orElseThrow();
+            assertTrue(engine.observeEntity(entityId, first, "LocalPlayer", 2_000L).spawned(), tag);
+            assertFalse(engine.observeEntity(entityId + 1, extra, "LocalPlayer", 2_100L).spawned(), tag);
+            entityId += 2;
+        }
+        long ownedBosses = engine.snapshot(3_000L).activeBosses().stream()
+                .filter(SlayerSessionEngine.ActiveBoss::owned)
+                .filter(active -> active.descriptor().role() == SlayerPolicy.EntityRole.BOSS)
+                .count();
+        assertEquals(6, ownedBosses);
+    }
 }

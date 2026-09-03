@@ -136,6 +136,31 @@ class SlayerQolCatalogTest {
     }
 
     @Test
+    void slayerFightCopyKeepsEveryFamilyOnTheLocalPlayersBoss() {
+        QolUtilityCatalog.ModuleDef highlights = QolUtilityCatalog.findById("qol.slayer_highlights");
+        assertNotNull(highlights);
+        assertTrue(highlights.description().contains("your own fight"));
+        assertFalse(highlights.description().contains("Enderman Slayer boxes"));
+        assertTrue(highlights.settings().stream().anyMatch(setting ->
+                setting.id().equals("qol.slayer_highlights.only_mine")
+                        && setting.description().contains("Every Slayer family")));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_voidgloom").description()
+                .contains("your own Voidgloom fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_revenant").description()
+                .contains("your own Revenant Horror fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_tarantula").description()
+                .contains("your own Tarantula Broodfather fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_sven").description()
+                .contains("your own Sven Packmaster fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_vampire_markers").description()
+                .contains("your own Riftstalker Bloodfiend fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_inferno").description()
+                .contains("your own Inferno Demonlord fight"));
+        assertTrue(QolUtilityCatalog.findById("qol.slayer_miniboss_alert").description()
+                .contains("your Slayer miniboss spawned"));
+    }
+
+    @Test
     void everySlayerDashboardValueControlHasAPersistedConfigBinding() {
         QolUtilityConfig config = new QolUtilityConfig();
 

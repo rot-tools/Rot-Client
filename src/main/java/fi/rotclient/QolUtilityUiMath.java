@@ -13,7 +13,7 @@ public final class QolUtilityUiMath {
         NONE,
         OPEN_SETTINGS,
         TOGGLE,
-        TOGGLE_HUD,
+        OPEN_HUD_SETTINGS,
         OPEN_HUD_MENU
     }
 
@@ -60,6 +60,7 @@ public final class QolUtilityUiMath {
     public static final int FILTER_CHIP_Y = 50;
     public static final int FILTER_CHIP_HEIGHT = 22;
     public static final int FILTER_CHIP_WIDTH = 64;
+    public static final int CHEAT_FILTER_CHIP_WIDTH = 92;
     public static final int FILTER_CHIP_GAP = 8;
     /** @deprecated use SETTINGS_BUTTON_* */
     @Deprecated
@@ -92,7 +93,7 @@ public final class QolUtilityUiMath {
             return CardAction.OPEN_SETTINGS;
         }
         if (hitHud && hasHud) {
-            return hudOpensMenu ? CardAction.OPEN_HUD_MENU : CardAction.TOGGLE_HUD;
+            return hudOpensMenu ? CardAction.OPEN_HUD_MENU : CardAction.OPEN_HUD_SETTINGS;
         }
         if (hitModuleToggle && toggleable) {
             return CardAction.TOGGLE;
@@ -201,13 +202,23 @@ public final class QolUtilityUiMath {
             String label = switch (filter) {
                 case ALL -> "All";
                 case ENABLED -> "On";
-                case CHEAT -> "Cheat";
+                case CHEAT -> "Cheats";
             };
+            int chipWidth = filter == PageFilter.CHEAT
+                    ? CHEAT_FILTER_CHIP_WIDTH
+                    : FILTER_CHIP_WIDTH;
             chips.add(new FilterChip(
-                    filter, label, x, y, FILTER_CHIP_WIDTH, FILTER_CHIP_HEIGHT));
-            x += FILTER_CHIP_WIDTH + FILTER_CHIP_GAP;
+                    filter, label, x, y, chipWidth, FILTER_CHIP_HEIGHT));
+            x += chipWidth + FILTER_CHIP_GAP;
         }
         return List.copyOf(chips);
+    }
+
+    public static String cheatFilterLabel(int cheatCount) {
+        if (cheatCount <= 0) {
+            return "Cheats";
+        }
+        return "Cheats [" + cheatCount + "]";
     }
 
     public static PageFilter hitPageFilter(int mouseX, int mouseY, int headerX, int headerY) {
@@ -410,7 +421,7 @@ public final class QolUtilityUiMath {
         return mouseX >= x
                 && mouseX < x + HUD_CONTROL_WIDTH
                 && mouseY >= y
-                && mouseY < y + TOGGLE_HEIGHT;
+                && mouseY < y + SETTINGS_BUTTON_HEIGHT;
     }
 
     public static int hudMenuX(int cardX) {

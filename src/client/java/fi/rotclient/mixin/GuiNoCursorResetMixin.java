@@ -20,13 +20,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Gui.class)
 abstract class GuiNoCursorResetMixin {
-    @Inject(method = "setScreen", at = @At("HEAD"))
+    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void rotclient$beforeSetScreen(Screen screen, CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.mouseHandler == null) {
             return;
         }
         Screen previous = ((Gui) (Object) this).screen();
+        if (screen == null && StorageOverlayRuntime.shouldPinClosedContainer(previous)) {
+            ci.cancel();
+            return;
+        }
         MouseHandler mouse = client.mouseHandler;
         boolean storageTransition =
                 StorageOverlayRuntime.shouldKeepCursorAcrossScreens(previous, screen);
@@ -62,5 +66,9 @@ abstract class GuiNoCursorResetMixin {
                 client.getWindow().handle(),
                 controller.savedX(),
                 controller.savedY());
+        if (client.mouseHandler instanceof MouseHandlerCursorAccessor access) {
+            access.rotclient$setXpos(controller.savedX());
+            access.rotclient$setYpos(controller.savedY());
+        }
     }
 }

@@ -1680,6 +1680,8 @@ final class QolSkyblockExtras {
             case "qol.freecam.show_body" -> freecamShowBody;
             case "qol.freecam.collide" -> freecamCollide;
             case "qol.hud_layout.show_background" -> hudLayoutShowBackground;
+            case "qol.pet_hud.show_background" -> resolvedHudStyle("pet").showBackground;
+            case "qol.performance_hud.show_background" -> resolvedHudStyle("performance").showBackground;
             case "qol.hud_layout.dim_unfocused" -> hudLayoutDimUnfocused;
             case "qol.hud_layout.hide_hotbar" -> hudHideHotbar;
             case "qol.hud_layout.hide_health" -> hudHideHealth;
@@ -2261,6 +2263,16 @@ final class QolSkyblockExtras {
             case "qol.freecam.show_body" -> freecamShowBody = value;
             case "qol.freecam.collide" -> freecamCollide = value;
             case "qol.hud_layout.show_background" -> hudLayoutShowBackground = value;
+            case "qol.pet_hud.show_background" -> {
+                HudStyleState petStyle = resolvedHudStyle("pet");
+                petStyle.showBackground = value;
+                putHudStyle("pet", petStyle);
+            }
+            case "qol.performance_hud.show_background" -> {
+                HudStyleState performanceStyle = resolvedHudStyle("performance");
+                performanceStyle.showBackground = value;
+                putHudStyle("performance", performanceStyle);
+            }
             case "qol.hud_layout.dim_unfocused" -> hudLayoutDimUnfocused = value;
             case "qol.hud_layout.hide_hotbar" -> hudHideHotbar = value;
             case "qol.hud_layout.hide_health" -> hudHideHealth = value;
@@ -4152,6 +4164,7 @@ final class QolSkyblockExtras {
     HudStyleState resolvedHudStyle(String elementId) {
         HudStyleState global = new HudStyleState();
         global.showBackground = hudLayoutShowBackground;
+        global.showTitle = Boolean.TRUE;
         global.backgroundColor = hudLayoutBackgroundColor;
         global.textColor = hudLayoutTextColor;
         global.scale = HudStylePolicy.clampScale(hudLayoutScale);
@@ -4170,6 +4183,13 @@ final class QolSkyblockExtras {
             hudStyles = new LinkedHashMap<>();
         }
         hudStyles.put(normalizeId(elementId), HudStylePolicy.copy(style));
+    }
+
+    void resetHudStyle(String elementId) {
+        if (hudStyles == null || elementId == null || elementId.isBlank()) {
+            return;
+        }
+        hudStyles.remove(normalizeId(elementId));
     }
 
     void resetHudEditorChrome() {

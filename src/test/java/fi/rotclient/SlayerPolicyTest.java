@@ -32,8 +32,72 @@ class SlayerPolicyTest {
         assertBoss("☠ Tarantula Broodfather IV 2.4M❤", SlayerPolicy.SlayerType.TARANTULA, 4);
         assertBoss("☠ Sven Packmaster IV 2.4M❤", SlayerPolicy.SlayerType.SVEN, 4);
         assertBoss("☠ Voidgloom Seraph IV 210M❤ 43 Hits", SlayerPolicy.SlayerType.VOIDGLOOM, 4);
+        assertBoss("☠ Voidgloom Seraph II 12M❤", SlayerPolicy.SlayerType.VOIDGLOOM, 2);
         assertBoss("☠ Inferno Demonlord IV 150M❤", SlayerPolicy.SlayerType.INFERNO, 4);
         assertBoss("☠ Riftstalker Bloodfiend V 10M❤", SlayerPolicy.SlayerType.VAMPIRE, 5);
+    }
+
+    @Test
+    void voidgloomTierTwoIsNotReadAsTierFourFromLaterHitsText() {
+        SlayerPolicy.EntityDescriptor boss = SlayerPolicy.classifyHolograms(java.util.List.of(
+                "☠ Voidgloom Seraph II 12M❤",
+                "43 Hits",
+                "Spawned by: LocalPlayer")).orElseThrow();
+        assertEquals(SlayerPolicy.EntityRole.BOSS, boss.role());
+        assertEquals(2, boss.tier());
+        assertEquals("LocalPlayer", boss.owner());
+    }
+
+    @Test
+    void nearbyVoidgloomTitleDoesNotTurnAVoidlingIntoTheBoss() {
+        SlayerPolicy.EntityDescriptor mini = SlayerPolicy.classifyHolograms(java.util.List.of(
+                "Voidling Devotee",
+                "☠ Voidgloom Seraph IV 210M❤",
+                "Spawned by: LocalPlayer")).orElseThrow();
+        assertEquals(SlayerPolicy.EntityRole.MINIBOSS, mini.role());
+        assertEquals("Voidling Devotee", mini.displayName());
+    }
+
+    @Test
+    void infersVoidgloomTierFromHealthWhenTheNametagHasNoRoman() {
+        SlayerPolicy.EntityDescriptor t2 = SlayerPolicy.classifyTag(
+                "☠ Voidgloom Seraph 12M❤", "Spawned by: LocalPlayer").orElseThrow();
+        assertEquals(2, t2.tier());
+    }
+
+    @Test
+    void infersEveryFamilyTierFromHealthWhenTheNametagHasNoRoman() {
+        assertEquals(1, classifyTier("☠ Revenant Horror 500❤"));
+        assertEquals(2, classifyTier("☠ Revenant Horror 20k❤"));
+        assertEquals(3, classifyTier("☠ Revenant Horror 400k❤"));
+        assertEquals(4, classifyTier("☠ Revenant Horror 1.5M❤"));
+        assertEquals(5, classifyTier("☠ Revenant Horror 10M❤"));
+        assertEquals(5, classifyTier("☠ Atoned Horror 10M❤"));
+        assertEquals(1, classifyTier("☠ Tarantula Broodfather 750❤"));
+        assertEquals(2, classifyTier("☠ Tarantula Broodfather 30k❤"));
+        assertEquals(3, classifyTier("☠ Tarantula Broodfather 900k❤"));
+        assertEquals(4, classifyTier("☠ Tarantula Broodfather 2.4M❤"));
+        assertEquals(5, classifyTier("☠ Tarantula Broodfather 10M❤"));
+        assertEquals(5, classifyTier("☠ Conjoined Brood 20M❤"));
+        assertEquals(1, classifyTier("☠ Sven Packmaster 2k❤"));
+        assertEquals(2, classifyTier("☠ Sven Packmaster 40k❤"));
+        assertEquals(3, classifyTier("☠ Sven Packmaster 750k❤"));
+        assertEquals(4, classifyTier("☠ Sven Packmaster 2M❤"));
+        assertEquals(1, classifyTier("☠ Inferno Demonlord 2.5M❤"));
+        assertEquals(2, classifyTier("☠ Inferno Demonlord 10M❤"));
+        assertEquals(3, classifyTier("☠ Inferno Demonlord 45M❤"));
+        assertEquals(4, classifyTier("☠ Inferno Demonlord 150M❤"));
+        assertEquals(0, classifyTier("☠ Riftstalker Bloodfiend 2400❤"));
+    }
+
+    @Test
+    void nearbyBossTitleDoesNotTurnFamilyMinibossesIntoTheBoss() {
+        SlayerPolicy.EntityDescriptor mini = SlayerPolicy.classifyHolograms(java.util.List.of(
+                "Revenant Sycophant",
+                "☠ Revenant Horror IV 1.5M❤",
+                "Spawned by: LocalPlayer")).orElseThrow();
+        assertEquals(SlayerPolicy.EntityRole.MINIBOSS, mini.role());
+        assertEquals("Revenant Sycophant", mini.displayName());
     }
 
     @Test
@@ -82,5 +146,9 @@ class SlayerPolicyTest {
         assertEquals(expected, descriptor.type());
         assertEquals(tier, descriptor.tier());
         assertEquals("ExamplePlayer", descriptor.owner());
+    }
+
+    private static int classifyTier(String tag) {
+        return SlayerPolicy.classifyTag(tag, "Owner: ExamplePlayer").orElseThrow().tier();
     }
 }

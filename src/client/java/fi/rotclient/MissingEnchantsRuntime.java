@@ -21,7 +21,20 @@ import java.util.Map;
  * as a no-op so old mixin wiring cannot draw a duplicate floating panel.
  */
 public final class MissingEnchantsRuntime {
+    private static String pinnedIdentity = "";
+
     private MissingEnchantsRuntime() {
+    }
+
+    public static void noteCtrlClick(ItemStack stack, boolean controlDown, int button) {
+        if (!controlDown || button != 0 || stack == null || stack.isEmpty()) {
+            return;
+        }
+        String identity = AutoClickerItemIdentity.identify(stack);
+        if (identity.isBlank()) {
+            return;
+        }
+        pinnedIdentity = identity.equals(pinnedIdentity) ? "" : identity;
     }
 
     public static void afterTooltip(
@@ -43,7 +56,11 @@ public final class MissingEnchantsRuntime {
         boolean unbound = qol.missingEnchantsKeybind == null || qol.missingEnchantsKeybind.isBlank();
         boolean held = QolKeybindNames.isBoundDown(
                 client.getWindow().handle(), qol.missingEnchantsKeybind);
-        if (!MissingEnchantsPolicy.shouldShow(true, unbound, held)) {
+        boolean ctrl = QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL)
+                || QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_CONTROL);
+        boolean pinned = !pinnedIdentity.isBlank()
+                && pinnedIdentity.equals(AutoClickerItemIdentity.identify(stack));
+        if (!MissingEnchantsPolicy.shouldShow(true, unbound, held || ctrl || pinned)) {
             return;
         }
         List<String> lore = InventoryChromeRuntime.loreLines(stack);

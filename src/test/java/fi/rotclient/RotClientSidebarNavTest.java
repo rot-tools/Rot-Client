@@ -9,11 +9,16 @@ import org.junit.jupiter.api.Test;
 
 final class RotClientSidebarNavTest {
     @Test
-    void defaultExpandedHasFourSections() {
-        assertEquals(4, RotClientSidebarNav.defaultExpandedSections().size());
+    void defaultExpandedHasLookAndModules() {
+        assertEquals(2, RotClientSidebarNav.defaultExpandedSections().size());
         assertTrue(RotClientSidebarNav.isExpanded(
                 RotClientSidebarNav.defaultExpandedSections(),
                 RotClientSidebarNav.SECTION_QOL));
+        assertTrue(RotClientSidebarNav.isExpanded(
+                RotClientSidebarNav.defaultExpandedSections(),
+                RotClientSidebarNav.SECTION_SETTINGS));
+        assertFalse(RotClientSidebarNav.knownSections().contains(
+                RotClientSidebarNav.SECTION_MINING));
     }
 
     @Test
@@ -61,14 +66,16 @@ final class RotClientSidebarNavTest {
         assertTrue(halfH < openH);
         assertTrue(half.qolChildrenVisible());
         assertFalse(closed.qolChildrenVisible());
+        int miningY = open.qolPageY(QolUtilityCatalog.Group.MINING);
+        assertTrue(miningY > open.qolHeaderY());
         assertTrue(
                 RotClientSidebarNav.hitTest(
-                        closed, 20, closed.trackerY() + 8, 8, 180, 8, 180)
-                        != RotClientSidebarNav.HitTarget.TRACKER);
+                        closed, 20, miningY + 8, 8, 180, 8, 180)
+                        != RotClientSidebarNav.HitTarget.QOL_MINING);
         assertEquals(
-                RotClientSidebarNav.HitTarget.TRACKER,
+                RotClientSidebarNav.HitTarget.QOL_MINING,
                 RotClientSidebarNav.hitTest(
-                        open, 20, open.trackerY() + 8, 8, 180, 8, 180));
+                        open, 20, miningY + 8, 8, 180, 8, 180));
     }
 
     @Test
@@ -82,7 +89,71 @@ final class RotClientSidebarNavTest {
                 RotClientSidebarNav.hitTargetForQolGroup(
                         QolUtilityCatalog.Group.UTILITIES));
         assertEquals(
-                RotClientSidebarNav.SECTION_MINING,
+                RotClientSidebarNav.HitTarget.QOL_EVENTS,
+                RotClientSidebarNav.hitTargetForQolGroup(
+                        QolUtilityCatalog.Group.EVENTS));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_KUUDRA,
+                RotClientSidebarNav.hitTargetForQolGroup(
+                        QolUtilityCatalog.Group.KUUDRA));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_GARDEN,
+                RotClientSidebarNav.hitTargetForQolGroup(
+                        QolUtilityCatalog.Group.GARDEN));
+        assertEquals(
+                RotClientSidebarNav.SECTION_QOL,
                 RotClientSidebarNav.sectionForModule(DashboardModule.MINING_TRACKER));
+        assertEquals(
+                RotClientSidebarNav.SECTION_QOL,
+                RotClientSidebarNav.sectionForModule(DashboardModule.SESSION_ANALYTICS));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_MINING,
+                RotClientSidebarNav.hitTargetForModule(DashboardModule.MINING_TRACKER));
+    }
+
+    @Test
+    void visualsChildrenHitWhileModulesCollapsed() {
+        RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
+                58, List.of(RotClientSidebarNav.SECTION_SETTINGS));
+        assertTrue(layout.hudLayoutVisible());
+        assertFalse(layout.qolChildrenVisible());
+        assertEquals(
+                RotClientSidebarNav.HitTarget.HUD_LAYOUT,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.hudLayoutY() + 8, 8, 180, 8, 180));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.APPEARANCE,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.appearanceY() + 8, 8, 180, 8, 180));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.SECTION_QOL,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.qolHeaderY() + 1, 8, 180, 8, 180));
+        assertTrue(layout.hudLayoutY() + RotClientSidebarNav.ITEM_HEIGHT
+                <= layout.qolHeaderY());
+    }
+
+    @Test
+    void miningIsNotATopLevelSidebarSection() {
+        RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
+                58, RotClientSidebarNav.defaultExpandedSections());
+        assertTrue(layout.miningHeaderY() < 0);
+        assertFalse(layout.trackerVisible());
+        assertFalse(layout.analyticsVisible());
+        assertEquals(
+                RotClientSidebarNav.SECTION_QOL,
+                RotClientSidebarNav.normalizeSectionId(RotClientSidebarNav.SECTION_MINING));
+        assertEquals(
+                RotClientSidebarNav.SECTION_QOL,
+                RotClientSidebarNav.normalizeSectionId(RotClientSidebarNav.SECTION_SESSIONS));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_MINING,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.qolPageY(QolUtilityCatalog.Group.MINING) + 8,
+                        8, 180, 8, 180));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.SECTION_QOL,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.qolHeaderY() + 1, 8, 180, 8, 180));
     }
 }

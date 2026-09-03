@@ -3,6 +3,7 @@ package fi.rotclient;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,8 +16,15 @@ public final class SlayerMechanicsPolicy {
     public static final int MIN_DAGGER_VARIANCE_TICKS = 0;
     public static final int MAX_DAGGER_VARIANCE_TICKS = 10;
     public static final int VENGEANCE_DURATION_TICKS = 120;
+    /**
+     * Hypixel Soulcry lasts 4s with a 4s cooldown from the same click.
+     * Attack-based use must wait for this, not fire on every katana hit.
+     */
+    public static final int SOULCRY_ABILITY_COOLDOWN_TICKS = 80;
     private static final Set<String> SOULCRY_KATANAS = Set.of(
             "VOIDEDGE_KATANA", "VORPAL_KATANA", "ATOMSPLIT_KATANA");
+    private static final Pattern ABILITY_COOLDOWN_CHAT = Pattern.compile(
+            "(?i)this ability is on cooldown(?: for)?\\s+([0-9]+(?:\\.[0-9]+)?)s");
     private static final Pattern ATTUNEMENT_DISPLAY = Pattern.compile(
             "^(ASHEN|AURIC|SPIRIT|CRYSTAL)\\s+♨(\\d)\\s+\\d{2}:\\d{2}$",
             Pattern.CASE_INSENSITIVE);
@@ -174,6 +182,41 @@ public final class SlayerMechanicsPolicy {
         }
     }
 
+    /**
+     * Shared ready-gate for tick-based and attack-based Auto Soulcry.
+     * The 1–5 tick {@link SoulcryState} delay is only a first-use stagger;
+     * this gate is the real ability cooldown.
+     */
+    public static final class SoulcryAbilityGate {
+        private int remainingTicks;
+
+        public void tick() {
+            if (remainingTicks > 0) {
+                remainingTicks--;
+            }
+        }
+
+        public boolean ready(boolean itemOnCooldown) {
+            return remainingTicks <= 0 && !itemOnCooldown;
+        }
+
+        public void markUsed() {
+            remainingTicks = SOULCRY_ABILITY_COOLDOWN_TICKS;
+        }
+
+        public void observeRemaining(int ticks) {
+            remainingTicks = Math.max(remainingTicks, Math.max(0, ticks));
+        }
+
+        public int remainingTicks() {
+            return remainingTicks;
+        }
+
+        public void reset() {
+            remainingTicks = 0;
+        }
+    }
+
     public static final class VengeanceTimer {
         private int remainingTicks;
 
@@ -244,6 +287,28 @@ public final class SlayerMechanicsPolicy {
 
     public static int clampSoulcryDelay(int ticks) {
         return Math.max(0, Math.min(5, ticks));
+    }
+
+    public static OptionalInt abilityCooldownTicks(String rawLine) {
+        if (rawLine == null || rawLine.isBlank()) {
+            return OptionalInt.empty();
+        }
+        String line = rawLine.replaceAll("§.", "").trim();
+        Matcher matcher = ABILITY_COOLDOWN_CHAT.matcher(line);
+        if (!matcher.find()) {
+            return OptionalInt.empty();
+        }
+        double seconds;
+        try {
+            seconds = Double.parseDouble(matcher.group(1));
+        } catch (NumberFormatException ignored) {
+            return OptionalInt.empty();
+        }
+        if (!(seconds > 0.0D) || !Double.isFinite(seconds)) {
+            return OptionalInt.empty();
+        }
+        int ticks = (int) Math.ceil(seconds * 20.0D);
+        return OptionalInt.of(Math.min(20 * 30, Math.max(1, ticks)));
     }
 
     public static Optional<AttunementDisplay> attunementDisplay(

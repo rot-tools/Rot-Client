@@ -39,6 +39,10 @@ abstract class GuiGraphicsExtractorCustomTooltipMixin {
                         mouseX,
                         mouseY,
                         tooltipWidth,
-                        tooltipHeight));
+                        tooltipHeight),
+                screenWidth,
+                screenHeight,
+                tooltipWidth,
+                tooltipHeight);
     }
 }

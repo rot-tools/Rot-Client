@@ -1,6 +1,7 @@
 package fi.rotclient;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -87,7 +88,11 @@ public final class SlayerPolicy {
     private static final Pattern FORMAT_CODE = Pattern.compile("§[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
     private static final Pattern DROP = Pattern.compile(
             "(?i).*(?:RARE|RNGESUS|PRAY TO RNGESUS|CRAZY RARE|INSANE) DROP!.*?\\(([^)]+)\\).*"                );
-    private static final Pattern ROMAN_TIER = Pattern.compile("(?:^|\\s)(V|IV|III|II|I)(?:\\s|$)");
+    /** Roman tier must sit immediately after the boss alias, not later in Hits/HP text. */
+    private static final Pattern ROMAN_TIER = Pattern.compile(
+            "^\\s*(IV|III|II|V|I)(?=\\s|$|[❤♥])");
+    private static final Pattern COMPACT_HEALTH = Pattern.compile(
+            "(?i)(\\d+(?:[.,]\\d+)?)\\s*([kmb])?\\s*[❤♥]");
     private static final Map<String, Mini> MINIBOSSES = createMinibosses();
     private static final Set<String> DEMONS = Set.of("Quazii", "ⓆⓊⒶⓏⒾⒾ", "Typhoeus", "ⓉⓎⓅⒽⓄⒺⓊⓈ");
 
@@ -115,20 +120,6 @@ public final class SlayerPolicy {
         }
         String owner = parseOwner(rawOwnerTag);
         Attunement attunement = attunement(tag);
-        for (SlayerType type : SlayerType.values()) {
-            for (String alias : type.aliases()) {
-                if (containsIgnoreCase(tag, alias)) {
-                    return Optional.of(new EntityDescriptor(
-                            EntityRole.BOSS,
-                            type,
-                            romanTierAfter(tag, alias),
-                            owner,
-                            type.displayName(),
-                            false,
-                            attunement));
-                }
-            }
-        }
         for (Map.Entry<String, Mini> entry : MINIBOSSES.entrySet()) {
             if (containsIgnoreCase(tag, entry.getKey())) {
                 Mini mini = entry.getValue();
@@ -154,7 +145,93 @@ public final class SlayerPolicy {
                         attunement));
             }
         }
+        for (SlayerType type : SlayerType.values()) {
+            for (String alias : type.aliases()) {
+                if (containsIgnoreCase(tag, alias)) {
+                    int namedTier = specialBossTier(tag);
+                    int tier = namedTier > 0 ? namedTier : romanTierAfter(tag, alias);
+                    if (tier <= 0) {
+                        tier = inferTierFromHealth(type, tag);
+                    }
+                    return Optional.of(new EntityDescriptor(
+                            EntityRole.BOSS,
+                            type,
+                            tier,
+                            owner,
+                            type.displayName(),
+                            false,
+                            attunement));
+                }
+            }
+        }
         return Optional.empty();
+    }
+
+    /**
+     * Classifies a living host from every nearby hologram. Miniboss and Inferno
+     * demon names win over a leaked boss title, so a Voidling standing under a
+     * Voidgloom nametag is not treated as the boss.
+     */
+    public static Optional<EntityDescriptor> classifyHolograms(List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return Optional.empty();
+        }
+        String owner = "";
+        for (String line : lines) {
+            String lower = normalize(line).toLowerCase(Locale.ROOT);
+            if (lower.contains("spawned by") || lower.startsWith("owner:")) {
+                owner = parseOwner(line);
+                if (!owner.isBlank()) {
+                    break;
+                }
+            }
+        }
+        Optional<EntityDescriptor> miniboss = Optional.empty();
+        Optional<EntityDescriptor> demon = Optional.empty();
+        Optional<EntityDescriptor> boss = Optional.empty();
+        for (String line : lines) {
+            Optional<EntityDescriptor> parsed = classifyTag(line, owner);
+            if (parsed.isEmpty()) {
+                continue;
+            }
+            EntityDescriptor descriptor = withOwner(parsed.get(), owner);
+            switch (descriptor.role()) {
+                case MINIBOSS -> {
+                    if (miniboss.isEmpty()) {
+                        miniboss = Optional.of(descriptor);
+                    }
+                }
+                case DEMON -> {
+                    if (demon.isEmpty()) {
+                        demon = Optional.of(descriptor);
+                    }
+                }
+                case BOSS -> {
+                    if (boss.isEmpty() || (boss.get().tier() <= 0 && descriptor.tier() > 0)) {
+                        boss = Optional.of(descriptor);
+                    }
+                }
+            }
+        }
+        if (miniboss.isPresent()) {
+            return miniboss;
+        }
+        if (demon.isPresent()) {
+            return demon;
+        }
+        return boss;
+    }
+
+    public static boolean isSlayerHologram(String raw) {
+        String tag = normalize(raw);
+        if (tag.isEmpty()) {
+            return false;
+        }
+        String lower = tag.toLowerCase(Locale.ROOT);
+        if (lower.contains("spawned by") || lower.startsWith("owner:")) {
+            return true;
+        }
+        return classifyTag(tag, "").isPresent();
     }
 
     public static Optional<DropObservation> dropObservation(String raw) {
@@ -183,12 +260,12 @@ public final class SlayerPolicy {
             }
         }
         return switch (value) {
-            case "rev", "zombie" -> Optional.of(SlayerType.REVENANT);
-            case "tara", "spider" -> Optional.of(SlayerType.TARANTULA);
-            case "wolf" -> Optional.of(SlayerType.SVEN);
-            case "void", "eman", "enderman" -> Optional.of(SlayerType.VOIDGLOOM);
-            case "blaze" -> Optional.of(SlayerType.INFERNO);
-            case "vamp", "rift", "bloodfiend" -> Optional.of(SlayerType.VAMPIRE);
+            case "rev", "zombie", "zombie slayer" -> Optional.of(SlayerType.REVENANT);
+            case "tara", "spider", "spider slayer" -> Optional.of(SlayerType.TARANTULA);
+            case "wolf", "wolf slayer" -> Optional.of(SlayerType.SVEN);
+            case "void", "eman", "enderman", "enderman slayer" -> Optional.of(SlayerType.VOIDGLOOM);
+            case "blaze", "blaze slayer" -> Optional.of(SlayerType.INFERNO);
+            case "vamp", "rift", "bloodfiend", "vampire slayer" -> Optional.of(SlayerType.VAMPIRE);
             default -> Optional.empty();
         };
     }
@@ -236,11 +313,88 @@ public final class SlayerPolicy {
         return owner;
     }
 
+    private static EntityDescriptor withOwner(EntityDescriptor descriptor, String owner) {
+        if (descriptor == null || owner == null || owner.isBlank()
+                || !descriptor.owner().isBlank()) {
+            return descriptor;
+        }
+        return new EntityDescriptor(
+                descriptor.role(),
+                descriptor.type(),
+                descriptor.tier(),
+                owner,
+                descriptor.displayName(),
+                descriptor.bigMiniboss(),
+                descriptor.attunement());
+    }
+
+    private static int specialBossTier(String tag) {
+        if (containsIgnoreCase(tag, "Atoned Horror") || containsIgnoreCase(tag, "Conjoined Brood")) {
+            return 5;
+        }
+        return 0;
+    }
+
     private static int romanTierAfter(String tag, String alias) {
         int start = tag.toLowerCase(Locale.ROOT).indexOf(alias.toLowerCase(Locale.ROOT));
         String tail = start < 0 ? tag : tag.substring(start + alias.length());
         Matcher matcher = ROMAN_TIER.matcher(tail);
         return matcher.find() ? romanValue(matcher.group(1)) : 0;
+    }
+
+    private static int inferTierFromHealth(SlayerType type, String tag) {
+        Matcher matcher = COMPACT_HEALTH.matcher(tag);
+        if (!matcher.find()) {
+            return 0;
+        }
+        double health = parseCompactHealth(matcher.group(1), matcher.group(2));
+        if (!Double.isFinite(health) || health <= 0.0D) {
+            return 0;
+        }
+        return switch (type) {
+            case REVENANT -> health >= 5_000_000.0D ? 5
+                    : health >= 800_000.0D ? 4
+                    : health >= 150_000.0D ? 3
+                    : health >= 8_000.0D ? 2
+                    : health >= 200.0D ? 1
+                    : 0;
+            case TARANTULA -> health >= 15_000_000.0D ? 5
+                    : health >= 5_000_000.0D ? 5
+                    : health >= 1_500_000.0D ? 4
+                    : health >= 300_000.0D ? 3
+                    : health >= 10_000.0D ? 2
+                    : health >= 300.0D ? 1
+                    : 0;
+            case SVEN -> health >= 1_200_000.0D ? 4
+                    : health >= 300_000.0D ? 3
+                    : health >= 15_000.0D ? 2
+                    : health >= 800.0D ? 1
+                    : 0;
+            case VOIDGLOOM -> health >= 150_000_000.0D ? 4
+                    : health >= 30_000_000.0D ? 3
+                    : health >= 5_000_000.0D ? 2
+                    : health >= 100_000.0D ? 1
+                    : 0;
+            case INFERNO -> health >= 90_000_000.0D ? 4
+                    : health >= 25_000_000.0D ? 3
+                    : health >= 5_000_000.0D ? 2
+                    : health >= 1_000_000.0D ? 1
+                    : 0;
+            case VAMPIRE -> 0;
+        };
+    }
+
+    private static double parseCompactHealth(String amount, String suffix) {
+        double value = Double.parseDouble(amount.replace(",", "").replace(' ', '.'));
+        if (suffix == null || suffix.isBlank()) {
+            return value;
+        }
+        return switch (suffix.toLowerCase(Locale.ROOT)) {
+            case "k" -> value * 1_000.0D;
+            case "m" -> value * 1_000_000.0D;
+            case "b" -> value * 1_000_000_000.0D;
+            default -> value;
+        };
     }
 
     private static int romanValue(String roman) {

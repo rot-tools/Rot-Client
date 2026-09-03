@@ -55,11 +55,11 @@ final class QolUtilityConfig {
     String inventoryOverlayProtectList = "";
     int inventoryOverlayPetOffsetX;
     int inventoryOverlayPetOffsetY;
-    int inventoryChromePanel;
-    int inventoryChromeHeader;
-    int inventoryChromeMain;
-    int inventoryChromeHotbar;
-    int inventoryChromeBorder;
+    int inventoryChromePanel = InventoryOverlayPolicy.DEFAULT_INV_PANEL;
+    int inventoryChromeHeader = InventoryOverlayPolicy.DEFAULT_INV_HEADER;
+    int inventoryChromeMain = InventoryOverlayPolicy.DEFAULT_INV_MAIN;
+    int inventoryChromeHotbar = InventoryOverlayPolicy.DEFAULT_INV_HOTBAR;
+    int inventoryChromeBorder = InventoryOverlayPolicy.DEFAULT_INV_BORDER;
 
     boolean skillLevelsEnabled = true;
     int skillLevelsColor = SkillLevelOverlayPolicy.DEFAULT_LEVEL_COLOR;
@@ -1833,6 +1833,7 @@ final class QolUtilityConfig {
                 performanceShowTps = d.performanceShowTps;
                 performanceShowPing = d.performanceShowPing;
                 performanceKeybind = d.performanceKeybind;
+                extras().resetHudStyle("performance");
             }
             case "qol.render_optimizer" -> {
                 renderOptimizerEnabled = d.renderOptimizerEnabled;
@@ -1940,6 +1941,7 @@ final class QolUtilityConfig {
                 petHudEnabled = d.petHudEnabled;
                 petHudX = d.petHudX;
                 petHudY = d.petHudY;
+                extras().resetHudStyle("pet");
             }
             case "qol.name_hider" -> {
                 nameHiderEnabled = d.nameHiderEnabled;

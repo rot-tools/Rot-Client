@@ -128,6 +128,39 @@ class SlayerMechanicsPolicyTest {
     }
 
     @Test
+    void soulcryAbilityGateWaitsTheRealFourSecondCooldownAndHonorsItemCooldown() {
+        SlayerMechanicsPolicy.SoulcryAbilityGate gate =
+                new SlayerMechanicsPolicy.SoulcryAbilityGate();
+        assertTrue(gate.ready(false));
+        assertFalse(gate.ready(true));
+        gate.markUsed();
+        assertFalse(gate.ready(false));
+        assertEquals(80, SlayerMechanicsPolicy.SOULCRY_ABILITY_COOLDOWN_TICKS);
+        assertEquals(80, gate.remainingTicks());
+        for (int i = 0; i < 79; i++) {
+            gate.tick();
+        }
+        assertFalse(gate.ready(false));
+        gate.tick();
+        assertTrue(gate.ready(false));
+        assertFalse(gate.ready(true));
+
+        gate.markUsed();
+        gate.observeRemaining(40);
+        assertEquals(80, gate.remainingTicks());
+        gate.observeRemaining(90);
+        assertEquals(90, gate.remainingTicks());
+        gate.reset();
+        assertTrue(gate.ready(false));
+
+        assertEquals(80, SlayerMechanicsPolicy.abilityCooldownTicks(
+                "This ability is on cooldown for 4s").orElse(-1));
+        assertEquals(70, SlayerMechanicsPolicy.abilityCooldownTicks(
+                "§cThis ability is on cooldown for 3.5s").orElse(-1));
+        assertTrue(SlayerMechanicsPolicy.abilityCooldownTicks("Boss spawned").isEmpty());
+    }
+
+    @Test
     void vengeanceTimerRunsForExactlySixSecondsAndCanShowTicksOrSeconds() {
         SlayerMechanicsPolicy.VengeanceTimer timer = new SlayerMechanicsPolicy.VengeanceTimer();
         timer.start();

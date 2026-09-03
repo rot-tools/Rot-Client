@@ -89,13 +89,27 @@ final class QolOverlayHud {
         if (qol.autoClickerCpsHudEnabled) {
             renderAutoClickerHud(graphics, font, qol);
         }
-        renderFishing(graphics, font, qol);
-        renderMiningLeftover(graphics, font, qol);
-        renderDiana(graphics, font, qol);
-        renderForaging(graphics, font, qol);
-        renderIotaArrows(graphics, font, qol);
-        renderKuudraAlerts(graphics, font, qol);
-        renderStallBin(graphics, font, qol);
+        if (FishingSuiteRuntime.hudVisible(qol)) {
+            renderFishing(graphics, font, qol);
+        }
+        if (MiningLeftoverRuntime.hudVisible(qol)) {
+            renderMiningLeftover(graphics, font, qol);
+        }
+        if (DianaRuntime.hudVisible(qol)) {
+            renderDiana(graphics, font, qol);
+        }
+        if (ForagingRuntime.hudVisible(qol)) {
+            renderForaging(graphics, font, qol);
+        }
+        if (IotaRuntime.hudVisible(qol)) {
+            renderIotaArrows(graphics, font, qol);
+        }
+        if (IotaKuudraRuntime.hudVisible(qol)) {
+            renderKuudraAlerts(graphics, font, qol);
+        }
+        if (StallMarketRuntime.hudVisible(qol)) {
+            renderStallBin(graphics, font, qol);
+        }
         int coldAlpha = MiningLeftoverRuntime.coldAlpha();
         if (coldAlpha > 0) {
             graphics.fill(
@@ -498,26 +512,28 @@ final class QolOverlayHud {
         if (panelOn(id)) {
             graphics.fill(x, y, x + 3, y + height, accentPaint(id));
         }
+        List<String> visible = visibleHudLines(id, lines);
         int rowY = y + 4;
-        for (int i = 0; i < lines.size(); i++) {
-            int color = i == 0 ? accentPaint(id) : textPaint(id, RotClientTheme.TEXT);
+        for (int i = 0; i < visible.size(); i++) {
+            int color = i == 0 && HudStylePolicy.titleVisible(qol.extras().resolvedHudStyle(id))
+                    ? accentPaint(id) : textPaint(id, RotClientTheme.TEXT);
             if ("slayer_profit".equals(id)
-                    && lines.get(i).startsWith("Latest · ")
+                    && visible.get(i).startsWith("Latest · ")
                     && qol.extras().slayerDropsRecentHighlight
-                    && !lines.get(i).equals("Latest · none")) {
+                    && !visible.get(i).equals("Latest · none")) {
                 color = RotClientTheme.SUCCESS;
             }
             float scale = dynamicSlayerText
-                    ? SlayerHudTextPolicy.scaleFor(font.width(lines.get(i)), SLAYER_EDITOR_WIDTH - 12)
+                    ? SlayerHudTextPolicy.scaleFor(font.width(visible.get(i)), SLAYER_EDITOR_WIDTH - 12)
                     : 1.0F;
             if (scale < 1.0F) {
                 graphics.pose().pushMatrix();
                 graphics.pose().translate(x + 7, rowY);
                 graphics.pose().scale(scale, scale);
-                RotClientUiDraw.text(graphics, font, lines.get(i), 0, 0, color, true);
+                RotClientUiDraw.text(graphics, font, visible.get(i), 0, 0, color, true);
                 graphics.pose().popMatrix();
             } else {
-                RotClientUiDraw.text(graphics, font, lines.get(i), x + 7, rowY, color, true);
+                RotClientUiDraw.text(graphics, font, visible.get(i), x + 7, rowY, color, true);
             }
             rowY += 10;
         }
@@ -898,6 +914,10 @@ final class QolOverlayHud {
         return true;
     }
 
+    String elementAt(double mouseX, double mouseY) {
+        return hitTest(mouseX, mouseY);
+    }
+
     private String hitTest(double mouseX, double mouseY) {
         QolUtilityConfig qol = qol();
         if (qol.performanceHudEnabled
@@ -934,9 +954,13 @@ final class QolOverlayHud {
         if (qol.commissionDisplayEnabled && inside(mouseX, mouseY, "commission", 180, 48)) {
             return "commission";
         }
-        if ((qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled)
-                && inside(mouseX, mouseY, "wardrobe", 110, 16)) {
-            return "wardrobe";
+        if ((qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled)) {
+            String text = WardrobeAutoEquipRuntime.hudText(true);
+            int width = Math.max(110, Minecraft.getInstance().font.width(
+                    text.isBlank() ? "Equipping [9]" : text) + 10);
+            if (inside(mouseX, mouseY, "wardrobe", width, 16)) {
+                return "wardrobe";
+            }
         }
         if (qol.autoClickerCpsHudEnabled && inside(mouseX, mouseY, "auto_clicker", 260, 16)) {
             return "auto_clicker";
@@ -1137,6 +1161,26 @@ final class QolOverlayHud {
         return true;
     }
 
+    boolean toggleSelectedTitle() {
+        if (!isVisibleElement(selectedId)) {
+            return false;
+        }
+        HudStyleState style = qol().extras().resolvedHudStyle(selectedId);
+        style.showTitle = !HudStylePolicy.titleVisible(style);
+        qol().extras().putHudStyle(selectedId, style);
+        return true;
+    }
+
+    private List<String> visibleHudLines(String id, List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return List.of();
+        }
+        if (HudStylePolicy.titleVisible(qol().extras().resolvedHudStyle(id)) || lines.size() <= 1) {
+            return lines;
+        }
+        return lines.subList(1, lines.size());
+    }
+
     private void drawStyledHudLines(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -1171,7 +1215,7 @@ final class QolOverlayHud {
         fillHudPanel(graphics, id, 0, 0, width, height);
         int rowY = 4;
         int color = textPaint(id, RotClientTheme.TEXT);
-        for (String line : lines) {
+        for (String line : visibleHudLines(id, lines)) {
             RotClientUiDraw.text(graphics, font, line, 4, rowY, color, true);
             rowY += 10;
         }

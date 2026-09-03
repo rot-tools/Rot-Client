@@ -1,7 +1,9 @@
 package fi.rotclient;
 
-import java.util.Locale;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -36,20 +38,46 @@ public final class StorageOverlayPolicy {
             int playerY,
             int scrollBarX,
             int scrollBarY,
-            int scrollBarHeight) {}
+            int scrollBarHeight,
+            int searchX,
+            int searchY,
+            int searchWidth,
+            int searchHeight,
+            int closeX,
+            int closeY,
+            int closeSize) {}
 
     public static final int SLOT_SIZE = 18;
     public static final int CARD_HEADER_HEIGHT = 18;
+    public static final int HEADER_SLOT_GAP = 4;
+    public static final int CARD_BOTTOM_PAD = 4;
+    public static final int CONTENT_TOP_INSET = 8;
     public static final int CONTROL_ROW_SLOTS = 9;
+    public static final int ENDER_CHEST_PAGES = 9;
+    public static final int BACKPACK_PAGES = 18;
+    /** Selector index when the page is known but Storage overview was never opened. */
+    public static final int COMMAND_SELECTOR_SLOT = -1;
+    public static final int SEARCH_GLOW_PURPLE = 0xFFB14CFF;
+    public static final int SEARCH_GLOW_RED = 0xFFFF2D55;
+    public static final int SEARCH_GLOW_PERIOD_MS = 1100;
+    public static final int SEARCH_GLOW_TAIL = 28;
+    public static final int CLOSE_BUTTON_SIZE = 14;
+    public static final int VALUE_ICON_SIZE = 11;
     public static final int PLAYER_WIDTH = 184;
-    public static final int PLAYER_HEIGHT = 91;
-    public static final int PLAYER_Y_INSET = 3;
+    public static final int PLAYER_HEIGHT = 98;
+    public static final int PLAYER_GAP = 10;
+    public static final int HEADER_HEIGHT = 22;
+    public static final int SEARCH_WIDTH = 132;
+    public static final int SEARCH_HEIGHT = 14;
+    public static final int MAX_SEARCH_LENGTH = 48;
+    public static final int EMPTY_PAGE_ROWS = 5;
     public static final int INNER_PADDING = 10;
     public static final int SCROLL_BAR_WIDTH = 8;
+    public static final int SCROLL_BAR_HIT_WIDTH = 12;
     public static final int SCROLL_KNOB_HEIGHT = 16;
     public static final int HOTBAR_X = 12;
-    public static final int HOTBAR_Y = 67;
-    public static final int MAIN_INVENTORY_Y = 9;
+    public static final int HOTBAR_Y = 74;
+    public static final int MAIN_INVENTORY_Y = 16;
 
     private static final Set<String> LOCKED_SELECTOR_ITEMS = Set.of(
             "red_stained_glass_pane",
@@ -87,6 +115,14 @@ public final class StorageOverlayPolicy {
         // observe it and leaving the overlay empty.
         if (normalized.equals("ender chest") || normalized.equals("large ender chest")) {
             return Optional.of(new Page(Kind.ENDER_CHEST, 1));
+        }
+        if (normalized.equals("backpack")
+                || normalized.equals("small backpack")
+                || normalized.equals("medium backpack")
+                || normalized.equals("large backpack")
+                || normalized.equals("greater backpack")
+                || normalized.equals("jumbo backpack")) {
+            return Optional.of(new Page(Kind.BACKPACK, 1));
         }
         Matcher matcher = PAGE.matcher(normalized);
         if (!matcher.matches()) return Optional.empty();
@@ -133,6 +169,21 @@ public final class StorageOverlayPolicy {
                 : "backpack " + page.number();
     }
 
+    public static boolean isPhysicalSelectorSlot(int slot) {
+        return slot >= 0;
+    }
+
+    public static List<Page> defaultDirectory() {
+        List<Page> pages = new ArrayList<>(ENDER_CHEST_PAGES + BACKPACK_PAGES);
+        for (int i = 1; i <= ENDER_CHEST_PAGES; i++) {
+            pages.add(new Page(Kind.ENDER_CHEST, i));
+        }
+        for (int i = 1; i <= BACKPACK_PAGES; i++) {
+            pages.add(new Page(Kind.BACKPACK, i));
+        }
+        return List.copyOf(pages);
+    }
+
     public static int clampColumns(int columns) { return Math.max(1, Math.min(5, columns)); }
     public static int clampHeight(int height) { return Math.max(180, Math.min(720, height)); }
     public static int clampScrollSpeed(int speed) { return Math.max(1, Math.min(40, speed)); }
@@ -145,8 +196,28 @@ public final class StorageOverlayPolicy {
     }
 
     public static int pageWidth() { return SLOT_SIZE * 9 + 4; }
-    public static int pageHeight(int rows) { return Math.max(1, Math.min(6, rows)) * SLOT_SIZE + 24; }
-    public static int emptyPageHeight() { return 28; }
+
+    /** Header strip + gap + slot rows + bottom pad. Must match {@link #contentSlotPosition}. */
+    public static int pageHeight(int rows) {
+        return CARD_HEADER_HEIGHT + HEADER_SLOT_GAP
+                + Math.max(1, Math.min(6, rows)) * SLOT_SIZE
+                + CARD_BOTTOM_PAD;
+    }
+
+    public static int emptyPageHeight() { return pageHeight(EMPTY_PAGE_ROWS); }
+    public static int defaultEmptySlotCount() { return EMPTY_PAGE_ROWS * CONTROL_ROW_SLOTS; }
+
+    /**
+     * Cached pages keep their observed row count. Unknown empty placeholders
+     * use the full Ender Chest / Greater Backpack 5-row well so cards do not
+     * draw slots into the next row.
+     */
+    public static int slotRows(int cachedRows, boolean emptyItems) {
+        if (cachedRows > 0) {
+            return Math.max(1, Math.min(6, cachedRows));
+        }
+        return emptyItems ? EMPTY_PAGE_ROWS : 1;
+    }
 
     public static OverlayLayout layout(
             int screenWidth,
@@ -154,26 +225,51 @@ public final class StorageOverlayPolicy {
             int columns,
             int padding,
             int configuredHeight) {
+        return layout(screenWidth, screenHeight, columns, padding, configuredHeight, INNER_PADDING);
+    }
+
+    public static OverlayLayout layout(
+            int screenWidth,
+            int screenHeight,
+            int columns,
+            int padding,
+            int configuredHeight,
+            int margin) {
         int cols = clampColumns(columns);
         int gap = clampSpacing(padding);
+        int inset = Math.max(INNER_PADDING, clampSpacing(margin));
         int innerWidth = cols * pageWidth() + Math.max(0, cols - 1) * gap;
-        int panelWidth = innerWidth + INNER_PADDING * 3 + SCROLL_BAR_WIDTH;
+        int panelWidth = innerWidth + inset * 2 + INNER_PADDING + SCROLL_BAR_WIDTH;
+        int reservedBelow = PLAYER_GAP + PLAYER_HEIGHT + Math.min(80, Math.max(0, screenHeight) / 10);
         int panelHeight = Math.min(
-                Math.max(4, screenHeight - PLAYER_HEIGHT - Math.min(80, Math.max(0, screenHeight) / 10)),
+                Math.max(4, screenHeight - reservedBelow),
                 clampHeight(configuredHeight));
+        int stackHeight = panelHeight + PLAYER_GAP + PLAYER_HEIGHT;
         int panelX = screenWidth / 2 - panelWidth / 2;
-        int panelY = Math.max(4, screenHeight / 2 - (panelHeight + PLAYER_HEIGHT) / 2);
-        int innerX = panelX + INNER_PADDING;
-        int innerY = panelY + INNER_PADDING;
-        int innerHeight = Math.max(0, panelHeight - INNER_PADDING * 2);
+        int panelY = Math.max(4, screenHeight / 2 - stackHeight / 2);
+        if (panelY + stackHeight > screenHeight - 4) {
+            panelY = Math.max(4, screenHeight - 4 - stackHeight);
+        }
+        int innerX = panelX + inset;
+        int innerY = panelY + HEADER_HEIGHT + CONTENT_TOP_INSET;
+        int innerHeight = Math.max(0, panelHeight - HEADER_HEIGHT - CONTENT_TOP_INSET - inset);
         int playerX = screenWidth / 2 - PLAYER_WIDTH / 2;
-        int playerY = panelY + panelHeight - PLAYER_Y_INSET;
+        int playerY = panelY + panelHeight + PLAYER_GAP;
         int scrollBarX = innerX + innerWidth + INNER_PADDING;
+        int closeSize = CLOSE_BUTTON_SIZE;
+        int closeX = panelX + panelWidth - 6 - closeSize;
+        int closeY = panelY + Math.max(2, (HEADER_HEIGHT - closeSize) / 2);
+        int searchWidth = SEARCH_WIDTH;
+        int searchHeight = SEARCH_HEIGHT;
+        int searchX = closeX - 6 - searchWidth;
+        int searchY = panelY + Math.max(2, (HEADER_HEIGHT - searchHeight) / 2);
         return new OverlayLayout(
                 panelX, panelY, panelWidth, panelHeight,
                 innerX, innerY, innerWidth, innerHeight,
                 playerX, playerY,
-                scrollBarX, innerY, innerHeight);
+                scrollBarX, innerY, innerHeight,
+                searchX, searchY, searchWidth, searchHeight,
+                closeX, closeY, closeSize);
     }
 
     /** Chest menus store main inventory then hotbar; overlay positions use hotbar first. */
@@ -192,9 +288,102 @@ public final class StorageOverlayPolicy {
     }
 
     public static int[] contentSlotPosition(int cardX, int cardY, int index) {
+        int originY = cardY + CARD_HEADER_HEIGHT + HEADER_SLOT_GAP;
         return new int[] {
                 cardX + 3 + (index % 9) * SLOT_SIZE,
-                cardY + 20 + (index / 9) * SLOT_SIZE};
+                originY + (index / 9) * SLOT_SIZE};
+    }
+
+    /**
+     * Unique pixels of the slot's own 1px outline. Stays inside the 18×18 well
+     * so adjacent matches never share a corner fragment.
+     */
+    public static int searchGlowPerimeter(int slotSize) {
+        int size = Math.max(2, slotSize);
+        int width = size - 1;
+        int height = size - 1;
+        return 2 * (width + height);
+    }
+
+    public static int searchGlowHead(long nowMillis, int perimeter) {
+        if (perimeter <= 0) {
+            return 0;
+        }
+        long period = Math.max(1L, SEARCH_GLOW_PERIOD_MS);
+        long wrapped = Math.floorMod(nowMillis, period);
+        return (int) (wrapped * (long) perimeter / period);
+    }
+
+    public static int searchGlowColor(int tailIndex, int tailLength) {
+        int length = Math.max(1, tailLength);
+        int index = Math.max(0, tailIndex);
+        float t = Math.min(1.0F, index / (float) length);
+        int alpha = Math.round(255.0F * (1.0F - t * 0.65F));
+        return lerpArgb(SEARCH_GLOW_PURPLE, SEARCH_GLOW_RED, t, alpha);
+    }
+
+    public static int[] searchGlowPixel(int slotX, int slotY, int slotSize, int perimeterIndex) {
+        int size = Math.max(2, slotSize);
+        int left = slotX;
+        int top = slotY;
+        int width = size - 1;
+        int height = size - 1;
+        int perimeter = 2 * (width + height);
+        int index = Math.floorMod(perimeterIndex, Math.max(1, perimeter));
+        if (index < width) {
+            return new int[] {left + index, top};
+        }
+        index -= width;
+        if (index < height) {
+            return new int[] {left + width, top + index};
+        }
+        index -= height;
+        if (index < width) {
+            return new int[] {left + width - index, top + height};
+        }
+        index -= width;
+        return new int[] {left, top + height - index};
+    }
+
+    public static int[] searchGlowInward(int slotX, int slotY, int slotSize, int pixelX, int pixelY) {
+        int size = Math.max(2, slotSize);
+        int inwardX = pixelX <= slotX + 1 ? 1 : (pixelX >= slotX + size - 2 ? -1 : 0);
+        int inwardY = pixelY <= slotY + 1 ? 1 : (pixelY >= slotY + size - 2 ? -1 : 0);
+        return new int[] {pixelX + inwardX, pixelY + inwardY};
+    }
+
+    private static int lerpArgb(int from, int to, float t, int alpha) {
+        float clamped = t < 0.0F ? 0.0F : Math.min(1.0F, t);
+        int fr = (from >> 16) & 0xFF;
+        int fg = (from >> 8) & 0xFF;
+        int fb = from & 0xFF;
+        int tr = (to >> 16) & 0xFF;
+        int tg = (to >> 8) & 0xFF;
+        int tb = to & 0xFF;
+        int r = Math.round(fr + (tr - fr) * clamped);
+        int g = Math.round(fg + (tg - fg) * clamped);
+        int b = Math.round(fb + (tb - fb) * clamped);
+        return ((alpha & 0xFF) << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    public static boolean overScrollBar(OverlayLayout layout, int mouseX, int mouseY) {
+        if (layout == null) {
+            return false;
+        }
+        return inside(
+                mouseX,
+                mouseY,
+                layout.scrollBarX(),
+                layout.scrollBarY(),
+                SCROLL_BAR_HIT_WIDTH,
+                layout.scrollBarHeight());
+    }
+
+    public static int scrollBarTrackBottom(OverlayLayout layout) {
+        if (layout == null) {
+            return 0;
+        }
+        return layout.scrollBarY() + Math.max(0, layout.scrollBarHeight());
     }
 
     public static boolean overPlayerInventory(OverlayLayout layout, int mouseX, int mouseY) {
@@ -215,10 +404,145 @@ public final class StorageOverlayPolicy {
                 && mouseY < cardY + CARD_HEADER_HEIGHT;
     }
 
+    public static int[] valueIconPosition(int cardX, int cardY, int cardWidth) {
+        int size = VALUE_ICON_SIZE;
+        int x = cardX + Math.max(size + 4, cardWidth) - size - 3;
+        int y = cardY + Math.max(2, (CARD_HEADER_HEIGHT - size) / 2);
+        return new int[] {x, y, size};
+    }
+
+    public static boolean overValueIcon(
+            int cardX, int cardY, int cardWidth, int mouseX, int mouseY) {
+        int[] icon = valueIconPosition(cardX, cardY, cardWidth);
+        return inside(mouseX, mouseY, icon[0], icon[1], icon[2], icon[2]);
+    }
+
+    public static int headerLabelMaxWidth(int cardWidth) {
+        return Math.max(24, Math.max(1, cardWidth) - VALUE_ICON_SIZE - 14);
+    }
+
+    public record MarketLine(String marketId, int count) {
+        public MarketLine {
+            marketId = marketId == null ? "" : marketId;
+            count = Math.max(0, count);
+        }
+    }
+
+    public static double instantSellTotal(
+            java.util.List<MarketLine> lines, java.util.Map<String, Double> unitPrices) {
+        if (lines == null || unitPrices == null || unitPrices.isEmpty()) {
+            return 0.0D;
+        }
+        double total = 0.0D;
+        for (MarketLine line : lines) {
+            if (line == null || line.marketId().isBlank() || line.count() <= 0) {
+                continue;
+            }
+            Double unit = unitPrices.get(line.marketId());
+            if (unit == null || unit <= 0.0D || !Double.isFinite(unit)) {
+                continue;
+            }
+            total += unit * line.count();
+        }
+        return total;
+    }
+
+    public static String formatCoins(long coins) {
+        long abs = Math.abs(coins);
+        String sign = coins < 0L ? "-" : "";
+        if (abs >= 1_000_000_000L) {
+            return sign + trimDecimal(abs / 1.0E9) + "b";
+        }
+        if (abs >= 1_000_000L) {
+            return sign + trimDecimal(abs / 1_000_000.0) + "m";
+        }
+        if (abs >= 1_000L) {
+            return sign + trimDecimal(abs / 1000.0) + "k";
+        }
+        return sign + abs;
+    }
+
+    public static double marketUnitValue(
+            double lowestBin,
+            double bazaarBuy,
+            double bazaarSell) {
+        if (bazaarSell > 0.0D && Double.isFinite(bazaarSell)) {
+            return bazaarSell;
+        }
+        if (bazaarBuy > 0.0D && Double.isFinite(bazaarBuy)) {
+            return bazaarBuy;
+        }
+        if (lowestBin > 0.0D && Double.isFinite(lowestBin)) {
+            return lowestBin;
+        }
+        return 0.0D;
+    }
+
+    public static String pageValueLabel(double coins) {
+        if (!(coins > 0.0D) || !Double.isFinite(coins)) {
+            return "No AH/BZ prices yet";
+        }
+        return "Total value: " + formatCoins(Math.round(coins));
+    }
+
+    private static String trimDecimal(double value) {
+        String raw = String.format(java.util.Locale.ROOT, "%.2f", value);
+        if (raw.indexOf('.') < 0) {
+            return raw;
+        }
+        int end = raw.length();
+        while (end > 0 && raw.charAt(end - 1) == '0') {
+            end--;
+        }
+        if (end > 0 && raw.charAt(end - 1) == '.') {
+            end--;
+        }
+        return raw.substring(0, end);
+    }
+
     /**
-     * Page cards must not steal shift-clicks, player-inventory clicks, or
-     * clicks that already sit on a live remapped slot.
+     * A freshly opened page often arrives with empty slots for a few ticks.
+     * Keep the last non-empty preview instead of wiping it.
      */
+    /**
+     * A freshly opened page often arrives with empty slots for a few ticks.
+     * Keep the last non-empty preview instead of wiping it.
+     */
+    public static boolean shouldKeepExistingCache(boolean existingHasItems, boolean incomingAllEmpty) {
+        return existingHasItems && incomingAllEmpty;
+    }
+
+    /**
+     * Bare player heads without SkyBlock NBT or a skull texture are the
+     * Steve placeholder. Do not let those overwrite a richer cached stack.
+     */
+    public static boolean incomingIsPlaceholder(
+            boolean existingHasIdentity, boolean incomingHasIdentity, boolean incomingEmpty) {
+        if (incomingEmpty) {
+            return existingHasIdentity;
+        }
+        return existingHasIdentity && !incomingHasIdentity;
+    }
+
+    public record CachedStack(String itemId, int count, String name) {
+        public CachedStack {
+            itemId = itemId == null ? "" : itemId;
+            count = Math.max(0, count);
+            name = name == null ? "" : name;
+        }
+    }
+
+    public record CachedPageSnapshot(Kind kind, int number, int rows, java.util.List<CachedStack> items) {
+        public CachedPageSnapshot {
+            rows = Math.max(0, rows);
+            items = items == null ? java.util.List.of() : java.util.List.copyOf(items);
+        }
+
+        public Page page() {
+            return new Page(kind, number);
+        }
+    }
+
     public static boolean shouldOpenPage(
             boolean shiftDown,
             boolean overRealSlot,
@@ -254,6 +578,176 @@ public final class StorageOverlayPolicy {
 
     public static boolean insidePlayerPanel(int mouseX, int mouseY, int playerX, int playerY) {
         return inside(mouseX, mouseY, playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
+    }
+
+    /**
+     * Overlay clicks live far outside the vanilla 176-wide chest. Treat the
+     * replacement panel and player inventory as inside the GUI so vanilla
+     * does not rewrite the click to slot -999 (drop / close).
+     */
+    public static boolean isClickInsideOverlay(OverlayLayout layout, double mouseX, double mouseY) {
+        if (layout == null) {
+            return false;
+        }
+        int mx = (int) Math.floor(mouseX);
+        int my = (int) Math.floor(mouseY);
+        if (inside(mx, my, layout.panelX(), layout.panelY(), layout.panelWidth(), layout.panelHeight())) {
+            return true;
+        }
+        if (insideSearchField(layout, mx, my)) {
+            return true;
+        }
+        if (overScrollBar(layout, mx, my)) {
+            return true;
+        }
+        return insidePlayerPanel(mx, my, layout.playerX(), layout.playerY());
+    }
+
+    public static boolean insideSearchField(OverlayLayout layout, int mouseX, int mouseY) {
+        if (layout == null) {
+            return false;
+        }
+        return inside(
+                mouseX,
+                mouseY,
+                layout.searchX(),
+                layout.searchY(),
+                layout.searchWidth(),
+                layout.searchHeight());
+    }
+
+    public static boolean searching(String query) {
+        return !normalize(query).isEmpty();
+    }
+
+    public static String clampSearchQuery(String query) {
+        String value = query == null ? "" : query;
+        if (value.length() <= MAX_SEARCH_LENGTH) {
+            return value;
+        }
+        return value.substring(0, MAX_SEARCH_LENGTH);
+    }
+
+    public static String appendSearchChar(String query, String typed) {
+        if (typed == null || typed.isEmpty()) {
+            return clampSearchQuery(query);
+        }
+        return clampSearchQuery((query == null ? "" : query) + typed);
+    }
+
+    public static String deleteSearchChar(String query) {
+        if (query == null || query.isEmpty()) {
+            return "";
+        }
+        return query.substring(0, query.offsetByCodePoints(query.length(), -1));
+    }
+
+    /**
+     * Page switches keep the cursor. Opening the dashboard or any other GUI
+     * after Storage must use vanilla mouse ungrab so wheel events still land.
+     */
+    public static boolean shouldKeepCursorOnScreenChange(
+            boolean overlayEnabled,
+            boolean userExiting,
+            boolean previousIsOverlay,
+            boolean nextIsOverlay,
+            boolean nextIsNull) {
+        if (!overlayEnabled || userExiting) {
+            return false;
+        }
+        if (nextIsNull) {
+            return previousIsOverlay;
+        }
+        return previousIsOverlay && nextIsOverlay;
+    }
+
+    public static boolean shouldKeepUngrabbedCursor(
+            boolean overlayEnabled,
+            boolean currentScreenIsOverlay,
+            boolean userExiting) {
+        return overlayEnabled && currentScreenIsOverlay && !userExiting;
+    }
+
+    /** Tooltip pan must not swallow wheel on the dashboard or empty overlay chrome. */
+    public static boolean shouldStealOverlayWheel(
+            boolean containerScreen,
+            boolean tooltipWantsWheel) {
+        return shouldStealOverlayWheel(containerScreen, false, false, tooltipWantsWheel);
+    }
+
+    public static boolean shouldStealOverlayWheel(
+            boolean containerScreen,
+            boolean storageOverlay,
+            boolean shiftHeld,
+            boolean tooltipWantsWheel) {
+        return CustomTooltipPolicy.shouldStealOverlayWheel(
+                containerScreen, storageOverlay, shiftHeld, tooltipWantsWheel);
+    }
+
+    public static boolean shouldSuppressOutsideClick(
+            boolean overlayActive, OverlayLayout layout, double mouseX, double mouseY) {
+        return overlayActive && isClickInsideOverlay(layout, mouseX, mouseY);
+    }
+
+    public static boolean overCloseButton(OverlayLayout layout, int mouseX, int mouseY) {
+        if (layout == null) {
+            return false;
+        }
+        return inside(
+                mouseX,
+                mouseY,
+                layout.closeX(),
+                layout.closeY(),
+                layout.closeSize(),
+                layout.closeSize());
+    }
+
+    /**
+     * Clicks on empty world around the replacement HUD close it so the player
+     * can move again. The panel, search, scrollbar and inventory stay inside.
+     */
+    public static boolean shouldCloseOnOutsideClick(
+            boolean overlayActive, OverlayLayout layout, int mouseX, int mouseY) {
+        if (!overlayActive || layout == null) {
+            return false;
+        }
+        return !isClickInsideOverlay(layout, mouseX, mouseY);
+    }
+
+    public static String clipSearchFromEnd(
+            String query, int maxWidth, java.util.function.ToIntFunction<String> widthOf) {
+        String shown = query == null ? "" : query;
+        if (maxWidth <= 0) {
+            return "";
+        }
+        java.util.function.ToIntFunction<String> measure =
+                widthOf == null ? text -> text == null ? 0 : text.length() : widthOf;
+        while (!shown.isEmpty() && measure.applyAsInt(shown) > maxWidth) {
+            shown = shown.substring(shown.offsetByCodePoints(0, 1));
+        }
+        return shown;
+    }
+
+    public static int searchCaretX(int fieldX, int padding, int fieldWidth, int shownWidth) {
+        int pad = Math.max(0, padding);
+        int left = fieldX + pad;
+        int right = fieldX + Math.max(pad + 1, fieldWidth) - Math.max(1, pad) - 1;
+        return Math.max(left, Math.min(right, left + Math.max(0, shownWidth)));
+    }
+
+    /**
+     * Page switches close the current chest for a tick. Keep the overlay
+     * mounted so the mouse is never re-grabbed and recentered.
+     */
+    public static boolean shouldPinScreenOnClose(
+            boolean overlayActive, boolean userExiting, boolean nextScreenIsNull) {
+        return overlayActive && !userExiting && nextScreenIsNull;
+    }
+
+    public static boolean cacheFingerprintUnchanged(String previous, String incoming) {
+        String left = previous == null ? "" : previous;
+        String right = incoming == null ? "" : incoming;
+        return left.equals(right);
     }
 
     /**

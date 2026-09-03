@@ -127,6 +127,7 @@ public final class InventoryChromeRuntime {
             return;
         }
         snapshot(screen);
+        SlayerRuntime.observeContainer(screen);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         graphics.nextStratum();
         renderColorEditor(screen, graphics, leftPos, topPos, imageWidth, imageHeight, mouseX, mouseY);
@@ -155,6 +156,7 @@ public final class InventoryChromeRuntime {
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (qol.skillLevelsEnabled && InventoryOverlayPolicy.isSkillsMenu(titleOf(screen))) {
+            graphics.nextStratum();
             graphics.nextStratum();
             graphics.nextStratum();
             renderSkillLevels(screen, graphics, leftPos, topPos, qol);
@@ -346,6 +348,9 @@ public final class InventoryChromeRuntime {
             snapshotEquipment(slots);
             snapshotStatsMenuPet(slots);
         }
+        if (InventoryOverlayPolicy.isEquipmentSetsMenu(title)) {
+            snapshotEquipmentSets(slots);
+        }
         if (MenuKeybindPolicy.parsePetsTitle(title) != null) {
             ItemStack pet = findEquippedPet(slots);
             if (pet.isEmpty()) {
@@ -388,6 +393,38 @@ public final class InventoryChromeRuntime {
             if (kind >= 0) {
                 EQUIPMENT[kind] = stack.copy();
             }
+        }
+    }
+
+    private static void snapshotEquipmentSets(List<Slot> slots) {
+        int column = -1;
+        int containerEnd = Math.max(0, slots.size() - 36);
+        for (int i = 36; i < Math.min(45, slots.size()); i++) {
+            ItemStack stack = stackIn(slots, i);
+            var found = InventoryOverlayPolicy.equipmentSetsColumn(i, itemPath(stack));
+            if (found.isPresent()) {
+                column = found.getAsInt();
+                break;
+            }
+        }
+        if (column < 0) {
+            return;
+        }
+        for (int i = 0; i < EQUIPMENT.length; i++) {
+            EQUIPMENT[i] = ItemStack.EMPTY;
+        }
+        for (int i = 0; i < containerEnd; i++) {
+            if (!InventoryOverlayPolicy.isEquipmentSetsPieceSlot(i, column)) {
+                continue;
+            }
+            ItemStack stack = stackIn(slots, i);
+            if (stack.isEmpty() || InventoryOverlayPolicy.isPlaceholder(
+                    stack.getHoverName().getString(), itemPath(stack))) {
+                continue;
+            }
+            int kind = InventoryOverlayPolicy.classifyEquipmentIndex(
+                    stack.getHoverName().getString(), loreLines(stack));
+            EQUIPMENT[kind >= 0 ? kind : i / 9] = stack.copy();
         }
     }
 
@@ -476,19 +513,21 @@ public final class InventoryChromeRuntime {
                 continue;
             }
             int textW = font.width(label);
-            int x = leftPos + slot.x + 17 - textW;
-            int y = topPos + slot.y + 11;
-            graphics.fill(x - 2, y - 1, x + textW + 2, y + 10, 0xEE08080C);
-            RotClientUiDraw.text(graphics, font, label, x + 1, y + 1, 0xFF08080C, false);
-            RotClientUiDraw.text(graphics, font, label, x, y, color, false);
+            int x = leftPos + SkillLevelOverlayPolicy.labelX(slot.x, textW);
+            int y = topPos + SkillLevelOverlayPolicy.labelY(slot.y);
+            RotClientUiDraw.text(graphics, font, label, x, y, color, true);
         }
     }
 
     private static void drawSlotWell(GuiGraphicsExtractor graphics, int x, int y) {
-        graphics.fill(x, y, x + 18, y + 18, 0xFF8B8B8B);
-        graphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF373737);
-        graphics.fill(x + 5, y + 3, x + 13, y + 15, 0xFF2A2A2A);
-        graphics.fill(x + 4, y + 5, x + 14, y + 13, 0xFF2A2A2A);
+        int size = InventoryOverlayPolicy.SLOT_SIZE;
+        graphics.fill(x, y, x + size, y + size, InventoryOverlayPolicy.DEFAULT_SLOT_BORDER);
+        graphics.fill(
+                x + 1,
+                y + 1,
+                x + size - 1,
+                y + size - 1,
+                InventoryOverlayPolicy.DEFAULT_SLOT_WELL);
     }
 
     private static void drawClickHint(GuiGraphicsExtractor graphics, Font font, int x, int y) {
@@ -627,21 +666,46 @@ public final class InventoryChromeRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        drawFill(graphics, InventoryOverlayPolicy.chromeRegion(
-                InventoryOverlayPolicy.ChromeRegion.PANEL, leftPos, topPos, imageWidth, imageHeight),
-                qol.inventoryChromePanel);
-        drawFill(graphics, InventoryOverlayPolicy.chromeRegion(
-                InventoryOverlayPolicy.ChromeRegion.HEADER, leftPos, topPos, imageWidth, imageHeight),
-                qol.inventoryChromeHeader);
-        drawFill(graphics, InventoryOverlayPolicy.chromeRegion(
-                InventoryOverlayPolicy.ChromeRegion.MAIN, leftPos, topPos, imageWidth, imageHeight),
-                qol.inventoryChromeMain);
-        drawFill(graphics, InventoryOverlayPolicy.chromeRegion(
-                InventoryOverlayPolicy.ChromeRegion.HOTBAR, leftPos, topPos, imageWidth, imageHeight),
-                qol.inventoryChromeHotbar);
+        drawChromeFills(
+                graphics,
+                InventoryOverlayPolicy.ChromeRegion.PANEL,
+                leftPos,
+                topPos,
+                imageWidth,
+                imageHeight,
+                paintChrome(qol.inventoryChromePanel, InventoryOverlayPolicy.ChromeColorRole.INV_PANEL));
+        drawChromeFills(
+                graphics,
+                InventoryOverlayPolicy.ChromeRegion.HEADER,
+                leftPos,
+                topPos,
+                imageWidth,
+                imageHeight,
+                paintChrome(qol.inventoryChromeHeader, InventoryOverlayPolicy.ChromeColorRole.INV_HEADER));
+        drawChromeFills(
+                graphics,
+                InventoryOverlayPolicy.ChromeRegion.MAIN,
+                leftPos,
+                topPos,
+                imageWidth,
+                imageHeight,
+                paintChrome(qol.inventoryChromeMain, InventoryOverlayPolicy.ChromeColorRole.INV_MAIN));
+        drawChromeFills(
+                graphics,
+                InventoryOverlayPolicy.ChromeRegion.HOTBAR,
+                leftPos,
+                topPos,
+                imageWidth,
+                imageHeight,
+                paintChrome(qol.inventoryChromeHotbar, InventoryOverlayPolicy.ChromeColorRole.INV_HOTBAR));
+        boolean hideOffhand = qol.inventoryOverlayEnabled && qol.inventoryOverlayEquipment;
+        for (InventoryOverlayPolicy.Rect slot : InventoryOverlayPolicy.survivalSlotRects(
+                leftPos, topPos, !hideOffhand)) {
+            drawSlotWell(graphics, slot.x(), slot.y());
+        }
         InventoryOverlayPolicy.Rect border = InventoryOverlayPolicy.chromeRegion(
                 InventoryOverlayPolicy.ChromeRegion.BORDER, leftPos, topPos, imageWidth, imageHeight);
-        int color = qol.inventoryChromeBorder;
+        int color = paintChrome(qol.inventoryChromeBorder, InventoryOverlayPolicy.ChromeColorRole.INV_BORDER);
         if (((color >>> 24) & 0xFF) == 0) {
             return;
         }
@@ -671,15 +735,11 @@ public final class InventoryChromeRuntime {
         boolean hover = wrench.contains(mouseX, mouseY);
         graphics.fill(wrench.x(), wrench.y(), wrench.x() + wrench.width(), wrench.y() + wrench.height(),
                 hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON);
-        graphics.fill(wrench.x(), wrench.y(), wrench.x() + wrench.width(), wrench.y() + 1,
-                RotClientTheme.BORDER_BRIGHT);
-        int cx = wrench.x() + 4;
-        int cy = wrench.y() + 3;
-        graphics.fill(cx + 6, cy, cx + 9, cy + 7, 0xFFE8E8F0);
-        graphics.fill(cx + 2, cy + 6, cx + 8, cy + 9, 0xFFE8E8F0);
-        graphics.fill(cx, cy + 8, cx + 4, cy + 11, 0xFFC0C0CC);
+        RotClientTheme.drawOutline(graphics, wrench.x(), wrench.y(), wrench.width(), wrench.height(),
+                hover ? RotClientTheme.BORDER_BRIGHT : RotClientTheme.BORDER);
+        drawPaintBucketIcon(graphics, wrench.x(), wrench.y(), wrench.width());
         if (font != null && hover && !colorEditorOpen) {
-            RotClientUiDraw.text(graphics, font, "Colors", mouseX + 12, mouseY - 10, 0xFFFFFFFF, true);
+            RotClientUiDraw.text(graphics, font, "Edit colors", mouseX + 12, mouseY - 10, 0xFFFFFFFF, true);
         }
         if (!colorEditorOpen || font == null) {
             return;
@@ -690,7 +750,7 @@ public final class InventoryChromeRuntime {
                 0xF0111118);
         graphics.fill(editor.x(), editor.y(), editor.x() + editor.width(), editor.y() + 1,
                 RotClientTheme.BORDER_BRIGHT);
-        RotClientUiDraw.text(graphics, font, "Background colors", editor.x() + 8, editor.y() + 6, RotClientTheme.TEXT, false);
+        RotClientUiDraw.text(graphics, font, "Inventory colors", editor.x() + 8, editor.y() + 6, RotClientTheme.TEXT, false);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         InventoryOverlayPolicy.ChromeColorRole[] roles = InventoryOverlayPolicy.ChromeColorRole.values();
         for (int i = 0; i < roles.length; i++) {
@@ -703,6 +763,12 @@ public final class InventoryChromeRuntime {
             }
             RotClientUiDraw.text(graphics, font, role.label(), row.x() + 2, row.y() + 4,
                     selected ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED, false);
+            InventoryOverlayPolicy.Rect reset = InventoryOverlayPolicy.editorResetRect(row);
+            boolean resetHover = reset.contains(mouseX, mouseY);
+            graphics.fill(reset.x(), reset.y(), reset.x() + reset.width(), reset.y() + reset.height(),
+                    resetHover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON);
+            RotClientUiDraw.text(graphics, font, "Reset", reset.x() + 3, reset.y() + 2,
+                    resetHover ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED, false);
             InventoryOverlayPolicy.Rect swatch = InventoryOverlayPolicy.editorSwatchRect(row);
             int color = readChromeColor(qol, role);
             int shown = ((color >>> 24) & 0xFF) == 0 ? 0xFF22222C : color;
@@ -712,15 +778,23 @@ public final class InventoryChromeRuntime {
         String[] labels = {"R", "G", "B", "A"};
         for (int channel = 0; channel < 4; channel++) {
             InventoryOverlayPolicy.Rect slider = InventoryOverlayPolicy.editorSliderRect(editor, channel);
-            RotClientUiDraw.text(graphics, font, labels[channel], editor.x() + 8, slider.y() + 1, RotClientTheme.TEXT_MUTED, false);
+            String channelLabel = channel == 3 ? "Op" : labels[channel];
+            RotClientUiDraw.text(graphics, font, channelLabel, editor.x() + 8, slider.y() + 1, RotClientTheme.TEXT_MUTED, false);
             graphics.fill(slider.x(), slider.y(), slider.x() + slider.width(), slider.y() + slider.height(),
                     0xFF1A1A22);
             int value = InventoryOverlayPolicy.channelValue(color, channel);
             int knob = slider.x() + Math.round((slider.width() - 4) * (value / 255f));
             graphics.fill(slider.x(), slider.y(), knob + 4, slider.y() + slider.height(), 0xFF54A0FF);
         }
-        RotClientUiDraw.text(graphics, font, "Drag sliders · stays on this menu",
-                editor.x() + 8, editor.y() + editor.height() - 14, RotClientTheme.TEXT_MUTED, false);
+        int alpha = InventoryOverlayPolicy.channelValue(color, 3);
+        String footer = alpha == 0
+                ? "Opacity 0 hides this layer · drag R/G/B to paint"
+                : selectedColorRole.hint();
+        RotClientUiDraw.text(graphics, font, footer,
+                editor.x() + 8, editor.y() + editor.height() - 26, RotClientTheme.TEXT_MUTED, false);
+        String hex = String.format("#%08X", color);
+        RotClientUiDraw.text(graphics, font, hex,
+                editor.x() + 8, editor.y() + editor.height() - 14, RotClientTheme.TEXT_DIM, false);
     }
 
     private static boolean handleColorEditorClick(
@@ -750,7 +824,17 @@ public final class InventoryChromeRuntime {
         }
         InventoryOverlayPolicy.ChromeColorRole[] roles = InventoryOverlayPolicy.ChromeColorRole.values();
         for (int i = 0; i < roles.length; i++) {
-            if (InventoryOverlayPolicy.editorRowRect(editor, i).contains(mouseX, mouseY)) {
+            InventoryOverlayPolicy.Rect row = InventoryOverlayPolicy.editorRowRect(editor, i);
+            if (InventoryOverlayPolicy.editorResetRect(row).contains(mouseX, mouseY)) {
+                selectedColorRole = roles[i];
+                writeChromeColor(
+                        RotClientClient.qolConfigPublic(),
+                        roles[i],
+                        InventoryOverlayPolicy.defaultChromeColor(roles[i]));
+                TrackerStore.save(RotClientClient.trackerConfig());
+                return true;
+            }
+            if (row.contains(mouseX, mouseY)) {
                 selectedColorRole = roles[i];
                 return true;
             }
@@ -784,7 +868,7 @@ public final class InventoryChromeRuntime {
                 InventoryOverlayPolicy.editorRect(wrench.x(), wrench.y(), screen.width, screen.height),
                 draggingColorChannel);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        int next = InventoryOverlayPolicy.withChannel(
+        int next = InventoryOverlayPolicy.withChannelEnsuringVisible(
                 readChromeColor(qol, selectedColorRole),
                 draggingColorChannel,
                 InventoryOverlayPolicy.sliderValue(slider, mouseX));
@@ -819,10 +903,49 @@ public final class InventoryChromeRuntime {
         qol.writeColor(role.settingId(), argb);
     }
 
+    private static void drawChromeFills(
+            GuiGraphicsExtractor graphics,
+            InventoryOverlayPolicy.ChromeRegion region,
+            int leftPos,
+            int topPos,
+            int imageWidth,
+            int imageHeight,
+            int argb) {
+        for (InventoryOverlayPolicy.Rect rect : InventoryOverlayPolicy.chromeFillRects(
+                region, leftPos, topPos, imageWidth, imageHeight)) {
+            drawFill(graphics, rect, argb);
+        }
+    }
+
     private static void drawFill(GuiGraphicsExtractor graphics, InventoryOverlayPolicy.Rect rect, int argb) {
         if (graphics == null || rect == null || ((argb >>> 24) & 0xFF) == 0) {
             return;
         }
         graphics.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), argb);
+    }
+
+    private static int paintChrome(int stored, InventoryOverlayPolicy.ChromeColorRole role) {
+        if (((stored >>> 24) & 0xFF) != 0) {
+            return stored;
+        }
+        return InventoryOverlayPolicy.defaultChromeColor(role);
+    }
+
+    /** Spilling paint bucket for the Inventory Colors control. */
+    private static void drawPaintBucketIcon(
+            GuiGraphicsExtractor graphics, int x, int y, int size) {
+        if (graphics == null || size < 8) {
+            return;
+        }
+        int paint = RotClientTheme.BORDER_BRIGHT;
+        int metal = RotClientTheme.TEXT;
+        int handleX = x + 3;
+        graphics.fill(handleX, y + 1, handleX + 2, y + 4, metal);
+        graphics.fill(x + 2, y + 3, x + size - 3, y + 5, RotClientTheme.TEXT_DIM);
+        graphics.fill(x + 3, y + 5, x + size - 4, y + size - 3, metal);
+        graphics.fill(x + 4, y + 6, x + size - 5, y + size - 4, paint);
+        graphics.fill(x + size - 5, y + size - 5, x + size - 2, y + size - 2, paint);
+        graphics.fill(x + size - 4, y + size - 3, x + size - 1, y + size, paint);
+        graphics.fill(x + 2, y + size - 2, x + 6, y + size, paint);
     }
 }

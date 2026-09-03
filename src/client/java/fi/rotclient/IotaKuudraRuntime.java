@@ -50,6 +50,7 @@ public final class IotaKuudraRuntime {
     private static boolean eaten;
     private static final List<IchorPool> ichorPools = new ArrayList<>();
     private static int highlightedGiantId = -1;
+    private static int kuudraBossId = -1;
     private static IotaKuudraPolicy.AlertLevel giantAlert = IotaKuudraPolicy.AlertLevel.NONE;
     private static String overlayTitle = "";
     private static long overlayUntilMs;
@@ -86,6 +87,7 @@ public final class IotaKuudraRuntime {
         eaten = false;
         ichorPools.clear();
         highlightedGiantId = -1;
+        kuudraBossId = -1;
         giantAlert = IotaKuudraPolicy.AlertLevel.NONE;
         overlayTitle = "";
         overlayUntilMs = 0L;
@@ -214,6 +216,12 @@ public final class IotaKuudraRuntime {
         if (overlayUntilMs > 0L && System.currentTimeMillis() > overlayUntilMs) {
             overlayTitle = "";
         }
+        if (inKuudra && extras.iotaKuudraHitbox) {
+            MagmaCube cube = findKuudra(client);
+            kuudraBossId = cube == null ? -1 : cube.getId();
+        } else {
+            kuudraBossId = -1;
+        }
     }
 
     public static void renderGizmos() {
@@ -318,9 +326,8 @@ public final class IotaKuudraRuntime {
 
     private static void scanSupplies(Minecraft client) {
         supplies.clear();
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (entity instanceof Giant giant
-                    && giant.getY() < IotaKuudraPolicy.SUPPLY_CARRIER_MAX_Y
+        for (Giant giant : client.level.getEntitiesOfClass(Giant.class, arenaSearch(client.player))) {
+            if (giant.getY() < IotaKuudraPolicy.SUPPLY_CARRIER_MAX_Y
                     && holdingSkull(giant.getMainHandItem())) {
                 supplies.add(IotaKuudraPolicy.crateFromGiant(
                         giant.getX(), giant.getZ(), giant.getYRot(), giant.getId()));
@@ -334,8 +341,8 @@ public final class IotaKuudraRuntime {
     }
 
     private static void scanCompletedPiles(Minecraft client) {
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand stand) || stand.getCustomName() == null) {
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, arenaSearch(client.player))) {
+            if (stand.getCustomName() == null) {
                 continue;
             }
             if (!stand.getCustomName().getString().contains("SUPPLIES RECEIVED")) {
@@ -475,8 +482,8 @@ public final class IotaKuudraRuntime {
             return;
         }
         List<BuildPile> piles = new ArrayList<>();
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ArmorStand stand) || stand.getCustomName() == null) {
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, arenaSearch(client.player))) {
+            if (stand.getCustomName() == null) {
                 continue;
             }
             String name = stand.getCustomName().getString();
@@ -514,13 +521,18 @@ public final class IotaKuudraRuntime {
     }
 
     private static void renderKuudraHitbox(Minecraft client, QolSkyblockExtras extras) {
-        if (!extras.iotaKuudraHitbox) {
+        if (!extras.iotaKuudraHitbox || kuudraBossId < 0) {
             return;
         }
-        MagmaCube boss = findKuudra(client);
-        if (boss != null) {
-            drawOutline(boss.getBoundingBox(), IotaKuudraPolicy.KUUDRA_HITBOX_COLOR);
+        if (!(client.level.getEntity(kuudraBossId) instanceof MagmaCube boss)) {
+            return;
         }
+        float partial = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        IotaKuudraPolicy.Aabb interpolated = IotaKuudraPolicy.interpolatedEntityBox(
+                boss.getX(), boss.getY(), boss.getZ(),
+                boss.xo, boss.yo, boss.zo,
+                boss.getBbWidth(), boss.getBbHeight(), partial);
+        drawOutline(aabb(interpolated), IotaKuudraPolicy.KUUDRA_HITBOX_COLOR);
     }
 
     private static void renderEtherwarp(LocalPlayer player, QolSkyblockExtras extras) {
@@ -612,9 +624,8 @@ public final class IotaKuudraRuntime {
             }
         }
         if (chosen == null) {
-            for (Entity entity : client.level.entitiesForRendering()) {
-                if (entity instanceof Giant giant
-                        && giant.getY() < IotaKuudraPolicy.SUPPLY_CARRIER_MAX_Y
+            for (Giant giant : client.level.getEntitiesOfClass(Giant.class, arenaSearch(player))) {
+                if (giant.getY() < IotaKuudraPolicy.SUPPLY_CARRIER_MAX_Y
                         && holdingSkull(giant.getMainHandItem())) {
                     IotaKuudraPolicy.AlertLevel next = alertFor(giant, eye, playerBox);
                     if (better(next, level)
@@ -675,15 +686,17 @@ public final class IotaKuudraRuntime {
         return candidate.ordinal() > current.ordinal();
     }
 
+    private static AABB arenaSearch(LocalPlayer player) {
+        return player.getBoundingBox().inflate(128.0D, 64.0D, 128.0D);
+    }
+
     private static MagmaCube findKuudra(Minecraft client) {
         MagmaCube best = null;
         double bestY = Double.NEGATIVE_INFINITY;
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (entity instanceof MagmaCube cube && cube.getSize() == IotaKuudraPolicy.KUUDRA_SIZE) {
-                if (cube.getY() > bestY) {
-                    best = cube;
-                    bestY = cube.getY();
-                }
+        for (MagmaCube cube : client.level.getEntitiesOfClass(MagmaCube.class, arenaSearch(client.player))) {
+            if (cube.getSize() == IotaKuudraPolicy.KUUDRA_SIZE && cube.getY() > bestY) {
+                best = cube;
+                bestY = cube.getY();
             }
         }
         if (best == null || best.getHealth() <= 0.0F
@@ -772,13 +785,7 @@ public final class IotaKuudraRuntime {
     }
 
     private static List<Zombie> zombies(Minecraft client) {
-        List<Zombie> list = new ArrayList<>();
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (entity instanceof Zombie zombie) {
-                list.add(zombie);
-            }
-        }
-        return list;
+        return client.level.getEntitiesOfClass(Zombie.class, arenaSearch(client.player));
     }
 
     private static boolean holdingSkull(ItemStack stack) {

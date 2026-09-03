@@ -23,9 +23,10 @@ final class RotClientHomeScreen extends Screen {
         int y = Math.max(12, (height - PANEL_HEIGHT) / 2);
         RotClientUiDraw.drawShadowedPanel(graphics, x, y, PANEL_WIDTH, PANEL_HEIGHT);
         RotClientUiDraw.drawHeaderBar(
-                graphics, font, x, y, PANEL_WIDTH, 42, "Rot Client", "Home");
+                graphics, font, x, y, PANEL_WIDTH, 42, "Rot Client", "Home", true);
+        RotClientUiDraw.drawBackButton(graphics, font, mouseX, mouseY, x + 8, y + 8);
         RotClientUiDraw.text(graphics, font,
-                "Open the dashboard for QoL modules, HUD layout, mining, and sessions.",
+                "Open the dashboard for modules, look, mining, and events.",
                 x + 20,
                 y + 64,
                 RotClientTheme.TEXT_DIM,
@@ -52,6 +53,10 @@ final class RotClientHomeScreen extends Screen {
         int mouseY = (int) Math.round(event.y());
         int x = Math.max(12, (width - PANEL_WIDTH) / 2);
         int y = Math.max(12, (height - PANEL_HEIGHT) / 2);
+        if (RotClientUiDraw.hitBackButton(mouseX, mouseY, x + 8, y + 8)) {
+            onClose();
+            return true;
+        }
         if (RotClientUiDraw.inside(mouseX, mouseY, x + 20, y + 118, 200, RotClientUiDraw.BUTTON_HEIGHT)) {
             RotClientClient.openClientUiNavigating(DashboardModule.NONE, null);
             return true;

@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -96,7 +97,47 @@ final class BazaarPriceService {
         }
 
         ProductPrice forProduct(String productId) {
-            return byProductId.get(productId);
+            if (productId == null || productId.isBlank()) {
+                return null;
+            }
+            ProductPrice direct = byProductId.get(productId);
+            if (direct != null) {
+                return direct;
+            }
+            String upper = productId.toUpperCase(Locale.ROOT);
+            direct = byProductId.get(upper);
+            if (direct != null) {
+                return direct;
+            }
+            ProductPrice gem = byGemstoneProductId.get(productId);
+            if (gem != null) {
+                return gem;
+            }
+            gem = byGemstoneProductId.get(upper);
+            if (gem != null) {
+                return gem;
+            }
+            if (!upper.startsWith("ENCHANTMENT_")) {
+                return null;
+            }
+            ProductPrice best = null;
+            double bestPrice = -1.0D;
+            for (Map.Entry<String, ProductPrice> entry : byProductId.entrySet()) {
+                String key = entry.getKey();
+                if (key == null) {
+                    continue;
+                }
+                String keyUpper = key.toUpperCase(Locale.ROOT);
+                if (!keyUpper.equals(upper) && !keyUpper.startsWith(upper + "_")) {
+                    continue;
+                }
+                double price = entry.getValue().instantSellPrice();
+                if (price > bestPrice) {
+                    bestPrice = price;
+                    best = entry.getValue();
+                }
+            }
+            return best;
         }
     }
 
@@ -130,7 +171,8 @@ final class BazaarPriceService {
                     .getAsJsonObject("products");
             MarketPrices marketPrices = parseMarketPrices(products);
             if (!marketPrices.byMaterial().isEmpty()
-                    || !marketPrices.byGemstoneProductId().isEmpty()) {
+                    || !marketPrices.byGemstoneProductId().isEmpty()
+                    || !marketPrices.byProductId().isEmpty()) {
                 onPrice.onPrice(marketPrices);
             }
         } catch (InterruptedException interrupted) {
@@ -180,16 +222,18 @@ final class BazaarPriceService {
         }
 
         Map<String, ProductPrice> byProductId = new HashMap<>();
-        for (SlayerRngCatalog.Entry entry : SlayerRngCatalog.entries()) {
+        for (Map.Entry<String, JsonElement> entry : products.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null || !entry.getValue().isJsonObject()) {
+                continue;
+            }
             try {
-                ProductPrice parsed = readInstantSellProduct(
-                        products.getAsJsonObject(entry.skyBlockId()));
+                ProductPrice parsed = readInstantSellProduct(entry.getValue().getAsJsonObject());
                 if (parsed != null && parsed.instantSellPrice() > 0D
                         && Double.isFinite(parsed.instantSellPrice())) {
-                    byProductId.put(entry.skyBlockId(), parsed);
+                    byProductId.put(entry.getKey(), parsed);
+                    byProductId.putIfAbsent(entry.getKey().toUpperCase(Locale.ROOT), parsed);
                 }
             } catch (RuntimeException ignored) {
-                // A missing/non-Bazaar Slayer product is explicitly unpriced.
             }
         }
 

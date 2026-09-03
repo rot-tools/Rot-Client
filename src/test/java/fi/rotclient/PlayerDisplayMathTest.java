@@ -197,6 +197,15 @@ final class PlayerDisplayMathTest {
                 false,
                 false);
         assertTrue(leftover.isEmpty());
+        Optional<String> combatTick = SkyBlockStatBarParser.filterActionBar(
+                "3,898/3,898 +408.2 Combat (19,896,487/0) 1,817/1,869 115/115",
+                true,
+                true,
+                true,
+                false,
+                false,
+                false);
+        assertTrue(combatTick.isEmpty());
         assertTrue(unused.isEmpty());
     }
 
