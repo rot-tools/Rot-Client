@@ -90,4 +90,6 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_$projectName"}
 	}
+	from("NOTICE")
+	from("THIRD_PARTY.md")
 }

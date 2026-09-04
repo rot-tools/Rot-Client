@@ -8,13 +8,18 @@ import org.junit.jupiter.api.Test;
 
 final class RotClientFontsWiringTest {
     @Test
-    void uiFontAssetsAreBundled() {
+    void uiFontAssetsAreBundled() throws Exception {
         Path json = Path.of("src/client/resources/assets/rotclient/font/ui.json");
         Path ttf = Path.of("src/client/resources/assets/rotclient/font/ui.ttf");
         assertTrue(Files.isRegularFile(json));
         assertTrue(Files.isRegularFile(ttf));
+        String ofl = Files.readString(Path.of(
+                "src/client/resources/assets/rotclient/license/OFL.txt"));
+        assertTrue(ofl.contains("SIL OPEN FONT LICENSE Version 1.1"));
+        assertTrue(ofl.contains("Reserved Font Name"));
+        assertTrue(ofl.contains("Source Sans 3"));
         assertTrue(Files.isRegularFile(Path.of(
-                "src/client/resources/assets/rotclient/license/OFL.txt")));
+                "src/client/resources/resourcepacks/gameplay_font/OFL.txt")));
     }
 
     @Test

@@ -89,6 +89,11 @@ final class CustomResourcePackPolicyTest {
                 .contains("rotclient:ui.ttf"));
         assertTrue(Files.readString(fontPack.resolve("OFL-ATTRIBUTION.txt"))
                 .contains("SIL Open Font License"));
+        assertTrue(Files.readString(fontPack.resolve("OFL.txt"))
+                .contains("SIL OPEN FONT LICENSE Version 1.1"));
+        String overworldCredit = Files.readString(root.resolve("dark_overworld/ATTRIBUTION.txt"));
+        assertTrue(overworldCredit.contains("Rot-authored"));
+        assertTrue(overworldCredit.contains("Minecraft EULA"));
         assertTrue(overworldMeta.contains("Rot Client dark overworld"));
         assertFalse(overworldMeta.toLowerCase().contains("original"));
         assertFalse(overworldMeta.contains("Miska"));

@@ -20,6 +20,8 @@
 - No LGPL parsers vendored into the MIT mod JAR.
 - No redistribution decision that would force a license change for Rot Client.
 - Public metadata refresh does not upload user/session/inventory/chat data.
+- Bundled non-Rot works (Adobe Source Sans OFL, vanilla Minecraft pack paths)
+  are listed in `THIRD_PARTY.md` and `NOTICE`.
 
 ## Provenance requirements met
 
