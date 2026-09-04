@@ -299,26 +299,36 @@ public final class RotClientClient implements ClientModInitializer {
                 (graphics, delta) -> ClientBoundaryGuard.run(
                         "HUD_RENDER",
                         () -> {
-                            if (!pauseMenuHidesHud()) {
+                            if (!pauseMenuHidesHud()
+                                    && !StorageOverlayRuntime.isOverlayOpen()) {
                                 HUD.render(graphics, delta);
                             }
                         }));
+
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath(
                         "rotclient", "powder_chest_tracker"),
                 (graphics, delta) -> ClientBoundaryGuard.run(
                         "POWDER_CHEST_HUD_RENDER",
                         () -> {
-                            if (!pauseMenuHidesHud()) {
+                            if (!pauseMenuHidesHud()
+                                    && !StorageOverlayRuntime.isOverlayOpen()) {
                                 POWDER_CHEST_HUD.render(graphics);
                             }
                         }));
+
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath("rotclient", "qol_overlay"),
                 (graphics, delta) -> ClientBoundaryGuard.run(
                         "QOL_HUD_RENDER",
-                        () -> QOL_HUD.render(graphics)));
+                        () -> {
+                            if (!StorageOverlayRuntime.isOverlayOpen()) {
+                                QOL_HUD.render(graphics);
+                            }
+                        }));
+
         registerVanillaHudHides();
+
         ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
             SkyBlockTooltipRuntime.append(stack, lines);
             MissingEnchantsRuntime.append(stack, lines);
