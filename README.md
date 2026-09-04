@@ -5,6 +5,7 @@
 <h1 align="center">Rot Client</h1>
 
 <p align="center">
+  made by <b>Rot Tools</b><br>
   <b>A client-side Fabric companion for Hypixel SkyBlock</b><br>
   One dashboard for quality-of-life modules, Visuals, mining, and sessions.<br>
   Built for Minecraft <code>26.2</code>.
@@ -42,13 +43,13 @@ endorsed by, or approved by Hypixel.
 
 ### Playtest JAR
 
-Testers do not need to build. Each green push to the default branch replaces
+Testers do not need to build. Each green push to `development` replaces
 the [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 pre-release:
 
 1. Open [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest).
 2. Download `RotClient-2.0.1+mc26.2.jar` only. Skip `-sources.jar`.
-3. Put that file in the instance `mods/` folder. Keep exactly one Rot Client JAR.
+3. Put that file in the instance `mods/` folder. Keep exactly one Rot Tools JAR.
    Remove any legacy MiningTracker JAR.
 
 The same JAR is also attached as artifact `RotClient-playable` on the matching
@@ -61,7 +62,7 @@ run if you need a specific commit.
 2. Build with the included wrapper: `.\gradlew.bat build`
 3. Copy only `RotClient-2.0.1+mc26.2.jar` from `build/libs/` into `mods/`.
 
-Rot Client includes bounded migration for supported legacy MiningTracker
+Rot Tools includes bounded migration for supported legacy MiningTracker
 configuration data. Back up the instance before upgrading. Never copy runtime
 configuration or session files into this repository.
 
@@ -144,11 +145,12 @@ git diff --check
 .\gradlew.bat clean build --console=plain
 ```
 
-A green build proves packaging. It does not prove in-game correctness. See [Contributing](CONTRIBUTING.md) and [Testing](docs/TESTING.md).
+A green build proves packaging. It does not prove in-game correctness. See [Contributing](CONTRIBUTING.md), [Branching](docs/BRANCHING.md), and [Testing](docs/TESTING.md).
 
 ## Docs
 
 - [Changelog](CHANGELOG.md)
+- [Branching](docs/BRANCHING.md) — `main`, `development`, and feature branches
 - [Code walkthrough](docs/CODE_WALKTHROUGH.md) — how the JAR is organized, Policy/Runtime/Mixin, and the build-to-play loop
 - [Project state](docs/PROJECT_STATE.md)
 - [Architecture](docs/ARCHITECTURE.md)
@@ -158,7 +160,7 @@ A green build proves packaging. It does not prove in-game correctness. See [Cont
 
 ## Credits
 
-Rot Client is created and maintained by **OgRudolf**.
+Rot Client is created and owned by **Rot Tools**.
 
 ## License
 

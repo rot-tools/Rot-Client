@@ -1,4 +1,4 @@
-# Rot Client Project Handoff
+# Rot Tools Project Handoff
 
 This file is a concise entry point. Maintained engineering details belong in
 the linked documents rather than in a growing handoff transcript.
@@ -7,7 +7,7 @@ the linked documents rather than in a growing handoff transcript.
 
 | Item | Current value |
 | --- | --- |
-| Branch | `qol-utilities` |
+| Branch | `development` (stable releases: `main`) |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Original author identity | OgRudolf (historical attribution) |
 | Mod version | `2.0.0+mc26.2` |
@@ -95,7 +95,8 @@ Read these before changing behavior:
 
 ## Current phase
 
-`qol-utilities` is the public development branch. The mining tracker,
+`development` is the public integration branch. Feature work merges there;
+`main` receives only a fully stable, tested line. The mining tracker,
 Current Session, Powder Chest Tracker, bounded MOB ingest, and the 124-module
 QoL dashboard are implemented and automated-tested. Powder Chest and
 representative MOB paths now have controlled runtime evidence; Session History

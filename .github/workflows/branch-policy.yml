@@ -1,0 +1,42 @@
+name: Branch policy
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    name: Check pull request target
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce development integration and main releases
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          echo "PR ${HEAD} -> ${BASE}"
+
+          if [[ "${BASE}" == "codex/qol-utilities" ]]; then
+            echo "::error::codex/qol-utilities is retired. Open this pull request against development."
+            exit 1
+          fi
+
+          if [[ "${BASE}" == "main" ]]; then
+            case "${HEAD}" in
+              development|hotfix/*)
+                exit 0
+                ;;
+              *)
+                echo "::error::main only accepts merges from development (stable release) or hotfix/*."
+                exit 1
+                ;;
+            esac
+          fi

@@ -1,11 +1,24 @@
 # Changelog
 
-All notable changes to Rot Client (formerly MiningTracker) are documented in this file.
+All notable changes to Rot Client (made by Rot Tools, formerly MiningTracker) are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses semantic versioning where practical.
 
 ## [Unreleased]
+
+### Git workflow
+
+* The public repository uses `development` for integration and `main` for
+  stable, tested releases. Feature and fix branches merge into `development`.
+  The playtest JAR publishes from `development`. See `docs/BRANCHING.md`.
+
+### Display name
+
+* Dashboard chrome shows **Rot Client** in accent red on the by-line only.
+  Mod Menu author / By-line / credits use **Rot Tools**. Appearance and HUD
+  Elements Editor sidebar clicks switch pages instead of sending the user
+  back to Overview.
 
 ### Playtest JAR
 

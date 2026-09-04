@@ -1,18 +1,18 @@
-# Contributing to Rot Client
+# Contributing to Rot Tools
 
 Contributions should preserve a clear in-game UI, tracker accuracy, family isolation, user privacy, and a reviewable Git history.
 
-Rot Client is created by **OgRudolf** and developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Use a focused branch and open a pull request for review before merging changes.
+Rot Client is created and owned by **Rot Tools** and developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Branch from `development`, keep one task per branch, and open a pull request into `development`. Merge `development` into `main` only for a fully stable, tested release. See [docs/BRANCHING.md](docs/BRANCHING.md).
 
 Playtesters can skip a local build: download `RotClient-2.0.1+mc26.2.jar` from the
 [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
-pre-release. That file is replaced on each green push to the default branch.
+pre-release. That file is replaced on each green push to `development`.
 
 Local-only files stay out of Git: `AGENTS.md`, `rotclient-dev.local.json`, and the Discord project-feed bootstrap path. Do not commit credentials, tokens, secrets, or personal machine paths. The optional local helper is `scripts/ensure-discord-project-feed.ps1`.
 
 ## Development setup
 
-Rot Client targets Minecraft `26.2`, Java `25`, Fabric Loader `0.19.3`, and Fabric API `0.155.2+26.2`. Use the included Gradle wrapper rather than a separately installed Gradle version.
+Rot Tools targets Minecraft `26.2`, Java `25`, Fabric Loader `0.19.3`, and Fabric API `0.155.2+26.2`. Use the included Gradle wrapper rather than a separately installed Gradle version.
 
 Before proposing a change, run with Java 25:
 
@@ -86,13 +86,17 @@ Changes to event correlation, source attribution, persistence, or HUD totals req
 
 ## Git practices
 
+- Integration branch is `development`. Stable releases live on `main`.
+- Create `feature/<short-name>` or `fix/<short-name>` from an up-to-date `development`.
+- Open pull requests into `development`. Do not merge features straight into `main`.
 - Keep commits narrowly scoped and stage only reviewed files.
 - Do not combine documentation, runtime deployment, and unrelated cleanup automatically.
 - Do not force-push shared branches.
 - Do not rewrite history to remove an ordinary current-tree artifact; delete it in a normal cleanup commit.
 - Do not commit build outputs, runtime configs, local backups, logs, screenshots, or temporary files.
 - Review the complete staged diff before committing and verify the branch and remote state before pushing.
+- Fetch `origin` first and keep collaborator commits intact.
 
 ## Reporting issues
 
-Include the Rot Client version, Minecraft/Fabric versions, selected target, expected behavior, observed behavior, and reproducible steps. Provide only the smallest sanitized diagnostic excerpt necessary; never post credentials or an unreviewed raw log.
+Include the Rot Tools version, Minecraft/Fabric versions, selected target, expected behavior, observed behavior, and reproducible steps. Provide only the smallest sanitized diagnostic excerpt necessary; never post credentials or an unreviewed raw log.

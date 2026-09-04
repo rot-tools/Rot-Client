@@ -1,16 +1,17 @@
-# Rot Client maintainer brief
+# Rot Tools maintainer brief
 
-Rot Client (formerly MiningTracker) is a client-side Fabric
+Rot Tools (formerly MiningTracker / Rot Client) is a client-side Fabric
 mod for Minecraft `26.2` using Java `25`. The current mod version is
-`2.0.1+mc26.2`, and active work is on `qol-utilities` in the public
+`2.0.1+mc26.2`, and active work is on `development` in the public
 repository [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client).
+Stable releases merge into `main`. See `docs/BRANCHING.md`.
 The original author identity is OgRudolf (historical attribution).
 
 ## Identity
 
 | Item | Value |
 | --- | --- |
-| Product | Rot Client |
+| Product | Rot Tools |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) |
 | Mod ID | `rotclient` |
 | Package | `fi.rotclient` |
@@ -49,7 +50,7 @@ not deleted.
   25 toolchain.
 - A clean build proves packaging; runtime claims require controlled in-game
   evidence.
-- Rot Client is local-first: no telemetry, cloud sync, or remote state upload.
+- Rot Tools is local-first: no telemetry, cloud sync, or remote state upload.
 
 ## Core invariants
 

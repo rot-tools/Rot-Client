@@ -8,19 +8,20 @@ This document is the maintainer-facing snapshot of the current engineering state
 
 | Item | Current value |
 | --- | --- |
-| Development branch | `qol-utilities` |
+| Stable branch | `main` (tested releases only) |
+| Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | 124 wired QoL modules. Appearance and HUD Elements Editor are Visuals-only (not HUD & Display cards). Unhandled clicks dismiss those landings to Overview. World editor shows only enabled overlays. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | 124 wired QoL modules. Dashboard chrome is **Rot Client** in accent red on the by-line. Appearance and HUD Elements Editor stay on Visuals when switching between them. Appearance and HUD Elements Editor are Visuals-only (not HUD & Display cards). World editor shows only enabled overlays. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
-| Mod ID | `rotclient` |
+| Display name | Rot Client (by-line, accent red). Author/owner: Rot Tools |
 | Package | `fi.rotclient` |
 | Playable JAR | `RotClient-2.0.1+mc26.2.jar` |
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,035 tests**, 300 suites, 0 failures, 0 errors, 0 skipped; client compilation and clean build passed |
+| Automated baseline | Current working tree: **2,035 tests**, 300 suites, 0 failures, 0 errors, 0 skipped; client compilation and clean build passed. Playable JAR SHA-256 `44BB777B9CF09682B66C79946F97867F299C8E426D1201414A5DD73606ECD834`. |
 | Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 13 groups and **124** catalog parents. Appearance and HUD Elements Editor are Visuals-only; unhandled clicks dismiss the landing. Ready for Runtime Test. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
@@ -213,7 +214,7 @@ These constraints are part of the current safety model:
   and CURRENCY rows. Controlled Hypixel runtime validation is still pending.
 - All 25 official Mining Collection keys are represented in the mechanics registry, but unresolved mechanics, aliases, and canonical identities remain explicit gaps.
 - Compilation and tests do not replace runtime validation.
-- Rot Client mod ID `rotclient` is incompatible with a simultaneous MiningTracker JAR install.
+- Rot Tools mod ID `rotclient` is incompatible with a simultaneous MiningTracker JAR install.
 
 ## Current known limitations
 
@@ -311,8 +312,8 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Session History 2.0 canonical lifecycle freeze, archive-first Start New with
   compensating rollback and bounded process-crash recovery, and schema v1
   compatibility (`2.0.0+mc26.2`, runtime validation pending).
-- Rot Client rebrand: mod ID, package, commands, persistence filenames, artifact naming (`2.0.0+mc26.2`).
-- Rot Client visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
+- Rot Tools rebrand: mod ID, package, commands, persistence filenames, artifact naming (`2.0.0+mc26.2`).
+- Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
 - QoL dashboard: 124 wired modules across thirteen task-oriented groups, with
