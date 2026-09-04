@@ -102,6 +102,17 @@ public final class StorageOverlayRuntime {
                 && StorageOverlayPolicy.pageFromTitle(title).isPresent();
     }
 
+    public static boolean isOverlayOpen() {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.gui == null) {
+            return false;
+        }
+
+        Screen current = client.gui.screen();
+        return current instanceof AbstractContainerScreen<?> screen
+                && shouldReplaceVanilla(screen);
+    }
+
     public static StorageOverlayPolicy.OverlayLayout lastLayout() {
         return lastLayout;
     }
