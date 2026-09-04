@@ -256,12 +256,15 @@ public final class RotClientClient implements ClientModInitializer {
     public void onInitializeClient() {
         CONFIG.normalize();
         CustomResourcePackRuntime.register();
+
         TrackingRuntimeTrace.installRuntimeStateProvider(() -> {
             RotClientCurrentSessionConfig session =
                     CURRENT_SESSION.snapshotConfig();
+
             String state = session.isPaused()
                     ? "PAUSED"
                     : (session.isActive() ? "RUNNING" : "UNKNOWN");
+
             return new TrackingRuntimeTrace.RuntimeState(
                     selectedSelection().id(),
                     state,
@@ -269,6 +272,7 @@ public final class RotClientClient implements ClientModInitializer {
                     SESSION_ENGINE.isCollectionActive() ? "ACTIVE" : "OFF",
                     CONFIG.enabled ? "ENABLED" : "DISABLED");
         });
+
         // Tracking is an explicit per-launch action. Material choice, HUD layout,
         // Per-material session ledgers, lifetime totals and cached prices persist.
         // Activity clocks never run across a closed client.
@@ -279,7 +283,6 @@ public final class RotClientClient implements ClientModInitializer {
         // ephemeral diagnostics engine so OTHER/chest collection continues without
         // a manual Session Analytics Start.
         ensureCurrentSessionCollection(System.currentTimeMillis());
-
         new BazaarPriceService().start(prices -> Minecraft.getInstance().execute(() ->
                 ClientBoundaryGuard.run("BAZAAR_PRICE_APPLY", () -> {
                     long observedAtMillis = System.currentTimeMillis();
@@ -372,6 +375,7 @@ public final class RotClientClient implements ClientModInitializer {
             return InteractionResult.PASS;
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+
             TrackingRuntimeTrace.callbackAlive("ClientTick");
             ClientBoundaryGuard.run(
                     "HOT_PATH_CACHE",
