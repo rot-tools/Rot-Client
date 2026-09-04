@@ -18,9 +18,12 @@ import java.util.Set;
  *
  * <p>The server pack must stay enabled: GUI fonts, HUD icons, panorama, and
  * player-head skulls have no vanilla stand-in. This policy only remaps
- * {@code hypixel_skyblock:} item models onto vanilla item models using the
- * legacy models {@code items.json} coverage (bundled, no download). Skulls and
- * heads are omitted so they keep the new pack / skin.
+ * {@code hypixel_skyblock:} item models onto vanilla item models using a
+ * bundled Rot Client lookup table ({@code legacy-item-models.json}): SkyBlock
+ * item id to vanilla {@code minecraft:} model path. That file is not a
+ * third-party source tree; it is generated coverage for Hypixel's 26.2 item
+ * models so this client can restore the pre-custom-model look without a
+ * download. Skulls and heads are omitted so they keep the new pack / skin.
  */
 public final class LegacyTexturesPolicy {
     private static final String CLASSPATH = "/assets/rotclient/data/legacy-item-models.json";

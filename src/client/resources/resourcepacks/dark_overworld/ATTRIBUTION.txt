@@ -1,2 +1,11 @@
 Rot Client Dark Overworld
-Built-in Rot Client world textures.
+
+Rot Tools darkened overworld block, item, entity, and GUI textures for
+Minecraft 26.2. These overlay files are Rot-authored conversions.
+
+Any remaining vanilla Minecraft path that is an unmodified Mojang atlas or
+font sheet (including `assets/minecraft/textures/font/unicode_page_*.png`)
+stays under the Minecraft EULA. Rot Client does not claim those pages as
+original art and does not relicense them.
+
+This pack is not a copy of another community client's source tree.

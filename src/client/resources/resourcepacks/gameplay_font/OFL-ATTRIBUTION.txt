@@ -1,6 +1,12 @@
-Source Sans 3
-Copyright 2010-2021 Adobe
-Licensed under the SIL Open Font License, Version 1.1.
+Source Sans 3 Regular is bundled as Rot Client's gameplay UI font.
 
-License text: https://openfontlicense.org/open-font-license-official-text/
-Source: https://github.com/adobe-fonts/source-sans
+Copyright 2010-2024 Adobe (http://www.adobe.com/), with Reserved Font Name
+'Source'. All Rights Reserved. Source is a trademark of Adobe in the United
+States and/or other countries.
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+The full license text is in OFL.txt in this pack and in
+src/client/resources/assets/rotclient/license/OFL.txt.
+
+Upstream: https://github.com/adobe-fonts/source-sans
+Official OFL FAQ: https://openfontlicense.org/open-font-license-official-text/

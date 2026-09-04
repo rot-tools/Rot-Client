@@ -164,4 +164,6 @@ Rot Client is created and owned by **Rot Tools**.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Bundled third-party works (Adobe Source Sans OFL, Hypixel
+public data facts, Minecraft EULA for any vanilla pack paths) are listed in
+[THIRD_PARTY.md](THIRD_PARTY.md) and [NOTICE](NOTICE).

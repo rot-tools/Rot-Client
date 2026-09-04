@@ -73,7 +73,7 @@ final class RotClientRuntimePolishTest {
         String readme = Files.readString(
                 Path.of("README.md"),
                 StandardCharsets.UTF_8);
-        assertTrue(readme.contains("OgRudolf"));
+        assertTrue(readme.contains("Rot Tools"));
         assertTrue(readme.contains("https://github.com/rot-tools/Rot-Client"));
         assertTrue(readme.contains(
                 "https://github.com/rot-tools/Rot-Client/issues"));
@@ -81,6 +81,8 @@ final class RotClientRuntimePolishTest {
                 "https://github.com/rot-tools/Rot-Client/releases/tag/playtest"));
         assertTrue(readme.contains("HUD Elements Editor"));
         assertTrue(readme.contains("Visuals"));
+        assertTrue(readme.contains("THIRD_PARTY.md"));
+        assertTrue(readme.contains("NOTICE"));
         assertFalse(readme.contains("Look & HUD"));
         assertFalse(readme.contains("Rot Client contributors"));
         String workflow = Files.readString(
@@ -88,7 +90,7 @@ final class RotClientRuntimePolishTest {
                 StandardCharsets.UTF_8);
         assertTrue(workflow.contains("name: RotClient-playable"));
         assertTrue(workflow.contains("gh release create playtest"));
-        assertTrue(workflow.contains("github.event.repository.default_branch"));
+        assertTrue(workflow.contains("refs/heads/development"));
     }
 
     @Test

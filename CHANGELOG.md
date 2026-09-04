@@ -7,6 +7,13 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### License notices
+
+* Ship the full SIL OFL-1.1 text with the bundled Source Sans 3 font.
+  Root `NOTICE` and `THIRD_PARTY.md` list bundled works. Dark-pack
+  `ATTRIBUTION.txt` files name Rot-authored art versus Minecraft EULA
+  vanilla paths. Gameplay behavior is unchanged.
+
 ### Git workflow
 
 * The public repository uses `development` for integration and `main` for
