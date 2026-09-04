@@ -514,6 +514,21 @@ public final class StorageOverlayRuntime {
         }
     }
 
+    public static void reloadCachedStacks() {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.level == null) {
+            return;
+        }
+
+        cacheLoaded = false;
+        CACHE.clear();
+        PAGE_FINGERPRINTS.clear();
+
+        loadCache();
+
+        System.err.println("[RotClient] Storage cache reloaded after resource reload");
+    }
+
     public static void resetWorld() {
         HITS.clear();
         restoreSlots();
@@ -786,11 +801,15 @@ public final class StorageOverlayRuntime {
     }
 
     public static void flushForShutdown() {
-        if (CACHE.isEmpty() && SELECTOR_SLOTS.isEmpty() && !CACHE_DIRTY.get()) {
+        if (!CACHE_DIRTY.get()) {
             return;
         }
+
         try {
-            AtomicFileWriter.writeAtomically(cachePath(), buildCacheJson());
+            AtomicFileWriter.writeAtomically(
+                    cachePath(),
+                    buildCacheJson());
+
             CACHE_DIRTY.set(false);
         } catch (Exception ignored) {
         }
@@ -1031,9 +1050,19 @@ public final class StorageOverlayRuntime {
                     ? existing.items.get(i)
                     : ItemStack.EMPTY;
             ItemStack chosen = live;
+
             if (StorageOverlayPolicy.incomingIsPlaceholder(
-                    stackHasIdentity(previous), stackHasIdentity(live), live.isEmpty())) {
+                    stackHasIdentity(previous),
+                    stackHasIdentity(live),
+                    live.isEmpty())) {
+
                 chosen = previous;
+
+            } else if (!previous.isEmpty() && !live.isEmpty()) {
+
+                chosen = preserveCachedRenderComponents(
+                        previous,
+                        live);
             }
             if (!chosen.isEmpty()) {
                 anyItem = true;
@@ -1162,69 +1191,166 @@ public final class StorageOverlayRuntime {
     }
 
     private static void loadCache() {
+        System.err.println("[RotClient] loadCache called. cacheLoaded=" + cacheLoaded);
+
         if (cacheLoaded) {
+            System.err.println("[RotClient] loadCache skipped because cache is already loaded");
             return;
         }
-        cacheLoaded = true;
+
+        Minecraft client = Minecraft.getInstance();
+
+        System.err.println("[RotClient] client=" + client
+                + ", level=" + (client == null ? null : client.level));
+
+        if (client == null || client.level == null) {
+            System.err.println("[RotClient] loadCache postponed because level is not ready");
+            return;
+        }
+
         Path path = cachePath();
+
+        System.err.println("[RotClient] Loading storage cache from disk: " + path);
+
         if (!Files.exists(path)) {
+            System.err.println("[RotClient] Storage cache file does not exist");
             return;
         }
+
         try {
             JsonObject root = CACHE_GSON.fromJson(Files.readString(path), JsonObject.class);
+
             if (root == null || !root.has("pages") || !root.get("pages").isJsonArray()) {
+                System.err.println("[RotClient] Storage cache file is missing a valid pages array");
                 return;
             }
+
+            int loadedPages = 0;
+            int loadedItems = 0;
+
             for (JsonElement element : root.getAsJsonArray("pages")) {
                 if (element == null || !element.isJsonObject()) {
                     continue;
                 }
+
                 JsonObject pageJson = element.getAsJsonObject();
-                String kindRaw = pageJson.has("kind") ? pageJson.get("kind").getAsString() : "";
+
+                String kindRaw = pageJson.has("kind")
+                        ? pageJson.get("kind").getAsString()
+                        : "";
+
                 StorageOverlayPolicy.Kind kind = "BACKPACK".equalsIgnoreCase(kindRaw)
                         ? StorageOverlayPolicy.Kind.BACKPACK
                         : StorageOverlayPolicy.Kind.ENDER_CHEST;
-                int number = pageJson.has("number") ? pageJson.get("number").getAsInt() : 0;
+
+                int number = pageJson.has("number")
+                        ? pageJson.get("number").getAsInt()
+                        : 0;
+
                 if (number < 1 || number > 18) {
                     continue;
                 }
-                StorageOverlayPolicy.Page page = new StorageOverlayPolicy.Page(kind, number);
-                int rows = pageJson.has("rows") ? pageJson.get("rows").getAsInt() : 0;
+
+                StorageOverlayPolicy.Page page =
+                        new StorageOverlayPolicy.Page(kind, number);
+
+                int rows = pageJson.has("rows")
+                        ? pageJson.get("rows").getAsInt()
+                        : 0;
+
                 List<ItemStack> items = new ArrayList<>();
+
                 if (pageJson.has("items") && pageJson.get("items").isJsonArray()) {
                     for (JsonElement itemElement : pageJson.getAsJsonArray("items")) {
-                        items.add(stackFromCache(itemElement));
+                        ItemStack stack = stackFromCache(itemElement);
+                        items.add(stack);
+
+                        if (stack != null && !stack.isEmpty()) {
+                            loadedItems++;
+                        }
                     }
                 }
-                CACHE.putIfAbsent(page, new CachedPage(page, List.copyOf(items), Math.max(0, rows)));
+
+                CACHE.putIfAbsent(
+                        page,
+                        new CachedPage(
+                                page,
+                                List.copyOf(items),
+                                Math.max(0, rows)
+                        )
+                );
+
+                loadedPages++;
+
+                System.err.println(
+                        "[RotClient] Loaded cached page "
+                                + kind
+                                + " #"
+                                + number
+                                + " with "
+                                + items.size()
+                                + " slots"
+                );
             }
+
             if (root.has("selectors") && root.get("selectors").isJsonArray()) {
                 for (JsonElement element : root.getAsJsonArray("selectors")) {
                     if (element == null || !element.isJsonObject()) {
                         continue;
                     }
+
                     JsonObject selector = element.getAsJsonObject();
-                    String kindRaw = selector.has("kind") ? selector.get("kind").getAsString() : "";
+
+                    String kindRaw = selector.has("kind")
+                            ? selector.get("kind").getAsString()
+                            : "";
+
                     StorageOverlayPolicy.Kind kind = "BACKPACK".equalsIgnoreCase(kindRaw)
                             ? StorageOverlayPolicy.Kind.BACKPACK
                             : StorageOverlayPolicy.Kind.ENDER_CHEST;
-                    int number = selector.has("number") ? selector.get("number").getAsInt() : 0;
+
+                    int number = selector.has("number")
+                            ? selector.get("number").getAsInt()
+                            : 0;
+
                     int slot = selector.has("slot")
                             ? selector.get("slot").getAsInt()
                             : StorageOverlayPolicy.COMMAND_SELECTOR_SLOT;
+
                     if (number < 1 || number > 18) {
                         continue;
                     }
+
                     SELECTOR_SLOTS.putIfAbsent(
-                            new StorageOverlayPolicy.Page(kind, number), slot);
+                            new StorageOverlayPolicy.Page(kind, number),
+                            slot
+                    );
                 }
             } else if (!CACHE.isEmpty()) {
                 for (StorageOverlayPolicy.Page page : CACHE.keySet()) {
-                    SELECTOR_SLOTS.putIfAbsent(page, StorageOverlayPolicy.COMMAND_SELECTOR_SLOT);
+                    SELECTOR_SLOTS.putIfAbsent(
+                            page,
+                            StorageOverlayPolicy.COMMAND_SELECTOR_SLOT
+                    );
                 }
             }
-            sawOverview = root.has("sawOverview") && root.get("sawOverview").getAsBoolean();
-        } catch (Exception ignored) {
+
+            sawOverview =
+                    root.has("sawOverview")
+                            && root.get("sawOverview").getAsBoolean();
+
+            cacheLoaded = true;
+
+            System.err.println(
+                    "[RotClient] Storage cache load finished. pages="
+                            + loadedPages
+                            + ", nonEmptyItems="
+                            + loadedItems
+            );
+
+        } catch (Exception e) {
+            System.err.println("[RotClient] Exception while loading storage cache:");
+            e.printStackTrace();
         }
     }
 
@@ -1391,43 +1517,78 @@ public final class StorageOverlayRuntime {
         if (element == null || !element.isJsonObject()) {
             return ItemStack.EMPTY;
         }
+
         JsonObject json = element.getAsJsonObject();
+
+        String cachedName = json.has("name")
+                ? json.get("name").getAsString()
+                : "";
+
         if (json.has("stack")) {
-            ItemStack decoded = decodeStack(json.get("stack"));
+            JsonElement originalStackJson = json.get("stack");
+            ItemStack decoded = decodeStack(originalStackJson);
+
             if (decoded != null && !decoded.isEmpty()) {
+
                 restoreMarketIdentity(decoded, json);
                 return decoded;
             }
         }
-        String id = json.has("id") ? json.get("id").getAsString() : "";
-        int count = json.has("count") ? json.get("count").getAsInt() : 0;
-        String name = json.has("name") ? json.get("name").getAsString() : "";
+
+        String id = json.has("id")
+                ? json.get("id").getAsString()
+                : "";
+
+        int count = json.has("count")
+                ? json.get("count").getAsInt()
+                : 0;
+
+        String name = cachedName;
+
         if (id == null || id.isBlank() || count <= 0) {
             return ItemStack.EMPTY;
         }
+
         Identifier identifier = Identifier.tryParse(id);
+
         if (identifier == null) {
             return ItemStack.EMPTY;
         }
+
         var item = BuiltInRegistries.ITEM.getValue(identifier);
+
         if (item == null || item == Items.AIR) {
             return ItemStack.EMPTY;
         }
-        ItemStack stack = new ItemStack(item, Math.max(1, count));
+
+        ItemStack stack = new ItemStack(
+                item,
+                Math.max(1, count));
+
         if (name != null && !name.isBlank()) {
-            stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+            stack.set(
+                    DataComponents.CUSTOM_NAME,
+                    Component.literal(name));
         }
+
         if (json.has("nbt")) {
             try {
-                CompoundTag tag = TagParser.parseCompoundFully(json.get("nbt").getAsString());
+                CompoundTag tag =
+                        TagParser.parseCompoundFully(
+                                json.get("nbt").getAsString());
+
                 if (tag != null && !tag.isEmpty()) {
-                    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                    stack.set(
+                            DataComponents.CUSTOM_DATA,
+                            CustomData.of(tag));
                 }
             } catch (Exception ignored) {
             }
         }
+
         applyProfile(stack, json);
         restoreMarketIdentity(stack, json);
+
         return stack;
     }
 
@@ -1516,15 +1677,83 @@ public final class StorageOverlayRuntime {
         return custom != null && !custom.isEmpty();
     }
 
+    private static ItemStack preserveCachedRenderComponents(
+            ItemStack previous,
+            ItemStack live) {
+
+        if (previous == null || previous.isEmpty()
+                || live == null || live.isEmpty()) {
+            return live;
+        }
+
+        String previousSkyBlockId =
+                AutoClickerItemIdentity.skyBlockId(previous);
+        String liveSkyBlockId =
+                AutoClickerItemIdentity.skyBlockId(live);
+
+        if (previousSkyBlockId.isBlank()
+                || liveSkyBlockId.isBlank()
+                || !previousSkyBlockId.equals(liveSkyBlockId)) {
+            return live;
+        }
+
+        ItemStack merged = live.copy();
+
+        var previousItemModel =
+                previous.get(DataComponents.ITEM_MODEL);
+
+        if (merged.get(DataComponents.ITEM_MODEL) == null
+                && previousItemModel != null) {
+            merged.set(
+                    DataComponents.ITEM_MODEL,
+                    previousItemModel);
+        }
+
+        var previousLore =
+                previous.get(DataComponents.LORE);
+
+        if (merged.get(DataComponents.LORE) == null
+                && previousLore != null) {
+            merged.set(
+                    DataComponents.LORE,
+                    previousLore);
+        }
+
+        var previousTooltipStyle =
+                previous.get(DataComponents.TOOLTIP_STYLE);
+
+        if (merged.get(DataComponents.TOOLTIP_STYLE) == null
+                && previousTooltipStyle != null) {
+            merged.set(
+                    DataComponents.TOOLTIP_STYLE,
+                    previousTooltipStyle);
+        }
+
+        var previousTooltipDisplay =
+                previous.get(DataComponents.TOOLTIP_DISPLAY);
+
+        if (merged.get(DataComponents.TOOLTIP_DISPLAY) == null
+                && previousTooltipDisplay != null) {
+            merged.set(
+                    DataComponents.TOOLTIP_DISPLAY,
+                    previousTooltipDisplay);
+        }
+
+        return merged;
+    }
+
     private static JsonElement encodeStack(ItemStack stack) {
         try {
             Minecraft client = Minecraft.getInstance();
             if (client == null || client.level == null || stack == null || stack.isEmpty()) {
                 return null;
             }
+
             return ItemStack.CODEC.encodeStart(
-                    RegistryOps.create(JsonOps.INSTANCE, client.level.registryAccess()),
-                    stack).result().orElse(null);
+                            RegistryOps.create(JsonOps.INSTANCE, client.level.registryAccess()),
+                            stack)
+                    .result()
+                    .orElse(null);
         } catch (Exception ignored) {
             return null;
         }
@@ -1536,9 +1765,12 @@ public final class StorageOverlayRuntime {
             if (client == null || client.level == null || element == null) {
                 return ItemStack.EMPTY;
             }
+
             return ItemStack.CODEC.parse(
-                    RegistryOps.create(JsonOps.INSTANCE, client.level.registryAccess()),
-                    element).result().orElse(ItemStack.EMPTY);
+                            RegistryOps.create(JsonOps.INSTANCE, client.level.registryAccess()),
+                            element)
+                    .result()
+                    .orElse(ItemStack.EMPTY);
         } catch (Exception ignored) {
             return ItemStack.EMPTY;
         }
