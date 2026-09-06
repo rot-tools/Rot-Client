@@ -50,54 +50,111 @@ public final class WardrobeAutoEquipRuntime {
     }
 
     static void tick(Minecraft client) {
-        tickPendingClose(client);
-        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        QolUtilityConfig qol =
+                RotClientClient.qolConfigPublic();
+
+        /*
+         * Disable/cancel all queued wardrobe work before processing a pending
+         * close. This matters when a profile switch disables the module while
+         * an equip operation is still in progress.
+         */
         if (!hiddenEquipEnabled(qol)) {
-            resetSwapState();
-            return;
-        }
-        if (!swapping) {
-            return;
-        }
-        if (stationaryOnly(qol) && !isPlayerStationary(client, -1)) {
-            cancelActiveSwap(client);
-            return;
-        }
-        long now = System.currentTimeMillis();
-        if (WardrobeKeybindPolicy.autoEquipTimedOut(startedAtMs, now)) {
             reset();
             return;
         }
-        if (!inMenu || client == null || client.player == null || client.gameMode == null) {
+
+        tickPendingClose(client);
+
+        if (!swapping) {
             return;
         }
+
+        if (stationaryOnly(qol)
+                && !isPlayerStationary(
+                client,
+                -1)) {
+
+            cancelActiveSwap(
+                    client);
+
+            return;
+        }
+
+        long now =
+                System.currentTimeMillis();
+
+        if (WardrobeKeybindPolicy.autoEquipTimedOut(
+                startedAtMs,
+                now)) {
+
+            reset();
+            return;
+        }
+
+        if (!inMenu
+                || client == null
+                || client.player == null
+                || client.gameMode == null) {
+
+            return;
+        }
+
         if (waitTicks > 0) {
             waitTicks--;
             return;
         }
-        LocalPlayer player = client.player;
-        AbstractContainerMenu menu = player.containerMenu;
-        if (menu == null || menu.containerId != containerId || slotIndex < 0) {
+
+        LocalPlayer player =
+                client.player;
+
+        AbstractContainerMenu menu =
+                player.containerMenu;
+
+        if (menu == null
+                || menu.containerId != containerId
+                || slotIndex < 0) {
+
             return;
         }
+
         if (slotIndex >= menu.slots.size()) {
             return;
         }
-        Slot slot = menu.slots.get(slotIndex);
-        ItemStack stack = slot.getItem();
-        boolean ready = WardrobeKeybindPolicy.isSlotReady(
-                stack.isEmpty(),
-                isLoadingPane(stack),
-                WardrobeKeybindPolicy.isEmptyMarker(
-                        isItemPath(stack, "gray_dye"),
-                        stack.getHoverName().getString()));
+
+        Slot slot =
+                menu.slots.get(
+                        slotIndex);
+
+        ItemStack stack =
+                slot.getItem();
+
+        boolean ready =
+                WardrobeKeybindPolicy.isSlotReady(
+                        stack.isEmpty(),
+                        isLoadingPane(stack),
+                        WardrobeKeybindPolicy.isEmptyMarker(
+                                isItemPath(
+                                        stack,
+                                        "gray_dye"),
+                                stack.getHoverName()
+                                        .getString()));
+
         if (!ready) {
             return;
         }
-        boolean equipped = WardrobeKeybindPolicy.isEquipped(
-                isItemPath(stack, "lime_dye"),
-                stack.getHoverName().getString());
-        if (WardrobeKeybindPolicy.shouldClickAutoEquip(true, equipped)) {
+
+        boolean equipped =
+                WardrobeKeybindPolicy.isEquipped(
+                        isItemPath(
+                                stack,
+                                "lime_dye"),
+                        stack.getHoverName()
+                                .getString());
+
+        if (WardrobeKeybindPolicy.shouldClickAutoEquip(
+                true,
+                equipped)) {
+
             client.gameMode.handleContainerInput(
                     containerId,
                     slotIndex,
@@ -105,10 +162,13 @@ public final class WardrobeAutoEquipRuntime {
                     ContainerInput.PICKUP,
                     player);
         }
-        pendingCloseTicks = WardrobeKeybindPolicy.delayWithVariance(
-                closeDelay(qol),
-                delayVariance(qol),
-                Math.random());
+
+        pendingCloseTicks =
+                WardrobeKeybindPolicy.delayWithVariance(
+                        closeDelay(qol),
+                        delayVariance(qol),
+                        Math.random());
+
         resetSwapState();
     }
 

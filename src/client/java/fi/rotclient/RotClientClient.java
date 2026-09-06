@@ -71,7 +71,17 @@ public final class RotClientClient implements ClientModInitializer {
     private static final QolOverlayHud QOL_HUD = new QolOverlayHud(CONFIG);
     private static final NoCursorResetController NO_CURSOR_RESET =
             new NoCursorResetController();
-    private static final RotClientWorkspace WORKSPACE = new RotClientWorkspace();
+    private static final RotClientWorkspace WORKSPACE =
+            new RotClientWorkspace();
+
+    private static final RotClientProfileManager SETTINGS_PROFILES =
+            new RotClientProfileManager();
+
+    private static final RotClientProfileController SETTINGS_PROFILE_CONTROLLER =
+            new RotClientProfileController(
+                    SETTINGS_PROFILES,
+                    CONFIG);
+
     private static final RotClientCurrentSession CURRENT_SESSION =
             new RotClientCurrentSession();
     private static final RotClientEventBus DOMAIN_EVENTS =
@@ -82,6 +92,7 @@ public final class RotClientClient implements ClientModInitializer {
 
     static {
         WORKSPACE.loadFromDisk();
+        SETTINGS_PROFILES.loadFromDisk();
         CURRENT_SESSION.loadFromDisk();
     }
 
@@ -123,10 +134,55 @@ public final class RotClientClient implements ClientModInitializer {
         save();
     }
 
+    private static boolean activeSettingsProfileWantsMiningTracker() {
+        RotClientProfile active =
+                SETTINGS_PROFILES.activeProfile();
+
+        return active != null
+                && active.settings != null
+                && active.settings.miningTrackerEnabled;
+    }
+
     static void setPowderChestHudEnabled(boolean enabled) {
         if (CONFIG.powderChestHudEnabled == enabled) return;
         CONFIG.powderChestHudEnabled = enabled;
         save();
+    }
+
+    static void reconcileSettingsProfileRuntime(
+            RotClientProfileSettings previousSettings,
+            RotClientProfileSettings targetSettings) {
+
+        /*
+         * Mining Tracker is runtime-sensitive.
+         * Use the normal setter so SESSION_ENGINE and Current Session stay synced.
+         */
+        if (targetSettings != null) {
+            setTrackerEnabled(
+                    targetSettings.miningTrackerEnabled);
+        }
+
+        /*
+         * Powder Chest Tracker needs cleanup when a profile disables it.
+         */
+        if (previousSettings != null
+                && previousSettings.powderChestTrackerEnabled
+                && !CONFIG.powderChestTrackerEnabled) {
+
+            SESSION_ENGINE.onPowderChestTrackerDisabled(
+                    System.currentTimeMillis());
+        }
+
+        /*
+         * Profile switching can replace HUD positions/scales immediately.
+         */
+        HUD.clampToScreen();
+        POWDER_CHEST_HUD.clampToScreen();
+
+        /*
+         * Keep camera changes visually immediate.
+         */
+        enforceCameraPerspective();
     }
 
     public static NoCursorResetController noCursorReset() {
@@ -135,6 +191,14 @@ public final class RotClientClient implements ClientModInitializer {
 
     static RotClientWorkspace workspace() {
         return WORKSPACE;
+    }
+
+    static RotClientProfileManager settingsProfiles() {
+        return SETTINGS_PROFILES;
+    }
+
+    static RotClientProfileController settingsProfileController() {
+        return SETTINGS_PROFILE_CONTROLLER;
     }
 
     public static RotClientEventBus domainEvents() {
@@ -255,6 +319,7 @@ public final class RotClientClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         CONFIG.normalize();
+        applyActiveSettingsProfileOnStartup();
         CustomResourcePackRuntime.register();
 
         TrackingRuntimeTrace.installRuntimeStateProvider(() -> {
@@ -273,11 +338,30 @@ public final class RotClientClient implements ClientModInitializer {
                     CONFIG.enabled ? "ENABLED" : "DISABLED");
         });
 
-        // Tracking is an explicit per-launch action. Material choice, HUD layout,
-        // Per-material session ledgers, lifetime totals and cached prices persist.
-        // Activity clocks never run across a closed client.
+        /*
+         * Without an active settings profile, preserve the legacy behavior:
+         * Mining Tracker starts disabled every launch.
+         *
+         * With an active settings profile, the profile owns the Mining Tracker
+         * enabled state. Start from OFF first so setTrackerEnabled(true) performs
+         * the full runtime transition and does not inherit stale rotclient.json
+         * state.
+         */
+        boolean restoreProfileTracker =
+                activeSettingsProfileWantsMiningTracker();
+
         CONFIG.enabled = false;
         prepareLaunchState();
+
+        if (restoreProfileTracker) {
+            setTrackerEnabled(true);
+        }
+
+        /*
+         * Keep rotclient.json aligned even when the active profile wants the tracker
+         * disabled and setTrackerEnabled(false) therefore was unnecessary.
+         */
+        TrackerStore.save(CONFIG);
 
         // Persistent Current Session stays ACTIVE across restarts. Auto-start the
         // ephemeral diagnostics engine so OTHER/chest collection continues without
@@ -572,7 +656,7 @@ public final class RotClientClient implements ClientModInitializer {
             if (now - lastAutosave >= 10_000L) {
                 ClientBoundaryGuard.run(
                         "TRACKER_AUTOSAVE",
-                        () -> TrackerStore.save(CONFIG));
+                        RotClientClient::save);
                 lastAutosave = now;
             }
         });
@@ -606,7 +690,7 @@ public final class RotClientClient implements ClientModInitializer {
                         0L;
             }
 
-            TrackerStore.save(CONFIG);
+            save();
             syncCurrentSessionFromEngine(now);
             // Pause Current Session so offline wall-clock is excluded from
             // active duration; stop only the ephemeral diagnostics engine.
@@ -4630,7 +4714,41 @@ private static int toggle(FabricClientCommandSource source) {
     }
 
     static void save() {
+        saveActiveSettingsProfile();
         TrackerStore.save(CONFIG);
+    }
+
+    private static void applyActiveSettingsProfileOnStartup() {
+        RotClientProfile active =
+                SETTINGS_PROFILES.activeProfile();
+
+        if (active == null) {
+            return;
+        }
+
+        RotClientProfileSettingsAdapter.apply(
+                active.settings,
+                CONFIG);
+
+        /*
+         * Keep rotclient.json aligned with the active profile immediately.
+         * Do not call save() here, because startup must never capture the old
+         * rotclient.json settings back into the profile before applying it.
+         */
+        TrackerStore.save(CONFIG);
+    }
+
+    private static void saveActiveSettingsProfile() {
+        RotClientProfile active =
+                SETTINGS_PROFILES.activeProfile();
+
+        if (active == null) {
+            return;
+        }
+
+        SETTINGS_PROFILES.captureCurrentSettings(
+                active.id,
+                CONFIG);
     }
 
     private static void applyMaterialPrices(

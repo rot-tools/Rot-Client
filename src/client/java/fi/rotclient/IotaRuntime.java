@@ -157,23 +157,36 @@ public final class IotaRuntime {
     }
 
     static void tick(Minecraft client) {
-        QolSkyblockExtras extras = extras();
-        if (client == null || client.player == null || !extras.iotaAddonsEnabled) {
-            leftToggleWasDown = false;
-            rightToggleWasDown = false;
-            leftAccumulator = 0.0D;
-            rightAccumulator = 0.0D;
-            if (overlayUntilMs > 0L && System.currentTimeMillis() > overlayUntilMs) {
-                overlayTitle = "";
-            }
-            IotaKuudraRuntime.clear();
+        QolSkyblockExtras extras =
+                extras();
+
+        if (client == null
+                || client.player == null
+                || !extras.iotaAddonsEnabled) {
+
+            clear();
             return;
         }
-        tickToggles(client, extras);
-        tickArrowTracker(client, extras);
-        tickStandaloneClicker(client, extras);
-        IotaKuudraRuntime.tick(client);
-        if (overlayUntilMs > 0L && System.currentTimeMillis() > overlayUntilMs) {
+
+        tickToggles(
+                client,
+                extras);
+
+        tickArrowTracker(
+                client,
+                extras);
+
+        tickStandaloneClicker(
+                client,
+                extras);
+
+        IotaKuudraRuntime.tick(
+                client);
+
+        if (overlayUntilMs > 0L
+                && System.currentTimeMillis()
+                > overlayUntilMs) {
+
             overlayTitle = "";
         }
     }

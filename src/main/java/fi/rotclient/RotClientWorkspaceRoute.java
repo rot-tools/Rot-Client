@@ -13,6 +13,7 @@ enum RotClientWorkspaceRoute {
     SESSION_ANALYTICS("session_analytics", "Session Analytics"),
     SESSION_HISTORY("session_history", "Session History"),
     QOL_SETTINGS("qol_settings", "QoL & Settings"),
+    PROFILES("profiles", "Profiles"),
     APPEARANCE_OVERVIEW("appearance_overview", "Appearance"),
     APPEARANCE_DASHBOARD("appearance_dashboard", "Appearance"),
     APPEARANCE_MINING_HUD("appearance_mining_hud", "Appearance"),
