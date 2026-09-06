@@ -62,6 +62,12 @@ public final class HudElementCatalog {
         if (id.contains("diana")) {
             return "diana";
         }
+        if (id.contains("dungeon_carry")) {
+            return "dungeon_carry";
+        }
+        if (id.contains("dungeon_watcher")) {
+            return "dungeon_watcher";
+        }
         if (id.contains("dungeon")) {
             return "dungeon";
         }
@@ -85,6 +91,9 @@ public final class HudElementCatalog {
         }
         if (id.contains("slayer_display") || id.contains("slayer_drops")) {
             return "slayer";
+        }
+        if (id.contains("custom_scoreboard")) {
+            return "custom_scoreboard";
         }
         if (id.contains("click_gui") || id.contains("hud_layout")) {
             return "";
@@ -122,6 +131,7 @@ public final class HudElementCatalog {
             case ENUM -> "Click to pick one of the listed options.";
             case ACTION -> "Click the button to run this action.";
             case SECTION -> "Click to collapse or expand this group.";
+            case SQUARE -> "Square latch. Off is idle; on fills red.";
         };
         if (detail.isBlank()) {
             return label.isBlank() ? typeHint : label + " — " + typeHint;
@@ -188,7 +198,35 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.dungeon_hud.class", "Class text"),
                     new InspectorToggle("qol.dungeon_hud.secrets", "Secrets text"),
                     new InspectorToggle("qol.dungeon_hud.score", "Score text"),
-                    new InspectorToggle("qol.dungeon_hud.map", "Dungeon map"));
+                    new InspectorToggle("qol.dungeon_hud.cleared", "Cleared"),
+                    new InspectorToggle("qol.dungeon_hud.invincibility", "Invincibility"),
+                    new InspectorToggle("qol.dungeon_hud.terracotta", "Terracotta"),
+                    new InspectorToggle("qol.dungeon_hud.blessings", "Blessings"),
+                    new InspectorToggle("qol.dungeon_hud.ragnarock", "Ragnarock"),
+                    new InspectorToggle("qol.dungeon_hud.melody", "Melody"),
+                    new InspectorToggle("qol.dungeon_hud.quiz", "Quiz / Weirdos"),
+                    new InspectorToggle("qol.dungeon_hud.score_overlay", "Score overlay"),
+                    new InspectorToggle("qol.dungeon_hud.map", "Dungeon map"),
+                    new InspectorToggle("qol.dungeon_hud.map_mode", "Map mode"),
+                    new InspectorToggle("qol.dungeon_hud.map_doors", "Map doors"),
+                    new InspectorToggle("qol.dungeon_hud.map_players", "Map players"),
+                    new InspectorToggle("qol.dungeon_hud.room_names", "Room names"),
+                    new InspectorToggle("qol.dungeon_hud.room_secrets", "Room secrets"),
+                    new InspectorToggle("qol.dungeon_hud.player_names", "Player names"),
+                    new InspectorToggle("qol.dungeon_hud.head_markers", "Head markers"),
+                    new InspectorToggle("qol.dungeon_hud.class_icons", "Class icons"),
+                    new InspectorToggle("qol.dungeon_hud.map_extra", "Map status bar"),
+                    new InspectorToggle("qol.dungeon_hud.crypts", "Crypts"),
+                    new InspectorToggle("qol.dungeon_hud.deaths", "Deaths"),
+                    new InspectorToggle("qol.dungeon_hud.map_mimic", "Mimic chip"),
+                    new InspectorToggle("qol.dungeon_hud.map_puzzles", "Puzzle chip"),
+                    new InspectorToggle("qol.dungeon_hud.map_hide_boss", "Hide in boss"),
+                    new InspectorToggle("qol.dungeon_hud.map_scale", "Map size"),
+                    new InspectorToggle("qol.dungeon_hud.f7_timers", "F7 timers"),
+                    new InspectorToggle("qol.dungeon_hud.puzzle_timer", "Puzzle timer"),
+                    new InspectorToggle("qol.dungeon_hud.run_timers", "Run timers"),
+                    new InspectorToggle("qol.dungeon_hud.show_split_pbs", "Split PBs"),
+                    new InspectorToggle("qol.dungeon_hud.kuudra_splits", "Kuudra splits"));
             case "mining" -> List.of(
                     new InspectorToggle("qol.mining_helpers.metal_distance", "Treasure meters"),
                     new InspectorToggle("qol.mining_helpers.ability_hud", "Ability HUD"),
@@ -196,6 +234,12 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.mining_scatha.hud", "Scatha HUD"),
                     new InspectorToggle("qol.mining_events.hud", "Event HUD"),
                     new InspectorToggle("qol.mining_glacite.pity_hud", "Pity HUD"));
+            case "stall_bin" -> List.of(
+                    new InspectorToggle("qol.stall_market.bin_overlay", "BIN overlay"));
+            case "custom_scoreboard" -> List.of(
+                    new InspectorToggle("qol.custom_scoreboard.hide_vanilla", "Hide vanilla"),
+                    new InspectorToggle("qol.custom_scoreboard.bg_enabled", "Background"),
+                    new InspectorToggle("qol.custom_scoreboard.outline", "Outline"));
             default -> List.of();
         };
     }

@@ -157,6 +157,82 @@ class StorageOverlayPolicyTest {
         assertTrue(StorageOverlayPolicy.incomingIsPlaceholder(true, false, false));
         assertFalse(StorageOverlayPolicy.incomingIsPlaceholder(true, true, false));
         assertTrue(StorageOverlayPolicy.incomingIsPlaceholder(true, false, true));
+        assertFalse(StorageOverlayPolicy.incomingIsPlaceholder(true, false, true, true));
+        assertFalse(StorageOverlayPolicy.useLiveDisplay(true, false));
+        assertTrue(StorageOverlayPolicy.useLiveDisplay(true, true));
+        assertFalse(StorageOverlayPolicy.useLiveDisplay(false, true));
+    }
+
+    @Test
+    void storageCacheReloadsWhenCodecBecomesReadyAndSkipsEmptyShutdownWrites() {
+        assertEquals("rotclient-storage-cache.json", StorageOverlayPolicy.CACHE_FILE);
+        assertEquals("storage", StorageOverlayPolicy.OVERVIEW_COMMAND);
+        assertFalse(StorageOverlayPolicy.shouldReloadCache(true, true, true, true, true));
+        assertTrue(StorageOverlayPolicy.shouldReloadCache(false, true, true, false, false));
+        assertTrue(StorageOverlayPolicy.shouldReloadCache(true, false, true, false, true));
+        assertFalse(StorageOverlayPolicy.shouldReloadCache(true, false, true, true, true));
+        assertFalse(StorageOverlayPolicy.shouldReloadCache(true, true, false, false, false));
+        assertTrue(StorageOverlayPolicy.shouldSkipEmptyStorageSave(false, true, false));
+        assertFalse(StorageOverlayPolicy.shouldSkipEmptyStorageSave(false, true, true));
+        assertFalse(StorageOverlayPolicy.shouldSkipEmptyStorageSave(true, true, false));
+        assertTrue(StorageOverlayPolicy.shouldSkipUnreadyShutdownSave(false, true));
+        assertFalse(StorageOverlayPolicy.shouldSkipUnreadyShutdownSave(true, true));
+        assertTrue(StorageOverlayPolicy.codecStackNeedsFallback(false, false, true, false, false));
+        assertFalse(StorageOverlayPolicy.codecStackNeedsFallback(false, true, true, true, true));
+        assertTrue(StorageOverlayPolicy.codecStackNeedsFallback(true, false, false, true, false));
+    }
+
+    @Test
+    void storagePrefetchFillsMissingPagesThenSettles() {
+        assertTrue(StorageOverlayPolicy.pageNeedsRefresh(true, false, false));
+        assertFalse(StorageOverlayPolicy.pageNeedsRefresh(true, true, false));
+        assertTrue(StorageOverlayPolicy.pageNeedsRefresh(true, true, true));
+        assertFalse(StorageOverlayPolicy.pageNeedsRefresh(false, false, false));
+        assertTrue(StorageOverlayPolicy.shouldStartPrefetch(true, true, false, false, 3, 2));
+        assertFalse(StorageOverlayPolicy.shouldStartPrefetch(true, true, true, false, 3, 2));
+        assertTrue(StorageOverlayPolicy.shouldStartPrefetch(true, true, true, true, 3, 0));
+        assertFalse(StorageOverlayPolicy.shouldStartPrefetch(true, false, false, false, 3, 2));
+        assertFalse(StorageOverlayPolicy.prefetchPageSettled(true, true, 0));
+        assertTrue(StorageOverlayPolicy.prefetchPageSettled(
+                true, true, StorageOverlayPolicy.PREFETCH_SETTLE_TICKS));
+        assertTrue(StorageOverlayPolicy.prefetchPageSettled(
+                false, false, StorageOverlayPolicy.PREFETCH_TIMEOUT_TICKS));
+        var first = new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.ENDER_CHEST, 2);
+        var second = new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.BACKPACK, 1);
+        assertEquals(java.util.List.of(first, second), StorageOverlayPolicy.prefetchOrder(java.util.List.of(second, first)));
+    }
+
+    @Test
+    void laterStorageOpensReloadOnlyClickedPages() {
+        var ender1 = new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.ENDER_CHEST, 1);
+        var ender2 = new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.ENDER_CHEST, 2);
+        var pack3 = new StorageOverlayPolicy.Page(StorageOverlayPolicy.Kind.BACKPACK, 3);
+        var unlocked = java.util.List.of(ender1, ender2, pack3);
+        assertEquals(
+                java.util.List.of(ender1, ender2, pack3),
+                StorageOverlayPolicy.pagesToPrefetch(unlocked, java.util.List.of(), java.util.List.of(), false, false));
+        assertEquals(
+                java.util.List.of(ender2, pack3),
+                StorageOverlayPolicy.pagesToPrefetch(unlocked, java.util.List.of(ender1), java.util.List.of(), false, false));
+        assertEquals(
+                java.util.List.of(),
+                StorageOverlayPolicy.pagesToPrefetch(unlocked, unlocked, java.util.List.of(), true, false));
+        var clicked = StorageOverlayPolicy.withClickedPage(
+                StorageOverlayPolicy.withClickedPage(java.util.List.of(), ender1), pack3);
+        assertEquals(java.util.List.of(ender1, pack3), clicked);
+        assertEquals(
+                java.util.List.of(pack3, ender1),
+                StorageOverlayPolicy.pagesToPrefetch(unlocked, unlocked, clicked, true, false));
+        assertEquals(
+                java.util.List.of(ender1, ender2, pack3),
+                StorageOverlayPolicy.pagesToPrefetch(unlocked, unlocked, java.util.List.of(pack3), true, true));
+        assertTrue(StorageOverlayPolicy.inferDirectoryScanCompleted(false, false, unlocked, unlocked));
+        assertFalse(StorageOverlayPolicy.inferDirectoryScanCompleted(false, false, java.util.List.of(ender1), unlocked));
+        assertFalse(StorageOverlayPolicy.inferDirectoryScanCompleted(false, false, java.util.List.of(), java.util.List.of()));
+        assertFalse(StorageOverlayPolicy.inferDirectoryScanCompleted(true, false, unlocked, unlocked));
+        assertTrue(StorageOverlayPolicy.directoryScanComplete(false, unlocked, unlocked));
+        assertFalse(StorageOverlayPolicy.directoryScanComplete(false, unlocked, java.util.List.of(ender1)));
+        assertFalse(StorageOverlayPolicy.shouldStartPrefetch(true, true, false, false, 3, 0));
     }
 
     @Test

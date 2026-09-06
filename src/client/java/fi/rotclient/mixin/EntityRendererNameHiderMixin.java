@@ -1,7 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.NameHiderRuntime;
-import fi.rotclient.SkyblockFlavorRuntime;
+import fi.rotclient.SkyBlockUtilityRuntime;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.network.chat.Component;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 abstract class EntityRendererNameHiderMixin<T extends Entity, S extends EntityRenderState> {
     @Inject(method = "getNameTag", at = @At("RETURN"), cancellable = true)
     private void rotclient$hideNameTag(T entity, CallbackInfoReturnable<Component> cir) {
-        cir.setReturnValue(SkyblockFlavorRuntime.rewriteNameTag(NameHiderRuntime.apply(cir.getReturnValue())));
+        cir.setReturnValue(SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(cir.getReturnValue())));
     }
 
     @Inject(
@@ -33,10 +33,10 @@ abstract class EntityRendererNameHiderMixin<T extends Entity, S extends EntityRe
             return;
         }
         if (state.nameTag != null) {
-            state.nameTag = SkyblockFlavorRuntime.rewriteNameTag(NameHiderRuntime.apply(state.nameTag));
+            state.nameTag = SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(state.nameTag));
         }
         if (state.scoreText != null) {
-            state.scoreText = SkyblockFlavorRuntime.rewriteNameTag(NameHiderRuntime.apply(state.scoreText));
+            state.scoreText = SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(state.scoreText));
         }
     }
 }

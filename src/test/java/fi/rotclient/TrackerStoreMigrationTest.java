@@ -468,6 +468,8 @@ final class TrackerStoreMigrationTest {
         original.selectedTargetId =
                 TrackingTarget.MITHRIL_TITANIUM.id();
         original.fullbrightEnabled = true;
+        original.alwaysNightEnabled = true;
+        original.lightingForceBoth = true;
         original.autoSprintEnabled = true;
         original.cameraEnabled = true;
 
@@ -523,6 +525,8 @@ final class TrackerStoreMigrationTest {
                 restored.selectedMaterial());
 
         assertTrue(restored.fullbrightEnabled);
+        assertTrue(restored.alwaysNightEnabled);
+        assertTrue(restored.lightingForceBoth);
         assertTrue(restored.autoSprintEnabled);
         assertTrue(restored.cameraEnabled);
 
@@ -937,6 +941,7 @@ final class TrackerStoreMigrationTest {
         qol.remove("inventoryOverlayHideStatusEffects");
         qol.remove("inventoryOverlayPetSlot");
         qol.remove("skillLevelsEnabled");
+        qol.remove("skillLevelsBackground");
         qol.remove("petHudEnabled");
 
         TrackerConfig restored = TrackerStore.fromJson(json);
@@ -946,13 +951,16 @@ final class TrackerStoreMigrationTest {
         assertTrue(restored.qolUtilities.inventoryOverlayHideStatusEffects);
         assertTrue(restored.qolUtilities.inventoryOverlayPetSlot);
         assertTrue(restored.qolUtilities.skillLevelsEnabled);
+        assertTrue(restored.qolUtilities.skillLevelsBackground);
         assertTrue(restored.qolUtilities.petHudEnabled);
 
         TrackerConfig explicitOff = new TrackerConfig();
         explicitOff.qolUtilities.inventoryOverlayEnabled = false;
         explicitOff.qolUtilities.petHudEnabled = false;
+        explicitOff.qolUtilities.skillLevelsBackground = false;
         TrackerConfig kept = TrackerStore.fromJson(TrackerStore.toJson(explicitOff));
         assertFalse(kept.qolUtilities.inventoryOverlayEnabled);
         assertFalse(kept.qolUtilities.petHudEnabled);
+        assertFalse(kept.qolUtilities.skillLevelsBackground);
     }
 }

@@ -31,7 +31,7 @@ class SlayerPolicyTest {
         assertBoss("☠ Revenant Horror V 2.4M❤", SlayerPolicy.SlayerType.REVENANT, 5);
         assertBoss("☠ Tarantula Broodfather IV 2.4M❤", SlayerPolicy.SlayerType.TARANTULA, 4);
         assertBoss("☠ Sven Packmaster IV 2.4M❤", SlayerPolicy.SlayerType.SVEN, 4);
-        assertBoss("☠ Voidgloom Seraph IV 210M❤ 43 Hits", SlayerPolicy.SlayerType.VOIDGLOOM, 4);
+        assertBoss("☠ Voidgloom Seraph IV❤", SlayerPolicy.SlayerType.VOIDGLOOM, 4);
         assertBoss("☠ Voidgloom Seraph II 12M❤", SlayerPolicy.SlayerType.VOIDGLOOM, 2);
         assertBoss("☠ Inferno Demonlord IV 150M❤", SlayerPolicy.SlayerType.INFERNO, 4);
         assertBoss("☠ Riftstalker Bloodfiend V 10M❤", SlayerPolicy.SlayerType.VAMPIRE, 5);
@@ -79,6 +79,10 @@ class SlayerPolicyTest {
         assertEquals(4, classifyTier("☠ Tarantula Broodfather 2.4M❤"));
         assertEquals(5, classifyTier("☠ Tarantula Broodfather 10M❤"));
         assertEquals(5, classifyTier("☠ Conjoined Brood 20M❤"));
+        assertEquals("Conjoined Brood", SlayerPolicy.classifyTag(
+                "☠ Conjoined Brood 20M❤", "Owner: ExamplePlayer").orElseThrow().displayName());
+        assertEquals("Tarantula Broodfather", SlayerPolicy.classifyTag(
+                "☠ Tarantula Broodfather 10M❤", "Owner: ExamplePlayer").orElseThrow().displayName());
         assertEquals(1, classifyTier("☠ Sven Packmaster 2k❤"));
         assertEquals(2, classifyTier("☠ Sven Packmaster 40k❤"));
         assertEquals(3, classifyTier("☠ Sven Packmaster 750k❤"));
@@ -116,6 +120,16 @@ class SlayerPolicyTest {
         assertEquals(SlayerPolicy.Attunement.ASHEN, demon.attunement());
 
         assertFalse(SlayerPolicy.classifyTag("[Lv100] Random Zombie", "").isPresent());
+        assertFalse(SlayerPolicy.classifyTag("We killed a Voidgloom Seraph earlier", "").isPresent());
+        assertTrue(SlayerPolicy.isCombatNametag("☠ Revenant Horror I 500❤"));
+        assertTrue(SlayerPolicy.shouldTrackLiveEntity(SlayerPolicy.classifyTag(
+                "☠ Revenant Horror I 500❤", "Spawned by: LocalPlayer").orElseThrow()));
+        assertFalse(SlayerPolicy.shouldTrackLiveEntity(SlayerPolicy.classifyTag(
+                "☠ Revenant Horror I 500❤", "").orElseThrow()));
+        assertEquals(java.util.List.of("02:46", "☠ Revenant Horror I 500❤"), SlayerPolicy.nametagHudLines(java.util.List.of(
+                "Spawned by: LocalPlayer",
+                "02:46",
+                "☠ Revenant Horror I 500❤")));
     }
 
     @Test

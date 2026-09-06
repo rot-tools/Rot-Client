@@ -32,8 +32,40 @@ final class SlayerHighlightPolicyTest {
         assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(false, Double.NaN, false, 4.0D));
         assertTrue(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 40.0D, true, 8.0D));
         assertFalse(SlayerHighlightPolicy.shouldDrawLocalFightMarker(true, 40.0D, true, 40.0D));
-        assertTrue(SlayerHighlightPolicy.shouldTrackYangGlyph(true, 40.0D, true, 35.0D));
-        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(true, 40.0D, true, 49.0D));
+    }
+
+    @Test
+    void yangGlyphDoesNotLatchAnotherPlayersNearbyBeacon() {
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                false, false, false, true, 4.0D, Double.NaN, 8.0D)),
+                "quest alone is not a throw");
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                false, false, true, true, 22.0D, 4.0D, 8.0D)),
+                "foreign Voidgloom is closer");
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                false, true, true, true, 4.0D, 30.0D, 8.0D)),
+                "this throw already claimed a glyph");
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                false, false, true, true, 18.0D, Double.NaN, 8.0D)),
+                "first sight must be at the owned throw origin");
+        assertTrue(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                false, false, true, true, 4.0D, 22.0D, 8.0D)));
+        assertTrue(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                true, true, true, true, 40.0D, 4.0D, 35.0D)),
+                "keep the latched stand after it flies");
+        assertFalse(SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                true, true, true, true, 40.0D, 4.0D, 49.0D)));
+        assertTrue(SlayerHighlightPolicy.shouldAdoptSittingYangGlyph(
+                true,
+                new SlayerHighlightPolicy.YangGlyphTrack(
+                        false, true, true, true, 40.0D, 4.0D, 35.0D)));
+        assertFalse(SlayerHighlightPolicy.shouldAdoptSittingYangGlyph(
+                false,
+                new SlayerHighlightPolicy.YangGlyphTrack(
+                        false, true, true, true, 4.0D, 30.0D, 8.0D)));
+        assertTrue(SlayerHighlightPolicy.closerToLocalBoss(4.0D, 22.0D));
+        assertFalse(SlayerHighlightPolicy.closerToLocalBoss(22.0D, 4.0D));
+        assertTrue(SlayerHighlightPolicy.closerToLocalBoss(4.0D, Double.NaN));
     }
 
     @Test

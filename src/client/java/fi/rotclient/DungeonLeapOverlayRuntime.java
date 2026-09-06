@@ -3,8 +3,6 @@ package fi.rotclient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -72,9 +70,11 @@ public final class DungeonLeapOverlayRuntime {
                     cell.x() + 8, cell.y() + 10, 0xFFFFFFFF, false);
             RotClientUiDraw.text(graphics, client.font, entry.name(),
                     cell.x() + 8, cell.y() + 28, entry.dead() ? 0xFF94A3B8 : 0xFFFFFFFF, true);
-            if (entry.dead()) {
-                RotClientUiDraw.text(graphics, client.font, "DEAD",
-                        cell.x() + 8, cell.y() + 44, 0xFFE11D48, false);
+            if (!entry.statusLabel().isBlank()) {
+                boolean offline = "OFFLINE".equals(entry.statusLabel());
+                RotClientUiDraw.text(graphics, client.font, entry.statusLabel(),
+                        cell.x() + 8, cell.y() + 44,
+                        offline ? 0xFF94A3B8 : 0xFFE11D48, false);
             }
         }
     }
@@ -145,26 +145,11 @@ public final class DungeonLeapOverlayRuntime {
             if (name == null || name.isBlank()) {
                 continue;
             }
-            DungeonPolicy.DungeonClass dungeonClass =
-                    DungeonPolicy.classFromLore(InventoryChromeRuntime.loreLines(stack));
-            boolean dead = playerDead(name);
-            out.add(new DungeonLeftoverPolicy.LeapEntry(slot.index, name, dungeonClass, dead));
+            List<String> lore = InventoryChromeRuntime.loreLines(stack);
+            DungeonPolicy.DungeonClass dungeonClass = DungeonPolicy.classFromLore(lore);
+            out.add(DungeonLeftoverPolicy.LeapEntry.fromLore(slot.index, name, dungeonClass, lore));
         }
         return out;
-    }
-
-    private static boolean playerDead(String name) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.level == null || name == null || name.isBlank()) {
-            return false;
-        }
-        for (Player player : client.level.players()) {
-            if (player != null && name.equalsIgnoreCase(player.getGameProfile().name())
-                    && player.isDeadOrDying()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static QolSkyblockExtras extras() {

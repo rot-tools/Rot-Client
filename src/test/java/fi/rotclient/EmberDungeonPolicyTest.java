@@ -107,4 +107,19 @@ final class EmberDungeonPolicyTest {
                 EmberDungeonPolicy.duplicateClasses(roster)));
         assertTrue(EmberDungeonPolicy.duplicateClasses(Map.of()).isEmpty());
     }
+
+    @Test
+    void relicCauldronClicksMatchPadCorners() {
+        EmberDungeonPolicy.Relic red = EmberDungeonPolicy.relicByName("Red").orElseThrow();
+        assertTrue(EmberDungeonPolicy.clickedRelicCauldron(red, 51, 7, 42));
+        assertTrue(EmberDungeonPolicy.clickedRelicCauldron(red, 51, 6, 42));
+        assertFalse(EmberDungeonPolicy.clickedRelicCauldron(red, 49, 7, 44));
+        assertTrue(EmberDungeonPolicy.isRelicCauldron(49, 7, 44));
+        assertTrue(EmberDungeonPolicy.correctRelicCauldron("Green Relic", 49, 7, 44));
+        assertTrue(EmberDungeonPolicy.blockRelicClick(true, "Red Relic", true, 49, 7, 44));
+        assertTrue(EmberDungeonPolicy.blockRelicClick(true, "Red Relic", false, 51, 7, 42));
+        assertFalse(EmberDungeonPolicy.blockRelicClick(true, "Red Relic", true, 51, 7, 42));
+        assertFalse(EmberDungeonPolicy.blockRelicClick(false, "Red Relic", true, 49, 7, 44));
+        assertFalse(EmberDungeonPolicy.blockRelicClick(true, "", true, 51, 7, 42));
+    }
 }

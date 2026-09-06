@@ -48,7 +48,9 @@ public final class HudLayerHidePolicy {
             boolean optimizerHideArmor,
             boolean optimizerHideFood,
             boolean optimizerHideEffects,
-            boolean optimizerHideItemName) {
+            boolean optimizerHideItemName,
+            boolean customBoardEnabled,
+            boolean customBoardHideVanilla) {
     }
 
     public static Flags flags(QolUtilityConfig qol) {
@@ -56,7 +58,7 @@ public final class HudLayerHidePolicy {
             return new Flags(
                     false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false, false, false, false, false, false, false,
-                    false, false, false, false, false, false);
+                    false, false, false, false, false, false, false, false);
         }
         QolSkyblockExtras extras = qol.extras();
         return new Flags(
@@ -85,7 +87,11 @@ public final class HudLayerHidePolicy {
                 extras.hideArmorBar,
                 extras.hideFoodBar,
                 extras.hideEffectDisplay,
-                extras.hideSelectedItemName);
+                extras.hideSelectedItemName,
+                qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID)
+                        && (SkyBlockAreaDetector.isInSkyblock()
+                        || extras.board().showOutsideSkyblock),
+                extras.board().hideVanilla);
     }
 
     private HudLayerHidePolicy() {
@@ -134,7 +140,8 @@ public final class HudLayerHidePolicy {
                             VanillaHudHidePolicy.Layer.XP);
             case AIR -> layout && flags.hideAir();
             case MOUNT -> layout && flags.hideMount();
-            case SCOREBOARD -> layout && flags.hideScoreboard();
+            case SCOREBOARD -> (layout && flags.hideScoreboard())
+                    || (flags.customBoardEnabled() && flags.customBoardHideVanilla());
             case BOSS -> (layout && flags.hideBoss())
                     || (flags.renderOptimizerEnabled() && flags.optimizerHideBoss());
             case ACTION -> layout && flags.hideAction();

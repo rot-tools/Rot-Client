@@ -113,7 +113,7 @@ public final class MiningLeftoverRuntime {
             return;
         }
         MiningAssistRuntime.tick(client);
-        SkyblockFlavorRuntime.tick(client);
+        SkyBlockUtilityRuntime.tick(client);
         boolean any = extras.miningScathaEnabled
                 || extras.miningEventsEnabled
                 || extras.miningGlaciteEnabled
@@ -170,7 +170,7 @@ public final class MiningLeftoverRuntime {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         String text = message.getString();
         if (!overlay) {
-            SkyblockFlavorRuntime.onChat(message);
+            SkyBlockUtilityRuntime.onChat(message);
         }
         MiningAssistRuntime.observeChat(text);
         if (overlay) {
@@ -268,7 +268,7 @@ public final class MiningLeftoverRuntime {
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         MiningAssistRuntime.renderGizmos();
-        SkyblockFlavorRuntime.renderGizmos();
+        SkyBlockUtilityRuntime.renderGizmos();
         boolean mobs = extras.miningHelpersEnabled && extras.miningHelpersCommissionMobs;
         boolean goblin = extras.miningEventsEnabled
                 && extras.miningEventsGoblinEsp

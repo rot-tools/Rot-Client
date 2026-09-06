@@ -143,7 +143,7 @@ The current schema persists:
 - Material and gemstone session ledgers.
 - Material and gemstone lifetime totals.
 - HUD position and scale.
-- HUD, dashboard, Fullbright, tax, and Fortune settings.
+- HUD, dashboard, Fullbright and Night, tax, and Fortune settings.
 - Cached material prices and their update timestamps.
 
 Activity timestamps are closed and cleared when the client stops, and launch preparation clears open activity windows. Closed-client time is never added to active time. Tracker enablement is explicit per launch: the loaded `enabled` value is set to false during client initialization. Transient detector batches, duplicate fingerprints, live graph samples, diagnostic recording state, and shadow ledger data do not persist.
@@ -251,8 +251,8 @@ Gemstone targets are selected through the searchable UI; there are no gemstone t
 
 QoL modules are defined in `QolUtilityCatalog` (Minecraft-free labels, groups, and setting types) and persisted through `QolUtilityConfig` inside `rotclient.json`. Client runtimes and mixins live under `src/client/java`. Policy classes that can be unit-tested stay in `src/main/java`.
 
-The dashboard currently exposes 124 modules across Combat, Slayer, Events,
-Dungeons, Kuudra, Mining, Fishing, Foraging, Garden, HUD & Display, Render,
+The dashboard currently exposes 131 modules across Combat, Slayer, Events,
+Dungeons, Kuudra, Mining, Fishing, Foraging, Garden, GUI, HUD & Display, Render,
 Interface, and Utilities.
 `QolUtilityCatalog` owns Minecraft-free metadata; `QolUtilityConfig` and
 `QolSkyblockExtras` own persisted values; pure `*Policy` classes stay in the
@@ -293,9 +293,13 @@ remain views or configuration around the shared engine.
 The inventory suite preserves the same split. `StorageOverlayPolicy` owns
 layout and selector decisions, while `StorageOverlayRuntime` replaces the
 vanilla Storage GUI with a compact projection of pages previously observed from
-genuine server containers; it does not invent, persist, or remotely fetch item
-contents. Navigation uses the real overview selector slot or `/enderchest` /
-`/backpack`. `InventoryButtonsPolicy`
+genuine server containers. Observed pages persist locally in
+`rotclient-storage-cache.json`, including skull textures when ItemStack codec
+JSON drops PROFILE. Opening Storage walks any empty unlocked pages through
+`/enderchest` and `/backpack`. Navigation uses the real overview selector slot
+or those same commands. `InventoryChromeRuntime` paints survival
+equipment bars and the pet slot from last-seen Stats/Pets stacks and stores
+them in `rotclient-inventory-chrome-cache.json`. `InventoryButtonsPolicy`
 validates command-button layouts, while `InventoryButtonsRuntime` and
 `InventoryButtonsEditorScreen` render and edit those local commands. Missing
 Enchantments is a tooltip projection over the held item's real enchantment

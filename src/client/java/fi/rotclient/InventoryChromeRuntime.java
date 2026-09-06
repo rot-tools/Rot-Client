@@ -1,6 +1,10 @@
 package fi.rotclient;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import fi.rotclient.mixin.PlayerTabOverlayAccessor;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,13 +24,23 @@ import net.minecraft.world.scores.PlayerScoreEntry;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Caches Hypixel equipment / equipped pet from their chest GUIs and paints
  * the survival-inventory equipment bars, movable pet slot, and skill levels.
+ * Observed stacks are stored locally like Storage Overlay page contents so
+ * they still appear after a restart.
  */
 public final class InventoryChromeRuntime {
     private static final ItemStack[] EQUIPMENT = new ItemStack[] {
@@ -44,11 +58,26 @@ public final class InventoryChromeRuntime {
     private static InventoryOverlayPolicy.ChromeColorRole selectedColorRole =
             InventoryOverlayPolicy.ChromeColorRole.INV_PANEL;
     private static int draggingColorChannel = -1;
+    private static String hoveredValueTip;
+    private static boolean cacheLoaded;
+    private static boolean codecReady;
+    private static boolean diskHadItems;
+    private static String lastFingerprint = "";
+    private static final Gson CACHE_GSON = new Gson();
+    private static final AtomicBoolean CACHE_DIRTY = new AtomicBoolean();
+    private static final AtomicBoolean CACHE_SAVE_SCHEDULED = new AtomicBoolean();
+    private static final ScheduledExecutorService CACHE_IO = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r, "RotClient-InventoryChromeCache");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private static final long CACHE_SAVE_DELAY_MS = 150L;
 
     private InventoryChromeRuntime() {
     }
 
     public static void tick(Minecraft client) {
+        loadCache();
         if (client == null || client.player == null) {
             clear();
             return;
@@ -65,13 +94,6 @@ public final class InventoryChromeRuntime {
     }
 
     public static void clear() {
-        for (int i = 0; i < EQUIPMENT.length; i++) {
-            EQUIPMENT[i] = ItemStack.EMPTY;
-        }
-        equippedPet = ItemStack.EMPTY;
-        petHud = null;
-        petKnownEmpty = false;
-        petCachedFromGui = false;
         tickCounter = 0;
         draggingPet = false;
         consumeNextRelease = false;
@@ -79,6 +101,17 @@ public final class InventoryChromeRuntime {
         petGrabY = 0;
         colorEditorOpen = false;
         draggingColorChannel = -1;
+    }
+
+    public static void flushForShutdown() {
+        if (!CACHE_DIRTY.get()) {
+            return;
+        }
+        try {
+            AtomicFileWriter.writeAtomically(cachePath(), buildCacheJson());
+            CACHE_DIRTY.set(false);
+        } catch (Exception ignored) {
+        }
     }
 
     public static ItemStack equipment(int index) {
@@ -100,18 +133,32 @@ public final class InventoryChromeRuntime {
         return !equippedPet.isEmpty() && petHud != null && !petKnownEmpty;
     }
 
+    static boolean skyblockInventoryUi() {
+        return InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock());
+    }
+
+    private static boolean inventoryOverlayVisible(QolUtilityConfig qol) {
+        return qol != null && qol.inventoryOverlayEnabled && skyblockInventoryUi();
+    }
+
+    private static boolean inventoryOverlayVisible() {
+        return inventoryOverlayVisible(RotClientClient.qolConfigPublic());
+    }
+
     public static boolean shouldHideRecipeBook(Screen screen) {
         if (!(screen instanceof InventoryScreen)) {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        return (qol.inventoryOverlayEnabled && qol.inventoryOverlayHideRecipeBook)
+        return (inventoryOverlayVisible(qol) && qol.inventoryOverlayHideRecipeBook)
                 || (qol.renderOptimizerEnabled && qol.extras().hideRecipeBook);
     }
 
     public static boolean shouldHideStatusEffects() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        return qol.inventoryOverlayEnabled && qol.inventoryOverlayHideStatusEffects;
+        return InventoryOverlayPolicy.hideInventoryStatusEffects(
+                qol != null && qol.inventoryOverlayEnabled,
+                qol != null && qol.inventoryOverlayHideStatusEffects);
     }
 
     public static void afterContainerContents(
@@ -126,20 +173,38 @@ public final class InventoryChromeRuntime {
         if (screen == null || graphics == null) {
             return;
         }
+        loadCache();
         snapshot(screen);
         SlayerRuntime.observeContainer(screen);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        hoveredValueTip = null;
         graphics.nextStratum();
+        if (screen instanceof InventoryScreen && inventoryOverlayVisible(qol)) {
+            if (qol.inventoryOverlayEquipment) {
+                renderEquipmentColumn(graphics, leftPos, topPos);
+            }
+            if (qol.inventoryOverlayPetSlot) {
+                renderPetSlot(graphics, leftPos, topPos, qol);
+            }
+            renderValueMark(
+                    screen,
+                    graphics,
+                    leftPos,
+                    topPos,
+                    qol.inventoryOverlayPetOffsetX,
+                    qol.inventoryOverlayPetOffsetY,
+                    mouseX,
+                    mouseY);
+            renderDashboardButton(
+                    graphics,
+                    leftPos,
+                    topPos,
+                    qol.inventoryOverlayPetOffsetX,
+                    qol.inventoryOverlayPetOffsetY,
+                    mouseX,
+                    mouseY);
+        }
         renderColorEditor(screen, graphics, leftPos, topPos, imageWidth, imageHeight, mouseX, mouseY);
-        if (!(screen instanceof InventoryScreen)) {
-            return;
-        }
-        if (qol.inventoryOverlayEnabled && qol.inventoryOverlayEquipment) {
-            renderEquipmentColumn(graphics, leftPos, topPos);
-        }
-        if (qol.inventoryOverlayEnabled && qol.inventoryOverlayPetSlot) {
-            renderPetSlot(graphics, leftPos, topPos, qol);
-        }
     }
 
     /**
@@ -155,7 +220,9 @@ public final class InventoryChromeRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (qol.skillLevelsEnabled && InventoryOverlayPolicy.isSkillsMenu(titleOf(screen))) {
+        if (qol.skillLevelsEnabled
+                && skyblockInventoryUi()
+                && InventoryOverlayPolicy.isSkillsMenu(titleOf(screen))) {
             graphics.nextStratum();
             graphics.nextStratum();
             graphics.nextStratum();
@@ -168,7 +235,7 @@ public final class InventoryChromeRuntime {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        return qol.inventoryOverlayEnabled
+        return inventoryOverlayVisible(qol)
                 && qol.inventoryOverlayEquipment
                 && InventoryOverlayPolicy.isVanillaOffhandSlot(slot.x, slot.y);
     }
@@ -192,11 +259,26 @@ public final class InventoryChromeRuntime {
         if (client == null || client.player == null) {
             return false;
         }
+        if (inventoryOverlayVisible(qol)
+                && screen instanceof InventoryScreen
+                && InventoryOverlayPolicy.hitDashboardButton(
+                        leftPos,
+                        topPos,
+                        qol.inventoryOverlayPetOffsetX,
+                        qol.inventoryOverlayPetOffsetY,
+                        mouseX,
+                        mouseY)) {
+            colorEditorOpen = false;
+            draggingColorChannel = -1;
+            RotClientClient.openClickGui();
+            consumeNextRelease = true;
+            return true;
+        }
         if (handleColorEditorClick(screen, leftPos, topPos, imageWidth, imageHeight, mouseX, mouseY)) {
             consumeNextRelease = true;
             return true;
         }
-        if (!qol.inventoryOverlayEnabled || !(screen instanceof InventoryScreen)) {
+        if (!inventoryOverlayVisible(qol) || !(screen instanceof InventoryScreen)) {
             return false;
         }
         if (qol.inventoryOverlayPetSlot
@@ -299,13 +381,42 @@ public final class InventoryChromeRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        if (!inventoryOverlayVisible(qol)) {
+            return;
+        }
         if (InventoryOverlayPolicy.hitWrench(leftPos, topPos, imageWidth, mouseX, mouseY)) {
             ItemStack hint = new ItemStack(Items.IRON_AXE);
             hint.set(DataComponents.CUSTOM_NAME, Component.literal("Inventory colors"));
             graphics.setTooltipForNextFrame(font, hint, mouseX, mouseY);
             return;
         }
-        if (qol.inventoryOverlayEnabled && qol.inventoryOverlayPetSlot
+        if (colorEditorOpen) {
+            InventoryOverlayPolicy.Rect wrench = wrenchHost(screen, leftPos, topPos, imageWidth);
+            if (wrench != null) {
+                InventoryOverlayPolicy.Rect editor = InventoryOverlayPolicy.editorRect(
+                        wrench.x(), wrench.y(), screen.width, screen.height);
+                if (InventoryOverlayPolicy.editorCloseRect(editor).contains(mouseX, mouseY)) {
+                    ItemStack hint = new ItemStack(Items.BARRIER);
+                    hint.set(DataComponents.CUSTOM_NAME, Component.literal("Close"));
+                    graphics.setTooltipForNextFrame(font, hint, mouseX, mouseY);
+                    return;
+                }
+            }
+        }
+        if (inventoryOverlayVisible(qol)
+                && InventoryOverlayPolicy.hitDashboardButton(
+                        leftPos,
+                        topPos,
+                        qol.inventoryOverlayPetOffsetX,
+                        qol.inventoryOverlayPetOffsetY,
+                        mouseX,
+                        mouseY)) {
+            ItemStack hint = new ItemStack(Items.REDSTONE);
+            hint.set(DataComponents.CUSTOM_NAME, Component.literal("Rot dashboard"));
+            graphics.setTooltipForNextFrame(font, hint, mouseX, mouseY);
+            return;
+        }
+        if (inventoryOverlayVisible(qol) && qol.inventoryOverlayPetSlot
                 && InventoryOverlayPolicy.hitPetSlot(
                         leftPos,
                         topPos,
@@ -324,7 +435,7 @@ public final class InventoryChromeRuntime {
             }
             return;
         }
-        if (qol.inventoryOverlayEnabled && qol.inventoryOverlayEquipment) {
+        if (inventoryOverlayVisible(qol) && qol.inventoryOverlayEquipment) {
             int index = InventoryOverlayPolicy.hitEquipmentIndex(leftPos, topPos, mouseX, mouseY);
             if (index >= 0) {
                 ItemStack equipped = EQUIPMENT[index];
@@ -351,7 +462,10 @@ public final class InventoryChromeRuntime {
         if (InventoryOverlayPolicy.isEquipmentSetsMenu(title)) {
             snapshotEquipmentSets(slots);
         }
-        if (MenuKeybindPolicy.parsePetsTitle(title) != null) {
+        if (MenuKeybindPolicy.parsePetsTitle(title) != null
+                && !InventoryOverlayPolicy.shouldKeepExistingCache(
+                        hasEquippedPet() || !equippedPet.isEmpty() || petHud != null,
+                        containerLooksUnpopulated(slots))) {
             ItemStack pet = findEquippedPet(slots);
             if (pet.isEmpty()) {
                 equippedPet = ItemStack.EMPTY;
@@ -366,12 +480,12 @@ public final class InventoryChromeRuntime {
                 petCachedFromGui = true;
             }
         }
+        persistObserved();
     }
 
     private static void snapshotEquipment(List<Slot> slots) {
-        for (int i = 0; i < EQUIPMENT.length; i++) {
-            EQUIPMENT[i] = ItemStack.EMPTY;
-        }
+        ItemStack[] next = new ItemStack[] {
+                ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY};
         for (int i = 0; i < InventoryOverlayPolicy.EQUIPMENT_CHEST_SLOTS.length; i++) {
             int index = InventoryOverlayPolicy.EQUIPMENT_CHEST_SLOTS[i];
             ItemStack stack = stackIn(slots, index);
@@ -379,7 +493,7 @@ public final class InventoryChromeRuntime {
                     stack.getHoverName().getString(), itemPath(stack))) {
                 continue;
             }
-            EQUIPMENT[i] = stack.copy();
+            next[i] = stack.copy();
         }
         int containerEnd = Math.max(0, slots.size() - 36);
         for (int i = 0; i < containerEnd; i++) {
@@ -391,9 +505,14 @@ public final class InventoryChromeRuntime {
             int kind = InventoryOverlayPolicy.classifyEquipmentIndex(
                     stack.getHoverName().getString(), loreLines(stack));
             if (kind >= 0) {
-                EQUIPMENT[kind] = stack.copy();
+                next[kind] = stack.copy();
             }
         }
+        if (InventoryOverlayPolicy.shouldKeepExistingCache(
+                hasAnyEquipment(), allEmpty(next))) {
+            return;
+        }
+        System.arraycopy(next, 0, EQUIPMENT, 0, EQUIPMENT.length);
     }
 
     private static void snapshotEquipmentSets(List<Slot> slots) {
@@ -410,9 +529,8 @@ public final class InventoryChromeRuntime {
         if (column < 0) {
             return;
         }
-        for (int i = 0; i < EQUIPMENT.length; i++) {
-            EQUIPMENT[i] = ItemStack.EMPTY;
-        }
+        ItemStack[] next = new ItemStack[] {
+                ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY};
         for (int i = 0; i < containerEnd; i++) {
             if (!InventoryOverlayPolicy.isEquipmentSetsPieceSlot(i, column)) {
                 continue;
@@ -424,8 +542,13 @@ public final class InventoryChromeRuntime {
             }
             int kind = InventoryOverlayPolicy.classifyEquipmentIndex(
                     stack.getHoverName().getString(), loreLines(stack));
-            EQUIPMENT[kind >= 0 ? kind : i / 9] = stack.copy();
+            next[kind >= 0 ? kind : Math.min(i / 9, next.length - 1)] = stack.copy();
         }
+        if (InventoryOverlayPolicy.shouldKeepExistingCache(
+                hasAnyEquipment(), allEmpty(next))) {
+            return;
+        }
+        System.arraycopy(next, 0, EQUIPMENT, 0, EQUIPMENT.length);
     }
 
     private static void snapshotStatsMenuPet(List<Slot> slots) {
@@ -512,10 +635,20 @@ public final class InventoryChromeRuntime {
             if (slot.x < -1000 || slot.y < -1000) {
                 continue;
             }
-            int textW = font.width(label);
+            int textW = RotClientFonts.vanillaWidth(font, label);
+            if (qol.skillLevelsBackground) {
+                SkillLevelOverlayPolicy.LabelBox box =
+                        SkillLevelOverlayPolicy.labelBackground(slot.x, slot.y, textW);
+                graphics.fill(
+                        leftPos + box.left(),
+                        topPos + box.top(),
+                        leftPos + box.right(),
+                        topPos + box.bottom(),
+                        SkillLevelOverlayPolicy.LABEL_BACKGROUND);
+            }
             int x = leftPos + SkillLevelOverlayPolicy.labelX(slot.x, textW);
             int y = topPos + SkillLevelOverlayPolicy.labelY(slot.y);
-            RotClientUiDraw.text(graphics, font, label, x, y, color, true);
+            RotClientUiDraw.vanillaText(graphics, font, label, x, y, color, true);
         }
     }
 
@@ -631,6 +764,7 @@ public final class InventoryChromeRuntime {
                     snapshot.level() >= 0 ? snapshot.level() : petHud.level(),
                     snapshot.name().isEmpty() ? petHud.name() : snapshot.name(),
                     petHud.heldItem());
+            persistObserved();
             return;
         }
         petHud = petHud == null
@@ -643,6 +777,7 @@ public final class InventoryChromeRuntime {
             equippedPet = new ItemStack(Items.PLAYER_HEAD);
         }
         petKnownEmpty = false;
+        persistObserved();
     }
 
     private static void appendLine(StringBuilder builder, String text) {
@@ -662,7 +797,7 @@ public final class InventoryChromeRuntime {
             int topPos,
             int imageWidth,
             int imageHeight) {
-        if (!(screen instanceof InventoryScreen) || graphics == null) {
+        if (!(screen instanceof InventoryScreen) || graphics == null || !inventoryOverlayVisible()) {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
@@ -698,7 +833,7 @@ public final class InventoryChromeRuntime {
                 imageWidth,
                 imageHeight,
                 paintChrome(qol.inventoryChromeHotbar, InventoryOverlayPolicy.ChromeColorRole.INV_HOTBAR));
-        boolean hideOffhand = qol.inventoryOverlayEnabled && qol.inventoryOverlayEquipment;
+        boolean hideOffhand = qol.inventoryOverlayEquipment;
         for (InventoryOverlayPolicy.Rect slot : InventoryOverlayPolicy.survivalSlotRects(
                 leftPos, topPos, !hideOffhand)) {
             drawSlotWell(graphics, slot.x(), slot.y());
@@ -751,6 +886,20 @@ public final class InventoryChromeRuntime {
         graphics.fill(editor.x(), editor.y(), editor.x() + editor.width(), editor.y() + 1,
                 RotClientTheme.BORDER_BRIGHT);
         RotClientUiDraw.text(graphics, font, "Inventory colors", editor.x() + 8, editor.y() + 6, RotClientTheme.TEXT, false);
+        InventoryOverlayPolicy.Rect close = InventoryOverlayPolicy.editorCloseRect(editor);
+        boolean closeHover = close.contains(mouseX, mouseY);
+        graphics.fill(close.x(), close.y(), close.x() + close.width(), close.y() + close.height(),
+                closeHover ? RotClientTheme.WARNING : RotClientTheme.BUTTON);
+        RotClientTheme.drawOutline(graphics, close.x(), close.y(), close.width(), close.height(),
+                closeHover ? RotClientTheme.BORDER_BRIGHT : RotClientTheme.BORDER);
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "×",
+                close.x() + 1,
+                close.y() + 1,
+                closeHover ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                false);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         InventoryOverlayPolicy.ChromeColorRole[] roles = InventoryOverlayPolicy.ChromeColorRole.values();
         for (int i = 0; i < roles.length; i++) {
@@ -819,8 +968,12 @@ public final class InventoryChromeRuntime {
         }
         InventoryOverlayPolicy.Rect editor = InventoryOverlayPolicy.editorRect(
                 wrench.x(), wrench.y(), screen.width, screen.height);
-        if (!editor.contains(mouseX, mouseY)) {
-            return false;
+        boolean inClose = InventoryOverlayPolicy.editorCloseRect(editor).contains(mouseX, mouseY);
+        if (InventoryOverlayPolicy.dismissColorEditor(
+                true, false, editor.contains(mouseX, mouseY), inClose)) {
+            colorEditorOpen = false;
+            draggingColorChannel = -1;
+            return true;
         }
         InventoryOverlayPolicy.ChromeColorRole[] roles = InventoryOverlayPolicy.ChromeColorRole.values();
         for (int i = 0; i < roles.length; i++) {
@@ -887,7 +1040,7 @@ public final class InventoryChromeRuntime {
             return InventoryOverlayPolicy.wrenchRect(
                     layout.playerX(), layout.playerY(), StorageOverlayPolicy.PLAYER_WIDTH);
         }
-        if (screen instanceof InventoryScreen) {
+        if (screen instanceof InventoryScreen && inventoryOverlayVisible()) {
             return InventoryOverlayPolicy.wrenchRect(leftPos, topPos, imageWidth);
         }
         return null;
@@ -947,5 +1100,424 @@ public final class InventoryChromeRuntime {
         graphics.fill(x + size - 5, y + size - 5, x + size - 2, y + size - 2, paint);
         graphics.fill(x + size - 4, y + size - 3, x + size - 1, y + size, paint);
         graphics.fill(x + 2, y + size - 2, x + 6, y + size, paint);
+    }
+
+    private static void renderDashboardButton(
+            GuiGraphicsExtractor graphics,
+            int leftPos,
+            int topPos,
+            int petOffsetX,
+            int petOffsetY,
+            int mouseX,
+            int mouseY) {
+        if (graphics == null) {
+            return;
+        }
+        InventoryOverlayPolicy.Rect button =
+                InventoryOverlayPolicy.dashboardButtonRect(leftPos, topPos, petOffsetX, petOffsetY);
+        boolean hover = button.contains(mouseX, mouseY);
+        drawSlotWell(graphics, button.x(), button.y());
+        if (hover) {
+            RotClientTheme.drawOutline(
+                    graphics,
+                    button.x(),
+                    button.y(),
+                    button.width(),
+                    button.height(),
+                    RotClientTheme.BORDER_BRIGHT);
+        }
+        Minecraft client = Minecraft.getInstance();
+        Font font = client == null ? null : client.font;
+        if (font != null) {
+            drawCenteredGlyph(
+                    graphics,
+                    font,
+                    "R",
+                    button.x(),
+                    button.y(),
+                    button.width(),
+                    hover ? RotClientTheme.TEXT : RotClientTheme.BORDER_BRIGHT);
+        } else {
+            drawRotLetterIcon(graphics, button.x(), button.y(), button.width());
+        }
+    }
+
+    /** Fallback pixel-art R when the font is not ready. */
+    private static void drawRotLetterIcon(
+            GuiGraphicsExtractor graphics, int x, int y, int size) {
+        if (graphics == null || size < 8) {
+            return;
+        }
+        int ink = RotClientTheme.BORDER_BRIGHT;
+        int left = x + Math.max(3, size * 3 / 12);
+        int top = y + Math.max(2, size * 2 / 12);
+        int bottom = y + size - Math.max(2, size * 2 / 12);
+        int mid = y + size / 2;
+        int stem = Math.max(2, size * 2 / 12);
+        graphics.fill(left, top, left + stem, bottom, ink);
+        graphics.fill(left, top, x + size - Math.max(3, size * 3 / 12), top + stem, ink);
+        graphics.fill(
+                x + size - Math.max(5, size * 5 / 12),
+                top + stem,
+                x + size - Math.max(3, size * 3 / 12),
+                mid,
+                ink);
+        graphics.fill(left, mid - 1, x + size - Math.max(4, size / 3), mid + 1, ink);
+        graphics.fill(left + stem, mid, left + stem * 2, mid + stem, ink);
+        graphics.fill(left + stem * 2, mid + 1, left + stem * 3, bottom, ink);
+    }
+
+    private static void renderValueMark(
+            AbstractContainerScreen<?> screen,
+            GuiGraphicsExtractor graphics,
+            int leftPos,
+            int topPos,
+            int petOffsetX,
+            int petOffsetY,
+            int mouseX,
+            int mouseY) {
+        if (graphics == null) {
+            return;
+        }
+        InventoryOverlayPolicy.Rect mark =
+                InventoryOverlayPolicy.valueMarkRect(leftPos, topPos, petOffsetX, petOffsetY);
+        boolean hover = mark.contains(mouseX, mouseY);
+        drawSlotWell(graphics, mark.x(), mark.y());
+        if (hover) {
+            RotClientTheme.drawOutline(
+                    graphics,
+                    mark.x(),
+                    mark.y(),
+                    mark.width(),
+                    mark.height(),
+                    RotClientTheme.BORDER_BRIGHT);
+        }
+        Minecraft client = Minecraft.getInstance();
+        Font font = client == null ? null : client.font;
+        if (font != null) {
+            drawCenteredGlyph(
+                    graphics,
+                    font,
+                    "S",
+                    mark.x(),
+                    mark.y(),
+                    mark.width(),
+                    hover ? RotClientTheme.TEXT : RotClientTheme.WARNING);
+        }
+        if (hover) {
+            hoveredValueTip = InventoryValuePolicy.tooltip(inventoryMarketValue(screen));
+        }
+    }
+
+    private static void drawCenteredGlyph(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            String glyph,
+            int x,
+            int y,
+            int size,
+            int color) {
+        int width = RotClientFonts.width(font, glyph);
+        int textX = x + Math.max(0, (size - width) / 2);
+        int textY = y + Math.max(0, (size - 9) / 2);
+        RotClientUiDraw.text(graphics, font, glyph, textX, textY, color, true);
+    }
+
+    public static void applyValueTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        if (hoveredValueTip == null || hoveredValueTip.isBlank() || graphics == null) {
+            return;
+        }
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.font == null) {
+            return;
+        }
+        graphics.setTooltipForNextFrame(
+                client.font, Component.literal(hoveredValueTip), mouseX, mouseY);
+    }
+
+    private static double inventoryMarketValue(AbstractContainerScreen<?> screen) {
+        List<StorageOverlayPolicy.MarketLine> lines = new ArrayList<>();
+        Map<String, Double> units = new HashMap<>();
+        SkyBlockMarketQuoteService.Quotes quotes = SkyBlockMarketQuoteService.current();
+        BazaarPriceService.MarketPrices bazaar = RotClientClient.currentMarketPrices();
+        if (screen != null && screen.getMenu() != null) {
+            for (Slot slot : screen.getMenu().slots) {
+                if (!InventoryValuePolicy.includeSurvivalSlot(slot.x, slot.y)) {
+                    continue;
+                }
+                addValuedStack(lines, units, quotes, bazaar, slot.getItem());
+            }
+        }
+        for (ItemStack stack : EQUIPMENT) {
+            addValuedStack(lines, units, quotes, bazaar, stack);
+        }
+        if (hasEquippedPet()) {
+            addValuedStack(lines, units, quotes, bazaar, equippedPet);
+        }
+        return StorageOverlayPolicy.instantSellTotal(lines, units);
+    }
+
+    private static void addValuedStack(
+            List<StorageOverlayPolicy.MarketLine> lines,
+            Map<String, Double> units,
+            SkyBlockMarketQuoteService.Quotes quotes,
+            BazaarPriceService.MarketPrices bazaar,
+            ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        List<String> candidates = InventoryValuePolicy.marketIdCandidates(
+                SkyBlockItemData.marketId(stack),
+                SkyBlockItemData.petInfo(stack),
+                stack.getHoverName().getString());
+        String priced = "";
+        double unit = 0.0D;
+        for (String id : candidates) {
+            PriceTooltipsPolicy.Quote quote = quotes.quote(id);
+            unit = StorageOverlayPolicy.marketUnitValue(
+                    quote.lowestBin(), quote.bazaarBuy(), quote.bazaarSell());
+            if (!(unit > 0.0D) && bazaar != null) {
+                BazaarPriceService.ProductPrice product = bazaar.forProduct(id);
+                if (product == null && id.startsWith("STARRED_")) {
+                    product = bazaar.forProduct(id.substring("STARRED_".length()));
+                }
+                if (product != null) {
+                    unit = product.instantSellPrice();
+                }
+            }
+            if (unit > 0.0D && Double.isFinite(unit)) {
+                priced = id;
+                break;
+            }
+        }
+        if (priced.isBlank()) {
+            return;
+        }
+        lines.add(new StorageOverlayPolicy.MarketLine(priced, Math.max(1, stack.getCount())));
+        units.putIfAbsent(priced, unit);
+    }
+
+    private static boolean hasAnyEquipment() {
+        return !allEmpty(EQUIPMENT);
+    }
+
+    private static boolean allEmpty(ItemStack[] stacks) {
+        if (stacks == null) {
+            return true;
+        }
+        for (ItemStack stack : stacks) {
+            if (stack != null && !stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean containerLooksUnpopulated(List<Slot> slots) {
+        int end = Math.max(0, slots.size() - 36);
+        for (int i = 0; i < end; i++) {
+            ItemStack stack = stackIn(slots, i);
+            if (!stack.isEmpty()
+                    && !InventoryOverlayPolicy.isPlaceholder(
+                            stack.getHoverName().getString(), itemPath(stack))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Path cachePath() {
+        return FabricLoader.getInstance().getConfigDir()
+                .resolve(InventoryOverlayPolicy.CHROME_CACHE_FILE);
+    }
+
+    public static void loadCache() {
+        Path path = cachePath();
+        boolean fileExists = Files.exists(path);
+        boolean memoryEmpty = chromeMemoryEmpty();
+        Minecraft client = Minecraft.getInstance();
+        boolean levelReady = client != null && client.level != null;
+        if (!InventoryOverlayPolicy.shouldReloadChromeCache(
+                cacheLoaded, memoryEmpty, fileExists, codecReady, levelReady)) {
+            return;
+        }
+        cacheLoaded = true;
+        codecReady = levelReady;
+        if (!fileExists) {
+            lastFingerprint = fingerprint();
+            return;
+        }
+        try {
+            JsonObject root = CACHE_GSON.fromJson(Files.readString(path), JsonObject.class);
+            if (root == null) {
+                lastFingerprint = fingerprint();
+                return;
+            }
+            if (root.has("equipment") && root.get("equipment").isJsonArray()) {
+                JsonArray items = root.getAsJsonArray("equipment");
+                for (int i = 0; i < EQUIPMENT.length; i++) {
+                    EQUIPMENT[i] = i < items.size()
+                            ? StorageOverlayRuntime.stackFromCache(items.get(i))
+                            : ItemStack.EMPTY;
+                }
+            }
+            if (root.has("pet")) {
+                equippedPet = StorageOverlayRuntime.stackFromCache(root.get("pet"));
+            }
+            petKnownEmpty = root.has("petKnownEmpty") && root.get("petKnownEmpty").getAsBoolean();
+            petCachedFromGui = root.has("petCachedFromGui")
+                    && root.get("petCachedFromGui").getAsBoolean();
+            petHud = null;
+            if (root.has("petHud") && root.get("petHud").isJsonObject()) {
+                JsonObject hud = root.getAsJsonObject("petHud");
+                String name = hud.has("name") ? hud.get("name").getAsString() : "";
+                if (name != null && !name.isBlank()) {
+                    int level = hud.has("level") ? hud.get("level").getAsInt() : -1;
+                    String held = hud.has("heldItem") ? hud.get("heldItem").getAsString() : "";
+                    petHud = new PetHudPolicy.Snapshot(level, name, held == null ? "" : held);
+                }
+            }
+            if (petKnownEmpty) {
+                equippedPet = ItemStack.EMPTY;
+                petHud = null;
+                petCachedFromGui = false;
+            }
+        } catch (Exception ignored) {
+        }
+        if (!petKnownEmpty
+                && petHud == null
+                && equippedPet != null
+                && !equippedPet.isEmpty()) {
+            petHud = PetHudPolicy.parse(
+                            equippedPet.getHoverName().getString(),
+                            loreLines(equippedPet))
+                    .orElse(new PetHudPolicy.Snapshot(
+                            -1, equippedPet.getHoverName().getString(), ""));
+        }
+        if (!petKnownEmpty
+                && petHud != null
+                && (equippedPet == null || equippedPet.isEmpty())) {
+            equippedPet = new ItemStack(Items.PLAYER_HEAD);
+        }
+        diskHadItems = diskHadItems || hasAnyEquipment() || !equippedPet.isEmpty() || petHud != null;
+        lastFingerprint = fingerprint();
+    }
+
+    private static void persistObserved() {
+        String next = fingerprint();
+        if (next.equals(lastFingerprint)) {
+            return;
+        }
+        boolean empty = chromeMemoryEmpty();
+        if (InventoryOverlayPolicy.shouldSkipEmptyChromeSave(empty, diskHadItems)) {
+            lastFingerprint = next;
+            return;
+        }
+        lastFingerprint = next;
+        if (!empty) {
+            diskHadItems = true;
+        }
+        scheduleSave();
+    }
+
+    private static boolean chromeMemoryEmpty() {
+        return !hasAnyEquipment()
+                && equippedPet.isEmpty()
+                && petHud == null
+                && !petKnownEmpty;
+    }
+
+    private static void scheduleSave() {
+        CACHE_DIRTY.set(true);
+        if (!CACHE_SAVE_SCHEDULED.compareAndSet(false, true)) {
+            return;
+        }
+        CACHE_IO.schedule(
+                InventoryChromeRuntime::flushScheduledSave,
+                CACHE_SAVE_DELAY_MS,
+                TimeUnit.MILLISECONDS);
+    }
+
+    private static void flushScheduledSave() {
+        CACHE_SAVE_SCHEDULED.set(false);
+        Minecraft client = Minecraft.getInstance();
+        if (client != null) {
+            client.execute(InventoryChromeRuntime::flushCacheToDisk);
+        } else {
+            flushCacheToDisk();
+        }
+    }
+
+    private static void flushCacheToDisk() {
+        if (!CACHE_DIRTY.get()) {
+            return;
+        }
+        String json;
+        try {
+            json = buildCacheJson();
+            CACHE_DIRTY.set(false);
+        } catch (Exception ignored) {
+            return;
+        }
+        CACHE_IO.execute(() -> {
+            try {
+                AtomicFileWriter.writeAtomically(cachePath(), json);
+            } catch (Exception ignored) {
+            }
+        });
+        if (CACHE_DIRTY.get() && CACHE_SAVE_SCHEDULED.compareAndSet(false, true)) {
+            CACHE_IO.schedule(
+                    InventoryChromeRuntime::flushScheduledSave,
+                    CACHE_SAVE_DELAY_MS,
+                    TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private static String buildCacheJson() {
+        JsonObject root = new JsonObject();
+        root.addProperty("schema", InventoryOverlayPolicy.CHROME_CACHE_SCHEMA);
+        JsonArray equipment = new JsonArray();
+        for (ItemStack stack : EQUIPMENT) {
+            equipment.add(StorageOverlayRuntime.stackToCache(stack));
+        }
+        root.add("equipment", equipment);
+        root.add("pet", StorageOverlayRuntime.stackToCache(equippedPet));
+        root.addProperty("petKnownEmpty", petKnownEmpty);
+        root.addProperty("petCachedFromGui", petCachedFromGui);
+        if (petHud != null && petHud.name() != null && !petHud.name().isBlank()) {
+            JsonObject hud = new JsonObject();
+            hud.addProperty("level", petHud.level());
+            hud.addProperty("name", petHud.name());
+            hud.addProperty("heldItem", petHud.heldItem() == null ? "" : petHud.heldItem());
+            root.add("petHud", hud);
+        }
+        return CACHE_GSON.toJson(root);
+    }
+
+    private static String fingerprint() {
+        StringBuilder builder = new StringBuilder();
+        for (ItemStack stack : EQUIPMENT) {
+            builder.append(stackFingerprint(stack)).append(';');
+        }
+        builder.append('|').append(stackFingerprint(equippedPet));
+        builder.append('|').append(petKnownEmpty);
+        builder.append('|').append(petCachedFromGui);
+        if (petHud != null) {
+            builder.append('|').append(petHud.level());
+            builder.append('|').append(petHud.name());
+            builder.append('|').append(petHud.heldItem());
+        }
+        return builder.toString();
+    }
+
+    private static String stackFingerprint(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return "";
+        }
+        return String.valueOf(BuiltInRegistries.ITEM.getKey(stack.getItem()))
+                + '#'
+                + stack.getCount()
+                + '#'
+                + stack.getHoverName().getString();
     }
 }

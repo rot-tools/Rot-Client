@@ -62,7 +62,7 @@ final class RenderHotPathWiringTest {
         assertTrue(slayer.contains("interpolatedBox"));
         assertFalse(slayer.contains("entitiesForRendering"));
         String flavor = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/SkyblockFlavorRuntime.java"),
+                "src/client/java/fi/rotclient/SkyBlockUtilityRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(flavor.contains("refreshImplosionHolders"));
         assertTrue(flavor.contains("IMPLOSION_HOLDERS"));

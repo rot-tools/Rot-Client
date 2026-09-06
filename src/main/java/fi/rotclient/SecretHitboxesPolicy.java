@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import java.util.Set;
+
 /**
  * Secret hitbox decisions. Returns which replacement shape to use
  * for dungeon secret blocks (lever / button / skull / chest).
@@ -31,6 +33,7 @@ public final class SecretHitboxesPolicy {
         NONE,
         FULL_CUBE,
         LEVER_FLOOR,
+        LEVER_CEILING,
         LEVER_NORTH,
         LEVER_SOUTH,
         LEVER_EAST,
@@ -43,7 +46,17 @@ public final class SecretHitboxesPolicy {
         BUTTON_WEST
     }
 
-    private SecretHitboxesPolicy() {
+    private static final Set<String> F7_BOSS_LEVERS = Set.of(
+            "61,136,142", "60,136,142", "59,136,142",
+            "62,135,142", "61,135,142", "59,135,142", "58,135,142",
+            "62,134,142", "61,134,142", "59,134,142", "58,134,142",
+            "61,133,142", "60,133,142", "59,133,142");
+
+    public static boolean expandLeverAt(int x, int y, int z, int floorNumber) {
+        if (floorNumber != 7) {
+            return true;
+        }
+        return !F7_BOSS_LEVERS.contains(x + "," + y + "," + z);
     }
 
     public static boolean shouldApply(
@@ -111,7 +124,10 @@ public final class SecretHitboxesPolicy {
     }
 
     static ShapeId oldLeverShape(AttachFace face, Cardinal direction) {
-        if (face == AttachFace.FLOOR || face == AttachFace.CEILING) {
+        if (face == AttachFace.CEILING) {
+            return ShapeId.LEVER_CEILING;
+        }
+        if (face == AttachFace.FLOOR) {
             return ShapeId.LEVER_FLOOR;
         }
         if (direction == null) {

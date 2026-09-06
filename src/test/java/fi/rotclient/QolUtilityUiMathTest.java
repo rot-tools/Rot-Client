@@ -37,7 +37,7 @@ final class QolUtilityUiMathTest {
                 QolUtilityUiMath.moduleCardAction(
                         true, false, false, true, false, true, true, true, false));
         assertEquals(
-                QolUtilityUiMath.CardAction.OPEN_HUD_MENU,
+                QolUtilityUiMath.CardAction.OPEN_HUD_SETTINGS,
                 QolUtilityUiMath.moduleCardAction(
                         true, false, false, true, false, true, true, true, true));
     }

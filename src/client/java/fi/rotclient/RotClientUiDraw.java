@@ -60,10 +60,21 @@ public final class RotClientUiDraw {
             int x,
             int y,
             int color) {
+        vanillaText(graphics, font, value, x, y, color, false);
+    }
+
+    public static void vanillaText(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            String value,
+            int x,
+            int y,
+            int color,
+            boolean shadow) {
         if (graphics == null || font == null) {
             return;
         }
-        graphics.text(font, RotClientFonts.vanilla(value), x, y, color, false);
+        graphics.text(font, RotClientFonts.vanilla(value), x, y, color, shadow);
     }
 
     /**
@@ -231,6 +242,11 @@ public final class RotClientUiDraw {
 
     static void drawShadowedPanel(
             GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
+        drawShadowedPanel(graphics, x, y, width, height, RotClientTheme.SURFACE);
+    }
+
+    static void drawShadowedPanel(
+            GuiGraphicsExtractor graphics, int x, int y, int width, int height, int background) {
         roundedFill(
                 graphics,
                 x + 4,
@@ -240,7 +256,7 @@ public final class RotClientUiDraw {
                 RotClientTheme.SHADOW,
                 RADIUS_MD);
         roundedFill(
-                graphics, x, y, x + width, y + height, RotClientTheme.SURFACE, RADIUS_MD);
+                graphics, x, y, x + width, y + height, background, RADIUS_MD);
         roundedOutline(
                 graphics, x, y, x + width, y + height, RotClientTheme.BORDER, RADIUS_MD);
     }
@@ -563,6 +579,26 @@ public final class RotClientUiDraw {
                 y + 2 + knob,
                 RotClientTheme.TOGGLE_KNOB,
                 knob / 2);
+    }
+
+    static void drawSquareLatch(
+            GuiGraphicsExtractor graphics, int x, int y, boolean enabled, boolean hover) {
+        int size = QolUtilityUiMath.SQUARE_LATCH_SIZE;
+        int fill;
+        if (enabled) {
+            fill = hover ? RotClientTheme.HUD_ACCENT : withAlpha(RotClientTheme.HUD_ACCENT, 0xE6);
+        } else {
+            fill = hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON;
+        }
+        roundedFill(graphics, x, y, x + size, y + size, fill, RADIUS_XS);
+        roundedOutline(
+                graphics,
+                x,
+                y,
+                x + size,
+                y + size,
+                enabled ? RotClientTheme.BORDER_BRIGHT : RotClientTheme.BORDER,
+                RADIUS_XS);
     }
 
     static void drawColorSwatch(

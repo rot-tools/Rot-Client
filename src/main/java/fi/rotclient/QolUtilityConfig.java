@@ -62,6 +62,7 @@ final class QolUtilityConfig {
     int inventoryChromeBorder = InventoryOverlayPolicy.DEFAULT_INV_BORDER;
 
     boolean skillLevelsEnabled = true;
+    boolean skillLevelsBackground = true;
     int skillLevelsColor = SkillLevelOverlayPolicy.DEFAULT_LEVEL_COLOR;
     int skillLevelsMaxColor = SkillLevelOverlayPolicy.DEFAULT_MAX_COLOR;
 
@@ -314,12 +315,12 @@ final class QolUtilityConfig {
     boolean chatGuildCommands = true;
     boolean chatPrivateCommands = true;
     boolean chatPreviousServer = true;
-    int chatPreviousServerSeconds = SkyblockFlavorPolicy.DEFAULT_PREVIOUS_SERVER_SECONDS;
+    int chatPreviousServerSeconds = SkyBlockUtilityPolicy.DEFAULT_PREVIOUS_SERVER_SECONDS;
     boolean chatQueueEstimate = true;
     boolean chatQuickJoin;
     boolean chatSlotMachine = true;
-    String chatQuickJoinText = SkyblockFlavorPolicy.DEFAULT_QUICK_JOIN_TEXT;
-    String chatQuickJoinIp = SkyblockFlavorPolicy.DEFAULT_QUICK_JOIN_IP;
+    String chatQuickJoinText = SkyBlockUtilityPolicy.DEFAULT_QUICK_JOIN_TEXT;
+    String chatQuickJoinIp = SkyBlockUtilityPolicy.DEFAULT_QUICK_JOIN_IP;
     String chatCommandsShortcuts = "";
     String chatCommandsRules = "";
     String chatCommandsKeybind = "";
@@ -645,6 +646,7 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.hide_recipe_book" -> inventoryOverlayHideRecipeBook;
             case "qol.inventory_overlay.hide_status_effects" -> inventoryOverlayHideStatusEffects;
             case "qol.inventory_overlay.pet_slot" -> inventoryOverlayPetSlot;
+            case "qol.skill_levels.background" -> skillLevelsBackground;
             case "qol.inventory_overlay.protect_drops" -> inventoryOverlayProtectDrops;
             case "qol.inventory_overlay.protect_salvage" -> inventoryOverlayProtectSalvage;
             case "qol.player_display.hide_vanilla_health" -> playerDisplayHideVanillaHealth;
@@ -813,6 +815,7 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.hide_recipe_book" -> inventoryOverlayHideRecipeBook = value;
             case "qol.inventory_overlay.hide_status_effects" -> inventoryOverlayHideStatusEffects = value;
             case "qol.inventory_overlay.pet_slot" -> inventoryOverlayPetSlot = value;
+            case "qol.skill_levels.background" -> skillLevelsBackground = value;
             case "qol.inventory_overlay.protect_drops" -> inventoryOverlayProtectDrops = value;
             case "qol.inventory_overlay.protect_salvage" -> inventoryOverlayProtectSalvage = value;
             case "qol.player_display.hide_vanilla_health" -> playerDisplayHideVanillaHealth = value;
@@ -1004,10 +1007,10 @@ final class QolUtilityConfig {
                     chatCommandsRules = value == null ? "" : value;
             case "qol.chat_commands.quick_join_text" ->
                     chatQuickJoinText = value == null || value.isBlank()
-                            ? SkyblockFlavorPolicy.DEFAULT_QUICK_JOIN_TEXT
+                            ? SkyBlockUtilityPolicy.DEFAULT_QUICK_JOIN_TEXT
                             : value.trim();
             case "qol.chat_commands.quick_join_ip" ->
-                    chatQuickJoinIp = SkyblockFlavorPolicy.sanitizeQuickJoinIp(value);
+                    chatQuickJoinIp = SkyBlockUtilityPolicy.sanitizeQuickJoinIp(value);
             case "qol.inventory_overlay.protect_list" ->
                     inventoryOverlayProtectList = value == null ? "" : value;
             default -> {
@@ -1126,7 +1129,7 @@ final class QolUtilityConfig {
             case "qol.world_scanner.esp_range" ->
                     worldScannerEspRange = WorldScannerPolicy.clampEspRange((int) Math.round(value));
             case "qol.chat_commands.previous_server_time" ->
-                    chatPreviousServerSeconds = SkyblockFlavorPolicy.clampPreviousServerSeconds((int) Math.round(value));
+                    chatPreviousServerSeconds = SkyBlockUtilityPolicy.clampPreviousServerSeconds((int) Math.round(value));
             case "qol.auto_conversation.delay" ->
                     autoConversationDelayTicks = AutoConversationPolicy.clampDelayTicks((int) Math.round(value));
             case "qol.fishing_helper.pull_delay" ->
@@ -1528,6 +1531,8 @@ final class QolUtilityConfig {
             case "slayer_vengeance" -> new float[] {slayerVengeanceHudX, slayerVengeanceHudY, 1.0F};
             case "auto_clicker" -> new float[] {autoClickerHudX, autoClickerHudY, 1.0F};
             case "dungeon" -> new float[] {dungeonHudX, dungeonHudY, 1.0F};
+            case "dungeon_carry" -> new float[] {extras().athen().carryHudX, extras().athen().carryHudY, 1.0F};
+            case "dungeon_watcher" -> new float[] {extras().athen().watcherHudX, extras().athen().watcherHudY, 1.0F};
             case "fishing" -> new float[] {fishingHudX, fishingHudY, 1.0F};
             case "mining" -> new float[] {extras().miningHudX, extras().miningHudY, 1.0F};
             case "diana" -> new float[] {extras().dianaHudX, extras().dianaHudY, 1.0F};
@@ -1535,6 +1540,8 @@ final class QolUtilityConfig {
             case "iota_arrows" -> new float[] {extras().iotaArrowHudX, extras().iotaArrowHudY, 1.0F};
             case "kuudra_alerts" -> new float[] {extras().iotaAlertHudX, extras().iotaAlertHudY, 1.0F};
             case "stall_bin" -> new float[] {extras().stallBinHudX, extras().stallBinHudY, 1.0F};
+            case "custom_scoreboard" -> new float[] {
+                    extras().board().hudX, extras().board().hudY, extras().board().hudScale};
             default -> new float[] {12.0F, 12.0F, 1.0F};
         };
     }
@@ -1629,6 +1636,14 @@ final class QolUtilityConfig {
                 dungeonHudX = clampPos(x);
                 dungeonHudY = clampPos(y);
             }
+            case "dungeon_carry" -> {
+                extras().athen().carryHudX = clampPos(x);
+                extras().athen().carryHudY = clampPos(y);
+            }
+            case "dungeon_watcher" -> {
+                extras().athen().watcherHudX = clampPos(x);
+                extras().athen().watcherHudY = clampPos(y);
+            }
             case "fishing" -> {
                 fishingHudX = clampPos(x);
                 fishingHudY = clampPos(y);
@@ -1656,6 +1671,10 @@ final class QolUtilityConfig {
             case "stall_bin" -> {
                 extras().stallBinHudX = clampPos(x);
                 extras().stallBinHudY = clampPos(y);
+            }
+            case "custom_scoreboard" -> {
+                extras().board().hudX = clampPos(x);
+                extras().board().hudY = clampPos(y);
             }
             default -> {
             }
@@ -1934,6 +1953,7 @@ final class QolUtilityConfig {
             }
             case "qol.skill_levels" -> {
                 skillLevelsEnabled = d.skillLevelsEnabled;
+                skillLevelsBackground = d.skillLevelsBackground;
                 skillLevelsColor = d.skillLevelsColor;
                 skillLevelsMaxColor = d.skillLevelsMaxColor;
             }

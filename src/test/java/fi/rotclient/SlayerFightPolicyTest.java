@@ -21,6 +21,11 @@ class SlayerFightPolicyTest {
         assertEquals(
                 SlayerFightPolicy.Marker.BEACON,
                 SlayerFightPolicy.markerFromStand("§cYang Glyph", "").orElseThrow());
+        assertTrue(SlayerFightPolicy.isThrownYangGlyphStand("", "Beacon", false));
+        assertTrue(SlayerFightPolicy.isThrownYangGlyphStand("", "", true));
+        assertTrue(SlayerFightPolicy.isThrownYangGlyphStand("Beacon", "", false));
+        assertFalse(SlayerFightPolicy.isThrownYangGlyphStand("§cYang Glyph", "", false));
+        assertFalse(SlayerFightPolicy.isThrownYangGlyphStand("Destroy the beacon!", "", false));
         assertEquals(
                 SlayerFightPolicy.Marker.NUKEKUBI,
                 SlayerFightPolicy.markerFromStand("Nukekubi", "").orElseThrow());
@@ -69,6 +74,15 @@ class SlayerFightPolicyTest {
                 SlayerFightPolicy.tarantulaPhase("Conjoined Brood"));
         assertEquals("Phase 2/2", SlayerFightPolicy.tarantulaPhaseLabel(
                 SlayerFightPolicy.TarantulaPhase.SECOND));
+        SlayerPolicy.EntityDescriptor t5PhaseOne = SlayerPolicy.classifyTag(
+                "☠ Tarantula Broodfather 10M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor t5PhaseTwo = SlayerPolicy.classifyTag(
+                "☠ Conjoined Brood 20M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor t4 = SlayerPolicy.classifyTag(
+                "☠ Tarantula Broodfather IV 2.4M❤", "Owner: LocalPlayer").orElseThrow();
+        assertTrue(SlayerFightPolicy.isTarantulaTierFivePhaseOne(t5PhaseOne));
+        assertFalse(SlayerFightPolicy.isTarantulaTierFivePhaseOne(t5PhaseTwo));
+        assertFalse(SlayerFightPolicy.isTarantulaTierFivePhaseOne(t4));
         assertTrue(SlayerFightPolicy.isHatchlingsChat(
                 "§cYou need to kill the Broodfather's hatchlings before it can be damaged again!"));
         assertTrue(SlayerFightPolicy.isSpiderSound("minecraft:entity.spider.hurt"));
@@ -107,11 +121,27 @@ class SlayerFightPolicyTest {
                 SlayerFightPolicy.markerFromStand("§6§l5s §c§l8 hits", "").orElseThrow());
         assertEquals(5, SlayerFightPolicy.firePillarSeconds("5s 8 hits").orElseThrow());
         assertEquals(8, SlayerFightPolicy.firePillarHits("5s 8 hits").orElseThrow());
+        assertEquals(5, SlayerFightPolicy.firePillarSeconds("Fire Pillar 5s").orElseThrow());
+        assertEquals(8, SlayerFightPolicy.firePillarHits("§6Fire Pillar §c5s").orElseThrow());
+        assertEquals(
+                SlayerFightPolicy.Marker.FIRE_PILLAR,
+                SlayerFightPolicy.markerFromStand("Fire Pillar 4s", "").orElseThrow());
         assertTrue(SlayerFightPolicy.isWrongAttunementChat("Your hit was reduced by Hellion Shield!"));
         assertTrue(SlayerFightPolicy.isWrongAttunementChat(
                 "Strike using the ASHEN attunement on your dagger!"));
         assertFalse(SlayerFightPolicy.isWrongAttunementChat("You have slain the Inferno Demonlord"));
         assertEquals(50_000_000.0D, SlayerFightPolicy.healthValue("50M❤").orElseThrow(), 0.01D);
+        assertEquals(30_000_000.0D, SlayerFightPolicy.healthValue("30,000,000❤").orElseThrow(), 0.01D);
+        assertEquals("30000000❤", SlayerFightPolicy.compactHealth("Inferno Demonlord 30,000,000❤").orElseThrow());
+        var reading = SlayerFightPolicy.healthReading("☠ Inferno Demonlord IV 15M/30M❤").orElseThrow();
+        assertEquals(15_000_000.0D, reading.current(), 0.01D);
+        assertEquals(30_000_000.0D, reading.max(), 0.01D);
+        var full = SlayerFightPolicy.healthReading("Inferno Demonlord 9,000,000/30,000,000❤").orElseThrow();
+        assertEquals(9_000_000.0D, full.current(), 0.01D);
+        assertEquals(30_000_000.0D, full.max(), 0.01D);
+        assertEquals(
+                SlayerFightPolicy.InfernoPhase.SECOND,
+                SlayerFightPolicy.infernoPhase(4, reading.current(), reading.max()));
         assertEquals(
                 SlayerFightPolicy.InfernoPhase.THIRD,
                 SlayerFightPolicy.infernoPhase(4, 9_000_000.0D, 30_000_000.0D));
@@ -196,6 +226,11 @@ class SlayerFightPolicyTest {
                 "IV"));
         assertTrue(split.isPresent());
         assertEquals(4, split.get().tier());
+        Optional<SlayerFightPolicy.QuestRef> numeric = SlayerFightPolicy.questFromSidebar(List.of(
+                "Slayer Quest",
+                "Voidgloom Seraph T4"));
+        assertTrue(numeric.isPresent());
+        assertEquals(4, numeric.get().tier());
         assertEquals(" IV", SlayerFightPolicy.romanLabel(4));
         assertTrue(SlayerFightPolicy.wrongQuest(
                 SlayerPolicy.SlayerType.SVEN, SlayerPolicy.SlayerType.VOIDGLOOM));

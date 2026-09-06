@@ -55,6 +55,12 @@ public final class SkyBlockStatBarParser {
                     + "(?:\\s*\\([^)]*\\))?");
     private static final Pattern UNLABELED_PAIR = Pattern.compile(
             "\\b[\\d,]+(?:\\.\\d+)?\\s*/\\s*[\\d,]+(?:\\.\\d+)?\\b");
+    /**
+     * Hypixel HUD-font icon slots. With the SkyBlock font they are hearts /
+     * defense / mana glyphs; after {@code Component.literal} they show as
+     * {@code T1}..{@code T5} on top of the vanilla hearts.
+     */
+    private static final Pattern HUD_ICON_TOKEN = Pattern.compile("(?i)T[1-5]");
     private static final List<Pattern> LOCATION_NAME_PATTERNS = locationNamePatterns();
 
     public record Stats(
@@ -111,7 +117,7 @@ public final class SkyBlockStatBarParser {
         if (raw == null || raw.isBlank()) {
             return Stats.empty();
         }
-        String text = stripFormatting(raw);
+        String text = stripHudIconTokens(stripFormatting(raw));
         Pair health = firstPair(HEALTH.matcher(text));
         OptionalDouble defense = firstSingle(DEFENSE.matcher(text));
         Pair mana = firstPair(MANA.matcher(text));
@@ -268,6 +274,9 @@ public final class SkyBlockStatBarParser {
         if (hideLocation) {
             text = stripLocationNames(text);
         }
+        if (hideHealth || hideDefense || hideMana || hideOverflow || hideSpeed || hideVitality) {
+            text = stripHudIconTokens(text);
+        }
         if (hideHealth) {
             text = HEALTH.matcher(text).replaceAll("");
         }
@@ -341,6 +350,13 @@ public final class SkyBlockStatBarParser {
                     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
         }
         return List.copyOf(patterns);
+    }
+
+    static String stripHudIconTokens(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        return HUD_ICON_TOKEN.matcher(text).replaceAll(" ");
     }
 
     public static String stripFormatting(String raw) {

@@ -29,7 +29,7 @@ abstract class BlockStateSecretHitboxMixin {
             BlockPos pos,
             CollisionContext context,
             CallbackInfoReturnable<VoxelShape> cir) {
-        VoxelShape override = SecretHitboxesRuntime.shapeFor((BlockState) (Object) this);
+        VoxelShape override = SecretHitboxesRuntime.shapeFor((BlockState) (Object) this, pos);
         if (override != null) {
             cir.setReturnValue(override);
         }

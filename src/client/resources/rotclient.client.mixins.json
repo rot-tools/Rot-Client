@@ -25,6 +25,7 @@
     "ClipContextSecretHitboxMixin",
     "ConnectionFreecamMixin",
     "ConnectionInventoryWalkMixin",
+    "CreeperPoweredGhostsMixin",
     "CreeperRendererGhostsMixin",
     "ConnectionOutboundPrivacyMixin",
     "FabricHooksPrivacyMixin",
@@ -82,6 +83,7 @@
     "SoundEngineSlayerMixin",
         "ScreenCustomCursorMixin",
         "ScreenEffectRendererMixin",
+        "SkyRendererExtractMixin",
         "TitleScreenQuickJoinMixin",
         "StuckInBodyLayerMixin"
   ],

@@ -41,6 +41,10 @@ final class SkyBlockItemData {
         return stringValue(extraAttributes(stack), "uuid");
     }
 
+    static String petInfo(ItemStack stack) {
+        return stringValue(extraAttributes(stack), "petInfo");
+    }
+
     static String marketId(ItemStack stack) {
         String id = AutoClickerItemIdentity.skyBlockId(stack);
         if (!id.isBlank()) {
@@ -76,7 +80,7 @@ final class SkyBlockItemData {
 
     static int dungeonStars(ItemStack stack) {
         CompoundTag extra = extraAttributes(stack);
-        return SkyblockFlavorPolicy.dungeonStars(
+        return SkyBlockUtilityPolicy.dungeonStars(
                 intValue(extra, "dungeon_item_level"),
                 intValue(extra, "upgrade_level"));
     }
@@ -89,7 +93,7 @@ final class SkyBlockItemData {
         if (extra.contains("candyUsed")) {
             return intValue(extra, "candyUsed");
         }
-        return SkyblockFlavorPolicy.parseCandyUsed(stringValue(extra, "petInfo"));
+        return SkyBlockUtilityPolicy.parseCandyUsed(stringValue(extra, "petInfo"));
     }
 
     private static int intValue(CompoundTag tag, String key) {

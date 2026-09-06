@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,8 +27,18 @@ public final class DungeonF7Policy {
 
     public static final long MAXOR_START_MILLIS = 8_350L;
     public static final long STORM_START_MILLIS = 6_000L;
-    public static final long CRYSTAL_RESPAWN_MILLIS = 4_000L;
+    /** Maxor crystals respawn 34 ticks after the beam / YOU TRICKED ME line. */
+    public static final int CRYSTAL_RESPAWN_TICKS = 34;
+    public static final long CRYSTAL_RESPAWN_MILLIS = CRYSTAL_RESPAWN_TICKS * 50L;
     public static final long RELIC_SPAWN_MILLIS = 42_000L;
+    public static final int MIN_RELIC_SPAWN_TICKS = 1;
+    public static final int MAX_RELIC_SPAWN_TICKS = 1200;
+    public static final int DEFAULT_RELIC_SPAWN_TICKS = 840;
+    public static final List<String> DRAGON_SOLO_CLASSES = List.of("Tank", "Healer");
+    public static final List<String> DRAGON_KILL_ORDER = List.of("Power", "Flame", "Apex", "Ice", "Soul");
+    public static final List<String> DRAGON_KILL_ORDER_PAUL = List.of("Ice", "Soul", "Power", "Flame", "Apex");
+    private static final Pattern DRAGON_NAME = Pattern.compile("(?i)\\b(power|flame|apex|ice|soul)\\b");
+    private static final Pattern DRAGON_KILL = Pattern.compile("(?i)(slain|killed|destroyed|down)");
 
     private static final Pattern CRYSTAL_PICKUP = Pattern.compile(
             "^(\\w{3,16}) picked up an Energy Crystal!$");
@@ -37,7 +48,7 @@ public final class DungeonF7Policy {
     private static final Pattern DRAGON_SPRAY = Pattern.compile("(?i)ice spray");
     private static final Pattern DRAGON_ARROWS = Pattern.compile("(?i)arrows? hit");
     private static final Pattern MELODY_PARTY = Pattern.compile(
-            "(?i)^Party > (?:\\[[^\\]]+]\\s*)?(\\w{3,16})\\s*[:\\>].*(?:melody|\\d/4|\\d{1,3}%)");
+            "(?i)^Party > (?:\\[[^\\]]+]\\s*)?(\\w{3,16})\\s*[:\\>].*(?:melody|\\d+/\\d+|\\d{1,3}%)");
 
     private DungeonF7Policy() {
     }
@@ -158,8 +169,38 @@ public final class DungeonF7Policy {
         return List.copyOf(buttons);
     }
 
+    /**
+     * Sea-lantern sequence lights the obsidian wall one block east of the
+     * clickable buttons (x=111), not the stone buttons at x=110.
+     */
+    public static List<EmberDungeonPolicy.IntVec> simonLanterns() {
+        List<EmberDungeonPolicy.IntVec> lanterns = new ArrayList<>();
+        for (int y = 120; y <= 123; y++) {
+            for (int z = 92; z <= 95; z++) {
+                lanterns.add(new EmberDungeonPolicy.IntVec(111, y, z));
+            }
+        }
+        return List.copyOf(lanterns);
+    }
+
     public static boolean isSimonButton(int x, int y, int z) {
         return x == 110 && y >= 120 && y <= 123 && z >= 92 && z <= 95;
+    }
+
+    public static boolean isSimonLantern(int x, int y, int z) {
+        return x == 111 && y >= 120 && y <= 123 && z >= 92 && z <= 95;
+    }
+
+    public static EmberDungeonPolicy.IntVec simonButtonForLantern(int x, int y, int z) {
+        if (!isSimonLantern(x, y, z)) {
+            return null;
+        }
+        return new EmberDungeonPolicy.IntVec(110, y, z);
+    }
+
+    public static boolean isSimonSequenceLit(String blockId) {
+        String id = blockId == null ? "" : blockId.toLowerCase(Locale.ROOT);
+        return id.contains("sea_lantern") || id.contains("lamp");
     }
 
     public static EmberDungeonPolicy.IntVec simonStart() {
@@ -216,7 +257,7 @@ public final class DungeonF7Policy {
             int col = melody.correct() + 1;
             int row = slot / 9;
             int slotCol = slot % 9;
-            if (slotCol == col && row >= 1 && row <= 4) {
+            if (slotCol == col && row >= 1 && row <= DungeonPolicy.LEGACY_MELODY_PLAY_ROWS) {
                 return column;
             }
         }
@@ -334,6 +375,11 @@ public final class DungeonF7Policy {
         return text.contains("relic") && (key.isEmpty() || text.contains(key));
     }
 
+    public static boolean holdingRelicOrMenu(String itemName) {
+        String text = DungeonPolicy.normalize(itemName).toLowerCase(Locale.ROOT);
+        return text.contains("relic") || text.contains("skyblock menu");
+    }
+
     public static int clampRelicLookMs(int ms) {
         return Math.max(MIN_RELIC_LOOK_MS, Math.min(MAX_RELIC_LOOK_MS, ms));
     }
@@ -393,7 +439,7 @@ public final class DungeonF7Policy {
     public static final int MAX_TERM_PROTECT_MS = 700;
     public static final int DEFAULT_TERM_PROTECT_MS = 400;
     private static final Pattern P3_PROGRESS = Pattern.compile(
-            "^(\\w{3,16}) (?:activated|completed) a (terminal|lever|device)! \\((\\d+)/(\\d+)\\)$");
+            "^(.{1,16}) (?:activated|completed) a (terminal|lever|device)! \\((\\d+)/(\\d+)\\)$");
 
     public record P3Progress(String player, String kind, int current, int total) {
     }
@@ -429,7 +475,12 @@ public final class DungeonF7Policy {
     }
 
     public static int melodySlotForDigit(int digit) {
-        if (digit < 1 || digit > 4) {
+        return melodySlotForDigit(digit, DungeonPolicy.DEFAULT_MELODY_PLAY_ROWS);
+    }
+
+    public static int melodySlotForDigit(int digit, int playRows) {
+        int rows = DungeonPolicy.clampMelodyPlayRows(playRows);
+        if (digit < 1 || digit > rows) {
             return -1;
         }
         return (digit - 1) * 9 + 16;
@@ -462,8 +513,132 @@ public final class DungeonF7Policy {
     }
 
     public static String dragonSpawnLine(long deadlineMillis, long nowMillis) {
-        long left = Math.max(0L, deadlineMillis - nowMillis);
-        return "Dragon spawn " + String.format(Locale.ROOT, "%.1fs", left / 1000.0D);
+        return formatCountdown("Dragon spawn", Math.max(0L, deadlineMillis - nowMillis), false, true, true);
+    }
+
+    public static int clampRelicSpawnTicks(int ticks) {
+        return Math.max(MIN_RELIC_SPAWN_TICKS, Math.min(MAX_RELIC_SPAWN_TICKS, ticks));
+    }
+
+    public static long relicSpawnMillis(int ticks) {
+        return clampRelicSpawnTicks(ticks) * 50L;
+    }
+
+    public static String normalizeSoloClass(String value) {
+        if (value != null) {
+            for (String option : DRAGON_SOLO_CLASSES) {
+                if (option.equalsIgnoreCase(value.trim())) {
+                    return option;
+                }
+            }
+        }
+        return "Tank";
+    }
+
+    public static List<String> dragonFocusOrder(boolean paul) {
+        return paul ? DRAGON_KILL_ORDER_PAUL : DRAGON_KILL_ORDER;
+    }
+
+    public static List<String> remainingDragons(boolean paul, Set<String> down) {
+        List<String> left = new ArrayList<>();
+        for (String name : dragonFocusOrder(paul)) {
+            if (down == null || !down.contains(name.toLowerCase(Locale.ROOT))) {
+                left.add(name);
+            }
+        }
+        return List.copyOf(left);
+    }
+
+    public static String dragonPriorityLine(boolean paul, Set<String> down, String soloClass) {
+        List<String> left = remainingDragons(paul, down);
+        String solo = normalizeSoloClass(soloClass);
+        if (left.isEmpty()) {
+            return "Dragons down  Solo " + solo;
+        }
+        return "Dragons " + String.join(" > ", left) + "  Solo " + solo;
+    }
+
+    public static Optional<String> dragonPadName(String text) {
+        if (text == null || text.isBlank()) {
+            return Optional.empty();
+        }
+        Matcher match = DRAGON_NAME.matcher(DungeonPolicy.normalize(text));
+        if (!match.find()) {
+            return Optional.empty();
+        }
+        String raw = match.group(1).toLowerCase(Locale.ROOT);
+        for (String name : DRAGON_KILL_ORDER) {
+            if (name.equalsIgnoreCase(raw)) {
+                return Optional.of(name);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static boolean dragonKillChat(String chat) {
+        String text = DungeonPolicy.normalize(chat);
+        return dragonPadName(text).isPresent() && DRAGON_KILL.matcher(text).find();
+    }
+
+    public static boolean slotInSolution(List<DungeonPolicy.TerminalClick> clicks, int slot) {
+        if (clicks == null || slot < 0) {
+            return false;
+        }
+        for (DungeonPolicy.TerminalClick click : clicks) {
+            if (click.slot() == slot) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean chestTerminalSlot(int slot) {
+        return slot >= 0 && slot < 54;
+    }
+
+    public static boolean shouldBlockWrongTerminalSlot(
+            boolean enabled,
+            boolean sneaking,
+            boolean inChestSlots,
+            boolean inSolution) {
+        if (!enabled || sneaking || !inChestSlots) {
+            return false;
+        }
+        return !inSolution;
+    }
+
+    public static boolean shouldHideClickedSlot(
+            boolean hideClicked,
+            boolean inChestSlots,
+            boolean empty,
+            boolean inSolution) {
+        if (!hideClicked || !inChestSlots || empty) {
+            return false;
+        }
+        return !inSolution;
+    }
+
+    public static String formatCountdown(
+            String label,
+            long remainingMs,
+            boolean ticks,
+            boolean symbol,
+            boolean prefix) {
+        long left = Math.max(0L, remainingMs);
+        String value;
+        String suffix;
+        if (ticks) {
+            value = Long.toString(left / 50L);
+            suffix = symbol ? "t" : "";
+        } else {
+            value = String.format(Locale.ROOT, "%.1f", left / 1000.0D);
+            suffix = symbol ? "s" : "";
+        }
+        String body = value + suffix;
+        if (!prefix || label == null || label.isBlank()) {
+            return body;
+        }
+        return label + " " + body;
     }
 
     public static String goldorFrenzyLine(int ticksLeft) {

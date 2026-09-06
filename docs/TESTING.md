@@ -368,11 +368,20 @@ The current gemstone pipeline emits these core markers:
 
 ### QoL checkpoint validation
 
-The current catalog contains 124 wired modules. Before claiming a module runtime
+The current catalog contains 131 wired modules. Before claiming a module runtime
 verified, test its switch, settings drawer, reset behavior, persistence across
 restart, and the exact visual/input effect. Start with UI move/resize/snap,
 Inventory Overlay, Price/Info Tooltips, Viewmodel, Item Scale, Experiments,
 Wardrobe, Harp, GFS, Sell, Ghosts, and Camera.
+
+Inventory Overlay persistence checklist:
+
+- [ ] Equip necklace/cloak/belt/gloves and a pet, open survival inventory, and
+  confirm the four bars and pet slot show those items.
+- [ ] Fully close Minecraft, launch again, join SkyBlock, and open inventory
+  without opening Stats or Pets first. The same equipment and pet should show.
+- [ ] Unequip the pet in Pets, then confirm the pet slot returns to `+` after
+  the Pets menu has finished loading.
 
 Wardrobe Swapper controlled checklist:
 

@@ -101,6 +101,10 @@ final class RotClientSidebarNavTest {
                 RotClientSidebarNav.hitTargetForQolGroup(
                         QolUtilityCatalog.Group.GARDEN));
         assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_GUI,
+                RotClientSidebarNav.hitTargetForQolGroup(
+                        QolUtilityCatalog.Group.GUI));
+        assertEquals(
                 RotClientSidebarNav.SECTION_QOL,
                 RotClientSidebarNav.sectionForModule(DashboardModule.MINING_TRACKER));
         assertEquals(

@@ -19,5 +19,25 @@ class SlayerRngHudWiringTest {
         assertTrue(source.contains("observeContainer("));
         assertTrue(source.contains("SlayerRngCatalog.resolve"));
         assertTrue(source.contains("SlayerRngMeterPolicy.chatSelection"));
+        assertTrue(source.contains("activateStoredRngDrop"));
+        assertTrue(source.contains("slayerRngMeterSelectedByFamily"));
+        assertTrue(source.contains("currentRngFamily"));
+        assertTrue(source.contains("ClientBoundaryGuard.run(\"SLAYER_CHAT\""));
+        assertTrue(source.contains("ClientBoundaryGuard.call(\"SLAYER_RNG_CHAT_HIDE\""));
+        assertTrue(source.contains("ClientBoundaryGuard.run(\"SLAYER_GIZMOS\""));
+        assertTrue(source.contains("renderGizmosInternal"));
+    }
+
+    @Test
+    void dashboardTogglesDoNotReenterTheGameMessageFilter() throws Exception {
+        String client = Files.readString(Path.of("src/client/java/fi/rotclient/RotClientClient.java"));
+        int notify = client.indexOf("static void notifyQolModuleToggled");
+        int next = client.indexOf("private static int resetLayout", notify);
+        assertTrue(notify >= 0);
+        assertTrue(next > notify);
+        String section = client.substring(notify, next);
+        assertTrue(section.contains("addClientSystemMessage"));
+        assertTrue(!section.contains("player.sendSystemMessage"));
+        assertTrue(client.contains("ClientBoundaryGuard.call(\"SLAYER_ALLOW_GAME\""));
     }
 }

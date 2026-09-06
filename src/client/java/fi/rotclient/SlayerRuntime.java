@@ -46,10 +46,12 @@ import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -89,6 +91,8 @@ public final class SlayerRuntime {
     private static final double MIN_MARKER_SIZE = 0.65D;
     private static boolean lastOwnedHeldBeacon;
     private static long yangGlyphThrownUntilMillis;
+    private static boolean yangGlyphClaimed;
+    private static Vec3 yangGlyphThrowOrigin;
     private static SlayerFightPolicy.VoidgloomPhase voidgloomPhase =
             SlayerFightPolicy.VoidgloomPhase.UNKNOWN;
     private static int voidgloomHits = -1;
@@ -130,11 +134,14 @@ public final class SlayerRuntime {
     private static long lastMinibossAlertAtMillis;
     private static SlayerSessionEngine.Snapshot overlaySnapshot;
     private static SlayerFightPolicy.QuestRef latestQuest;
+    private static List<String> ownedNametagLines = List.of();
 
     private static long fadeSnapshotTick = Long.MIN_VALUE;
     private static SlayerSessionEngine.Snapshot fadeSnapshot;
     private static long scanOwnedAt;
     private static Vec3[] scanOwnedPositions;
+    private static List<Vec3> scanForeignVoidgloomPositions;
+    private static int scanOwnedVoidgloomEntityId = Integer.MIN_VALUE;
 
     private record FightMarker(
             AABB box,
@@ -216,6 +223,10 @@ public final class SlayerRuntime {
     }
 
     static void onChat(Component message) {
+        ClientBoundaryGuard.run("SLAYER_CHAT", () -> observeChat(message));
+    }
+
+    private static void observeChat(Component message) {
         if (message == null || !anyFeatureEnabled(settings())) {
             return;
         }
@@ -292,23 +303,31 @@ public final class SlayerRuntime {
      * game chat remains untouched.
      */
     static boolean shouldHideRngMeterChat(Component message) {
-        QolSkyblockExtras settings = settings();
-        if (message == null || !settings.slayerDropsEnabled) {
-            return false;
-        }
-        String line = message.getString().replaceAll("§.", "").trim();
-        return SlayerRngMeterPolicy.shouldHideChat(
-                settings.slayerDropsRngHideChat,
-                SlayerRngMeterPolicy.chatStoredXp(line).isPresent(),
-                selectedRngDrop != null && selectedRngDrop.requiredXp() > 0L);
+        return ClientBoundaryGuard.call("SLAYER_RNG_CHAT_HIDE", () -> {
+            QolSkyblockExtras settings = settings();
+            if (message == null || !settings.slayerDropsEnabled) {
+                return false;
+            }
+            String line = message.getString().replaceAll("§.", "").trim();
+            if (line.startsWith("[Rot Client]")) {
+                return false;
+            }
+            activateStoredRngDrop(currentRngFamily());
+            return SlayerRngMeterPolicy.shouldHideChat(
+                    settings.slayerDropsRngHideChat,
+                    SlayerRngMeterPolicy.chatStoredXp(line).isPresent(),
+                    selectedRngDrop != null && selectedRngDrop.requiredXp() > 0L);
+        }, false);
     }
 
     static boolean shouldHideInfernoChat(Component message) {
-        QolSkyblockExtras settings = settings();
-        if (message == null || !settings.slayerInfernoEnabled || !settings.slayerInfernoHideChat) {
-            return false;
-        }
-        return SlayerFightPolicy.isWrongAttunementChat(message.getString());
+        return ClientBoundaryGuard.call("SLAYER_INFERNO_CHAT_HIDE", () -> {
+            QolSkyblockExtras settings = settings();
+            if (message == null || !settings.slayerInfernoEnabled || !settings.slayerInfernoHideChat) {
+                return false;
+            }
+            return SlayerFightPolicy.isWrongAttunementChat(message.getString());
+        }, false);
     }
 
     static void onEntityEvent(Entity entity, byte eventId) {
@@ -333,16 +352,17 @@ public final class SlayerRuntime {
         scanCooldown = 0;
         pendingTradePlayer = "";
         CARRY_PAYMENTS_M.clear();
-        selectedRngDrop = null;
-        lastRngStoredXp = -1L;
         lastMagicFind = null;
         lastRngEmptyWarningMillis = 0L;
         lastMinibossAlertAtMillis = 0L;
         fadeSnapshot = null;
         fadeSnapshotTick = Long.MIN_VALUE;
         scanOwnedPositions = null;
+        scanForeignVoidgloomPositions = null;
+        scanOwnedVoidgloomEntityId = Integer.MIN_VALUE;
         lastAttackedCarryBossEntityId = Integer.MIN_VALUE;
         latestQuest = null;
+        ownedNametagLines = List.of();
         overlaySnapshot = null;
         lastTimeMessageAtMillis = 0L;
         resetProgress();
@@ -363,20 +383,8 @@ public final class SlayerRuntime {
         }
         boolean questVisible = ENGINE.questState() == SlayerSessionEngine.QuestState.ACTIVE
                 || latestQuest != null;
-        SlayerProgressPolicy.parse(message.getString(), questVisible).ifPresent(progress -> {
-            latestProgress = progress;
-            if (!settings.slayerProgressBossWarning) {
-                PROGRESS_THRESHOLD.reset();
-                return;
-            }
-            if (PROGRESS_THRESHOLD.observe(
-                    questVisible,
-                    progress,
-                    settings.slayerProgressWarningPercent,
-                    settings.slayerProgressWarningRepeat)) {
-                alertBossSpawnSoon(Minecraft.getInstance(), progress);
-            }
-        });
+        SlayerProgressPolicy.parse(message.getString(), questVisible).ifPresent(progress ->
+                applyProgress(settings, progress, questVisible));
     }
 
     static void onAttack(Entity entity) {
@@ -522,30 +530,39 @@ public final class SlayerRuntime {
         SlayerSessionEngine.ActiveBoss boss = primaryOwnedBoss(snapshot);
         List<String> lines = new ArrayList<>();
         lines.add("SLAYER");
+        List<String> nametags = SlayerPolicy.nametagHudLines(ownedNametagLines);
         if (boss == null) {
-            if (latestQuest != null) {
-                lines.add(latestQuest.type().displayName()
-                        + SlayerFightPolicy.romanLabel(latestQuest.tier()));
+            if (!nametags.isEmpty()) {
+                lines.addAll(nametags);
+            } else {
+                if (latestQuest != null) {
+                    lines.add(latestQuest.type().displayName()
+                            + SlayerFightPolicy.romanLabel(latestQuest.tier()));
+                }
+                lines.add(snapshot.questState() == SlayerSessionEngine.QuestState.ACTIVE
+                        || latestQuest != null
+                        ? "Quest active"
+                        : "No active Slayer boss");
             }
-            lines.add(snapshot.questState() == SlayerSessionEngine.QuestState.ACTIVE
-                    || latestQuest != null
-                    ? "Quest active"
-                    : "No active Slayer boss");
             if (settings.slayerDisplayKillTime && snapshot.lastKillDurationMillis() > 0L) {
                 lines.add("Last kill " + duration(snapshot.lastKillDurationMillis()));
             }
             return lines;
         }
         SlayerPolicy.EntityDescriptor descriptor = boss.descriptor();
-        int tier = descriptor.tier();
-        if (tier <= 0 && latestQuest != null && latestQuest.type() == descriptor.type()) {
-            tier = latestQuest.tier();
+        if (!nametags.isEmpty()) {
+            lines.addAll(nametags);
+        } else {
+            int tier = descriptor.tier();
+            if (tier <= 0 && latestQuest != null && latestQuest.type() == descriptor.type()) {
+                tier = latestQuest.tier();
+            }
+            lines.add(descriptor.displayName() + tierSuffix(tier));
+            if (!descriptor.owner().isBlank()) {
+                lines.add((boss.owned() ? "Your boss · " : "Owner: ") + descriptor.owner());
+            }
+            lines.add("Time " + duration(now - boss.spawnedAtMillis()));
         }
-        lines.add(descriptor.displayName() + tierSuffix(tier));
-        if (!descriptor.owner().isBlank()) {
-            lines.add((boss.owned() ? "Your boss · " : "Owner: ") + descriptor.owner());
-        }
-        lines.add("Time " + duration(now - boss.spawnedAtMillis()));
         if (descriptor.attunement() != SlayerPolicy.Attunement.UNKNOWN) {
             lines.add("Attunement " + descriptor.attunement().name());
         }
@@ -692,6 +709,7 @@ public final class SlayerRuntime {
     static List<String> rngLines(boolean editorOpen) {
         QolSkyblockExtras settings = settings();
         if (!settings.slayerDropsEnabled || !settings.slayerDropsRngHud) return List.of();
+        activateStoredRngDrop(currentRngFamily());
         if (selectedRngDrop == null) {
             return editorOpen ? List.of("RNG METER", "Waiting for selected drop") : List.of();
         }
@@ -761,18 +779,20 @@ public final class SlayerRuntime {
     }
 
     private static Map<String, BigDecimal> slayerUnitPrices() {
-        MiningSessionBazaarPriceCache.CacheSnapshot cache = MiningSessionBazaarPriceCache.capture();
-        if (!cache.isAvailable()) return Map.of();
-        Map<String, BigDecimal> prices = new HashMap<>();
-        for (SlayerRngCatalog.Entry entry : SlayerRngCatalog.entries()) {
-            BazaarPriceService.ProductPrice quote = cache.marketPrices().forProduct(entry.skyBlockId());
-            if (quote == null) continue;
-            double instantSell = quote.instantSellPrice();
-            if (instantSell > 0D && Double.isFinite(instantSell)) {
-                prices.put(entry.skyBlockId(), BigDecimal.valueOf(instantSell));
+        return ClientBoundaryGuard.call("SLAYER_UNIT_PRICES", () -> {
+            MiningSessionBazaarPriceCache.CacheSnapshot cache = MiningSessionBazaarPriceCache.capture();
+            if (!cache.isAvailable()) return Map.of();
+            Map<String, BigDecimal> prices = new HashMap<>();
+            for (SlayerRngCatalog.Entry entry : SlayerRngCatalog.entries()) {
+                BazaarPriceService.ProductPrice quote = cache.marketPrices().forProduct(entry.skyBlockId());
+                if (quote == null) continue;
+                double instantSell = quote.instantSellPrice();
+                if (instantSell > 0D && Double.isFinite(instantSell)) {
+                    prices.put(entry.skyBlockId(), BigDecimal.valueOf(instantSell));
+                }
             }
-        }
-        return prices;
+            return prices;
+        }, Map.of());
     }
 
     private static void announcePricedDrop(
@@ -1125,6 +1145,10 @@ public final class SlayerRuntime {
     }
 
     public static void renderGizmos() {
+        ClientBoundaryGuard.run("SLAYER_GIZMOS", SlayerRuntime::renderGizmosInternal);
+    }
+
+    private static void renderGizmosInternal() {
         QolSkyblockExtras settings = settings();
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
@@ -1318,6 +1342,7 @@ public final class SlayerRuntime {
         AABB search = player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
         Map<Integer, List<String>> linesByEntity = new HashMap<>();
         Map<Integer, Entity> hosts = new HashMap<>();
+        ownedNametagLines = List.of();
         for (Entity entity : level.getEntities(player, search)) {
             if (settings.slayerVengeanceDamageEnabled && entity instanceof ArmorStand) {
                 seenDamageEntities.add(entity.getId());
@@ -1345,6 +1370,36 @@ public final class SlayerRuntime {
                 }
             }
         }
+        for (Entity entity : level.getEntities(player, search)) {
+            if (!isNameHologram(entity)) {
+                continue;
+            }
+            Entity host = nearestSlayerHost(level, entity);
+            if (host == null || !hosts.containsKey(host.getId())) {
+                continue;
+            }
+            String line = name(entity);
+            if (line.isBlank()) {
+                continue;
+            }
+            List<String> bucket = linesByEntity.computeIfAbsent(host.getId(), id -> new ArrayList<>());
+            if (!bucket.contains(line)) {
+                bucket.add(line);
+            }
+        }
+        for (Entity entity : hosts.values()) {
+            List<String> bucket = linesByEntity.computeIfAbsent(entity.getId(), id -> new ArrayList<>());
+            for (int offset : SlayerPolicy.HOLOGRAM_ID_OFFSETS) {
+                Entity tag = level.getEntity(entity.getId() + offset);
+                if (!isNameHologram(tag)) {
+                    continue;
+                }
+                String line = name(tag);
+                if (!line.isBlank() && !bucket.contains(line)) {
+                    bucket.add(line);
+                }
+            }
+        }
         long now = System.currentTimeMillis();
         for (Entity entity : hosts.values()) {
             List<String> lines = linesByEntity.getOrDefault(entity.getId(), List.of());
@@ -1356,12 +1411,15 @@ public final class SlayerRuntime {
                 lines = List.of(self);
             }
             SlayerPolicy.EntityDescriptor descriptor = SlayerPolicy.classifyHolograms(lines).orElse(null);
-            if (descriptor == null) {
+            if (descriptor == null || !SlayerPolicy.shouldTrackLiveEntity(descriptor)) {
                 continue;
             }
             SlayerSessionEngine.SpawnResult spawn = ENGINE.observeEntity(
                     entity.getId(), descriptor, localName, now);
             boolean owned = descriptor.owner().equalsIgnoreCase(localName);
+            if (owned && descriptor.role() == SlayerPolicy.EntityRole.BOSS) {
+                ownedNametagLines = List.copyOf(lines);
+            }
             if (owned && descriptor.role() == SlayerPolicy.EntityRole.BOSS
                     && descriptor.type() == SlayerPolicy.SlayerType.INFERNO) {
                 for (Entity attached : attachedNameEntities(level, entity)) {
@@ -1437,11 +1495,15 @@ public final class SlayerRuntime {
         }
         List<String> lines = new ArrayList<>();
         Entity typeTag = level.getEntity(entity.getId() + 1);
+        Entity timerTag = level.getEntity(entity.getId() + 2);
         Entity ownerTag = level.getEntity(entity.getId() + 3);
-        if (isNameHologram(typeTag) && hologramBelongsTo(entity, typeTag)) {
+        if (isNameHologram(typeTag)) {
             lines.add(name(typeTag));
         }
-        if (isNameHologram(ownerTag) && hologramBelongsTo(entity, ownerTag)) {
+        if (isNameHologram(timerTag)) {
+            lines.add(name(timerTag));
+        }
+        if (isNameHologram(ownerTag)) {
             lines.add(name(ownerTag));
         }
         for (Entity nearby : attachedNameEntities(level, entity)) {
@@ -1532,21 +1594,55 @@ public final class SlayerRuntime {
     }
 
     private static void syncSidebarQuest(QolSkyblockExtras settings) {
-        List<String> lines = List.of(SkyBlockSidebar.text().split("\n"));
-        boolean visible = SlayerFightPolicy.sidebarHasSlayerQuest(lines);
+        Minecraft client = Minecraft.getInstance();
+        List<String> sidebar = List.of(SkyBlockSidebar.text().split("\n"));
+        List<String> tab = client == null
+                ? List.of()
+                : CommissionDisplayRuntime.tabLines(client);
+        boolean visible = SlayerFightPolicy.sidebarHasSlayerQuest(sidebar)
+                || SlayerFightPolicy.sidebarHasSlayerQuest(tab)
+                || SlayerProgressPolicy.showsQuest(tab)
+                || SlayerProgressPolicy.showsQuest(sidebar);
         long now = System.currentTimeMillis();
         ENGINE.observeQuestVisible(visible, now);
-        Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(lines);
+        Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(sidebar);
+        if (quest.isEmpty()) {
+            quest = SlayerFightPolicy.questFromSidebar(tab);
+        }
         if (quest.isPresent()) {
             latestQuest = quest.get();
+            activateStoredRngDrop(latestQuest.type());
         } else if (!visible && ENGINE.questState() != SlayerSessionEngine.QuestState.ACTIVE) {
             latestQuest = null;
         }
         if (!settings.slayerProgressEnabled) {
             return;
         }
-        for (String line : lines) {
-            SlayerProgressPolicy.parse(line, visible).ifPresent(progress -> latestProgress = progress);
+        Optional<SlayerProgressPolicy.Progress> progress =
+                SlayerProgressPolicy.parseLines(sidebar, visible);
+        if (progress.isEmpty()) {
+            progress = SlayerProgressPolicy.parseLines(tab, visible);
+        }
+        progress.ifPresent(value -> applyProgress(settings, value, visible));
+    }
+
+    private static void applyProgress(
+            QolSkyblockExtras settings,
+            SlayerProgressPolicy.Progress incoming,
+            boolean questVisible) {
+        SlayerProgressPolicy.Progress progress =
+                SlayerProgressPolicy.preferFresh(latestProgress, incoming);
+        latestProgress = progress;
+        if (!settings.slayerProgressBossWarning) {
+            PROGRESS_THRESHOLD.reset();
+            return;
+        }
+        if (PROGRESS_THRESHOLD.observe(
+                questVisible,
+                progress,
+                settings.slayerProgressWarningPercent,
+                settings.slayerProgressWarningRepeat)) {
+            alertBossSpawnSoon(Minecraft.getInstance(), progress);
         }
     }
 
@@ -1646,6 +1742,68 @@ public final class SlayerRuntime {
             scanOwnedPositions[type.ordinal()] = ownedBossPosition(level, type, now);
         }
         scanOwnedAt = now;
+    }
+
+    private static void cacheForeignVoidgloomPositions(ClientLevel level, long now) {
+        scanOwnedVoidgloomEntityId = ownedVoidgloomEntityId(now);
+        List<Vec3> positions = new ArrayList<>();
+        if (level != null) {
+            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+                if (active.owned()
+                        || active.descriptor().role() != SlayerPolicy.EntityRole.BOSS
+                        || active.descriptor().type() != SlayerPolicy.SlayerType.VOIDGLOOM) {
+                    continue;
+                }
+                Entity entity = level.getEntity(active.entityId());
+                if (entity != null) {
+                    positions.add(entity.position());
+                }
+            }
+            Minecraft client = Minecraft.getInstance();
+            if (client != null && client.player != null) {
+                int ownedId = scanOwnedVoidgloomEntityId;
+                AABB box = client.player.getBoundingBox().inflate(
+                        SlayerHighlightPolicy.YANG_GLYPH_PLAYER_RANGE);
+                for (EnderMan enderman : level.getEntitiesOfClass(EnderMan.class, box)) {
+                    if (enderman.getId() == ownedId || !holdingBeacon(enderman)) {
+                        continue;
+                    }
+                    positions.add(enderman.position());
+                }
+            }
+        }
+        scanForeignVoidgloomPositions = positions;
+    }
+
+    private static int ownedVoidgloomEntityId(long now) {
+        SlayerSessionEngine.Snapshot snapshot = overlaySnapshot != null
+                ? overlaySnapshot
+                : ENGINE.snapshot(now);
+        for (SlayerSessionEngine.ActiveBoss active : snapshot.activeBosses()) {
+            if (active.owned()
+                    && active.descriptor().role() == SlayerPolicy.EntityRole.BOSS
+                    && active.descriptor().type() == SlayerPolicy.SlayerType.VOIDGLOOM) {
+                return active.entityId();
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    private static double nearestForeignVoidgloomDistance(Vec3 at) {
+        if (at == null || scanForeignVoidgloomPositions == null || scanForeignVoidgloomPositions.isEmpty()) {
+            return Double.NaN;
+        }
+        double best = Double.NaN;
+        for (Vec3 pos : scanForeignVoidgloomPositions) {
+            if (pos == null) {
+                continue;
+            }
+            double dist = at.distanceTo(pos);
+            if (!Double.isFinite(best) || dist < best) {
+                best = dist;
+            }
+        }
+        return best;
     }
 
     private static Vec3 cachedOwnedPosition(SlayerPolicy.SlayerType type) {
@@ -1932,6 +2090,8 @@ public final class SlayerRuntime {
         YANG_GLYPH_BEAMS.clear();
         lastOwnedHeldBeacon = false;
         yangGlyphThrownUntilMillis = 0L;
+        yangGlyphClaimed = false;
+        yangGlyphThrowOrigin = null;
         voidgloomPhase = SlayerFightPolicy.VoidgloomPhase.UNKNOWN;
         voidgloomHits = -1;
         voidgloomHealth = "";
@@ -2132,7 +2292,8 @@ public final class SlayerRuntime {
                 result.descriptor().role(),
                 duration,
                 now,
-                lastTimeMessageAtMillis);
+                lastTimeMessageAtMillis,
+                result.descriptor());
         if (!announce) {
             return;
         }
@@ -2221,8 +2382,11 @@ public final class SlayerRuntime {
     private static void observeRng(String line, QolSkyblockExtras settings) {
         String plain = line.replaceAll("§.", "").trim();
         if (settings.slayerDropsDetectAutomatically) {
-            SlayerRngMeterPolicy.chatSelection(plain).ifPresent(item ->
-                    SlayerRngCatalog.resolve(item).ifPresent(entry -> selectedRngDrop = entry));
+            SlayerRngMeterPolicy.chatSelection(plain).ifPresent(item -> {
+                SlayerPolicy.SlayerType family = SlayerRngMeterPolicy.chatFamily(plain).orElse(null);
+                SlayerRngCatalog.resolve(item, family).ifPresent(entry -> applyRngSelection(
+                        new SlayerRngMeterPolicy.Selection(entry.display(), -1L, entry.type())));
+            });
         }
         Matcher mf = MAGIC_FIND.matcher(plain);
         if (mf.matches()) {
@@ -2232,8 +2396,9 @@ public final class SlayerRuntime {
         if (storedXp.isEmpty()) {
             return;
         }
+        activateStoredRngDrop(currentRngFamily());
         if (SlayerRngMeterPolicy.shouldWarnEmpty(
-                settings.slayerDropsRngWarnEmpty, true, selectedRngDrop != null)) {
+                settings.slayerDropsRngWarnEmpty, true, rngDropKnown())) {
             warnEmptyRngMeter(Minecraft.getInstance());
             return;
         }
@@ -2241,6 +2406,7 @@ public final class SlayerRuntime {
             return;
         }
         lastRngStoredXp = Math.max(0L, storedXp.get());
+        persistRngSelection(selectedRngDrop.type(), selectedRngDrop, lastRngStoredXp);
         Minecraft client = Minecraft.getInstance();
         if (client.player != null && settings.slayerDropsShowChance) {
             if (lastMagicFind == null) {
@@ -2345,11 +2511,14 @@ public final class SlayerRuntime {
         if (!fightOverlaysEnabled(settings) || client.level == null || client.player == null) {
             SITTING_BEACONS.clear();
             FLYING_BEACON_PATHS.clear();
+            yangGlyphClaimed = false;
+            yangGlyphThrowOrigin = null;
             return;
         }
         ClientLevel level = client.level;
         long now = System.currentTimeMillis();
         cacheOwnedBossPositions(level, now);
+        cacheForeignVoidgloomPositions(level, now);
         for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
             if (active.owned() && active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO) {
                 ownedInfernoTier = Math.max(ownedInfernoTier, active.descriptor().tier());
@@ -2416,6 +2585,12 @@ public final class SlayerRuntime {
         SEEN_BEACON_STANDS.retainAll(liveBeacons);
         FLYING_BEACON_PATHS.keySet().retainAll(liveBeacons);
         pruneAndPaintSittingBeacons(level, settings, now, liveSitting);
+        if (SITTING_BEACONS.isEmpty() && FLYING_BEACON_PATHS.isEmpty()) {
+            yangGlyphClaimed = false;
+            if (now >= yangGlyphThrownUntilMillis) {
+                yangGlyphThrowOrigin = null;
+            }
+        }
         if (settings.slayerVoidgloomEnabled && settings.slayerVoidgloomLineToBoss) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomBossLineWidth);
             for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
@@ -2605,7 +2780,7 @@ public final class SlayerRuntime {
             Entity entity,
             long now) {
         String hologram = name(entity);
-        Optional<Double> health = SlayerFightPolicy.healthValue(hologram);
+        Optional<SlayerFightPolicy.HealthReading> health = SlayerFightPolicy.healthReading(hologram);
         if (health.isEmpty()) {
             return;
         }
@@ -2616,8 +2791,12 @@ public final class SlayerRuntime {
                 && !text.contains("typhoeus")) {
             return;
         }
-        double current = health.get();
-        if (infernoMaxHealth <= 0.0D || current > infernoMaxHealth) {
+        double current = health.get().current();
+        double max = health.get().max();
+        if (infernoMaxHealth <= 0.0D || max > infernoMaxHealth) {
+            infernoMaxHealth = max;
+        }
+        if (current > infernoMaxHealth) {
             infernoMaxHealth = current;
         }
         int tier = ownedInfernoTier > 0 ? ownedInfernoTier : 4;
@@ -2651,23 +2830,32 @@ public final class SlayerRuntime {
             QolSkyblockExtras settings,
             Entity entity,
             long now) {
+        Vec3 ownedPos = cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM);
+        boolean ownedEnderman = entity instanceof EnderMan
+                && entity.getId() == scanOwnedVoidgloomEntityId;
+        double distOwned = ownedPos == null ? Double.NaN : entity.position().distanceTo(ownedPos);
+        boolean onOwnedFight = ownedEnderman
+                || (ownedPos != null
+                && distOwned <= SlayerHighlightPolicy.LOCAL_FIGHT_MARKER_RANGE
+                && SlayerHighlightPolicy.closerToLocalBoss(
+                        distOwned, nearestForeignVoidgloomDistance(entity.position())));
+        if (!onOwnedFight) {
+            return;
+        }
         String hologram = name(entity);
         SlayerFightPolicy.VoidgloomPhase phase = SlayerFightPolicy.voidgloomPhase(hologram);
         if (phase != SlayerFightPolicy.VoidgloomPhase.UNKNOWN) {
             voidgloomPhase = phase;
         }
-        if (phase == SlayerFightPolicy.VoidgloomPhase.BEACON) {
-            yangGlyphThrownUntilMillis = Math.max(yangGlyphThrownUntilMillis, now + 8_000L);
+        if (phase == SlayerFightPolicy.VoidgloomPhase.BEACON && !lastOwnedHeldBeacon) {
+            noteOwnedYangGlyphThrow(ownedPos != null ? ownedPos : entity.position(), now);
         }
         SlayerFightPolicy.hitsRemaining(hologram).ifPresent(hits -> voidgloomHits = hits);
         SlayerFightPolicy.compactHealth(hologram).ifPresent(health -> voidgloomHealth = health);
         if (!(entity instanceof EnderMan enderman)) {
             return;
         }
-        boolean ownedVoidgloom = ENGINE.snapshot(now).activeBosses().stream()
-                .anyMatch(active -> active.owned()
-                        && active.entityId() == enderman.getId()
-                        && active.descriptor().type() == SlayerPolicy.SlayerType.VOIDGLOOM);
+        boolean ownedVoidgloom = ownedEnderman;
         if (settings.slayerVoidgloomHighlightHeld && ownedVoidgloom && holdingBeacon(enderman)) {
             addTrackedMarker(enderman, 0.12D,
                     settings.slayerVoidgloomBeaconColor,
@@ -2678,6 +2866,8 @@ public final class SlayerRuntime {
         }
         boolean holding = holdingBeacon(enderman);
         if (ownedVoidgloom && lastOwnedHeldBeacon && !holding) {
+            yangGlyphClaimed = false;
+            yangGlyphThrowOrigin = enderman.position();
             yangGlyphThrownUntilMillis = now + 8_000L;
         }
         if (ownedVoidgloom) {
@@ -2824,8 +3014,11 @@ public final class SlayerRuntime {
         }
         Optional<SlayerPolicy.SlayerType> family = SlayerFightPolicy.familyForMarker(marker.get());
         if (marker.get() == SlayerFightPolicy.Marker.BEACON) {
-            if (!nearYangGlyph(client.level, stand, now)
-                    && !fightingVoidgloom) {
+            if (!SlayerFightPolicy.isThrownYangGlyphStand(
+                    name(stand), helmetName, !helmet.isEmpty() && helmet.is(Items.BEACON))) {
+                return;
+            }
+            if (!nearYangGlyph(client.level, stand, now)) {
                 return;
             }
         } else if (family.isPresent()
@@ -2838,7 +3031,7 @@ public final class SlayerRuntime {
                     return;
                 }
                 liveBeacons.add(stand.getId());
-                yangGlyphThrownUntilMillis = Math.max(yangGlyphThrownUntilMillis, now + 8_000L);
+                yangGlyphClaimed = true;
                 boolean drawBeacon = settings.slayerVoidgloomHighlightBeacon
                         || settings.slayerVoidgloomBeaconLine
                         || settings.slayerVoidgloomBeaconTimer
@@ -3200,27 +3393,40 @@ public final class SlayerRuntime {
             return;
         }
         long now = System.currentTimeMillis();
-        boolean localVoidgloom = localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM)
-                || cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM) != null
-                || now < yangGlyphThrownUntilMillis
-                || !FLYING_BEACON_PATHS.isEmpty()
-                || !SEEN_BEACON_STANDS.isEmpty();
-        if (!localVoidgloom) {
-            return;
-        }
-        if (client.player.distanceToSqr(Vec3.atCenterOf(pos)) > 64.0D * 64.0D) {
-            return;
-        }
         long key = pos.asLong();
-        if (newState.is(Blocks.BEACON)) {
-            SITTING_BEACONS.putIfAbsent(key, now);
-            yangGlyphThrownUntilMillis = 0L;
-        } else {
+        if (!newState.is(Blocks.BEACON)) {
             SITTING_BEACONS.remove(key);
+            return;
         }
+        Vec3 at = Vec3.atCenterOf(pos);
+        if (client.player.distanceToSqr(at) > SlayerHighlightPolicy.YANG_GLYPH_PLAYER_RANGE
+                * SlayerHighlightPolicy.YANG_GLYPH_PLAYER_RANGE) {
+            return;
+        }
+        boolean nearPath = nearTrackedYangGlyphPath(pos);
+        Vec3 origin = yangGlyphThrowOrigin != null
+                ? yangGlyphThrowOrigin
+                : cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM);
+        SlayerHighlightPolicy.YangGlyphTrack probe = new SlayerHighlightPolicy.YangGlyphTrack(
+                false,
+                yangGlyphClaimed,
+                now < yangGlyphThrownUntilMillis,
+                origin != null,
+                origin == null ? Double.NaN : at.distanceTo(origin),
+                nearestForeignVoidgloomDistance(at),
+                client.player.position().distanceTo(at));
+        if (!SlayerHighlightPolicy.shouldAdoptSittingYangGlyph(nearPath, probe)) {
+            return;
+        }
+        SITTING_BEACONS.putIfAbsent(key, now);
+        yangGlyphClaimed = true;
     }
 
     static void observeContainer(AbstractContainerScreen<?> screen) {
+        ClientBoundaryGuard.run("SLAYER_RNG_CONTAINER", () -> observeRngContainer(screen));
+    }
+
+    private static void observeRngContainer(AbstractContainerScreen<?> screen) {
         QolSkyblockExtras extras = settings();
         if (!extras.slayerDropsEnabled || screen == null) {
             return;
@@ -3241,7 +3447,7 @@ public final class SlayerRuntime {
                 continue;
             }
             slots.add(new SlayerRngMeterPolicy.SlotView(
-                    i,
+                    slot.index,
                     stack.getHoverName().getString(),
                     InventoryChromeRuntime.loreLines(stack)));
         }
@@ -3253,36 +3459,183 @@ public final class SlayerRuntime {
         if (selection == null) {
             return;
         }
+        SlayerPolicy.SlayerType family = selection.family();
         if (!selection.hasItem()) {
-            selectedRngDrop = null;
-            lastRngStoredXp = -1L;
+            if (family == null || selectedRngDrop == null || selectedRngDrop.type() == family) {
+                selectedRngDrop = null;
+                lastRngStoredXp = -1L;
+            }
+            persistRngSelection(family, null, -1L);
             return;
         }
-        SlayerRngCatalog.resolve(selection.itemName()).ifPresent(entry -> {
-            selectedRngDrop = entry;
-            if (selection.storedXp() >= 0L) {
-                lastRngStoredXp = selection.storedXp();
+        Optional<SlayerRngCatalog.Entry> resolved =
+                SlayerRngCatalog.resolve(selection.itemName(), family);
+        if (resolved.isEmpty()) {
+            if (family != null) {
+                persistRawRngSelection(family, selection.itemName(), selection.storedXp());
             }
-        });
+            return;
+        }
+        SlayerRngCatalog.Entry entry = resolved.get();
+        selectedRngDrop = entry;
+        if (selection.storedXp() >= 0L) {
+            lastRngStoredXp = selection.storedXp();
+        }
+        persistRngSelection(entry.type(), entry, lastRngStoredXp);
+    }
+
+    private static SlayerPolicy.SlayerType currentRngFamily() {
+        if (latestQuest != null) {
+            return latestQuest.type();
+        }
+        return selectedRngDrop == null ? null : selectedRngDrop.type();
+    }
+
+    private static boolean rngDropKnown() {
+        activateStoredRngDrop(currentRngFamily());
+        if (selectedRngDrop != null) {
+            return true;
+        }
+        SlayerPolicy.SlayerType family = currentRngFamily();
+        if (family == null) {
+            return false;
+        }
+        Map<String, String> selected = settings().slayerRngMeterSelectedByFamily;
+        if (selected == null) {
+            return false;
+        }
+        String id = selected.get(family.name());
+        return id != null && !id.isBlank();
+    }
+
+    private static void activateStoredRngDrop(SlayerPolicy.SlayerType family) {
+        if (family == null) {
+            return;
+        }
+        if (selectedRngDrop != null && selectedRngDrop.type() == family) {
+            return;
+        }
+        QolSkyblockExtras extras = settings();
+        Map<String, String> selected = extras.slayerRngMeterSelectedByFamily;
+        String id = selected == null ? null : selected.get(family.name());
+        if (id == null || id.isBlank()) {
+            if (selectedRngDrop != null && selectedRngDrop.type() != family) {
+                selectedRngDrop = null;
+                lastRngStoredXp = -1L;
+            }
+            return;
+        }
+        Optional<SlayerRngCatalog.Entry> entry = SlayerRngCatalog.byId(id)
+                .or(() -> SlayerRngCatalog.resolve(id, family));
+        if (entry.isEmpty()) {
+            return;
+        }
+        selectedRngDrop = entry.get();
+        Map<String, Long> stored = extras.slayerRngMeterStoredXpByFamily;
+        if (stored != null && stored.get(family.name()) != null) {
+            lastRngStoredXp = stored.get(family.name());
+        }
+    }
+
+    private static void persistRngSelection(
+            SlayerPolicy.SlayerType family,
+            SlayerRngCatalog.Entry entry,
+            long storedXp) {
+        if (family == null && entry != null) {
+            family = entry.type();
+        }
+        persistRawRngSelection(
+                family,
+                entry == null ? "" : entry.skyBlockId(),
+                storedXp);
+    }
+
+    private static void persistRawRngSelection(
+            SlayerPolicy.SlayerType family,
+            String itemId,
+            long storedXp) {
+        if (family == null) {
+            return;
+        }
+        QolSkyblockExtras extras = settings();
+        if (extras.slayerRngMeterSelectedByFamily == null) {
+            extras.slayerRngMeterSelectedByFamily = new LinkedHashMap<>();
+        }
+        if (extras.slayerRngMeterStoredXpByFamily == null) {
+            extras.slayerRngMeterStoredXpByFamily = new LinkedHashMap<>();
+        }
+        String nextId = itemId == null ? "" : itemId.trim();
+        String previousId = extras.slayerRngMeterSelectedByFamily.get(family.name());
+        Long previousXp = extras.slayerRngMeterStoredXpByFamily.get(family.name());
+        boolean changed = false;
+        if (nextId.isBlank()) {
+            changed = extras.slayerRngMeterSelectedByFamily.remove(family.name()) != null;
+            changed = extras.slayerRngMeterStoredXpByFamily.remove(family.name()) != null || changed;
+        } else {
+            if (!nextId.equals(previousId)) {
+                extras.slayerRngMeterSelectedByFamily.put(family.name(), nextId);
+                changed = true;
+            }
+            if (storedXp >= 0L && !Objects.equals(previousXp, storedXp)) {
+                extras.slayerRngMeterStoredXpByFamily.put(family.name(), storedXp);
+                changed = true;
+            }
+        }
+        if (changed) {
+            RotClientClient.save();
+        }
     }
 
     private static boolean nearYangGlyph(ClientLevel level, Entity entity, long now) {
         if (level == null || entity == null) {
             return false;
         }
-        Vec3 owned = scanOwnedAt == now && scanOwnedPositions != null
+        boolean alreadyTracking = FLYING_BEACON_PATHS.containsKey(entity.getId())
+                || SEEN_BEACON_STANDS.contains(entity.getId());
+        Vec3 origin = yangGlyphThrowOrigin != null
+                ? yangGlyphThrowOrigin
+                : (scanOwnedAt == now && scanOwnedPositions != null
                 ? cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM)
-                : ownedBossPosition(level, SlayerPolicy.SlayerType.VOIDGLOOM, now);
+                : ownedBossPosition(level, SlayerPolicy.SlayerType.VOIDGLOOM, now));
         Minecraft client = Minecraft.getInstance();
         double playerDistance = client != null && client.player != null
                 ? entity.distanceTo(client.player)
                 : Double.NaN;
-        return SlayerHighlightPolicy.shouldTrackYangGlyph(
-                owned != null,
-                owned == null ? Double.NaN : entity.position().distanceTo(owned),
-                localQuestFamily(SlayerPolicy.SlayerType.VOIDGLOOM)
-                        || now < yangGlyphThrownUntilMillis,
-                playerDistance);
+        return SlayerHighlightPolicy.shouldTrackYangGlyph(new SlayerHighlightPolicy.YangGlyphTrack(
+                alreadyTracking,
+                yangGlyphClaimed && !alreadyTracking,
+                now < yangGlyphThrownUntilMillis,
+                origin != null,
+                origin == null ? Double.NaN : entity.position().distanceTo(origin),
+                nearestForeignVoidgloomDistance(entity.position()),
+                playerDistance));
+    }
+
+    private static void noteOwnedYangGlyphThrow(Vec3 origin, long now) {
+        if (now >= yangGlyphThrownUntilMillis) {
+            yangGlyphClaimed = false;
+            yangGlyphThrowOrigin = origin;
+        } else if (yangGlyphThrowOrigin == null && origin != null) {
+            yangGlyphThrowOrigin = origin;
+        }
+        yangGlyphThrownUntilMillis = Math.max(yangGlyphThrownUntilMillis, now + 8_000L);
+    }
+
+    private static boolean nearTrackedYangGlyphPath(BlockPos pos) {
+        if (pos == null || FLYING_BEACON_PATHS.isEmpty()) {
+            return false;
+        }
+        Vec3 target = Vec3.atCenterOf(pos);
+        double max = SlayerFightPolicy.YANG_GLYPH_SIT_SCAN + 0.85D;
+        for (List<Vec3> path : FLYING_BEACON_PATHS.values()) {
+            if (path == null || path.isEmpty()) {
+                continue;
+            }
+            if (path.get(path.size() - 1).distanceTo(target) <= max) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void rememberFlyingBeacon(ArmorStand stand) {

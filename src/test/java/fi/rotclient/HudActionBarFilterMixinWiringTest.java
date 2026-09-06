@@ -74,7 +74,7 @@ final class HudActionBarFilterMixinWiringTest {
         assertTrue(source.contains("setOverlayMessage"));
         assertTrue(source.contains(
                 "setOverlayMessage(Lnet/minecraft/network/chat/Component;Z)V"));
-        assertTrue(source.contains("hideActionLocation()"));
+        assertTrue(source.contains("actionBarHides()"));
         assertFalse(source.contains("@Mixin(Gui.class)"));
         assertFalse(Files.exists(Path.of(
                 "src/client/java/fi/rotclient/mixin/GuiActionBarFilterMixin.java")));

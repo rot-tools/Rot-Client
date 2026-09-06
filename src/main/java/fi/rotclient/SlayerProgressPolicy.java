@@ -1,11 +1,13 @@
 package fi.rotclient;
 
 import java.math.BigInteger;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Parses the stable Slayer combat-XP fraction shown in SkyBlock action bars. */
+/** Parses the stable Slayer combat-XP fraction from action bar, sidebar, or tab. */
 public final class SlayerProgressPolicy {
     private static final String AMOUNT = "([\\d,.]+[kKmM]?)";
     private static final Pattern LABEL_THEN_FRACTION = Pattern.compile(
@@ -114,6 +116,58 @@ public final class SlayerProgressPolicy {
 
     public static Optional<Progress> parse(String raw) {
         return parse(raw, false);
+    }
+
+    public static boolean showsQuest(List<String> lines) {
+        if (lines == null) {
+            return false;
+        }
+        for (String line : lines) {
+            String text = SlayerPolicy.normalize(line).toLowerCase(Locale.ROOT);
+            if (text.contains("slayer quest")
+                    || text.contains("combat xp")
+                    || text.contains("slayer xp")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Reads Combat XP from a block of HUD lines. A nearby {@code Slayer Quest}
+     * header unlocks the same bare {@code 2,403/3,000} form used on the sidebar.
+     * Labeled Combat XP wins over a bare fraction on the same snapshot.
+     */
+    public static Optional<Progress> parseLines(List<String> lines, boolean questVisible) {
+        if (lines == null || lines.isEmpty()) {
+            return Optional.empty();
+        }
+        boolean visible = questVisible || showsQuest(lines);
+        Optional<Progress> labeled = Optional.empty();
+        Optional<Progress> any = Optional.empty();
+        for (String line : lines) {
+            Optional<Progress> parsed = parse(line, visible);
+            if (parsed.isEmpty()) {
+                continue;
+            }
+            any = parsed;
+            String text = SlayerPolicy.normalize(line).toLowerCase(Locale.ROOT);
+            if (text.contains("combat") || text.contains("slayer xp") || text.contains("slayer quest")) {
+                labeled = parsed;
+            }
+        }
+        return labeled.isPresent() ? labeled : any;
+    }
+
+    /** Keep the higher completion while the required XP stays the same quest. */
+    public static Progress preferFresh(Progress current, Progress incoming) {
+        if (incoming == null) {
+            return current;
+        }
+        if (current == null || current.requiredXp() != incoming.requiredXp()) {
+            return incoming;
+        }
+        return incoming.earnedXp() >= current.earnedXp() ? incoming : current;
     }
 
     /**

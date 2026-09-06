@@ -68,6 +68,7 @@ final class QolOverlayHud {
         }
         PrizeSpinRuntime.renderHud(graphics);
         QolUtilityConfig qol = qol();
+        CustomScoreboardRuntime.render(graphics, qol);
         Font font = client.font;
         long now = System.currentTimeMillis();
 
@@ -162,6 +163,8 @@ final class QolOverlayHud {
         renderSlayerPanel(graphics, font, qol, "slayer_attunement", SlayerRuntime.attunementLines(editorOpen));
         renderSlayerPanel(graphics, font, qol, "slayer_vengeance", SlayerRuntime.vengeanceLines(editorOpen));
         renderSlayerPanel(graphics, font, qol, "dungeon", DungeonRuntime.displayLines(editorOpen));
+        renderSlayerPanel(graphics, font, qol, "dungeon_carry", DungeonCarryRuntime.hudLines(editorOpen));
+        renderSlayerPanel(graphics, font, qol, "dungeon_watcher", DungeonWatcherRuntime.hudLines(editorOpen));
         ItemRarityRuntime.renderHotbar(
                 graphics,
                 client.getWindow() == null ? 0 : client.getWindow().getGuiScaledWidth(),
@@ -558,75 +561,178 @@ final class QolOverlayHud {
             Font font,
             int x,
             int y) {
-        DungeonPuzzlePolicy.MapPreview preview = DungeonRuntime.mapPreview();
-        if (preview.width() <= 0 || preview.height() <= 0 || preview.argb().length == 0) {
+        DungeonMapPolicy.Schematic schematic = DungeonRuntime.mapSchematic();
+        if (!schematic.present()) {
             return;
         }
-        int scale = preview.width() > 80 ? 1 : preview.width() > 40 ? 2 : 3;
-        int width = preview.width() * scale;
-        int height = preview.height() * scale;
-        graphics.fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xFF000000);
-        for (int row = 0; row < preview.height(); row++) {
-            for (int col = 0; col < preview.width(); col++) {
-                int index = row * preview.width() + col;
-                if (index >= preview.argb().length) {
-                    continue;
-                }
-                graphics.fill(
-                        x + col * scale,
-                        y + row * scale,
-                        x + (col + 1) * scale,
-                        y + (row + 1) * scale,
-                        preview.argb()[index]);
-            }
-        }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (extras.dungeonHudHeadMarkers) {
-            for (DungeonMapPolicy.PlayerIcon icon : DungeonRuntime.mapPlayers()) {
-                drawMapHead(graphics, Minecraft.getInstance(), x + icon.mapX() * scale - 4, y + icon.mapZ() * scale - 4, icon);
+        List<DungeonAssistPolicy.MapChip> chips = DungeonRuntime.mapStatusChips();
+        int map = DungeonMapPolicy.HUD_MAP;
+        int extra = extras.dungeonHudMapExtra && !chips.isEmpty() ? DungeonMapPolicy.HUD_EXTRA : 0;
+        graphics.fill(x - 1, y - 1, x + map + 1, y + map + extra + 1, DungeonMapPolicy.HUD_BORDER);
+        graphics.fill(x, y, x + map, y + map + extra, DungeonMapPolicy.HUD_BG);
+        for (DungeonMapPolicy.HudRoom room : schematic.rooms()) {
+            for (DungeonMapPolicy.HudRect rect : room.rects()) {
+                graphics.fill(
+                        x + rect.x(),
+                        y + rect.y(),
+                        x + rect.x() + rect.w(),
+                        y + rect.y() + rect.h(),
+                        room.color());
             }
-        } else if (extras.dungeonHudClassIcons) {
-            for (DungeonMapPolicy.PlayerIcon icon : DungeonRuntime.mapPlayers()) {
-                String letter = EmberDungeonPolicy.classLetter(
-                        DungeonPolicy.dungeonClass(icon.classKey()));
-                if (letter.isEmpty()) {
-                    continue;
-                }
-                RotClientUiDraw.text(graphics, font,
-                        letter,
-                        x + icon.mapX() * scale - 2,
-                        y + icon.mapZ() * scale - 8,
-                        EmberDungeonPolicy.classColor(DungeonPolicy.dungeonClass(icon.classKey())),
-                        true);
+            boolean hidden = DungeonMapPolicy.hiddenOnMap(room.room());
+            boolean names = extras.dungeonHudRoomNames
+                    || (extras.dungeonMapRevealHidden() && extras.dungeonHudCheaterNames && hidden);
+            boolean secrets = extras.dungeonHudRoomSecrets && room.secretsTotal() > 0;
+            if (names || secrets || hidden) {
+                drawMapRoomLabel(graphics, font, x, y, room, names, secrets, hidden);
+            } else {
+                drawMapCheckmark(graphics, x, y, room);
             }
         }
-        if (extras.dungeonHudCheaterMap && extras.dungeonHudCheaterNames) {
-            DungeonMapPolicy.Board board = DungeonRuntime.mapBoard();
-            if (board != null && board.calibration().ok()) {
-                for (DungeonMapPolicy.RoomTile room : board.rooms()) {
-                    String label = DungeonLeftoverPolicy.cheaterRoomLabel(room);
-                    if (label.isEmpty()) {
-                        continue;
+        if (extras.dungeonHudMapDoors) {
+            for (DungeonMapPolicy.HudDoor door : schematic.doors()) {
+                graphics.fill(
+                        x + door.x(),
+                        y + door.y(),
+                        x + door.x() + door.w(),
+                        y + door.y() + door.h(),
+                        door.color());
+            }
+        }
+        if (extras.dungeonHudMapPlayers) {
+            for (DungeonMapPolicy.HudMarker marker : schematic.players()) {
+                int mx = x + marker.x();
+                int my = y + marker.y();
+                graphics.pose().pushMatrix();
+                graphics.pose().translate(mx, my);
+                graphics.pose().rotate((float) Math.toRadians(marker.yaw() + 180.0F));
+                if (extras.dungeonHudHeadMarkers) {
+                    drawMapHead(graphics, Minecraft.getInstance(), -4, -4, new DungeonMapPolicy.PlayerIcon(
+                            marker.x(), marker.y(), marker.yaw(), marker.self(), marker.classKey(), marker.name()));
+                } else if (extras.dungeonHudClassIcons) {
+                    String letter = EmberDungeonPolicy.classLetter(
+                            DungeonPolicy.dungeonClass(marker.classKey()));
+                    if (!letter.isEmpty()) {
+                        RotClientUiDraw.text(graphics, font, letter, -2, -8,
+                                EmberDungeonPolicy.classColor(DungeonPolicy.dungeonClass(marker.classKey())),
+                                true);
+                    } else {
+                        graphics.fill(-3, -3, 3, 3,
+                                marker.self() ? 0xFFFFFFFF : 0xFFF8FAFC);
                     }
-                    RotClientUiDraw.text(graphics, font,
-                            label,
-                            x + room.pixelX() * scale,
-                            y + room.pixelZ() * scale,
-                            0xFFE2E8F0,
-                            true);
+                } else {
+                    graphics.fill(-3, -3, 3, 3,
+                            marker.self() ? 0xFFFFFFFF : 0xFFF8FAFC);
+                }
+                graphics.pose().popMatrix();
+                if (extras.dungeonHudPlayerNames && !marker.name().isBlank() && !marker.self()) {
+                    mapScaledText(graphics, font, marker.name(), mx + 6, my - 4, 0xFFF8FAFC, 0.55F);
                 }
             }
         }
-        List<String> footer = DungeonRuntime.mapFooterLines();
-        int rowY = y + height + 3;
-        for (String line : footer) {
-            int color = line.startsWith("Score") ? 0xFFFF5555
-                    : line.startsWith("Crypts") ? 0xFFFF5555
-                    : line.startsWith("Secrets") ? 0xFF55FF55
-                    : 0xFFFFFFFF;
-            RotClientUiDraw.text(graphics, font, line, x, rowY, color, true);
-            rowY += 10;
+        int chipX = x + 4;
+        int chipY = y + map + 2;
+        for (DungeonAssistPolicy.MapChip chip : chips) {
+            RotClientUiDraw.text(graphics, font, chip.text(), chipX, chipY, chip.color(), true);
+            chipX += font.width(chip.text()) + 8;
         }
+    }
+
+    private static void drawMapRoomLabel(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int originX,
+            int originY,
+            DungeonMapPolicy.HudRoom room,
+            boolean names,
+            boolean secrets,
+            boolean hidden) {
+        List<String> lines = new ArrayList<>();
+        if (names) {
+            lines.addAll(DungeonMapPolicy.nameLines(room.name()));
+        } else if (hidden) {
+            lines.add("?");
+        }
+        if (secrets) {
+            lines.add(room.secretsFound() + "/" + room.secretsTotal());
+        }
+        if (lines.isEmpty()) {
+            drawMapCheckmark(graphics, originX, originY, room);
+            return;
+        }
+        int minX = Integer.MAX_VALUE;
+        int maxX = 0;
+        int minY = Integer.MAX_VALUE;
+        int maxY = 0;
+        for (DungeonMapPolicy.HudRect rect : room.rects()) {
+            minX = Math.min(minX, rect.x());
+            maxX = Math.max(maxX, rect.x() + rect.w());
+            minY = Math.min(minY, rect.y());
+            maxY = Math.max(maxY, rect.y() + rect.h());
+        }
+        int innerW = Math.max(8, maxX - minX - 2);
+        int innerH = Math.max(8, maxY - minY - 2);
+        int maxW = 1;
+        for (String line : lines) {
+            maxW = Math.max(maxW, font.width(line));
+        }
+        float scale = 0.7F;
+        float fitW = innerW / (float) maxW;
+        float fitH = innerH / (float) Math.max(1, lines.size() * 9);
+        scale = Math.max(0.32F, Math.min(scale, Math.min(fitW, fitH)));
+        int color = DungeonMapPolicy.labelArgb(room.room().checkmark());
+        int lineH = Math.max(4, Math.round(9 * scale));
+        int totalH = lineH * lines.size();
+        int y = originY + room.labelY() - totalH / 2;
+        for (String line : lines) {
+            int drawW = Math.round(font.width(line) * scale);
+            mapScaledText(
+                    graphics,
+                    font,
+                    line,
+                    originX + room.labelX() - drawW / 2,
+                    y,
+                    color,
+                    scale);
+            y += lineH;
+        }
+    }
+
+    private static void mapScaledText(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            String text,
+            int x,
+            int y,
+            int color,
+            float scale) {
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(scale, scale);
+        RotClientUiDraw.text(graphics, font, text, 0, 0, color, true);
+        graphics.pose().popMatrix();
+    }
+
+    private static void drawMapCheckmark(
+            GuiGraphicsExtractor graphics,
+            int originX,
+            int originY,
+            DungeonMapPolicy.HudRoom room) {
+        DungeonMapPolicy.Checkmark mark = room.room().checkmark();
+        int color = switch (mark) {
+            case GREEN -> 0xFF55FF55;
+            case WHITE -> 0xFFFFFFFF;
+            case RED -> 0xFFFF5555;
+            default -> 0;
+        };
+        if (color == 0 || room.rects().isEmpty()) {
+            return;
+        }
+        DungeonMapPolicy.HudRect rect = room.rects().getFirst();
+        int cx = originX + rect.x() + Math.max(1, rect.w() / 2 - 2);
+        int cy = originY + rect.y() + 2;
+        graphics.fill(cx, cy, cx + 4, cy + 4, color);
     }
 
     private static void drawMapHead(
@@ -786,6 +892,9 @@ final class QolOverlayHud {
         if (hit.isEmpty()) {
             return false;
         }
+        if (CustomScoreboardPolicy.POSE_ID.equals(hit)) {
+            CustomScoreboardRuntime.disableAutoAlign(qol());
+        }
         float[] pose = qol().pose(hit);
         selectedId = hit;
         draggingId = hit;
@@ -874,6 +983,7 @@ final class QolOverlayHud {
         if (IotaRuntime.hudVisible(qol)) labels.add("Arrow Tracker");
         if (IotaKuudraRuntime.hudVisible(qol)) labels.add("Kuudra Alerts");
         if (StallMarketRuntime.hudVisible(qol)) labels.add("BIN Overlay");
+        if (qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID)) labels.add("Custom Scoreboard");
         return labels;
     }
 
@@ -884,6 +994,9 @@ final class QolOverlayHud {
     boolean centerSelectedHorizontally(int screenWidth) {
         if (!isVisibleElement(selectedId) || screenWidth <= 0) {
             return false;
+        }
+        if (CustomScoreboardPolicy.POSE_ID.equals(selectedId)) {
+            CustomScoreboardRuntime.disableAutoAlign(qol());
         }
         float[] pose = qol().pose(selectedId);
         qol().setPose(
@@ -896,6 +1009,9 @@ final class QolOverlayHud {
     boolean centerSelectedVertically(int screenHeight) {
         if (!isVisibleElement(selectedId) || screenHeight <= 0) {
             return false;
+        }
+        if (CustomScoreboardPolicy.POSE_ID.equals(selectedId)) {
+            CustomScoreboardRuntime.disableAutoAlign(qol());
         }
         float[] pose = qol().pose(selectedId);
         qol().setPose(
@@ -920,6 +1036,10 @@ final class QolOverlayHud {
 
     private String hitTest(double mouseX, double mouseY) {
         QolUtilityConfig qol = qol();
+        if (qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID)
+                && CustomScoreboardRuntime.hit(mouseX, mouseY)) {
+            return CustomScoreboardPolicy.POSE_ID;
+        }
         if (qol.performanceHudEnabled
                 && inside(mouseX, mouseY, "performance", 120, 36)) {
             return "performance";
@@ -1028,6 +1148,15 @@ final class QolOverlayHud {
         if (qol.extras().dungeonHudEnabled
                 && inside(mouseX, mouseY, "dungeon", SLAYER_EDITOR_WIDTH, 68)) {
             return "dungeon";
+        }
+        DungeonAthenSettings athen = qol.extras().athen();
+        if (athen.carryEnabled && athen.carryDisplay
+                && inside(mouseX, mouseY, "dungeon_carry", SLAYER_EDITOR_WIDTH, 68)) {
+            return "dungeon_carry";
+        }
+        if (athen.watcherEnabled && athen.watcherBloodTimers
+                && inside(mouseX, mouseY, "dungeon_watcher", SLAYER_EDITOR_WIDTH, 68)) {
+            return "dungeon_watcher";
         }
         return "";
     }
@@ -1147,6 +1276,9 @@ final class QolOverlayHud {
         qol().extras().putHudStyle(selectedId, style);
         if ("performance".equals(selectedId)) {
             qol().performanceHudScale = style.scale;
+        }
+        if (CustomScoreboardPolicy.POSE_ID.equals(selectedId)) {
+            qol().extras().board().hudScale = style.scale;
         }
         return true;
     }
@@ -1270,6 +1402,9 @@ final class QolOverlayHud {
         if (qol.extras().slayerAttunementDisplayEnabled) return "slayer_attunement";
         if (qol.extras().slayerVengeanceEnabled) return "slayer_vengeance";
         if (qol.extras().dungeonHudEnabled) return "dungeon";
+        DungeonAthenSettings athen = qol.extras().athen();
+        if (athen.carryEnabled && athen.carryDisplay) return "dungeon_carry";
+        if (athen.watcherEnabled && athen.watcherBloodTimers) return "dungeon_watcher";
         if (FishingSuiteRuntime.hudVisible(qol)) return "fishing";
         if (MiningLeftoverRuntime.hudVisible(qol)) return "mining";
         if (DianaRuntime.hudVisible(qol)) return "diana";
@@ -1277,6 +1412,7 @@ final class QolOverlayHud {
         if (IotaRuntime.hudVisible(qol)) return "iota_arrows";
         if (IotaKuudraRuntime.hudVisible(qol)) return "kuudra_alerts";
         if (StallMarketRuntime.hudVisible(qol)) return "stall_bin";
+        if (qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID)) return CustomScoreboardPolicy.POSE_ID;
         return "";
     }
 
@@ -1308,6 +1444,8 @@ final class QolOverlayHud {
             case "slayer_attunement" -> qol.extras().slayerAttunementDisplayEnabled;
             case "slayer_vengeance" -> qol.extras().slayerVengeanceEnabled;
             case "dungeon" -> qol.extras().dungeonHudEnabled;
+            case "dungeon_carry" -> qol.extras().athen().carryEnabled && qol.extras().athen().carryDisplay;
+            case "dungeon_watcher" -> qol.extras().athen().watcherEnabled && qol.extras().athen().watcherBloodTimers;
             case "fishing" -> FishingSuiteRuntime.hudVisible(qol);
             case "mining" -> MiningLeftoverRuntime.hudVisible(qol);
             case "diana" -> DianaRuntime.hudVisible(qol);
@@ -1315,6 +1453,7 @@ final class QolOverlayHud {
             case "iota_arrows" -> IotaRuntime.hudVisible(qol);
             case "kuudra_alerts" -> IotaKuudraRuntime.hudVisible(qol);
             case "stall_bin" -> StallMarketRuntime.hudVisible(qol);
+            case "custom_scoreboard" -> qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID);
             default -> false;
         };
     }
@@ -1343,6 +1482,8 @@ final class QolOverlayHud {
             case "slayer_attunement" -> "Attunement Display";
             case "slayer_vengeance" -> "Vengeance Timer";
             case "dungeon" -> "Dungeon HUD";
+            case "dungeon_carry" -> "Dungeon Carry Display";
+            case "dungeon_watcher" -> "Blood Timers";
             case "fishing" -> "Fishing HUD";
             case "mining" -> "Mining HUD";
             case "diana" -> "Diana HUD";
@@ -1350,6 +1491,7 @@ final class QolOverlayHud {
             case "iota_arrows" -> "Arrow Tracker";
             case "kuudra_alerts" -> "Kuudra Alerts";
             case "stall_bin" -> "BIN Overlay";
+            case "custom_scoreboard" -> "Custom Scoreboard";
             default -> "No QoL element selected";
         };
     }
@@ -1369,6 +1511,9 @@ final class QolOverlayHud {
         }
         if ("auto_clicker".equals(id)) {
             return 260;
+        }
+        if ("custom_scoreboard".equals(id)) {
+            return CustomScoreboardRuntime.editorWidth();
         }
         if (id != null && (id.startsWith("slayer") || "dungeon".equals(id) || "fishing".equals(id) || "mining".equals(id) || "diana".equals(id) || "foraging".equals(id) || "iota_arrows".equals(id) || "kuudra_alerts".equals(id) || "stall_bin".equals(id))) {
             return SLAYER_EDITOR_WIDTH;
@@ -1396,11 +1541,15 @@ final class QolOverlayHud {
         if ("slayer_progress".equals(id)) return 48;
         if ("slayer_rng".equals(id)) return 48;
         if ("slayer_profit".equals(id)) return profitPanelHeight();
-        if ("slayer_stats".equals(id) || "slayer_carry".equals(id)) return 68;
+        if ("slayer_stats".equals(id) || "slayer_carry".equals(id)
+                || "dungeon_carry".equals(id) || "dungeon_watcher".equals(id)) return 68;
         if ("slayer_cocoon".equals(id)
                 || "slayer_attunement".equals(id)
                 || "slayer_vengeance".equals(id)) return 36;
         if ("dungeon".equals(id) || "fishing".equals(id) || "mining".equals(id) || "diana".equals(id) || "foraging".equals(id) || "iota_arrows".equals(id) || "kuudra_alerts".equals(id) || "stall_bin".equals(id)) return 68;
+        if ("custom_scoreboard".equals(id)) {
+            return CustomScoreboardRuntime.editorHeight();
+        }
         return STAT_EDITOR_HEIGHT;
     }
 

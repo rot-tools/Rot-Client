@@ -65,6 +65,10 @@ public final class QolNumberSettings {
         if (settingId == null || settingId.isBlank()) {
             return null;
         }
+        QolNumberSettings.Spec board = CustomScoreboardPolicy.numberSpec(settingId);
+        if (board != null) {
+            return board;
+        }
         return switch (settingId) {
             case "qol.auto_clicker.cps",
                  "qol.auto_clicker.left_cps",
@@ -94,14 +98,14 @@ public final class QolNumberSettings {
                             true);
             case "qol.chat_commands.previous_server_time" ->
                     new Spec(
-                            SkyblockFlavorPolicy.MIN_PREVIOUS_SERVER_SECONDS,
-                            SkyblockFlavorPolicy.MAX_PREVIOUS_SERVER_SECONDS,
+                            SkyBlockUtilityPolicy.MIN_PREVIOUS_SERVER_SECONDS,
+                            SkyBlockUtilityPolicy.MAX_PREVIOUS_SERVER_SECONDS,
                             10.0D,
                             true);
             case "qol.render_optimizer.nether_fog_scale" ->
                     new Spec(
-                            SkyblockFlavorPolicy.MIN_NETHER_FOG_SCALE,
-                            SkyblockFlavorPolicy.MAX_NETHER_FOG_SCALE,
+                            SkyBlockUtilityPolicy.MIN_NETHER_FOG_SCALE,
+                            SkyBlockUtilityPolicy.MAX_NETHER_FOG_SCALE,
                             0.05D,
                             true);
             case "qol.render_optimizer.armor_self",
@@ -307,6 +311,12 @@ public final class QolNumberSettings {
                             DungeonF7Policy.MAX_RELIC_LOOK_MS,
                             1.0D,
                             true);
+            case "qol.dungeon_f7.relic_spawn_ticks" ->
+                    new Spec(
+                            DungeonF7Policy.MIN_RELIC_SPAWN_TICKS,
+                            DungeonF7Policy.MAX_RELIC_SPAWN_TICKS,
+                            1.0D,
+                            true);
             case "qol.dungeon_f7.auto_i4_rotation" ->
                     new Spec(
                             DungeonF7Policy.MIN_I4_ROTATION_MS,
@@ -317,12 +327,22 @@ public final class QolNumberSettings {
                     new Spec(0.0D, 100.0D, 1.0D, true);
             case "qol.dungeon_announce.score_threshold" ->
                     new Spec(100.0D, 305.0D, 1.0D, true);
+            case "qol.dungeon_hud.chest_warning_count" ->
+                    new Spec(1.0D, 60.0D, 1.0D, true);
+            case "qol.dungeon_esp.secret_clicked_seconds" ->
+                    new Spec(1.0D, 120.0D, 1.0D, true);
             case "qol.dungeon_termsim.ping" ->
                     new Spec(0.0D, 500.0D, 50.0D, true);
             case "qol.dungeon_esp.trigger_delay" ->
                     new Spec(0.0D, 1000.0D, 50.0D, true);
             case "qol.dungeon_hud.cheater_darken_factor" ->
                     new Spec(0.0D, 1.0D, 0.05D, true);
+            case "qol.dungeon_hud.map_scale" ->
+                    new Spec(
+                            DungeonMapPolicy.HUD_CELL_MIN,
+                            DungeonMapPolicy.HUD_CELL_MAX,
+                            1.0D,
+                            true);
             case "qol.dungeon_f7.superboom_delay" ->
                     new Spec(1.0D, 10.0D, 1.0D, true);
             case "qol.auto_dojo.control_predict" ->
@@ -382,7 +402,10 @@ public final class QolNumberSettings {
                             RingPolicy.MAX_LENGTH_LIMIT,
                             1.0D,
                             true);
-            default -> dynamicWorldScannerSpec(settingId);
+            default -> {
+                Spec athen = DungeonAthenSettings.numberSpec(settingId);
+                yield athen != null ? athen : dynamicWorldScannerSpec(settingId);
+            }
         };
     }
 

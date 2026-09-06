@@ -49,6 +49,13 @@ final class TrackerConfig {
     boolean showOtherValue = true;
     boolean showTotalMinedValue = true;
     boolean fullbrightEnabled;
+    /** Vanilla-style always-night sky and terrain lighting. */
+    boolean alwaysNightEnabled;
+    /**
+     * When true, Fullbright and Always Night may both be on. When false they
+     * are exclusive.
+     */
+    boolean lightingForceBoth;
     /**
      * When enabled, forward movement keeps the local player sprinting via
      * normal vanilla sprint rules (Input.sprint override).

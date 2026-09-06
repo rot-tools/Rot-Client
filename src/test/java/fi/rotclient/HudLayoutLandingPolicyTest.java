@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 final class HudLayoutLandingPolicyTest {
     @Test
-    void groupsVanillaAndRotOverlaysAndKeepsCatalogAt124() {
-        assertEquals(124, QolUtilityCatalog.modules().size());
+    void groupsVanillaAndRotOverlaysAndKeepsCatalogAt130() {
+        assertEquals(131, QolUtilityCatalog.modules().size());
         assertFalse(HudLayoutLandingPolicy.sections().isEmpty());
         assertTrue(HudLayoutLandingPolicy.sections().stream()
                 .anyMatch(section -> "Vanilla / Hypixel".equals(section.title())));
@@ -28,6 +28,10 @@ final class HudLayoutLandingPolicyTest {
                 .anyMatch(row -> "qol.wardrobe_keybinds".equals(row.settingId())));
         assertTrue(HudLayoutLandingPolicy.rows().stream()
                 .anyMatch(row -> "qol.iota.arrow_tracker".equals(row.settingId())));
+        assertTrue(HudLayoutLandingPolicy.rows().stream()
+                .anyMatch(row -> "qol.custom_scoreboard".equals(row.settingId())));
+        assertTrue(HudLayoutLandingPolicy.sections().stream()
+                .anyMatch(section -> "GUI".equals(section.title())));
         assertTrue(HudLayoutLandingPolicy.contentHeight() > 200);
         assertEquals(
                 HudLayoutLandingPolicy.Action.NONE,
@@ -95,7 +99,8 @@ final class HudLayoutLandingPolicyTest {
                 "speed", "pet", "commission", "wardrobe", "auto_clicker", "fishing", "mining",
                 "diana", "foraging", "iota_arrows", "kuudra_alerts", "stall_bin", "slayer",
                 "slayer_progress", "slayer_rng", "slayer_profit", "slayer_stats", "slayer_carry",
-                "slayer_cocoon", "slayer_attunement", "slayer_vengeance", "dungeon"
+                "slayer_cocoon", "slayer_attunement", "slayer_vengeance", "dungeon",
+                "dungeon_carry", "dungeon_watcher", "custom_scoreboard"
         }) {
             assertNotNull(HudLayoutLandingPolicy.disableForPose(poseId), poseId);
         }

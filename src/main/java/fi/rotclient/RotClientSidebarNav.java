@@ -51,6 +51,7 @@ final class RotClientSidebarNav {
         QOL_EVENTS,
         QOL_MINING,
         QOL_GARDEN,
+        QOL_GUI,
         QOL_UTILITIES,
         QOL_HUD_DISPLAY,
         QOL_RENDER,
@@ -422,6 +423,7 @@ final class RotClientSidebarNav {
             case QOL_EVENTS -> QolUtilityCatalog.Group.EVENTS;
             case QOL_MINING -> QolUtilityCatalog.Group.MINING;
             case QOL_GARDEN -> QolUtilityCatalog.Group.GARDEN;
+            case QOL_GUI -> QolUtilityCatalog.Group.GUI;
             case QOL_UTILITIES -> QolUtilityCatalog.Group.UTILITIES;
             case QOL_HUD_DISPLAY -> QolUtilityCatalog.Group.HUD_DISPLAY;
             case QOL_RENDER -> QolUtilityCatalog.Group.RENDER;
@@ -444,6 +446,7 @@ final class RotClientSidebarNav {
             case EVENTS -> HitTarget.QOL_EVENTS;
             case MINING -> HitTarget.QOL_MINING;
             case GARDEN -> HitTarget.QOL_GARDEN;
+            case GUI -> HitTarget.QOL_GUI;
             case UTILITIES -> HitTarget.QOL_UTILITIES;
             case HUD_DISPLAY -> HitTarget.QOL_HUD_DISPLAY;
             case RENDER -> HitTarget.QOL_RENDER;
@@ -493,7 +496,7 @@ final class RotClientSidebarNav {
             case HUD_LAYOUT -> layout.hudLayoutY();
             case SECTION_QOL -> layout.qolHeaderY();
             case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
-                    QOL_GARDEN, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE ->
+                    QOL_GARDEN, QOL_GUI, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE ->
                     layout.qolPageY(groupForHitTarget(target));
         };
     }

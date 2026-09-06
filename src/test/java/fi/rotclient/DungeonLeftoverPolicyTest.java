@@ -106,6 +106,20 @@ final class DungeonLeftoverPolicyTest {
                 DungeonLeftoverPolicy.leapOverlay(400, 240, mixed);
         assertEquals("Mage", sorted.get(0).entry().name());
         assertTrue(sorted.get(1).entry().dead());
+        DungeonLeftoverPolicy.LeapEntry offline = DungeonLeftoverPolicy.LeapEntry.fromLore(
+                13,
+                "Gone",
+                DungeonPolicy.DungeonClass.HEALER,
+                List.of("Currently offline"));
+        assertEquals("OFFLINE", offline.statusLabel());
+        assertTrue(offline.dead());
+        DungeonLeftoverPolicy.LeapEntry living = DungeonLeftoverPolicy.LeapEntry.fromLore(
+                14,
+                "Tank",
+                DungeonPolicy.DungeonClass.TANK,
+                List.of("Class: Tank"));
+        assertEquals("", living.statusLabel());
+        assertFalse(living.dead());
         assertTrue(DungeonLeftoverPolicy.cellAt(cells, cells.get(0).x() + 4, cells.get(0).y() + 4).isPresent());
     }
 

@@ -33,6 +33,11 @@ final class InventoryOverlayPolicyTest {
         assertTrue(InventoryOverlayPolicy.isSkillsMenu("Skills"));
         assertFalse(InventoryOverlayPolicy.isSkillsMenu("Your Equipment and Stats"));
         assertFalse(InventoryOverlayPolicy.isSkillsMenu("Dungeoneering"));
+        assertFalse(InventoryOverlayPolicy.showSkyblockInventoryUi(false));
+        assertTrue(InventoryOverlayPolicy.showSkyblockInventoryUi(true));
+        assertTrue(InventoryOverlayPolicy.hideInventoryStatusEffects(true, true));
+        assertFalse(InventoryOverlayPolicy.hideInventoryStatusEffects(true, false));
+        assertFalse(InventoryOverlayPolicy.hideInventoryStatusEffects(false, true));
     }
 
     @Test
@@ -84,6 +89,22 @@ final class InventoryOverlayPolicyTest {
         assertTrue(InventoryOverlayPolicy.hitPetSlot(0, 0, 10, 5, 104, 67));
         assertTrue(InventoryOverlayPolicy.isVanillaOffhandSlot(77, 62));
         assertFalse(InventoryOverlayPolicy.isVanillaOffhandSlot(76, 62));
+    }
+
+    @Test
+    void emptyStatsOrPetsChestsKeepLastObservedEquipmentAndPet() {
+        assertTrue(InventoryOverlayPolicy.shouldKeepExistingCache(true, true));
+        assertFalse(InventoryOverlayPolicy.shouldKeepExistingCache(true, false));
+        assertFalse(InventoryOverlayPolicy.shouldKeepExistingCache(false, true));
+        assertEquals("rotclient-inventory-chrome-cache.json", InventoryOverlayPolicy.CHROME_CACHE_FILE);
+        assertEquals(1, InventoryOverlayPolicy.CHROME_CACHE_SCHEMA);
+        assertTrue(InventoryOverlayPolicy.shouldReloadChromeCache(true, true, true, true, true));
+        assertTrue(InventoryOverlayPolicy.shouldReloadChromeCache(true, false, true, false, true));
+        assertFalse(InventoryOverlayPolicy.shouldReloadChromeCache(true, false, true, true, true));
+        assertFalse(InventoryOverlayPolicy.shouldReloadChromeCache(true, true, false, false, false));
+        assertTrue(InventoryOverlayPolicy.shouldSkipEmptyChromeSave(true, true));
+        assertFalse(InventoryOverlayPolicy.shouldSkipEmptyChromeSave(true, false));
+        assertFalse(InventoryOverlayPolicy.shouldSkipEmptyChromeSave(false, true));
     }
 
     @Test
@@ -153,6 +174,48 @@ final class InventoryOverlayPolicyTest {
         assertEquals(20 + 50, mascot.y());
         assertTrue(mascot.x() + mascot.width() >= 40 + 176);
         assertEquals(34, mascot.height());
+        InventoryOverlayPolicy.Rect close = InventoryOverlayPolicy.editorCloseRect(editor);
+        assertEquals(editor.x() + editor.width() - InventoryOverlayPolicy.EDITOR_CLOSE_SIZE - 4, close.x());
+        assertEquals(editor.y() + 4, close.y());
+        assertFalse(InventoryOverlayPolicy.editorRowRect(editor, 0).contains(close.x() + 1, close.y() + 1));
+        assertTrue(InventoryOverlayPolicy.dismissColorEditor(true, false, false, false));
+        assertTrue(InventoryOverlayPolicy.dismissColorEditor(true, false, true, true));
+        assertFalse(InventoryOverlayPolicy.dismissColorEditor(true, false, true, false));
+        assertFalse(InventoryOverlayPolicy.dismissColorEditor(true, true, false, false));
+        assertFalse(InventoryOverlayPolicy.dismissColorEditor(false, false, false, false));
+        InventoryOverlayPolicy.Rect value = InventoryOverlayPolicy.valueMarkRect(40, 20);
+        InventoryOverlayPolicy.Rect dash = InventoryOverlayPolicy.dashboardButtonRect(40, 20, 176);
+        assertEquals(InventoryOverlayPolicy.SLOT_SIZE, dash.width());
+        assertEquals(InventoryOverlayPolicy.SLOT_SIZE, dash.height());
+        assertEquals(InventoryOverlayPolicy.SLOT_SIZE, value.width());
+        assertEquals(InventoryOverlayPolicy.SLOT_SIZE, value.height());
+        assertEquals(value.y(), dash.y());
+        assertEquals(20 + InventoryOverlayPolicy.DEFAULT_PET_SLOT_Y, value.y());
+        assertEquals(
+                40 + InventoryOverlayPolicy.DEFAULT_PET_SLOT_X + InventoryOverlayPolicy.SLOT_SIZE
+                        + InventoryOverlayPolicy.VALUE_MARK_GAP,
+                value.x());
+        assertEquals(value.x() + value.width() + InventoryOverlayPolicy.VALUE_MARK_GAP, dash.x());
+        assertTrue(InventoryOverlayPolicy.hitDashboardButton(40, 20, 176, dash.x() + 1, dash.y() + 1));
+        assertTrue(InventoryOverlayPolicy.hitValueMark(40, 20, value.x() + 1, value.y() + 1));
+        assertFalse(value.contains(dash.x(), dash.y()));
+        InventoryOverlayPolicy.Rect movedPetValue =
+                InventoryOverlayPolicy.valueMarkRect(40, 20, 12, -4);
+        InventoryOverlayPolicy.Rect movedPetDash =
+                InventoryOverlayPolicy.dashboardButtonRect(40, 20, 12, -4);
+        assertEquals(
+                40 + InventoryOverlayPolicy.petSlotX(12) + InventoryOverlayPolicy.SLOT_SIZE
+                        + InventoryOverlayPolicy.VALUE_MARK_GAP,
+                movedPetValue.x());
+        assertEquals(20 + InventoryOverlayPolicy.petSlotY(-4), movedPetValue.y());
+        assertEquals(movedPetValue.y(), movedPetDash.y());
+        assertEquals(
+                movedPetValue.x() + movedPetValue.width() + InventoryOverlayPolicy.VALUE_MARK_GAP,
+                movedPetDash.x());
+        assertTrue(InventoryOverlayPolicy.hitValueMark(
+                40, 20, 12, -4, movedPetValue.x() + 1, movedPetValue.y() + 1));
+        assertTrue(InventoryOverlayPolicy.hitDashboardButton(
+                40, 20, 12, -4, movedPetDash.x() + 1, movedPetDash.y() + 1));
     }
 
     @Test

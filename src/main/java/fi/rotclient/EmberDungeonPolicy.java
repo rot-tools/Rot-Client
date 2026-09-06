@@ -105,6 +105,35 @@ public final class EmberDungeonPolicy {
                     new IntVec(18, 123, 93), new IntVec(-2, 109, 77)),
             List.of(new IntVec(41, 109, 30), new IntVec(44, 121, 30),
                     new IntVec(67, 109, 30), new IntVec(72, 114, 47)));
+    public record WaypointNode(int id, int section, int x, int y, int z, boolean lever, String label) {
+    }
+
+    private static final List<WaypointNode> WAYPOINT_NODES = List.of(
+            new WaypointNode(1, 1, 111, 113, 73, false, "S1 T1"),
+            new WaypointNode(2, 1, 111, 119, 79, false, "S1 T2"),
+            new WaypointNode(3, 1, 89, 112, 92, false, "S1 T3"),
+            new WaypointNode(4, 1, 89, 122, 101, false, "S1 T4"),
+            new WaypointNode(5, 1, 94, 124, 113, true, "S1 Right"),
+            new WaypointNode(6, 1, 106, 124, 113, true, "S1 Left"),
+            new WaypointNode(7, 2, 68, 109, 121, false, "S2 T1"),
+            new WaypointNode(8, 2, 59, 120, 122, false, "S2 T2"),
+            new WaypointNode(9, 2, 47, 109, 121, false, "S2 T3"),
+            new WaypointNode(10, 2, 39, 108, 143, false, "S2 T4"),
+            new WaypointNode(11, 2, 40, 124, 122, false, "S2 T5"),
+            new WaypointNode(12, 2, 27, 124, 127, true, "S2 Right"),
+            new WaypointNode(13, 2, 23, 132, 138, true, "S2 Left"),
+            new WaypointNode(14, 3, -3, 109, 112, false, "S3 T1"),
+            new WaypointNode(15, 3, -3, 119, 93, false, "S3 T2"),
+            new WaypointNode(16, 3, 19, 123, 93, false, "S3 T3"),
+            new WaypointNode(17, 3, -3, 109, 77, false, "S3 T4"),
+            new WaypointNode(18, 3, 14, 122, 55, true, "S3 Right"),
+            new WaypointNode(19, 3, 2, 122, 55, true, "S3 Left"),
+            new WaypointNode(20, 4, 41, 109, 29, false, "S4 T1"),
+            new WaypointNode(21, 4, 44, 121, 29, false, "S4 T2"),
+            new WaypointNode(22, 4, 67, 109, 29, false, "S4 T3"),
+            new WaypointNode(23, 4, 72, 115, 48, false, "S4 T4"),
+            new WaypointNode(24, 4, 86, 128, 46, true, "S4 Right"),
+            new WaypointNode(25, 4, 84, 121, 34, true, "S4 Left"));
     private static final int[][] ARROW_SOLUTIONS = {
             {7, 7, -1, -1, -1, 1, -1, -1, -1, -1, 1, 3, 3, 3, 3, -1, -1, -1, -1, 1, -1, -1, -1, 7, 1},
             {-1, -1, 7, 7, 5, -1, 7, 1, -1, 5, -1, -1, -1, -1, -1, -1, 7, 5, -1, 1, -1, -1, 7, 7, 1},
@@ -209,6 +238,10 @@ public final class EmberDungeonPolicy {
 
     public static List<List<IntVec>> terminalSections() {
         return TERMINAL_SECTIONS;
+    }
+
+    public static List<WaypointNode> waypointNodes() {
+        return WAYPOINT_NODES;
     }
 
     public static List<IntVec> i4Blocks() {
@@ -334,6 +367,47 @@ public final class EmberDungeonPolicy {
             }
         }
         return Optional.empty();
+    }
+
+    public static boolean clickedRelicCauldron(Relic relic, int x, int y, int z) {
+        if (relic == null) {
+            return false;
+        }
+        IntVec cauldron = relic.cauldron();
+        return x == cauldron.x()
+                && (y == cauldron.y() || y == cauldron.y() - 1)
+                && z == cauldron.z();
+    }
+
+    public static boolean isRelicCauldron(int x, int y, int z) {
+        for (Relic relic : relics()) {
+            if (clickedRelicCauldron(relic, x, y, z)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean correctRelicCauldron(String heldColor, int x, int y, int z) {
+        return relicByName(heldColor)
+                .filter(relic -> clickedRelicCauldron(relic, x, y, z))
+                .isPresent();
+    }
+
+    public static boolean blockRelicClick(
+            boolean enabled,
+            String heldColor,
+            boolean holdingRelicOrMenu,
+            int x,
+            int y,
+            int z) {
+        if (!enabled || heldColor == null || heldColor.isBlank() || !isRelicCauldron(x, y, z)) {
+            return false;
+        }
+        if (!holdingRelicOrMenu) {
+            return true;
+        }
+        return !correctRelicCauldron(heldColor, x, y, z);
     }
 
     public static List<Gate> gates() {

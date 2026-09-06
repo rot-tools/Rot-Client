@@ -5,9 +5,31 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StorageOverlayRuntimeWiringTest {
+    @Test
+    void serverSnapshotsGuardCacheUpdatesAndAllVanillaSlotInputs() throws Exception {
+        String runtime = Files.readString(Path.of("src/client/java/fi/rotclient/StorageOverlayRuntime.java"));
+        String packets = Files.readString(Path.of("src/client/java/fi/rotclient/mixin/ClientPacketListenerMixin.java"));
+        String screen = Files.readString(Path.of("src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"));
+        assertTrue(packets.contains("ClientBoundaryGuard.run(\"STORAGE_CONTENT_PACKET\""));
+        assertTrue(packets.contains("StorageOverlayRuntime.onContainerContent(packet.containerId(), packet.items().size())"));
+        assertTrue(runtime.contains("MENU_READINESS.acceptContents"));
+        assertTrue(runtime.contains("if (!menuReady(screen)) return;"));
+        assertTrue(runtime.contains("client.player.containerMenu != screen.getMenu()"));
+        assertTrue(runtime.contains("allPagesConfirmedEmpty()"));
+        assertTrue(runtime.contains("slotFullyVisible"));
+        assertTrue(runtime.contains("getCarried()"));
+        assertTrue(runtime.contains("overItem || hoveredPageItem"));
+        assertTrue(runtime.contains("StorageOverlayPolicy.layoutColumns(layout"));
+        assertFalse(runtime.contains("clampColumns(extras.storageOverlayColumns)"));
+        assertFalse(runtime.contains("pageHasIdentity(CACHE.get(prefetchWaitingFor))"));
+        assertTrue(screen.contains("STORAGE_SLOT_INPUT"));
+        assertTrue(screen.contains("StorageOverlayRuntime.shouldBlockSlotInput"));
+    }
+
     @Test
     void overviewPagesRemainVisibleBeforeTheirContentsAreCached() throws Exception {
         String source = Files.readString(Path.of("src/client/java/fi/rotclient/StorageOverlayRuntime.java"));
@@ -59,7 +81,9 @@ class StorageOverlayRuntimeWiringTest {
         String dashboard = Files.readString(Path.of("src/client/java/fi/rotclient/QolUtilityDashboard.java"));
 
         assertTrue(catalog.contains("qol.storage_overlay.clear_search"));
+        assertTrue(catalog.contains("qol.storage_overlay.reload_pages"));
         assertTrue(dashboard.contains("qol.storage_overlay.clear_search"));
+        assertTrue(dashboard.contains("StorageOverlayRuntime.requestReloadAll"));
         assertTrue(dashboard.contains("storageOverlaySearchQuery = \"\""));
     }
 
@@ -88,6 +112,7 @@ class StorageOverlayRuntimeWiringTest {
                 "src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"));
 
         assertTrue(source.contains("public static boolean shouldReplaceVanilla"));
+        assertTrue(source.contains("showSkyblockInventoryUi"));
         assertTrue(source.contains("contentSlotStart()"));
         assertTrue(source.contains("drawSlotWell"));
         assertTrue(source.contains("enableScissor"));
@@ -146,7 +171,9 @@ class StorageOverlayRuntimeWiringTest {
         assertTrue(source.contains("shouldPinClosedContainer"));
         assertTrue(source.contains("shouldKeepUngrabbedCursor"));
         assertTrue(source.contains("forcePreserveNext"));
-        assertTrue(source.contains("rotclient-storage-cache.json"));
+        assertTrue(source.contains("StorageOverlayPolicy.CACHE_FILE"));
+        String policy = Files.readString(Path.of("src/main/java/fi/rotclient/StorageOverlayPolicy.java"));
+        assertTrue(policy.contains("rotclient-storage-cache.json"));
         assertTrue(source.contains("addProperty(\"nbt\""));
         assertTrue(source.contains("addProperty(\"texture\""));
         assertTrue(source.contains("ResolvableProfile.createResolved"));
@@ -154,6 +181,14 @@ class StorageOverlayRuntimeWiringTest {
         assertTrue(source.contains("flushForShutdown"));
         assertTrue(source.contains("encodeStack"));
         assertTrue(source.contains("incomingIsPlaceholder"));
+        assertTrue(source.contains("codecStackNeedsFallback"));
+        assertTrue(source.contains("requestReloadAll"));
+        assertTrue(source.contains("shouldReloadCache"));
+        assertTrue(source.contains("useLiveDisplay"));
+        assertTrue(source.contains("pagesToPrefetch"));
+        assertTrue(source.contains("directoryScanCompleted"));
+        assertTrue(source.contains("pendingRefresh"));
+        assertTrue(source.contains("rememberClickedPage"));
         assertTrue(source.contains("charTyped"));
         assertTrue(source.contains("keyPressed"));
         assertTrue(source.contains("insideSearchField"));
@@ -166,6 +201,8 @@ class StorageOverlayRuntimeWiringTest {
         assertTrue(keyMixin.contains("StorageOverlayRuntime.keyPressed"));
         assertTrue(charMixin.contains("StorageOverlayRuntime.charTyped"));
         assertTrue(source.contains("highlightSearchMatches"));
+        assertTrue(client.contains("StorageOverlayRuntime.onJoin"));
+        assertTrue(client.contains("StorageOverlayRuntime.tick"));
         assertTrue(client.contains("shouldStealOverlayWheel"));
         assertTrue(client.contains("CustomTooltipRuntime.clear()"));
         assertTrue(source.contains("SkyBlockMarketQuoteService.current()"));

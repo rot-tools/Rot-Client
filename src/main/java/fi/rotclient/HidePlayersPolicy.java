@@ -13,6 +13,7 @@ public final class HidePlayersPolicy {
     public static final double MIN_DISTANCE = 1.0D;
     public static final double MAX_DISTANCE = 128.0D;
     public static final double DEFAULT_DISTANCE = 32.0D;
+    public static final long LEAP_HIDE_MS = 3000L;
 
     private HidePlayersPolicy() {
     }
@@ -50,5 +51,33 @@ public final class HidePlayersPolicy {
         double safeDistance = clampDistance(distanceBlocks);
         return distanceToRemoteBlocks >= 0.0D
                 && distanceToRemoteBlocks <= safeDistance;
+    }
+
+    public static boolean hideAfterLeap(
+            boolean enabled,
+            boolean onlyInBoss,
+            boolean inBoss,
+            long leapAtMs,
+            long nowMs) {
+        if (!enabled || leapAtMs <= 0L) {
+            return false;
+        }
+        if (onlyInBoss && !inBoss) {
+            return false;
+        }
+        long elapsed = nowMs - leapAtMs;
+        return elapsed >= 0L && elapsed < LEAP_HIDE_MS;
+    }
+
+    public static boolean hideAtSimonSays(
+            boolean enabled,
+            boolean inBoss,
+            boolean beforeTermsOnly,
+            boolean inP3,
+            boolean remoteAtSs) {
+        if (!enabled || !inBoss || !remoteAtSs) {
+            return false;
+        }
+        return !(beforeTermsOnly && inP3);
     }
 }

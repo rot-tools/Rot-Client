@@ -1,5 +1,6 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.FullbrightNightRuntime;
 import fi.rotclient.RotClientClient;
 import net.minecraft.client.renderer.LightmapRenderStateExtractor;
 import net.minecraft.client.renderer.state.LightmapRenderState;
@@ -15,12 +16,14 @@ abstract class LightmapRenderStateExtractorMixin {
             LightmapRenderState state,
             float tickProgress,
             CallbackInfo callback) {
-        if (!RotClientClient.isFullbrightEnabled()) return;
-
-        state.needsUpdate = true;
-        state.ambientColor = LightmapRenderStateExtractor.WHITE;
-        state.darknessEffectScale = 0.0F;
-        state.bossOverlayWorldDarkening = 0.0F;
-        state.brightness = 1.0F;
+        if (RotClientClient.isFullbrightEnabled()) {
+            state.needsUpdate = true;
+            state.ambientColor = LightmapRenderStateExtractor.WHITE;
+            state.darknessEffectScale = 0.0F;
+            state.bossOverlayWorldDarkening = 0.0F;
+            state.brightness = 1.0F;
+            return;
+        }
+        FullbrightNightRuntime.applyNightLightmap(state);
     }
 }

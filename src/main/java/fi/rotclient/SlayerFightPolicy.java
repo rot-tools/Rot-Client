@@ -57,15 +57,18 @@ public final class SlayerFightPolicy {
                     + "enderman slayer|zombie slayer|spider slayer|wolf slayer|"
                     + "blaze slayer|vampire slayer|"
                     + "enderman|zombie|spider|wolf|blaze|vampire)"
-                    + "\\s*(iv|iii|ii|v|i)\\b.*");
+                    + "\\s*(?:t\\s*([1-5])|(iv|iii|ii|v|i))\\b.*");
     private static final Pattern POWER_ORB = Pattern.compile(
             "(?i).*(?:overflux|plasmaflux|mana\\s*flux|power\\s*orb|\\bradiant\\b).*");
     private static final Pattern VOIDGLOOM_HITS = Pattern.compile(
             "(?i).*(?:hits?:\\s*(\\d+)|\\b(\\d+)\\s+hits?\\b).*");
     private static final Pattern VOIDGLOOM_LASER = Pattern.compile("(?i).*(laser|immune).*");
     private static final Pattern VOIDGLOOM_BEACON = Pattern.compile("(?i).*(yang glyph|throw a beacon|destroy the beacon).*");
+    private static final Pattern HEALTH_FRACTION = Pattern.compile(
+            "(?i)(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)\\s*([kmb])?\\s*/\\s*"
+                    + "(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)\\s*([kmb])?\\s*[❤♥]");
     private static final Pattern COMPACT_HEALTH = Pattern.compile(
-            "(?i)(\\d+(?:[.,]\\d+)?)\\s*([kmb])?\\s*[❤♥]");
+            "(?i)(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)\\s*([kmb])?\\s*[❤♥]");
 
     private SlayerFightPolicy() {}
 
@@ -188,6 +191,19 @@ public final class SlayerFightPolicy {
         };
     }
 
+    /**
+     * Tarantula T5 dies twice: Broodfather then Conjoined Brood. Phase 1 is not
+     * a finished kill for time-to-kill, personal bests, or carry counts.
+     */
+    public static boolean isTarantulaTierFivePhaseOne(SlayerPolicy.EntityDescriptor descriptor) {
+        if (descriptor == null
+                || descriptor.type() != SlayerPolicy.SlayerType.TARANTULA
+                || descriptor.tier() != 5) {
+            return false;
+        }
+        return tarantulaPhase(descriptor.displayName()) == TarantulaPhase.FIRST;
+    }
+
     public static boolean isHatchlingsChat(String raw) {
         String text = normalize(raw).toLowerCase(Locale.ROOT);
         return text.contains("kill the broodfather's hatchlings")
@@ -228,6 +244,20 @@ public final class SlayerFightPolicy {
 
     public static boolean isBeaconHelmet(String itemName) {
         return normalize(itemName).equalsIgnoreCase("Beacon");
+    }
+
+    /**
+     * The flying/sitting Yang Glyph is a beacon armor stand. Boss holograms that
+     * say "Yang Glyph" or "Destroy the beacon!" are not the thrown glyph.
+     */
+    public static boolean isThrownYangGlyphStand(
+            String hoverName,
+            String helmetItemName,
+            boolean helmetIsBeacon) {
+        if (helmetIsBeacon || isBeaconHelmet(helmetItemName)) {
+            return true;
+        }
+        return normalize(hoverName).equalsIgnoreCase("Beacon");
     }
 
     /**
@@ -289,7 +319,7 @@ public final class SlayerFightPolicy {
         if (!matcher.find()) {
             return Optional.empty();
         }
-        String amount = matcher.group(1).replace(',', '.');
+        String amount = healthAmountToken(matcher.group(1), matcher.group(2));
         String suffix = matcher.group(2) == null ? "" : matcher.group(2).toUpperCase(Locale.ROOT);
         return Optional.of(amount + suffix + "❤");
     }
@@ -375,7 +405,13 @@ public final class SlayerFightPolicy {
         if (type.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(new QuestRef(type.get(), roman(matcher.group(2))));
+        int tier;
+        if (matcher.group(2) != null) {
+            tier = Integer.parseInt(matcher.group(2));
+        } else {
+            tier = roman(matcher.group(3));
+        }
+        return Optional.of(new QuestRef(type.get(), tier));
     }
 
     public static String romanLabel(int tier) {
@@ -548,31 +584,45 @@ public final class SlayerFightPolicy {
         THIRD
     }
 
-    private static final Pattern FIRE_PILLAR = Pattern.compile("(?i)^(\\d+)s\\s+(\\d+)\\s+hits$");
+    private static final Pattern FIRE_PILLAR_HITS = Pattern.compile(
+            "(?i)(\\d+)s\\s+(\\d+)\\s+hits?");
+    private static final Pattern FIRE_PILLAR_NAMED_SECONDS = Pattern.compile(
+            "(?i)fire\\s*pillar.*?(\\d+)s");
 
     public static boolean isFirePillarHologram(String raw) {
-        return FIRE_PILLAR.matcher(normalize(raw)).matches();
+        String text = normalize(raw);
+        String lower = text.toLowerCase(Locale.ROOT);
+        return FIRE_PILLAR_HITS.matcher(text).find()
+                || lower.contains("fire pillar");
     }
 
     public static Optional<Integer> firePillarSeconds(String raw) {
-        Matcher matcher = FIRE_PILLAR.matcher(normalize(raw));
-        if (!matcher.matches()) {
-            return Optional.empty();
+        String text = normalize(raw);
+        Matcher hits = FIRE_PILLAR_HITS.matcher(text);
+        if (hits.find()) {
+            return parsePositiveInt(hits.group(1));
         }
-        try {
-            return Optional.of(Integer.parseInt(matcher.group(1)));
-        } catch (NumberFormatException ignored) {
-            return Optional.empty();
+        Matcher named = FIRE_PILLAR_NAMED_SECONDS.matcher(text);
+        if (named.find()) {
+            return parsePositiveInt(named.group(1));
         }
+        return Optional.empty();
     }
 
     public static Optional<Integer> firePillarHits(String raw) {
-        Matcher matcher = FIRE_PILLAR.matcher(normalize(raw));
-        if (!matcher.matches()) {
-            return Optional.empty();
+        Matcher matcher = FIRE_PILLAR_HITS.matcher(normalize(raw));
+        if (matcher.find()) {
+            return parsePositiveInt(matcher.group(2));
         }
+        if (isFirePillarHologram(raw)) {
+            return Optional.of(8);
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Integer> parsePositiveInt(String raw) {
         try {
-            return Optional.of(Integer.parseInt(matcher.group(2)));
+            return Optional.of(Integer.parseInt(raw));
         } catch (NumberFormatException ignored) {
             return Optional.empty();
         }
@@ -584,24 +634,63 @@ public final class SlayerFightPolicy {
                 || (text.startsWith("strike using the") && text.endsWith("attunement on your dagger!"));
     }
 
+    public record HealthReading(double current, double max) {
+        public HealthReading {
+            current = Math.max(0.0D, current);
+            max = Math.max(current, max);
+        }
+    }
+
     public static Optional<Double> healthValue(String hologram) {
-        Matcher matcher = COMPACT_HEALTH.matcher(normalize(hologram));
+        return healthReading(hologram).map(HealthReading::current);
+    }
+
+    public static Optional<HealthReading> healthReading(String hologram) {
+        String text = normalize(hologram);
+        Matcher fraction = HEALTH_FRACTION.matcher(text);
+        if (fraction.find()) {
+            try {
+                double current = parseHealthAmount(fraction.group(1), fraction.group(2));
+                double max = parseHealthAmount(fraction.group(3), fraction.group(4));
+                if (current > 0.0D) {
+                    return Optional.of(new HealthReading(current, max));
+                }
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+        Matcher matcher = COMPACT_HEALTH.matcher(text);
         if (!matcher.find()) {
             return Optional.empty();
         }
         try {
-            double amount = Double.parseDouble(matcher.group(1).replace(',', '.'));
-            String suffix = matcher.group(2) == null ? "" : matcher.group(2).toUpperCase(Locale.ROOT);
-            double multiplier = switch (suffix) {
-                case "K" -> 1_000.0D;
-                case "M" -> 1_000_000.0D;
-                case "B" -> 1_000_000_000.0D;
-                default -> 1.0D;
-            };
-            return Optional.of(amount * multiplier);
+            double amount = parseHealthAmount(matcher.group(1), matcher.group(2));
+            if (amount <= 0.0D) {
+                return Optional.empty();
+            }
+            return Optional.of(new HealthReading(amount, amount));
         } catch (NumberFormatException ignored) {
             return Optional.empty();
         }
+    }
+
+    private static double parseHealthAmount(String rawAmount, String suffix) {
+        double amount = Double.parseDouble(healthAmountToken(rawAmount, suffix));
+        String unit = suffix == null ? "" : suffix.toUpperCase(Locale.ROOT);
+        return switch (unit) {
+            case "K" -> amount * 1_000.0D;
+            case "M" -> amount * 1_000_000.0D;
+            case "B" -> amount * 1_000_000_000.0D;
+            default -> amount;
+        };
+    }
+
+    private static String healthAmountToken(String rawAmount, String suffix) {
+        String amount = rawAmount == null ? "" : rawAmount.trim();
+        if (suffix == null || suffix.isBlank()) {
+            return amount.replace(",", "");
+        }
+        return amount.replace(',', '.');
     }
 
     public static InfernoPhase infernoPhase(int tier, double current, double max) {

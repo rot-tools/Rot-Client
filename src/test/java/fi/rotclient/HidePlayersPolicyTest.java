@@ -55,4 +55,14 @@ final class HidePlayersPolicyTest {
                 SkyBlockDungeonDetector.detectFromScoreboardLines(
                         java.util.List.of("Crystal Hollows", "Magma Fields")));
     }
+
+    @Test
+    void leapAndSimonSaysHideUseExactPadAndDuration() {
+        assertTrue(HidePlayersPolicy.hideAfterLeap(true, true, true, 1000L, 2500L));
+        assertFalse(HidePlayersPolicy.hideAfterLeap(true, true, true, 1000L, 4000L));
+        assertFalse(HidePlayersPolicy.hideAfterLeap(true, true, false, 1000L, 1500L));
+        assertTrue(HidePlayersPolicy.hideAtSimonSays(true, true, true, false, true));
+        assertFalse(HidePlayersPolicy.hideAtSimonSays(true, true, true, true, true));
+        assertFalse(HidePlayersPolicy.hideAtSimonSays(true, false, false, false, true));
+    }
 }

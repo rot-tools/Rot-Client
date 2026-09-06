@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.ChestBlock;
@@ -18,6 +19,7 @@ import net.minecraft.world.level.block.Block;
  */
 public final class SecretHitboxesRuntime {
     private static final VoxelShape LEVER_FLOOR = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 10.0D, 12.0D);
+    private static final VoxelShape LEVER_CEILING = Block.box(4.0D, 6.0D, 4.0D, 12.0D, 16.0D, 12.0D);
     private static final VoxelShape LEVER_NORTH = Block.box(5.0D, 3.0D, 10.0D, 11.0D, 13.0D, 16.0D);
     private static final VoxelShape LEVER_SOUTH = Block.box(5.0D, 3.0D, 0.0D, 11.0D, 13.0D, 6.0D);
     private static final VoxelShape LEVER_EAST = Block.box(0.0D, 3.0D, 5.0D, 6.0D, 13.0D, 11.0D);
@@ -27,7 +29,26 @@ public final class SecretHitboxesRuntime {
     }
 
     public static VoxelShape shapeFor(BlockState state) {
+        return shapeFor(state, null);
+    }
+
+    public static VoxelShape shapeFor(BlockState state, BlockPos pos) {
         if (state == null) {
+            return null;
+        }
+        SecretHitboxesPolicy.BlockKind kind = kind(state);
+        int floor = -1;
+        DungeonPolicy.Sidebar bar = DungeonRuntime.sidebar();
+        if (bar != null) {
+            floor = DungeonMapPolicy.floorNumber(bar.floor());
+        }
+        if (kind == SecretHitboxesPolicy.BlockKind.LEVER
+                && pos != null
+                && !SecretHitboxesPolicy.expandLeverAt(
+                        pos.getX(),
+                        pos.getY(),
+                        pos.getZ(),
+                        floor)) {
             return null;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
@@ -57,6 +78,7 @@ public final class SecretHitboxesRuntime {
         return switch (id) {
             case FULL_CUBE -> Shapes.block();
             case LEVER_FLOOR -> LEVER_FLOOR;
+            case LEVER_CEILING -> LEVER_CEILING;
             case LEVER_NORTH -> LEVER_NORTH;
             case LEVER_SOUTH -> LEVER_SOUTH;
             case LEVER_EAST -> LEVER_EAST;

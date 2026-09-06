@@ -9,7 +9,7 @@ client-only Fabric mod. Almost every class lives in the same Java package:
 `fi.rotclient`. Mixins that hook Minecraft live in `fi.rotclient.mixin`.
 
 Current checkpoint: **`2.0.1+mc26.2`**, Minecraft **26.2**, Java **25**,
-**124** QoL parent modules. This is a public engineering checkpoint, not a
+**131** QoL parent modules. This is a public engineering checkpoint, not a
 finished 2.0 release. Rot Client is not affiliated with Hypixel.
 
 Automation (clickers, scanners, dungeon helpers, Free Camera, Terminal
@@ -25,7 +25,7 @@ Rot Client does four jobs in one JAR:
 | Job | What the player sees | Where it lives in code |
 | --- | --- | --- |
 | **Dashboard** | Right Shift / `/rot` Click GUI | `RotClientHomeScreen`, `QolUtilityDashboard` |
-| **QoL catalog** | 124 modules in 13 groups | `QolUtilityCatalog` + `*Policy` + `*Runtime` |
+| **QoL catalog** | 131 modules in 14 groups | `QolUtilityCatalog` + `*Policy` + `*Runtime` |
 | **Mining tracker** | Material / gemstone HUD and ledgers | `TrackerConfig`, detectors, `RotClientHud` |
 | **Current Session** | Pause / resume / start new, History | `RotClientCurrentSession`, History store |
 
@@ -152,16 +152,16 @@ Related UI classes they will hit next:
 | Class | Role |
 | --- | --- |
 | `RotClientHomeScreen` | Overview: Modules / Look & HUD / Mining / Events |
-| `QolUtilityDashboard` | Searchable 124-module catalog + settings drawer |
+| `QolUtilityDashboard` | Searchable 131-module catalog + settings drawer |
 | `MiningUiScreen` | Mining tracker selector, enable, reset, HUD edit |
 | `RotClientTheme` | Blue-slate palette. Do not hardcode random colors. |
 | `RotClientModMenuIntegration` | Optional Mod Menu config button |
 
 ---
 
-## 5. How the 124 modules actually exist
+## 5. How the 131 modules actually exist
 
-There is **one catalog**, not 124 independent mods.
+There is **one catalog**, not 131 independent mods.
 
 `QolUtilityCatalog` is a static list of `ModuleDef` records. Each module has:
 
@@ -309,7 +309,7 @@ is the HUD layout editor. `/rot help` lists commands.
 | **Paused** | Intentionally not the current product track |
 
 When someone reads the dashboard and sees **Needs testing**, that is
-intentional. Most of the 124 modules are wired and automated-tested. The
+intentional. Most of the 131 modules are wired and automated-tested. The
 group-wide Minecraft matrix is still pending.
 
 ### Adding or changing a QoL module (the usual PR shape)
@@ -343,7 +343,7 @@ a generic fallback range.
 
 | File | Why |
 | --- | --- |
-| `QolUtilityCatalog` | The 124 modules and their settings |
+| `QolUtilityCatalog` | The 131 modules and their settings |
 | `QolUtilityConfig` | Persisted toggles |
 | `QolSkyblockExtras` | Extra option blob |
 | `QolModuleEvidence` | Ready vs needs-testing vs upcoming |

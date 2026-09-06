@@ -51,6 +51,7 @@ tracking-runtime*.log
 tracking-summary*.txt
 rotclient.json
 miningtracker.json
+rotclient-profiles.json
 rotclient-current-session.json
 rotclient-current-session.corrupt.json
 rotclient-session-start-new-transaction.json
@@ -141,9 +142,14 @@ secrets*.json
 /obsidian-vault/.obsidian/cache/
 /obsidian-vault/.trash/
 
+# Local GitHub wiki staging (published via Rot-Client.wiki.git, not this repo)
+
+/.wiki-staging/
+
 # Local reference dumps (never commit Minecraft instances or decompiled mods)
 
 /Projects/
+/.tmp-mc-sources/
 
 # Accidental root-level Fabric JAR extraction artifacts
 

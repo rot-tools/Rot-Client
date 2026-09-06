@@ -22,6 +22,12 @@ public final class TempleDungeonPolicy {
         BLOOD_DOOR_OPEN
     }
 
+    public enum KeySkull {
+        NONE,
+        WITHER,
+        BLOOD
+    }
+
     public record BreakerCharges(int current, int max) {
         public String hudLine() {
             return "Breaker " + current + "/" + max;
@@ -31,6 +37,12 @@ public final class TempleDungeonPolicy {
     public static final double MIN_CAMERA_DISTANCE = 1.0D;
     public static final double MAX_CAMERA_DISTANCE = 64.0D;
     public static final double DEFAULT_CAMERA_DISTANCE = 4.0D;
+    public static final String WITHER_KEY_UUID = "2865274b-3097-394e-8149-ec629c72d850";
+    public static final String BLOOD_KEY_UUID = "73f6d1f9-df41-3d1d-b98c-e1442d915885";
+    public static final int SECRET_CLICKED_DEFAULT_SECONDS = 7;
+    public static final int SECRET_CLICKED_MAX_SECONDS = 120;
+    public static final int SECRET_CLICKED_COLOR = 0x66FFAA00;
+    public static final int SECRET_LOCKED_COLOR = 0x66FF5555;
 
     private static final Pattern BREAKER_CHARGES =
             Pattern.compile("Charges:\\s*(\\d+)/(\\d+)");
@@ -78,6 +90,61 @@ public final class TempleDungeonPolicy {
             case BLOOD_DOOR_OPEN -> Optional.of("Blood door opened");
             case NONE -> Optional.empty();
         };
+    }
+
+    public static KeySkull keySkull(String uuid) {
+        if (uuid == null || uuid.isBlank()) {
+            return KeySkull.NONE;
+        }
+        String id = uuid.toLowerCase(Locale.ROOT);
+        if (id.equals(WITHER_KEY_UUID)) {
+            return KeySkull.WITHER;
+        }
+        if (id.equals(BLOOD_KEY_UUID)) {
+            return KeySkull.BLOOD;
+        }
+        return KeySkull.NONE;
+    }
+
+    public static boolean keyDropClass(DungeonPolicy.DungeonClass dungeonClass, boolean allClasses) {
+        if (allClasses) {
+            return true;
+        }
+        return dungeonClass == DungeonPolicy.DungeonClass.ARCHER
+                || dungeonClass == DungeonPolicy.DungeonClass.MAGE;
+    }
+
+    public static String keyDropTitle(KeySkull skull) {
+        return switch (skull) {
+            case WITHER -> "Wither Key Dropped";
+            case BLOOD -> "Blood Key Dropped";
+            case NONE -> "";
+        };
+    }
+
+    public static boolean keyPickupClearsDrop(String chat) {
+        DoorKeyEvent event = doorKeyEvent(chat);
+        return event == DoorKeyEvent.WITHER_OBTAINED
+                || event == DoorKeyEvent.WITHER_PICKED_UP
+                || event == DoorKeyEvent.BLOOD_OBTAINED
+                || event == DoorKeyEvent.BLOOD_PICKED_UP;
+    }
+
+    public static boolean lockedChestChat(String chat) {
+        return DungeonPolicy.normalize(chat).toLowerCase(Locale.ROOT).contains("chest is locked");
+    }
+
+    public static int clampSecretStaySeconds(int seconds) {
+        return Math.max(1, Math.min(SECRET_CLICKED_MAX_SECONDS, seconds));
+    }
+
+    public static boolean shouldBoxSecretClick(
+            boolean enabled,
+            boolean inDungeon,
+            boolean inBoss,
+            boolean boxInBoss,
+            boolean secretBlock) {
+        return enabled && inDungeon && secretBlock && (!inBoss || boxInBoss);
     }
 
     public static boolean isSpiritBearHologram(String hologram) {

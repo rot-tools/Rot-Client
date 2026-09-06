@@ -3,6 +3,7 @@ package fi.rotclient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 final class SlayerProgressPolicyTest {
@@ -58,6 +59,28 @@ final class SlayerProgressPolicyTest {
         assertEquals(2_403L, sidebar.earnedXp());
         assertEquals(3_000L, sidebar.requiredXp());
         assertTrue(SlayerProgressPolicy.parse("2,403/3,000", false).isEmpty());
+    }
+
+    @Test
+    void tabListSlayerQuestUnlocksBareFractionAndPrefersLabeledCombatXp() {
+        assertTrue(SlayerProgressPolicy.showsQuest(List.of(
+                "Slayer Quest",
+                "Voidgloom Seraph IV",
+                "2,403/3,000")));
+        SlayerProgressPolicy.Progress tab = SlayerProgressPolicy.parseLines(List.of(
+                "Slayer Quest",
+                "Voidgloom Seraph IV",
+                "2,403/3,000"), false).orElseThrow();
+        assertEquals(2_403L, tab.earnedXp());
+        assertEquals(3_000L, tab.requiredXp());
+        SlayerProgressPolicy.Progress labeled = SlayerProgressPolicy.parseLines(List.of(
+                "2,000/3,000",
+                "Combat XP: 2,403/3,000"), true).orElseThrow();
+        assertEquals(2_403L, labeled.earnedXp());
+        SlayerProgressPolicy.Progress kept = SlayerProgressPolicy.preferFresh(
+                new SlayerProgressPolicy.Progress(2_403, 3_000),
+                new SlayerProgressPolicy.Progress(2_000, 3_000));
+        assertEquals(2_403L, kept.earnedXp());
     }
 
     @Test

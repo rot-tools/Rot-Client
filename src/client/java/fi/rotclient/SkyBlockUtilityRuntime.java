@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * Client glue for SkyBlock flavor extras.
  */
-public final class SkyblockFlavorRuntime {
+public final class SkyBlockUtilityRuntime {
     private static boolean shaftAnnounced;
     private static String lastServerId = "";
     private static long lastServerMs;
@@ -42,7 +42,7 @@ public final class SkyblockFlavorRuntime {
     private static final List<Vec3> IMPLOSION_HOLDERS = new ArrayList<>();
     private static int implosionCacheTick = Integer.MIN_VALUE;
 
-    private SkyblockFlavorRuntime() {
+    private SkyBlockUtilityRuntime() {
     }
 
     static void tick(Minecraft client) {
@@ -53,23 +53,23 @@ public final class SkyblockFlavorRuntime {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         QolSkyblockExtras extras = qol.extras();
         List<String> tab = CommissionDisplayRuntime.tabLines(client);
-        SkyblockFlavorPolicy.parseMinister(tab).ifPresent(name -> ministerName = name);
+        SkyBlockUtilityPolicy.parseMinister(tab).ifPresent(name -> ministerName = name);
         String area = SkyBlockAreaDetector.detect().displayName();
-        boolean inShaft = SkyblockFlavorPolicy.isMineshaftArea(area);
+        boolean inShaft = SkyBlockUtilityPolicy.isMineshaftArea(area);
         if (inShaft && extras.miningGlaciteEnabled && !shaftAnnounced) {
             shaftAnnounced = true;
             if (extras.miningGlaciteEnterTitle) {
                 MiningLeftoverRuntime.showTitle("Glacite Mineshaft", true, false);
             }
             if (extras.miningGlaciteEnterChat) {
-                localChat(SkyblockFlavorPolicy.shaftEnterLine(area));
+                localChat(SkyBlockUtilityPolicy.shaftEnterLine(area));
             }
             if (extras.miningGlaciteEnterParty) {
-                MiningLeftoverRuntime.sendPartyChat(SkyblockFlavorPolicy.shaftEnterLine(area));
+                MiningLeftoverRuntime.sendPartyChat(SkyBlockUtilityPolicy.shaftEnterLine(area));
             }
             if (extras.miningGlaciteKeyAnnounce) {
-                String keys = SkyblockFlavorPolicy.keyAnnounceLine(
-                        SkyblockFlavorPolicy.countUnlooted(MiningLeftoverRuntime.corpses()),
+                String keys = SkyBlockUtilityPolicy.keyAnnounceLine(
+                        SkyBlockUtilityPolicy.countUnlooted(MiningLeftoverRuntime.corpses()),
                         inventoryKeyCounts(client.player));
                 if (!keys.isBlank()) {
                     localChat(keys);
@@ -90,21 +90,21 @@ public final class SkyblockFlavorRuntime {
         String text = message.getString();
         PrizeSpinRuntime.onChat(text);
         long now = System.currentTimeMillis();
-        SkyblockFlavorPolicy.parseServerId(text).ifPresent(id -> {
+        SkyBlockUtilityPolicy.parseServerId(text).ifPresent(id -> {
             if (qol.chatCommandsEnabled && qol.chatPreviousServer
-                    && SkyblockFlavorPolicy.shouldAnnouncePreviousServer(
+                    && SkyBlockUtilityPolicy.shouldAnnouncePreviousServer(
                             id, lastServerId, lastServerMs, now, qol.chatPreviousServerSeconds)) {
-                localChat(SkyblockFlavorPolicy.previousServerLine(id, lastServerMs, now));
+                localChat(SkyBlockUtilityPolicy.previousServerLine(id, lastServerMs, now));
             }
             lastServerId = id;
             lastServerMs = now;
         });
-        SkyblockFlavorPolicy.parseQueuePosition(text).ifPresent(position -> {
+        SkyBlockUtilityPolicy.parseQueuePosition(text).ifPresent(position -> {
             if (qol.chatCommandsEnabled && qol.chatQueueEstimate) {
-                SkyblockFlavorPolicy.estimateQueueSeconds(
+                SkyBlockUtilityPolicy.estimateQueueSeconds(
                                 lastQueuePosition, lastQueueMs, position, now)
                         .ifPresent(seconds -> localChat(
-                                SkyblockFlavorPolicy.queueEstimateLine(position, seconds)));
+                                SkyBlockUtilityPolicy.queueEstimateLine(position, seconds)));
             }
             lastQueuePosition = position;
             lastQueueMs = now;
@@ -112,14 +112,14 @@ public final class SkyblockFlavorRuntime {
         if (MiningLeftoverPolicy.classifyChat(text) == MiningLeftoverPolicy.NotifyKind.MINESHAFT_PORTAL
                 && extras.miningGlaciteEnabled
                 && extras.miningGlacitePityChat) {
-            String pity = SkyblockFlavorPolicy.pityChatLine(MiningLeftoverRuntime.pity());
+            String pity = SkyBlockUtilityPolicy.pityChatLine(MiningLeftoverRuntime.pity());
             if (!pity.isBlank()) {
                 localChat(pity);
             }
         }
         if (qol.renderOptimizerEnabled
                 && extras.totemAnimation
-                && SkyblockFlavorPolicy.isAbsorbChat(text)) {
+                && SkyBlockUtilityPolicy.isAbsorbChat(text)) {
             playTotem();
         }
     }
@@ -129,7 +129,7 @@ public final class SkyblockFlavorRuntime {
             return null;
         }
         QolSkyblockExtras extras = extras();
-        return SkyblockFlavorPolicy.rewriteScathaPetDrop(
+        return SkyBlockUtilityPolicy.rewriteScathaPetDrop(
                         extras.miningScathaEnabled && extras.miningScathaPetRarity,
                         message.getString())
                 .map(text -> (Component) Component.literal(text))
@@ -140,7 +140,7 @@ public final class SkyblockFlavorRuntime {
         QolSkyblockExtras extras = extras();
         if (!extras.miningHelpersEnabled
                 || !extras.miningHelpersDetectorSolver
-                || !SkyblockFlavorPolicy.shouldPingDetector(previous, next)) {
+                || !SkyBlockUtilityPolicy.shouldPingDetector(previous, next)) {
             return;
         }
         long now = System.currentTimeMillis();
@@ -170,9 +170,9 @@ public final class SkyblockFlavorRuntime {
         }
         var key = BuiltInRegistries.BLOCK.getKey(original.getBlock());
         String id = key == null ? "" : key.toString();
-        if (!SkyblockFlavorPolicy.recolorDwarvenCarpet(
+        if (!SkyBlockUtilityPolicy.recolorDwarvenCarpet(
                 true,
-                SkyblockFlavorPolicy.isDwarvenMines(SkyBlockAreaDetector.detect().displayName()),
+                SkyBlockUtilityPolicy.isDwarvenMines(SkyBlockAreaDetector.detect().displayName()),
                 id)) {
             return null;
         }
@@ -197,10 +197,10 @@ public final class SkyblockFlavorRuntime {
                 + MiningLeftoverRuntime.scoreboardText();
         boolean corpses = extras.miningGlaciteEnabled
                 && extras.miningGlaciteCorpseWaypoints
-                && SkyblockFlavorPolicy.isMineshaftArea(area);
+                && SkyBlockUtilityPolicy.isMineshaftArea(area);
         boolean rats = qol.worldScannerEnabled
                 && qol.worldScannerRatHitboxes
-                && SkyblockFlavorPolicy.isHubIsland(area);
+                && SkyBlockUtilityPolicy.isHubIsland(area);
         if (!corpses && !rats) {
             return;
         }
@@ -209,13 +209,13 @@ public final class SkyblockFlavorRuntime {
         for (Entity entity : client.level.getEntities(client.player, search)) {
             if (corpses
                     && entity instanceof ArmorStand stand
-                    && SkyblockFlavorPolicy.isCorpseStand(stand.getName().getString())) {
+                    && SkyBlockUtilityPolicy.isCorpseStand(stand.getName().getString())) {
                 Gizmos.cuboid(interpolatedBox(stand, partialTick, 0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F))
                         .setAlwaysOnTop();
             }
             if (rats
                     && entity instanceof Zombie zombie
-                    && SkyblockFlavorPolicy.isHubRat(true, zombie.isBaby())) {
+                    && SkyBlockUtilityPolicy.isHubRat(true, zombie.isBaby())) {
                 Gizmos.cuboid(interpolatedBox(zombie, partialTick, 0.08D), GizmoStyle.stroke(0xFFFFAA00, 2.0F))
                         .setAlwaysOnTop();
             }
@@ -228,7 +228,7 @@ public final class SkyblockFlavorRuntime {
         if (!qol.renderOptimizerEnabled || !extras.hideImplosionParticles) {
             return false;
         }
-        if (!SkyblockFlavorPolicy.isImplosionParticle(particleId)) {
+        if (!SkyBlockUtilityPolicy.isImplosionParticle(particleId)) {
             return false;
         }
         Minecraft client = Minecraft.getInstance();
@@ -240,7 +240,7 @@ public final class SkyblockFlavorRuntime {
             double dx = holder.x - x;
             double dy = holder.y - y;
             double dz = holder.z - z;
-            if (SkyblockFlavorPolicy.hideImplosion(true, particleId, true, dx * dx + dy * dy + dz * dz)) {
+            if (SkyBlockUtilityPolicy.hideImplosion(true, particleId, true, dx * dx + dy * dy + dz * dz)) {
                 return true;
             }
         }
@@ -256,7 +256,7 @@ public final class SkyblockFlavorRuntime {
         IMPLOSION_HOLDERS.clear();
         AABB search = client.player.getBoundingBox().inflate(8.0D);
         for (Player player : client.level.getEntitiesOfClass(Player.class, search)) {
-            if (!SkyblockFlavorPolicy.isWitherBlade(
+            if (!SkyBlockUtilityPolicy.isWitherBlade(
                     AutoClickerItemIdentity.skyBlockId(player.getMainHandItem()))) {
                 continue;
             }
@@ -282,7 +282,7 @@ public final class SkyblockFlavorRuntime {
             return component;
         }
         String original = component.getString();
-        String rewritten = SkyblockFlavorPolicy.rewriteMobIcons(true, original);
+        String rewritten = SkyBlockUtilityPolicy.rewriteMobIcons(true, original);
         if (rewritten.equals(original)) {
             return component;
         }
@@ -296,11 +296,11 @@ public final class SkyblockFlavorRuntime {
 
     public static String quickJoinLabel() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        return SkyblockFlavorPolicy.quickJoinLabel(qol.chatQuickJoinText, qol.chatQuickJoinIp);
+        return SkyBlockUtilityPolicy.quickJoinLabel(qol.chatQuickJoinText, qol.chatQuickJoinIp);
     }
 
     public static String quickJoinIp() {
-        return SkyblockFlavorPolicy.sanitizeQuickJoinIp(
+        return SkyBlockUtilityPolicy.sanitizeQuickJoinIp(
                 RotClientClient.qolConfigPublic().chatQuickJoinIp);
     }
 

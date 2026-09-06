@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -88,11 +89,18 @@ public final class SlayerPolicy {
     private static final Pattern FORMAT_CODE = Pattern.compile("§[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
     private static final Pattern DROP = Pattern.compile(
             "(?i).*(?:RARE|RNGESUS|PRAY TO RNGESUS|CRAZY RARE|INSANE) DROP!.*?\\(([^)]+)\\).*"                );
+    /**
+     * Hypixel armor-stand ids relative to the living slayer host: name/tier,
+     * timer, then Spawned by.
+     */
+    public static final int[] HOLOGRAM_ID_OFFSETS = {1, 2, 3};
     /** Roman tier must sit immediately after the boss alias, not later in Hits/HP text. */
     private static final Pattern ROMAN_TIER = Pattern.compile(
             "^\\s*(IV|III|II|V|I)(?=\\s|$|[❤♥])");
+    private static final Pattern ROMAN_IN_TAG = Pattern.compile(
+            "(?:^|\\s)(IV|III|II|V|I)(?=\\s|$|[❤♥])");
     private static final Pattern COMPACT_HEALTH = Pattern.compile(
-            "(?i)(\\d+(?:[.,]\\d+)?)\\s*([kmb])?\\s*[❤♥]");
+            "(?i)(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)\\s*([kmb])?\\s*[❤♥]");
     private static final Map<String, Mini> MINIBOSSES = createMinibosses();
     private static final Set<String> DEMONS = Set.of("Quazii", "ⓆⓊⒶⓏⒾⒾ", "Typhoeus", "ⓉⓎⓅⒽⓄⒺⓊⓈ");
 
@@ -148,23 +156,96 @@ public final class SlayerPolicy {
         for (SlayerType type : SlayerType.values()) {
             for (String alias : type.aliases()) {
                 if (containsIgnoreCase(tag, alias)) {
+                    if (!isCombatNametag(tag)) {
+                        continue;
+                    }
                     int namedTier = specialBossTier(tag);
                     int tier = namedTier > 0 ? namedTier : romanTierAfter(tag, alias);
                     if (tier <= 0) {
                         tier = inferTierFromHealth(type, tag);
+                    }
+                    String shown = type.displayName();
+                    if (containsIgnoreCase(tag, "Conjoined Brood")) {
+                        shown = "Conjoined Brood";
+                    } else if (containsIgnoreCase(tag, "Atoned Horror")) {
+                        shown = "Atoned Horror";
                     }
                     return Optional.of(new EntityDescriptor(
                             EntityRole.BOSS,
                             type,
                             tier,
                             owner,
-                            type.displayName(),
+                            shown,
                             false,
                             attunement));
                 }
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Live boss/mini/demon armor-stand text: skull prefix, heart suffix, or Hits.
+     */
+    public static boolean isCombatNametag(String raw) {
+        String tag = normalize(raw);
+        if (tag.isEmpty()) {
+            return false;
+        }
+        boolean shape = tag.startsWith("☠")
+                || tag.endsWith("❤")
+                || tag.endsWith("♥")
+                || tag.endsWith("❤ ✯")
+                || tag.endsWith("♥ ✯")
+                || tag.endsWith("Hits");
+        if (!shape) {
+            return false;
+        }
+        return containsBossMiniOrDemonName(tag);
+    }
+
+    /**
+     * HUD copies the boss timer stand and name stand; skip Spawned by.
+     */
+    public static List<String> nametagHudLines(List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return List.of();
+        }
+        String timer = null;
+        String name = null;
+        for (String raw : lines) {
+            String text = normalize(raw);
+            if (text.isEmpty() || containsIgnoreCase(text, "Spawned by")) {
+                continue;
+            }
+            if (timer == null && text.contains(":")) {
+                timer = text;
+            }
+            if (name == null && isCombatNametag(text) && bossAliasIn(text)) {
+                name = text;
+            }
+            if (timer != null && name != null) {
+                break;
+            }
+        }
+        List<String> out = new ArrayList<>();
+        if (timer != null) {
+            out.add(timer);
+        }
+        if (name != null) {
+            out.add(name);
+        }
+        return List.copyOf(out);
+    }
+
+    public static boolean shouldTrackLiveEntity(EntityDescriptor descriptor) {
+        if (descriptor == null) {
+            return false;
+        }
+        if (descriptor.role() == EntityRole.BOSS && descriptor.owner().isBlank()) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -339,7 +420,11 @@ public final class SlayerPolicy {
         int start = tag.toLowerCase(Locale.ROOT).indexOf(alias.toLowerCase(Locale.ROOT));
         String tail = start < 0 ? tag : tag.substring(start + alias.length());
         Matcher matcher = ROMAN_TIER.matcher(tail);
-        return matcher.find() ? romanValue(matcher.group(1)) : 0;
+        if (matcher.find()) {
+            return romanValue(matcher.group(1));
+        }
+        Matcher anywhere = ROMAN_IN_TAG.matcher(tag);
+        return anywhere.find() ? romanValue(anywhere.group(1)) : 0;
     }
 
     private static int inferTierFromHealth(SlayerType type, String tag) {
@@ -406,6 +491,38 @@ public final class SlayerPolicy {
             case "V" -> 5;
             default -> 0;
         };
+    }
+
+    private static boolean containsBossMiniOrDemonName(String tag) {
+        for (SlayerType type : SlayerType.values()) {
+            for (String alias : type.aliases()) {
+                if (containsIgnoreCase(tag, alias)) {
+                    return true;
+                }
+            }
+        }
+        for (String mini : MINIBOSSES.keySet()) {
+            if (containsIgnoreCase(tag, mini)) {
+                return true;
+            }
+        }
+        for (String demon : DEMONS) {
+            if (containsIgnoreCase(tag, demon)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean bossAliasIn(String tag) {
+        for (SlayerType type : SlayerType.values()) {
+            for (String alias : type.aliases()) {
+                if (containsIgnoreCase(tag, alias)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean containsIgnoreCase(String source, String fragment) {

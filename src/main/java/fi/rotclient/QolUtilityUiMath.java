@@ -13,8 +13,7 @@ public final class QolUtilityUiMath {
         NONE,
         OPEN_SETTINGS,
         TOGGLE,
-        OPEN_HUD_SETTINGS,
-        OPEN_HUD_MENU
+        OPEN_HUD_SETTINGS
     }
 
     public enum PageFilter {
@@ -32,6 +31,7 @@ public final class QolUtilityUiMath {
     public static final int SETTINGS_BUTTON_HEIGHT = 24;
     public static final int TOGGLE_WIDTH = 44;
     public static final int TOGGLE_HEIGHT = 20;
+    public static final int SQUARE_LATCH_SIZE = 20;
     public static final int CARD_PAD = 14;
     public static final int FOOTER_HEIGHT = 28;
     public static final int MODULE_BLOCK_WIDTH = 92;
@@ -93,7 +93,7 @@ public final class QolUtilityUiMath {
             return CardAction.OPEN_SETTINGS;
         }
         if (hitHud && hasHud) {
-            return hudOpensMenu ? CardAction.OPEN_HUD_MENU : CardAction.OPEN_HUD_SETTINGS;
+            return CardAction.OPEN_HUD_SETTINGS;
         }
         if (hitModuleToggle && toggleable) {
             return CardAction.TOGGLE;
@@ -444,7 +444,7 @@ public final class QolUtilityUiMath {
     public static int settingLabelMaxWidth(int rowWidth, QolUtilityCatalog.SettingType type) {
         int reserve = switch (type == null ? QolUtilityCatalog.SettingType.TOGGLE : type) {
             case TOGGLE -> DRAWER_CONTROL_RESERVE;
-            case COLOR -> 36;
+            case COLOR, SQUARE -> 36;
             case ENUM -> 118;
             case NUMBER -> NUMBER_CONTROL_WIDTH + 12;
             case ACTION -> 72;

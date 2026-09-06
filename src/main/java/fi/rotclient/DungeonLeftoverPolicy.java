@@ -45,14 +45,33 @@ public final class DungeonLeftoverPolicy {
     }
 
     public record LeapEntry(
-            int slot, String name, DungeonPolicy.DungeonClass dungeonClass, boolean dead) {
+            int slot,
+            String name,
+            DungeonPolicy.DungeonClass dungeonClass,
+            boolean dead,
+            String statusLabel) {
         public LeapEntry {
             name = name == null ? "" : name;
             dungeonClass = dungeonClass == null ? DungeonPolicy.DungeonClass.UNKNOWN : dungeonClass;
+            statusLabel = statusLabel == null ? "" : statusLabel;
         }
 
         public LeapEntry(int slot, String name, DungeonPolicy.DungeonClass dungeonClass) {
-            this(slot, name, dungeonClass, false);
+            this(slot, name, dungeonClass, false, "");
+        }
+
+        public LeapEntry(
+                int slot, String name, DungeonPolicy.DungeonClass dungeonClass, boolean dead) {
+            this(slot, name, dungeonClass, dead, dead ? "DEAD" : "");
+        }
+
+        public static LeapEntry fromLore(
+                int slot,
+                String name,
+                DungeonPolicy.DungeonClass dungeonClass,
+                List<String> lore) {
+            String label = DungeonPolicy.leapHeadLabel(lore);
+            return new LeapEntry(slot, name, dungeonClass, !label.isBlank(), label);
         }
     }
 
@@ -579,7 +598,7 @@ public final class DungeonLeftoverPolicy {
         return String.format(Locale.ROOT, "%.2fs", millis / 1000.0D);
     }
 
-    private static String path(String blockId) {
+    public static String path(String blockId) {
         if (blockId == null) {
             return "";
         }

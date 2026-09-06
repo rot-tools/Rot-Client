@@ -2539,7 +2539,7 @@ int selectorY = masterY + 10;
                 return true;
             }
             case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
-                 QOL_GARDEN, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
+                 QOL_GARDEN, QOL_GUI, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
                 QolUtilityCatalog.Group group =
                         RotClientSidebarNav.groupForHitTarget(hit);
                 if (group != null) {

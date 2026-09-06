@@ -19,7 +19,7 @@ abstract class ClipContextSecretHitboxMixin {
             BlockGetter level,
             BlockPos pos,
             CallbackInfoReturnable<VoxelShape> cir) {
-        VoxelShape override = SecretHitboxesRuntime.shapeFor(state);
+        VoxelShape override = SecretHitboxesRuntime.shapeFor(state, pos);
         if (override != null) {
             cir.setReturnValue(override);
         }

@@ -40,15 +40,14 @@ final class RotClientClickGuiReviewTest {
                 "src/client/java/fi/rotclient/QolUtilityDashboard.java");
         assertTrue(dashboard.contains("RotClientUiDraw.drawScrim("));
         assertTrue(dashboard.contains("closeDrawer();"));
+        assertFalse(dashboard.contains("private boolean handleHudMenuClick"));
         String hudClick = section(
                 dashboard,
-                "private boolean handleHudMenuClick",
+                "private boolean handleCardClick",
                 "private boolean handleDrawerClick");
-        assertTrue(hudClick.contains("if (!inside)"));
-        assertTrue(hudClick.contains("closeHudMenu();"));
-        int outside = hudClick.indexOf("if (!inside)");
-        String outsideBlock = hudClick.substring(outside, outside + 80);
-        assertTrue(outsideBlock.contains("return true;"));
+        assertTrue(hudClick.contains("openHudSettings(module.id())"));
+        assertTrue(hudClick.contains("OPEN_HUD_SETTINGS"));
+        assertFalse(hudClick.contains("OPEN_HUD_MENU"));
     }
 
     private static String read(String path) throws IOException {

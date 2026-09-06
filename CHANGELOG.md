@@ -7,6 +7,27 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### GUI
+
+* Custom Scoreboard is a new **GUI** left-panel group. It rebuilds the SkyBlock
+  sidebar with a Rot-native appearance list, number layouts, alignment, events,
+  mayor/party/Maxwell rows, title/footer markup (`&&` colors), and a rounded
+  panel. Vanilla sidebar hide is on by default; the module stays off until
+  enabled. Catalog lock is **131**.
+
+### Dungeons (Athen / Nebulune port)
+
+* Port screenshot Dungeons modules into Rot-native policies and runtimes.
+  Existing cards keep saved configs: Auto Superboom (click-triggered extra
+  walls, `/rot superboom`), Auto/Queue Terms (ms delay, click order, 800 ms
+  resync), Breaker instamine, chest-close delays, Item Quality style tokens,
+  Party Finder lore tints, terminal waypoints with class/lever nodes, and
+  solver overlay extras (first-click delay, drop/L/R binds, hide header,
+  sounds). New cards: Dungeon Carry Tracker (`/rot dcarry`), Hover Terms,
+  Party Finder Join Stats (SkyCrypt cache, not starred.foo), Soulsand
+  Triggerbot, Terminal Click Trails, Watcher Helper. Cheat options stay off
+  until opt-in. Catalog lock is **130**.
+
 ### License notices
 
 * Ship the full SIL OFL-1.1 text with the bundled Source Sans 3 font.
@@ -47,9 +68,13 @@ and the project uses semantic versioning where practical.
   Backpack. Each card has its own header strip, then its slot grid.
 * `/storage` records which Ender Chests and Backpacks are unlocked, and each
   opened page stores full item data (SkyBlock NBT and head textures) in
-  `rotclient-storage-cache.json`. The overlay reloads that cache when Storage
-  opens, including after a game restart, so cards are not empty Steve heads.
-  Disk writes are delayed off the click so opening a card does not hitch.
+  `rotclient-storage-cache.json`. The first Storage open walks unlocked pages
+  that have never been cached so cards remember item order. Later opens only
+  reload pages you clicked last, not every chest again. Dashboard Reload
+  Storage Pages still walks every unlocked page. The overlay reloads that
+  cache when Storage opens, including after a game restart, so cards are not
+  empty Steve heads. Disk writes are delayed off the click so opening a card
+  does not hitch.
 * Each Ender Chest / Backpack header has a Rot-themed `$` icon. Hovering it
   shows that page's bazaar instant-sell total.
 * The search caret uses the same UI font as the query and stays inside the
@@ -72,6 +97,15 @@ and the project uses semantic versioning where practical.
   the list. Chrome, cards, search field, and slots now use the same
   `RotClientTheme` dashboard palette (black / red / violet) instead of the
   old teal panel.
+
+### Inventory Overlay
+
+* Equipment bars and the pet slot remember the last items seen in Stats /
+  Pets, using the same local stack cache as Storage Overlay
+  (`rotclient-inventory-chrome-cache.json`). The cache reloads on the title
+  screen and again after the world exists, and an empty overlay does not
+  overwrite a known loadout. Opening inventory after a restart no longer
+  shows empty `+` slots until those menus are opened again.
 
 ### Custom Tooltip pan (26.2)
 

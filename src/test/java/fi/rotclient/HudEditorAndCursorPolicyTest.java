@@ -43,15 +43,28 @@ final class HudEditorAndCursorPolicyTest {
                 "dungeon",
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.dungeon_hud.open_hud_editor"));
+        assertEquals(
+                "dungeon_carry",
+                HudElementCatalog.focusIdForHudEditorSetting(
+                        "qol.dungeon_carry.open_hud_editor"));
+        assertEquals(
+                "dungeon_watcher",
+                HudElementCatalog.focusIdForHudEditorSetting(
+                        "qol.dungeon_watcher.open_hud_editor"));
         assertTrue(HudElementCatalog.moduleHasHudToggle(
                 QolUtilityCatalog.findById("qol.fishing_creatures")));
         assertTrue(HudElementCatalog.explainedDescription(
                 QolUtilityCatalog.findById("qol.performance_hud"))
                 .contains("Use Module"));
-        assertTrue(HudElementCatalog.hudControlOpensMenu(
-                QolUtilityCatalog.findById("qol.performance_hud")));
-        assertTrue(HudElementCatalog.hudPieces(
-                QolUtilityCatalog.findById("qol.performance_hud")).size() >= 3);
+        assertTrue(HudDrawerPolicy.allHudCatalogSettings(
+                QolUtilityCatalog.findById("qol.performance_hud")).stream().anyMatch(
+                setting -> "qol.performance_hud.show_fps".equals(setting.id())));
+        assertTrue(HudDrawerPolicy.allHudCatalogSettings(
+                QolUtilityCatalog.findById("qol.performance_hud")).stream().anyMatch(
+                setting -> "qol.performance_hud.show_tps".equals(setting.id())));
+        assertTrue(HudDrawerPolicy.allHudCatalogSettings(
+                QolUtilityCatalog.findById("qol.performance_hud")).stream().anyMatch(
+                setting -> "qol.performance_hud.show_ping".equals(setting.id())));
         assertTrue(HudElementCatalog.moduleShowsHudControl(
                 QolUtilityCatalog.findById("qol.slayer_display")));
         assertEquals(

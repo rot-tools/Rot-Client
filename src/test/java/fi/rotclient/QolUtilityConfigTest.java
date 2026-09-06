@@ -21,8 +21,11 @@ final class QolUtilityConfigTest {
                         && setting.type() != QolUtilityCatalog.SettingType.SECTION) {
                     continue;
                 }
+                if (FullbrightNightPolicy.isLightingSetting(setting.id())) {
+                    continue;
+                }
                 boolean supported = switch (setting.type()) {
-                    case TOGGLE -> config.readBoolean(setting.id()) != null;
+                    case TOGGLE, SQUARE -> config.readBoolean(setting.id()) != null;
                     case ENUM -> !setting.enumOptions().isEmpty()
                             && config.writeEnum(setting.id(), setting.enumOptions().getFirst());
                     case NUMBER -> config.readNumber(setting.id()) != null
@@ -162,7 +165,12 @@ final class QolUtilityConfigTest {
         assertTrue(config.inventoryOverlayHideStatusEffects);
         assertTrue(config.inventoryOverlayPetSlot);
         assertTrue(config.skillLevelsEnabled);
+        assertTrue(config.skillLevelsBackground);
         assertTrue(config.petHudEnabled);
+        assertTrue(config.toggleBooleanSetting("qol.skill_levels.background"));
+        assertFalse(config.skillLevelsBackground);
+        assertTrue(config.resetModuleToDefaults("qol.skill_levels"));
+        assertTrue(config.skillLevelsBackground);
         assertTrue(config.toggleBooleanSetting("qol.inventory_overlay.hide_recipe_book"));
         assertFalse(config.inventoryOverlayHideRecipeBook);
         assertTrue(config.toggleBooleanSetting("qol.inventory_overlay.hide_status_effects"));
@@ -250,5 +258,24 @@ final class QolUtilityConfigTest {
         assertTrue(config.resetModuleToDefaults("qol.item_rarity"));
         assertEquals(ItemRarityPolicy.DEFAULT_FILL_ALPHA, config.itemRarityFillAlpha, 0.0001F);
         assertEquals(ItemRarityPolicy.DEFAULT_OUTLINE_ALPHA, config.itemRarityOutlineAlpha, 0.0001F);
+    }
+
+    @Test
+    void dungeonMapModeUnifiesExploredAndRevealHidden() {
+        QolUtilityConfig config = new QolUtilityConfig();
+        assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertFalse(config.extras().dungeonMapRevealHidden());
+        assertTrue(config.writeEnum("qol.dungeon_hud.map_mode", "Cheater"));
+        assertEquals(DungeonMapPolicy.MAP_MODE_REVEAL, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertTrue(config.extras().dungeonMapRevealHidden());
+        assertTrue(config.extras().dungeonHudCheaterMap);
+        assertTrue(config.writeEnum("qol.dungeon_hud.map_mode", DungeonMapPolicy.MAP_MODE_EXPLORED));
+        assertFalse(config.extras().dungeonMapRevealHidden());
+        assertFalse(config.extras().dungeonHudCheaterMap);
+        config.extras().dungeonHudCheaterMap = true;
+        assertEquals(DungeonMapPolicy.MAP_MODE_REVEAL, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertTrue(config.resetModuleToDefaults("qol.dungeon_hud"));
+        assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertFalse(config.extras().dungeonMapRevealHidden());
     }
 }

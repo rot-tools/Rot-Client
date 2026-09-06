@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Shipped catacombs room cores and secret waypoints, loaded from
@@ -26,6 +27,8 @@ public final class DungeonRoomDataPolicy {
     public static final int HASH_Y_BOTTOM = 12;
     public static final int ROOM_SPAN = 32;
     public static final int ROOM_HALF = 15;
+    /** Hypixel Catacombs rooms sit on a 32-block grid whose origin is world -200. */
+    public static final int DUNGEON_WORLD_SHIFT = 200;
 
     public enum SecretKind {
         CHEST,
@@ -61,6 +64,14 @@ public final class DungeonRoomDataPolicy {
     }
 
     public record Rotation(int degrees, int cornerX, int cornerZ) {
+    }
+
+    public record MapTile(int tileX, int tileZ) {
+    }
+
+    @FunctionalInterface
+    public interface BlockAt {
+        String idAt(int x, int y, int z);
     }
 
     private static final Map<String, Integer> LEGACY_IDS = legacyIds();
@@ -138,7 +149,8 @@ public final class DungeonRoomDataPolicy {
     }
 
     public static int roomOrigin(int world) {
-        return Math.floorDiv(world, ROOM_SPAN) * ROOM_SPAN;
+        return Math.floorDiv(world + DUNGEON_WORLD_SHIFT, ROOM_SPAN) * ROOM_SPAN
+                - DUNGEON_WORLD_SHIFT;
     }
 
     public static int roomCenter(int world) {
@@ -155,6 +167,74 @@ public final class DungeonRoomDataPolicy {
         }
         int[] xz = rotate(relX, relZ, 360 - rotation.degrees());
         return new IntVec(xz[0] + rotation.cornerX(), relY, xz[1] + rotation.cornerZ());
+    }
+
+    /**
+     * Inverse of {@link #fromComp}: world block back to room-relative
+     * clay-corner coordinates.
+     */
+    public static IntVec toComp(int worldX, int worldY, int worldZ, Rotation rotation) {
+        if (rotation == null) {
+            return new IntVec(worldX, worldY, worldZ);
+        }
+        int dx = worldX - rotation.cornerX();
+        int dz = worldZ - rotation.cornerZ();
+        int[] xz = rotate(dx, dz, rotation.degrees());
+        return new IntVec(xz[0], worldY, xz[1]);
+    }
+
+    public static String secretKey(int x, int y, int z) {
+        return x + "," + y + "," + z;
+    }
+
+    public static boolean secretBlockStillPresent(SecretKind kind, String blockId) {
+        if (kind == null) {
+            return true;
+        }
+        String id = DungeonLeftoverPolicy.path(blockId);
+        return switch (kind) {
+            case CHEST -> DungeonPuzzlePolicy.isChestBlock(id);
+            case REDSTONE -> id.contains("redstone");
+            case ESSENCE -> !isAirLike(blockId) && !id.isBlank();
+            case ITEM, BAT, LEVER -> true;
+        };
+    }
+
+    public static Optional<PlacedWaypoint> matchingSecret(
+            List<PlacedWaypoint> waypoints,
+            Set<String> collected,
+            int x,
+            int y,
+            int z,
+            int maxDistSqr) {
+        if (waypoints == null || waypoints.isEmpty()) {
+            return Optional.empty();
+        }
+        PlacedWaypoint best = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (PlacedWaypoint waypoint : waypoints) {
+            if (waypoint == null) {
+                continue;
+            }
+            if (collected != null && collected.contains(secretKey(waypoint.x(), waypoint.y(), waypoint.z()))) {
+                continue;
+            }
+            int dx = waypoint.x() - x;
+            int dy = waypoint.y() - y;
+            int dz = waypoint.z() - z;
+            int dist = dx * dx + dy * dy + dz * dz;
+            if (maxDistSqr <= 0) {
+                if (dist == 0) {
+                    return Optional.of(waypoint);
+                }
+                continue;
+            }
+            if (dist <= maxDistSqr && dist < bestDist) {
+                best = waypoint;
+                bestDist = dist;
+            }
+        }
+        return Optional.ofNullable(best);
     }
 
     /**
@@ -178,6 +258,191 @@ public final class DungeonRoomDataPolicy {
         return id.contains("blue_terracotta");
     }
 
+    public static boolean isAirLike(String blockId) {
+        String id = blockId == null ? "" : blockId.toLowerCase(Locale.ROOT);
+        return id.isBlank()
+                || id.equals("air")
+                || id.equals("cave_air")
+                || id.equals("void_air")
+                || id.endsWith(":air")
+                || id.contains(":cave_air")
+                || id.contains(":void_air");
+    }
+
+    public static boolean isGoldBlock(String blockId) {
+        String id = blockId == null ? "" : blockId.toLowerCase(Locale.ROOT);
+        return id.contains("gold_block");
+    }
+
+    /**
+     * First non-air, non-gold block from Y=140 down to Y=12.
+     */
+    public static int highestBlock(List<String> blockIdsY140toY12) {
+        int expected = HASH_Y_TOP - HASH_Y_BOTTOM + 1;
+        List<String> column = blockIdsY140toY12 == null ? List.of() : blockIdsY140toY12;
+        for (int i = 0; i < expected; i++) {
+            String id = i < column.size() ? column.get(i) : "";
+            if (isAirLike(id) || isGoldBlock(id)) {
+                continue;
+            }
+            return HASH_Y_TOP - i;
+        }
+        return HASH_Y_BOTTOM;
+    }
+
+    public static boolean isOneByOne(String shape) {
+        String value = shape == null ? "" : shape.trim().toLowerCase(Locale.ROOT);
+        return value.isEmpty() || value.equals("1x1") || value.equals("onebyone");
+    }
+
+    public static boolean isFairy(RoomMeta room) {
+        return room != null && "Fairy".equalsIgnoreCase(room.name());
+    }
+
+    public static Rotation fairyRotation(int worldX, int worldZ) {
+        return candidateRotations(worldX, worldZ).getFirst();
+    }
+
+    public static Rotation rotationFromOdinFacing(String facing, int clayX, int clayZ) {
+        int degrees = switch (facing == null ? "" : facing.trim().toUpperCase(Locale.ROOT)) {
+            case "SOUTH" -> 0;
+            case "WEST" -> 90;
+            case "NORTH" -> 180;
+            case "EAST" -> 270;
+            default -> 0;
+        };
+        return new Rotation(degrees, clayX, clayZ);
+    }
+
+    /**
+     * Blue-terracotta corner and degrees. Fairy is forced SOUTH (0° NW).
+     * 1×1 probes the four corners at {@code highestY}. Multi-tile rooms use
+     * Magical Map unique tiles. Missing clay returns empty — never 0° fake.
+     */
+    public static Optional<Rotation> resolveRotation(
+            RoomMeta room,
+            int worldX,
+            int worldZ,
+            int highestY,
+            List<MapTile> uniqueTiles,
+            BlockAt world) {
+        if (room == null) {
+            return Optional.empty();
+        }
+        if (isFairy(room)) {
+            return Optional.of(fairyRotation(worldX, worldZ));
+        }
+        if (isOneByOne(room.shape())) {
+            if (world == null) {
+                return Optional.empty();
+            }
+            for (Rotation candidate : candidateRotations(worldX, worldZ)) {
+                if (isBlueTerracotta(world.idAt(candidate.cornerX(), highestY, candidate.cornerZ()))) {
+                    return Optional.of(candidate);
+                }
+            }
+            return Optional.empty();
+        }
+        return resolveMultiTileRotation(room.shape(), uniqueTiles, highestY, world);
+    }
+
+    private static Optional<Rotation> resolveMultiTileRotation(
+            String shape,
+            List<MapTile> uniqueTiles,
+            int highestY,
+            BlockAt world) {
+        if (uniqueTiles == null || uniqueTiles.size() < 2) {
+            return Optional.empty();
+        }
+        MapTile topLeft = null;
+        MapTile bottomRight = null;
+        int minKey = Integer.MAX_VALUE;
+        int maxKey = Integer.MIN_VALUE;
+        for (MapTile tile : uniqueTiles) {
+            if (tile == null) {
+                continue;
+            }
+            int key = tile.tileX() * 1000 + tile.tileZ();
+            if (key < minKey) {
+                minKey = key;
+                topLeft = tile;
+            }
+            if (key > maxKey) {
+                maxKey = key;
+                bottomRight = tile;
+            }
+        }
+        if (topLeft == null || bottomRight == null) {
+            return Optional.empty();
+        }
+        boolean lShape = shape != null && shape.trim().equalsIgnoreCase("L");
+        String facing;
+        MapTile other = null;
+        if (lShape) {
+            for (MapTile tile : uniqueTiles) {
+                if (tile != null && !sameTile(tile, topLeft) && !sameTile(tile, bottomRight)) {
+                    other = tile;
+                    break;
+                }
+            }
+            if (other == null) {
+                return Optional.empty();
+            }
+            if (topLeft.tileX() == bottomRight.tileX()) {
+                facing = "EAST";
+            } else if (topLeft.tileZ() == bottomRight.tileZ()) {
+                facing = "WEST";
+            } else if (other.tileX() == topLeft.tileX()) {
+                facing = "SOUTH";
+            } else {
+                facing = "NORTH";
+            }
+        } else {
+            facing = topLeft.tileX() == bottomRight.tileX() ? "WEST" : "SOUTH";
+        }
+        int tlX = DungeonMapPolicy.roomWorldCenter(topLeft.tileX());
+        int tlZ = DungeonMapPolicy.roomWorldCenter(topLeft.tileZ());
+        int brX = DungeonMapPolicy.roomWorldCenter(bottomRight.tileX());
+        int brZ = DungeonMapPolicy.roomWorldCenter(bottomRight.tileZ());
+        int clayX;
+        int clayZ;
+        if (lShape) {
+            int otX = DungeonMapPolicy.roomWorldCenter(other.tileX());
+            switch (facing) {
+                case "EAST" -> {
+                    clayX = otX - ROOM_HALF;
+                    clayZ = tlZ + ROOM_HALF;
+                }
+                case "WEST" -> {
+                    clayX = brX + ROOM_HALF;
+                    clayZ = brZ - ROOM_HALF;
+                }
+                case "SOUTH" -> {
+                    clayX = tlX - ROOM_HALF;
+                    clayZ = tlZ - ROOM_HALF;
+                }
+                default -> {
+                    clayX = brX + ROOM_HALF;
+                    clayZ = brZ + ROOM_HALF;
+                }
+            }
+        } else if ("WEST".equals(facing)) {
+            clayX = tlX + ROOM_HALF;
+            clayZ = tlZ - ROOM_HALF;
+        } else {
+            clayX = tlX - ROOM_HALF;
+            clayZ = tlZ - ROOM_HALF;
+        }
+        if (world != null && !isBlueTerracotta(world.idAt(clayX, highestY, clayZ))) {
+            return Optional.empty();
+        }
+        return Optional.of(rotationFromOdinFacing(facing, clayX, clayZ));
+    }
+
+    private static boolean sameTile(MapTile a, MapTile b) {
+        return a.tileX() == b.tileX() && a.tileZ() == b.tileZ();
+    }
+
     public static List<PlacedWaypoint> placeSecrets(RoomMeta room, Rotation rotation) {
         if (room == null || rotation == null) {
             return List.of();
@@ -189,6 +454,20 @@ public final class DungeonRoomDataPolicy {
             out.add(new PlacedWaypoint(waypoint.kind(), world.x(), world.y(), world.z(), room.name()));
         }
         return List.copyOf(out);
+    }
+
+    public static String secretLabel(SecretKind kind) {
+        if (kind == null) {
+            return "";
+        }
+        return switch (kind) {
+            case CHEST -> "Chest";
+            case ITEM -> "Item";
+            case ESSENCE -> "Essence";
+            case BAT -> "Bat";
+            case REDSTONE -> "Redstone";
+            case LEVER -> "Lever";
+        };
     }
 
     public static int secretColor(SecretKind kind) {

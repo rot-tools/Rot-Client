@@ -184,6 +184,9 @@ public final class SlayerSessionEngine {
         if (descriptor.role() != SlayerPolicy.EntityRole.BOSS) {
             return new DeathResult(false, removed.owned(), descriptor, duration, "");
         }
+        if (SlayerFightPolicy.isTarantulaTierFivePhaseOne(descriptor)) {
+            return new DeathResult(false, removed.owned(), descriptor, duration, "");
+        }
         if (removed.owned()
                 && duration < SlayerTimeMessagePolicy.MIN_KILL_DURATION_MILLIS
                 && lastOwnedBossKillMillis > 0L

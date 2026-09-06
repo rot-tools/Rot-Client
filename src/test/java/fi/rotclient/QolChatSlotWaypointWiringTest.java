@@ -86,6 +86,7 @@ final class QolChatSlotWaypointWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(slots.contains("ContainerInput.SWAP"));
         assertTrue(slots.contains("ContainerInput.QUICK_MOVE"));
+        assertTrue(slots.contains("showSkyblockInventoryUi"));
 
         String waypoints = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/WaypointRuntime.java"),
