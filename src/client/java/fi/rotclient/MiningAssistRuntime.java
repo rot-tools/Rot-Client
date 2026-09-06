@@ -207,7 +207,7 @@ public final class MiningAssistRuntime {
         if (MiningAssistPolicy.shouldRenderDetector(hits)) {
             detectorHits.addAll(hits);
         }
-        SkyblockFlavorRuntime.onDetectorHits(previous, detectorHits.size());
+        SkyBlockUtilityRuntime.onDetectorHits(previous, detectorHits.size());
     }
 
     private static void tickCompass(LocalPlayer player) {

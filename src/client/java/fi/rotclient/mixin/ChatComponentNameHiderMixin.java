@@ -2,7 +2,7 @@ package fi.rotclient.mixin;
 
 import fi.rotclient.ChatCommandsRuntime;
 import fi.rotclient.NameHiderRuntime;
-import fi.rotclient.SkyblockFlavorRuntime;
+import fi.rotclient.SkyBlockUtilityRuntime;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.chat.GuiMessageSource;
 import net.minecraft.client.multiplayer.chat.GuiMessageTag;
@@ -37,6 +37,6 @@ abstract class ChatComponentNameHiderMixin {
             argsOnly = true,
             ordinal = 0)
     private Component rotclient$hideNameInChat(Component message) {
-        return NameHiderRuntime.apply(SkyblockFlavorRuntime.rewriteChat(ChatCommandsRuntime.applyIncoming(message)));
+        return NameHiderRuntime.apply(SkyBlockUtilityRuntime.rewriteChat(ChatCommandsRuntime.applyIncoming(message)));
     }
 }

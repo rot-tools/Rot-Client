@@ -69,6 +69,8 @@ public final class TermSimPolicy {
     };
 
     public static final int[] RUBIX_SLOTS = {12, 13, 14, 21, 22, 23, 30, 31, 32};
+    public static final int NUMBERS_COUNT = DungeonPolicy.DEFAULT_NUMBERS_COUNT;
+    public static final int MELODY_PLAY_ROWS = DungeonPolicy.DEFAULT_MELODY_PLAY_ROWS;
     public static final String[] RUBIX_COLORS = {
             "orange_stained_glass_pane",
             "yellow_stained_glass_pane",
@@ -261,13 +263,13 @@ public final class TermSimPolicy {
         int size = sizeFor(Kind.PANES);
         Slot[] slots = filledBlack(size);
         boolean anyRed = false;
-        for (int index : innerSlots(1, 3, 1, 7)) {
+        for (int index : innerSlots(1, 3, 2, 6)) {
             boolean red = rng.nextBoolean();
             anyRed |= red;
             slots[index] = pane(index, red);
         }
         if (!anyRed) {
-            slots[10] = pane(10, true);
+            slots[11] = pane(11, true);
         }
         return new Layout(Kind.PANES, titleFor(Kind.PANES), size, Arrays.asList(slots), "", "", null);
     }
@@ -290,13 +292,15 @@ public final class TermSimPolicy {
         int size = sizeFor(Kind.NUMBERS);
         Slot[] slots = filledBlack(size);
         List<Integer> values = new ArrayList<>();
-        for (int i = 1; i <= 14; i++) {
+        for (int i = 1; i <= NUMBERS_COUNT; i++) {
             values.add(i);
         }
         Collections.shuffle(values, rng);
-        int n = 0;
-        for (int index : innerSlots(1, 2, 1, 7)) {
-            int value = values.get(n++);
+        List<Integer> places = innerSlots(1, 2, 1, 7);
+        Collections.shuffle(places, rng);
+        for (int i = 0; i < NUMBERS_COUNT; i++) {
+            int index = places.get(i);
+            int value = values.get(i);
             slots[index] = new Slot(index, "red_stained_glass_pane", String.valueOf(value), value, false);
         }
         return new Layout(Kind.NUMBERS, titleFor(Kind.NUMBERS), size, Arrays.asList(slots), "", "", null);
@@ -468,7 +472,7 @@ public final class TermSimPolicy {
                 clock.limeDirection(),
                 clock.tickCounter());
         Layout updated = withMelody(layout, next);
-        return new ClickResult(updated, true, row >= 5);
+        return new ClickResult(updated, true, row > MELODY_PLAY_ROWS);
     }
 
     private static Layout withMelody(Layout layout, MelodyClock clock) {
@@ -477,7 +481,7 @@ public final class TermSimPolicy {
         for (int index = 0; index < size; index++) {
             int row = index / 9;
             int col = index % 9;
-            if (col == clock.magentaColumn() && (row < 1 || row >= 5)) {
+            if (col == clock.magentaColumn() && (row < 1 || row == MELODY_PLAY_ROWS + 1)) {
                 slots[index] = namedPane(index, "magenta_stained_glass_pane");
             } else if (col == clock.limeColumn() && row == clock.currentRow()) {
                 slots[index] = namedPane(index, "lime_stained_glass_pane");
@@ -485,9 +489,9 @@ public final class TermSimPolicy {
                 slots[index] = namedPane(index, "red_stained_glass_pane");
             } else if (col == 7 && row == clock.currentRow()) {
                 slots[index] = new Slot(index, "lime_terracotta", "");
-            } else if (col == 7 && row >= 1 && row < 5) {
+            } else if (col == 7 && row >= 1 && row <= MELODY_PLAY_ROWS) {
                 slots[index] = new Slot(index, "red_terracotta", "");
-            } else if (col >= 1 && col < 6 && row >= 1 && row < 5) {
+            } else if (col >= 1 && col < 6 && row >= 1 && row <= MELODY_PLAY_ROWS) {
                 slots[index] = namedPane(index, "white_stained_glass_pane");
             }
         }

@@ -20,7 +20,12 @@ public final class InventoryButtonsRuntime {
                               int left, int top, int guiWidth, int guiHeight,
                               int mouseX, int mouseY) {
         QolSkyblockExtras extras = settings();
-        if (!extras.inventoryButtonsEnabled || screen == null || graphics == null) return;
+        if (!extras.inventoryButtonsEnabled
+                || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
+                || screen == null
+                || graphics == null) {
+            return;
+        }
         if (extras.inventoryButtonsInventoryOnly && !isPlayerInventory(screen)) return;
         int[] anchor = buttonAnchor(screen, left, top, guiWidth, guiHeight);
         Minecraft client = Minecraft.getInstance();
@@ -53,7 +58,12 @@ public final class InventoryButtonsRuntime {
                                 int guiWidth, int guiHeight, int mouseX, int mouseY,
                                 int mouseButton, boolean shiftDown) {
         QolSkyblockExtras extras = settings();
-        if (!extras.inventoryButtonsEnabled || mouseButton != 0 || screen == null) return false;
+        if (!extras.inventoryButtonsEnabled
+                || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
+                || mouseButton != 0
+                || screen == null) {
+            return false;
+        }
         if (extras.inventoryButtonsInventoryOnly && !isPlayerInventory(screen)) return false;
         int[] anchor = buttonAnchor(screen, left, top, guiWidth, guiHeight);
         for (InventoryButtonsPolicy.Button button : extras.inventoryButtons) {

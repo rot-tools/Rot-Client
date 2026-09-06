@@ -1,5 +1,6 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.DungeonRuntime;
 import fi.rotclient.ItemRarityRuntime;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -27,5 +28,18 @@ abstract class HudItemRarityMixin {
             int seed,
             CallbackInfo ci) {
         ItemRarityRuntime.paintHotbarBackground(graphics, x, y, stack);
+    }
+
+    @Inject(method = "extractSlot", at = @At("RETURN"))
+    private void rotclient$maskCooldownHotbar(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            DeltaTracker delta,
+            Player player,
+            ItemStack stack,
+            int seed,
+            CallbackInfo ci) {
+        DungeonRuntime.paintMaskOverlay(graphics, x, y, stack);
     }
 }

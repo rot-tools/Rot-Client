@@ -75,6 +75,14 @@ public final class InventoryOverlayPolicy {
     public static final int OPEN_STATS_SLOT_INDEX = 3;
 
     /**
+     * Last observed necklace/cloak/belt/gloves and the chosen pet are stored
+     * locally under this config file, same idea as Storage Overlay's page cache.
+     */
+    public static final String CHROME_CACHE_FILE = "rotclient-inventory-chrome-cache.json";
+
+    public static final int CHROME_CACHE_SCHEMA = 1;
+
+    /**
      * Right of the bottom equipment bar, under the 2x2 crafting grid.
      * {@code 76 + 18}, {@code 8 + 3 * 18}.
      */
@@ -145,6 +153,24 @@ public final class InventoryOverlayPolicy {
                 && slotIndex / 9 < 4;
     }
 
+    /**
+     * Equipment bars, pet slot, inventory chrome, inventory buttons, storage
+     * overlay, and skill-level digits stay off in Hypixel lobby and other
+     * modes. Cached loadouts still persist for the next SkyBlock join.
+     */
+    public static boolean showSkyblockInventoryUi(boolean inSkyblock) {
+        return inSkyblock;
+    }
+
+    /**
+     * Hide Inventory Effects follows the overlay module, not the SkyBlock
+     * scoreboard, so lobby still suppresses the vanilla potion cards.
+     */
+    public static boolean hideInventoryStatusEffects(
+            boolean overlayEnabled, boolean hideToggle) {
+        return overlayEnabled && hideToggle;
+    }
+
     public static boolean isSkillsMenu(String title) {
         String text = MenuKeybindPolicy.stripGuiText(title);
         if (text.isEmpty()) {
@@ -157,6 +183,42 @@ public final class InventoryOverlayPolicy {
                 || lower.startsWith("skills -")
                 || lower.contains("skill menu")
                 || (lower.contains("skills") && !lower.contains("bestiary"));
+    }
+
+    /**
+     * A freshly opened Stats / Pets chest often arrives with empty slots for a
+     * few ticks. Keep the last non-empty preview instead of wiping it.
+     */
+    public static boolean shouldKeepExistingCache(
+            boolean existingHasItems, boolean incomingAllEmpty) {
+        return existingHasItems && incomingAllEmpty;
+    }
+
+    /**
+     * Reload from disk when memory is empty, or once more after the world
+     * exists so ItemStack codec JSON can decode. Do not loop if there is no file.
+     */
+    public static boolean shouldReloadChromeCache(
+            boolean alreadyLoaded,
+            boolean memoryEmpty,
+            boolean fileExists,
+            boolean codecReady,
+            boolean levelReady) {
+        if (!fileExists) {
+            return !alreadyLoaded;
+        }
+        if (!alreadyLoaded || memoryEmpty) {
+            return true;
+        }
+        return levelReady && !codecReady;
+    }
+
+    /**
+     * An empty overlay must not replace a file that already has a loadout.
+     */
+    public static boolean shouldSkipEmptyChromeSave(
+            boolean memoryEmpty, boolean diskHadItems) {
+        return memoryEmpty && diskHadItems;
     }
 
     public static boolean isPlaceholder(String hoverName, String itemPath) {
@@ -320,6 +382,10 @@ public final class InventoryOverlayPolicy {
     public static final int EDITOR_ROW = 18;
     public static final int EDITOR_SLIDER_HEIGHT = 10;
     public static final int EDITOR_RESET_WIDTH = 34;
+    public static final int EDITOR_CLOSE_SIZE = 10;
+    /** S-value and Rot R sit on the pet-slot row and match its 18×18 well. */
+    public static final int STRIP_CONTROL_SIZE = SLOT_SIZE;
+    public static final int VALUE_MARK_GAP = 3;
     public static final int DEFAULT_STORAGE_PANEL = 0xF00A1520;
     public static final int DEFAULT_STORAGE_CARD = 0xFF122433;
     public static final int DEFAULT_STORAGE_ACTIVE = 0xFF18384A;
@@ -440,6 +506,102 @@ public final class InventoryOverlayPolicy {
             case STORAGE_ACTIVE -> DEFAULT_STORAGE_ACTIVE;
             case STORAGE_PLAYER -> DEFAULT_STORAGE_PLAYER;
         };
+    }
+
+    public static Rect editorCloseRect(Rect editor) {
+        if (editor == null) {
+            return new Rect(0, 0, EDITOR_CLOSE_SIZE, EDITOR_CLOSE_SIZE);
+        }
+        return new Rect(
+                editor.x() + editor.width() - EDITOR_CLOSE_SIZE - 4,
+                editor.y() + 4,
+                EDITOR_CLOSE_SIZE,
+                EDITOR_CLOSE_SIZE);
+    }
+
+    /**
+     * Clicking the close icon or anywhere outside the open panel dismisses it.
+     * The wrench still toggles and is handled separately.
+     */
+    public static boolean dismissColorEditor(
+            boolean open,
+            boolean inWrench,
+            boolean inEditor,
+            boolean inClose) {
+        if (!open || inWrench) {
+            return false;
+        }
+        return inClose || !inEditor;
+    }
+
+    /**
+     * S-mark immediately right of the live pet well, same 18×18 slot chrome.
+     */
+    public static Rect valueMarkRect(int guiLeft, int guiTop) {
+        return valueMarkRect(guiLeft, guiTop, 0, 0);
+    }
+
+    public static Rect valueMarkRect(
+            int guiLeft, int guiTop, int petOffsetX, int petOffsetY) {
+        return stripControlRect(guiLeft, guiTop, petOffsetX, petOffsetY, 0);
+    }
+
+    /**
+     * Rot R, same 18×18 well as the S-mark, one gap to its right. Stays in
+     * that row even when the pet is Ctrl-dragged.
+     */
+    public static Rect dashboardButtonRect(int guiLeft, int guiTop, int guiWidth) {
+        return dashboardButtonRect(guiLeft, guiTop, 0, 0);
+    }
+
+    public static Rect dashboardButtonRect(
+            int guiLeft, int guiTop, int petOffsetX, int petOffsetY) {
+        return stripControlRect(guiLeft, guiTop, petOffsetX, petOffsetY, 1);
+    }
+
+    static Rect stripControlRect(
+            int guiLeft,
+            int guiTop,
+            int petOffsetX,
+            int petOffsetY,
+            int index) {
+        int slot = Math.max(0, index);
+        int x = guiLeft
+                + petSlotX(petOffsetX)
+                + (1 + slot) * (SLOT_SIZE + VALUE_MARK_GAP);
+        int y = guiTop + petSlotY(petOffsetY);
+        return new Rect(x, y, SLOT_SIZE, SLOT_SIZE);
+    }
+
+    public static boolean hitDashboardButton(
+            int guiLeft, int guiTop, int guiWidth, int mouseX, int mouseY) {
+        return hitDashboardButton(guiLeft, guiTop, 0, 0, mouseX, mouseY);
+    }
+
+    public static boolean hitDashboardButton(
+            int guiLeft,
+            int guiTop,
+            int petOffsetX,
+            int petOffsetY,
+            int mouseX,
+            int mouseY) {
+        return dashboardButtonRect(guiLeft, guiTop, petOffsetX, petOffsetY)
+                .contains(mouseX, mouseY);
+    }
+
+    public static boolean hitValueMark(int guiLeft, int guiTop, int mouseX, int mouseY) {
+        return hitValueMark(guiLeft, guiTop, 0, 0, mouseX, mouseY);
+    }
+
+    public static boolean hitValueMark(
+            int guiLeft,
+            int guiTop,
+            int petOffsetX,
+            int petOffsetY,
+            int mouseX,
+            int mouseY) {
+        return valueMarkRect(guiLeft, guiTop, petOffsetX, petOffsetY)
+                .contains(mouseX, mouseY);
     }
 
     public static Rect editorSliderRect(Rect editor, int channel) {

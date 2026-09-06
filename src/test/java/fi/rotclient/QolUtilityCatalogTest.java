@@ -146,6 +146,12 @@ final class QolUtilityCatalogTest {
                 "qol.dungeon_puzzles",
                 "qol.dungeon_f7",
                 "qol.dungeon_menus",
+                "qol.dungeon_carry",
+                "qol.dungeon_hover_terms",
+                "qol.dungeon_party_join",
+                "qol.dungeon_soulsand",
+                "qol.dungeon_term_click",
+                "qol.dungeon_watcher",
                 "qol.farm_keys",
                 "qol.auto_dojo",
                 "qol.freecam",
@@ -154,7 +160,8 @@ final class QolUtilityCatalogTest {
                 "qol.legacy_textures",
                 "qol.custom_resource_pack",
                 "qol.iota",
-                "qol.stall_market")) {
+                "qol.stall_market",
+                "qol.custom_scoreboard")) {
             QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(id);
             assertNotNull(module, id);
             assertTrue(module.runtimeReady(), id);
@@ -207,6 +214,12 @@ final class QolUtilityCatalogTest {
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.farm_keys")));
         assertTrue(utilities.stream().anyMatch(m -> m.id().equals("qol.stall_market")));
+        List<QolUtilityCatalog.ModuleDef> gui =
+                QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.GUI);
+        assertEquals("qol.custom_scoreboard", gui.get(0).id());
+        assertEquals("Custom Scoreboard", gui.get(0).name());
+        assertEquals("Board", gui.get(0).section());
+        assertEquals("GUI", QolUtilityCatalog.Group.GUI.title());
         assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.skill_levels")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.camera")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.freecam")));
@@ -256,7 +269,25 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(13, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertEquals(19, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_hover_terms")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_party_join")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_soulsand")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_term_click")));
+        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
+                .stream()
+                .anyMatch(m -> m.id().equals("qol.dungeon_watcher")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.UTILITIES)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.stall_market")));
@@ -311,6 +342,7 @@ final class QolUtilityCatalogTest {
                         QolUtilityCatalog.Group.FISHING,
                         QolUtilityCatalog.Group.FORAGING,
                         QolUtilityCatalog.Group.GARDEN,
+                        QolUtilityCatalog.Group.GUI,
                         QolUtilityCatalog.Group.HUD_DISPLAY,
                         QolUtilityCatalog.Group.RENDER,
                         QolUtilityCatalog.Group.INTERFACE,
@@ -362,12 +394,16 @@ final class QolUtilityCatalogTest {
                         && !id.equals("qol.command_keybinds.open_sequence_editor")
                         && !id.equals("qol.storage_overlay.open_item_search")
                         && !id.equals("qol.slayer_carry.open_manager")
+                        && !id.equals("qol.dungeon_carry.open_manager")
                         && !id.equals("qol.slayer_stats.reset_session")
                         && !id.equals("qol.slayer_drops.open_filter_editor")
                         && !id.equals("qol.dungeon_termsim.open")
                         && !id.equals("qol.dungeon_hud.reset_split_pbs")
                         && !id.equals("qol.dungeon_hud.reset_kuudra_pbs")
+                        && !id.equals("qol.dungeon_f7.reset_term_pbs")
+                        && !id.equals("qol.dungeon_f7.reset_predev_pb")
                         && !id.equals("qol.storage_overlay.clear_cache")
+                        && !id.equals("qol.storage_overlay.reload_pages")
                         && !id.equals("qol.storage_overlay.clear_search")
                         && !id.equals("qol.inventory_overlay.open_colors")
                         && !id.startsWith("qol.inventory_buttons.")
@@ -375,7 +411,9 @@ final class QolUtilityCatalogTest {
                         && !id.equals("qol.powder_chest.open_page")
                         && !id.equals("qol.mining_session.open_page")
                         && !id.equals("qol.mining_history.open_page")
-                        && !id.startsWith("qol.appearance.open_"))
+                        && !id.startsWith("qol.appearance.open_")
+                        && !id.equals("qol.custom_scoreboard.reset_appearance")
+                        && !id.equals("qol.custom_scoreboard.reset_events"))
                 .collect(Collectors.toList());
 
         assertTrue(unsupported.isEmpty(), "Action rows without behavior: " + unsupported);
@@ -413,6 +451,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(124, moduleIds.size());
+        assertEquals(131, moduleIds.size());
     }
 }

@@ -180,6 +180,21 @@ public final class RotClientClient implements ClientModInitializer {
         POWDER_CHEST_HUD.clampToScreen();
 
         /*
+         * apply() already wrote lighting flags. Replay Always Night runtime
+         * from the previous profile so dusk/snap is not skipped.
+         */
+        if (targetSettings != null) {
+            boolean nightWas = previousSettings != null
+                    && previousSettings.alwaysNightEnabled;
+            boolean worldLoaded = Minecraft.getInstance() != null
+                    && Minecraft.getInstance().level != null;
+            FullbrightNightRuntime.onAlwaysNightChanged(
+                    nightWas,
+                    targetSettings.alwaysNightEnabled,
+                    worldLoaded);
+        }
+
+        /*
          * Keep camera changes visually immediate.
          */
         enforceCameraPerspective();
@@ -494,6 +509,9 @@ public final class RotClientClient implements ClientModInitializer {
                     "INVENTORY_CHROME",
                     () -> InventoryChromeRuntime.tick(client));
             ClientBoundaryGuard.run(
+                    "STORAGE_OVERLAY",
+                    () -> StorageOverlayRuntime.tick(client));
+            ClientBoundaryGuard.run(
                     "CUSTOM_CURSOR",
                     () -> CustomCursorRuntime.tick(client));
             ClientBoundaryGuard.run(
@@ -662,6 +680,7 @@ public final class RotClientClient implements ClientModInitializer {
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             StorageOverlayRuntime.flushForShutdown();
+            InventoryChromeRuntime.flushForShutdown();
             long now = System.currentTimeMillis();
             TrackerSelection selection =
                     selectedSelection();
@@ -718,6 +737,8 @@ public final class RotClientClient implements ClientModInitializer {
             DianaRuntime.clear();
             ForagingRuntime.clear();
             FishingSuiteRuntime.clear();
+            InventoryChromeRuntime.loadCache();
+            StorageOverlayRuntime.onJoin();
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             long now = System.currentTimeMillis();
@@ -738,6 +759,7 @@ public final class RotClientClient implements ClientModInitializer {
             StallMarketRuntime.clear();
             WaypointRuntime.clear();
             SlotBindsRuntime.clearPending();
+            InventoryChromeRuntime.flushForShutdown();
             InventoryChromeRuntime.clear();
             enforceCameraPerspective();
         });
@@ -831,13 +853,15 @@ public final class RotClientClient implements ClientModInitializer {
                 ForagingRuntime.onChat(message);
                 return false;
             }
-            if (SlayerRuntime.shouldHideRngMeterChat(message)) {
-                // GAME is not fired for canceled messages. Observe first so the
-                // canonical Slayer session and optional local HUD stay current.
-                SlayerRuntime.onChat(message);
-                return false;
-            }
-            return !SlayerRuntime.shouldHideInfernoChat(message);
+            return ClientBoundaryGuard.call("SLAYER_ALLOW_GAME", () -> {
+                if (SlayerRuntime.shouldHideRngMeterChat(message)) {
+                    // GAME is not fired for canceled messages. Observe first so the
+                    // canonical Slayer session and optional local HUD stay current.
+                    SlayerRuntime.onChat(message);
+                    return false;
+                }
+                return !SlayerRuntime.shouldHideInfernoChat(message);
+            }, true);
         });
 
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
@@ -1283,6 +1307,43 @@ public final class RotClientClient implements ClientModInitializer {
                                         source -> openTermSimPing(
                                                 source,
                                                 IntegerArgumentType.getInteger(context, "ping"))))))
+                .then(literal("superboom")
+                        .then(literal("add")
+                                .executes(context -> runCommand(
+                                        context.getSource(), legacyAlias, RotClientClient::superboomAdd)))
+                        .then(literal("remove")
+                                .executes(context -> runCommand(
+                                        context.getSource(), legacyAlias, RotClientClient::superboomRemove)))
+                        .then(literal("list")
+                                .executes(context -> runCommand(
+                                        context.getSource(), legacyAlias, RotClientClient::superboomList))))
+                .then(literal("dcarry")
+                        .executes(context -> runCommand(
+                                context.getSource(), legacyAlias, RotClientClient::dungeonCarryManager))
+                        .then(literal("list")
+                                .executes(context -> runCommand(
+                                        context.getSource(), legacyAlias, RotClientClient::dungeonCarryList)))
+                        .then(literal("history")
+                                .executes(context -> runCommand(
+                                        context.getSource(), legacyAlias, RotClientClient::dungeonCarryHistory)))
+                        .then(literal("add")
+                                .then(argument("player", StringArgumentType.word())
+                                        .then(argument("count", IntegerArgumentType.integer(1, 10_000))
+                                                .then(argument("floor", StringArgumentType.word())
+                                                        .executes(context -> runCommand(
+                                                                context.getSource(), legacyAlias,
+                                                                source -> dungeonCarryAdd(
+                                                                        source,
+                                                                        StringArgumentType.getString(context, "player"),
+                                                                        IntegerArgumentType.getInteger(context, "count"),
+                                                                        StringArgumentType.getString(context, "floor"))))))))
+                        .then(literal("remove")
+                                .then(argument("player", StringArgumentType.word())
+                                        .executes(context -> runCommand(
+                                                context.getSource(), legacyAlias,
+                                                source -> dungeonCarryRemove(
+                                                        source,
+                                                        StringArgumentType.getString(context, "player")))))))
                 .then(literal("target")
                         .then(literal("coal")
                                 .executes(context -> runCommand(
@@ -1539,6 +1600,108 @@ public final class RotClientClient implements ClientModInitializer {
                     "- " + carry.player() + " · " + carry.type().displayName()
                             + (carry.tier() == 0 ? " · any tier" : " · tier " + carry.tier())
                             + " · " + carry.completed() + "/" + carry.total()));
+        }
+        return 1;
+    }
+
+    private static int superboomAdd(FabricClientCommandSource source) {
+        String blockId = lookedBlockId();
+        if (blockId.isBlank()) {
+            source.sendError(Component.literal("Look at a block first. Usage: /rot superboom add"));
+            return 0;
+        }
+        DungeonAthenSettings athen = qolConfigPublic().extras().athen();
+        athen.superboomExtraBlocks = DungeonAthenPortPolicy.addExtraBlock(athen.superboomExtraBlocks, blockId);
+        TrackerStore.save(CONFIG);
+        source.sendFeedback(Component.literal("Superboom extra block added: " + DungeonLeftoverPolicy.path(blockId)));
+        return 1;
+    }
+
+    private static int superboomRemove(FabricClientCommandSource source) {
+        String blockId = lookedBlockId();
+        if (blockId.isBlank()) {
+            source.sendError(Component.literal("Look at a block first. Usage: /rot superboom remove"));
+            return 0;
+        }
+        DungeonAthenSettings athen = qolConfigPublic().extras().athen();
+        athen.superboomExtraBlocks = DungeonAthenPortPolicy.removeExtraBlock(athen.superboomExtraBlocks, blockId);
+        TrackerStore.save(CONFIG);
+        source.sendFeedback(Component.literal("Superboom extra block removed: " + DungeonLeftoverPolicy.path(blockId)));
+        return 1;
+    }
+
+    private static int superboomList(FabricClientCommandSource source) {
+        String csv = qolConfigPublic().extras().athen().superboomExtraBlocks;
+        if (csv == null || csv.isBlank()) {
+            source.sendFeedback(Component.literal(
+                    "No extra Superboom blocks. Defaults still include cracked stone bricks and crypt walls."));
+            return 1;
+        }
+        source.sendFeedback(Component.literal("Superboom extra blocks: " + csv));
+        return 1;
+    }
+
+    private static String lookedBlockId() {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || !(client.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)
+                || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            return "";
+        }
+        return DungeonRuntime.lookedBlockId(client, hit.getBlockPos());
+    }
+
+    private static int dungeonCarryManager(FabricClientCommandSource source) {
+        Minecraft client = Minecraft.getInstance();
+        Screen parent = client.gui == null ? null : client.gui.screen();
+        client.gui.setScreen(new DungeonCarryManagerScreen(parent));
+        return 1;
+    }
+
+    private static int dungeonCarryAdd(
+            FabricClientCommandSource source, String player, int count, String floor) {
+        String start = DungeonCarryRuntime.add(player, floor, count);
+        if (start.isBlank() && DungeonCarryPolicy.sanitizePlayer(player).isBlank()) {
+            source.sendError(Component.literal("Could not add dungeon carry. Check the player name."));
+            return 0;
+        }
+        source.sendFeedback(Component.literal(
+                "Dungeon carry added: " + DungeonCarryPolicy.sanitizePlayer(player)
+                        + " · " + DungeonCarryPolicy.normalizeFloor(floor)
+                        + " · 0/" + Math.max(1, count)));
+        return 1;
+    }
+
+    private static int dungeonCarryRemove(FabricClientCommandSource source, String player) {
+        if (!DungeonCarryRuntime.remove(player)) {
+            source.sendError(Component.literal("No active dungeon carry for " + player + "."));
+            return 0;
+        }
+        source.sendFeedback(Component.literal("Removed dungeon carry for " + player + "."));
+        return 1;
+    }
+
+    private static int dungeonCarryList(FabricClientCommandSource source) {
+        List<String> lines = DungeonCarryRuntime.listLines();
+        if (lines.isEmpty()) {
+            source.sendFeedback(Component.literal("No active dungeon carries."));
+            return 1;
+        }
+        source.sendFeedback(Component.literal("Active dungeon carries:"));
+        for (String line : lines) {
+            source.sendFeedback(Component.literal("- " + line));
+        }
+        return 1;
+    }
+
+    private static int dungeonCarryHistory(FabricClientCommandSource source) {
+        List<String> lines = DungeonCarryRuntime.historyLines();
+        if (lines.isEmpty()) {
+            source.sendFeedback(Component.literal("No completed dungeon carries."));
+            return 1;
+        }
+        source.sendFeedback(Component.literal("Completed dungeon carries:"));
+        for (String line : lines) {
+            source.sendFeedback(Component.literal("- " + line));
         }
         return 1;
     }
@@ -2151,6 +2314,9 @@ public final class RotClientClient implements ClientModInitializer {
                     isGemstoneTrackingActive()
                             || SESSION_ENGINE.isCollectionActive());
             SlayerRuntime.onBlockUpdate(pos, newState);
+            net.minecraft.world.level.block.state.BlockState oldState =
+                    client.level == null ? null : client.level.getBlockState(pos);
+            DungeonRuntime.onBlockUpdate(pos, oldState, newState);
 
             if (CONFIG.enabled && isMaterialSelection()) {
                 for (TrackedMaterial material : selectedMaterials()) {
@@ -2532,56 +2698,40 @@ public final class RotClientClient implements ClientModInitializer {
                 qolConfig().noCursorUnhookTimeoutMs);
     }
 
+    public static PlayerDisplayHidePolicy.ActionHides actionBarHides() {
+        return PlayerDisplayHidePolicy.from(qolConfig());
+    }
+
     public static boolean shouldFilterActionBar() {
-        QolUtilityConfig qol = qolConfig();
-        return hideActionLocation()
-                || (qol.playerDisplayEnabled
-                && (hideActionHealth()
-                || hideActionDefense()
-                || hideActionMana()
-                || hideActionOverflow()
-                || hideActionSpeed()
-                || hideActionVitality()));
+        return actionBarHides().any();
     }
 
     public static boolean hideActionHealth() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionHealth
-                || (qol.playerDisplayEnabled && qol.playerDisplayHealthHud);
+        return actionBarHides().health();
     }
 
     public static boolean hideActionDefense() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionDefense
-                || (qol.playerDisplayEnabled && qol.playerDisplayDefenseHud);
+        return actionBarHides().defense();
     }
 
     public static boolean hideActionMana() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionMana
-                || (qol.playerDisplayEnabled && qol.playerDisplayManaHud);
+        return actionBarHides().mana();
     }
 
     public static boolean hideActionOverflow() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionOverflow
-                || (qol.playerDisplayEnabled && qol.playerDisplayOverflowManaHud);
+        return actionBarHides().overflow();
     }
 
     public static boolean hideActionSpeed() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionSpeed
-                || (qol.playerDisplayEnabled && qol.playerDisplaySpeedHud);
+        return actionBarHides().speed();
     }
 
     public static boolean hideActionVitality() {
-        QolUtilityConfig qol = qolConfig();
-        return qol.playerDisplayHideActionVitality
-                || (qol.playerDisplayEnabled && qol.playerDisplayVitalityHud);
+        return actionBarHides().vitality();
     }
 
     public static boolean hideActionLocation() {
-        return qolConfig().playerDisplayHideActionLocation;
+        return actionBarHides().location();
     }
 
     static boolean clickGuiChatNotificationsEnabled() {
@@ -2718,10 +2868,12 @@ public final class RotClientClient implements ClientModInitializer {
             return;
         }
         Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null) {
+        if (client == null || client.gui == null || client.gui.hud == null) {
             return;
         }
-        client.player.sendSystemMessage(Component.literal(
+        // Local HUD only. A system-message send re-enters ALLOW_GAME and
+        // crashed the click when a later Slayer class failed to load from the JAR.
+        client.gui.hud.getChat().addClientSystemMessage(Component.literal(
                 "[Rot Client] "
                         + moduleLabel
                         + (enabled ? " enabled" : " disabled")));
@@ -2830,9 +2982,9 @@ public final class RotClientClient implements ClientModInitializer {
             return false;
         }
         if (overlay && CustomTooltipPolicy.storageOverlayTakesWheel(true, shift)) {
-            return !StorageOverlayRuntime.scroll(vertical, overSlot);
+            return !StorageOverlayRuntime.scroll(vertical, overItem);
         }
-        return !(container && StorageOverlayRuntime.scroll(vertical, overSlot));
+        return !(container && StorageOverlayRuntime.scroll(vertical, overItem));
     }
 
     private static void addPauseMenuButton(
@@ -3190,6 +3342,7 @@ private static int toggle(FabricClientCommandSource source) {
         // never keep a stale area/sub-area from the previous world/session.
         SkyBlockAreaDetector.updateCurrentLocation(SkyBlockLocation.UNKNOWN);
         SkyBlockAreaDetector.clearSkyblockPresence();
+        CustomScoreboardRuntime.onWorldChange();
         SkyBlockDungeonDetector.clear();
         // Also update a PAUSED Current Session. The controller stores the
         // pending UNKNOWN area without opening a segment, so reconnect cannot
@@ -3479,10 +3632,78 @@ private static int toggle(FabricClientCommandSource source) {
         return CONFIG.fullbrightEnabled;
     }
 
+    public static boolean isAlwaysNightEnabled() {
+        return CONFIG.alwaysNightEnabled;
+    }
+
+    static FullbrightNightPolicy.LightingState lightingState() {
+        return new FullbrightNightPolicy.LightingState(
+                CONFIG.fullbrightEnabled,
+                CONFIG.alwaysNightEnabled,
+                CONFIG.lightingForceBoth);
+    }
+
+    static void applyLightingState(FullbrightNightPolicy.LightingState state) {
+        FullbrightNightPolicy.LightingState next =
+                state == null ? FullbrightNightPolicy.LightingState.defaults() : state;
+        if (CONFIG.fullbrightEnabled == next.fullbright()
+                && CONFIG.alwaysNightEnabled == next.alwaysNight()
+                && CONFIG.lightingForceBoth == next.forceBoth()) {
+            return;
+        }
+        boolean nightWas = CONFIG.alwaysNightEnabled;
+        boolean worldLoaded = Minecraft.getInstance() != null
+                && Minecraft.getInstance().level != null;
+        CONFIG.fullbrightEnabled = next.fullbright();
+        CONFIG.alwaysNightEnabled = next.alwaysNight();
+        CONFIG.lightingForceBoth = next.forceBoth();
+        save();
+        FullbrightNightRuntime.onAlwaysNightChanged(nightWas, next.alwaysNight(), worldLoaded);
+    }
+
+    static void setLightingCardEnabled(boolean enabled) {
+        FullbrightNightPolicy.LightingState current = lightingState();
+        applyLightingState(enabled
+                ? FullbrightNightPolicy.enableCard(current)
+                : FullbrightNightPolicy.disableCard(current));
+    }
+
+    static void resetLightingModule() {
+        applyLightingState(FullbrightNightPolicy.LightingState.defaults());
+    }
+
+    static Boolean readLightingSetting(String settingId) {
+        if (!FullbrightNightPolicy.isLightingSetting(settingId)) {
+            return null;
+        }
+        return switch (settingId) {
+            case FullbrightNightPolicy.USE_FULLBRIGHT -> CONFIG.fullbrightEnabled;
+            case FullbrightNightPolicy.ALWAYS_NIGHT -> CONFIG.alwaysNightEnabled;
+            case FullbrightNightPolicy.FORCE_BOTH -> CONFIG.lightingForceBoth;
+            default -> null;
+        };
+    }
+
+    static boolean writeLightingSetting(String settingId, boolean value) {
+        if (!FullbrightNightPolicy.isLightingSetting(settingId)) {
+            return false;
+        }
+        FullbrightNightPolicy.LightingState current = lightingState();
+        FullbrightNightPolicy.LightingState next = switch (settingId) {
+            case FullbrightNightPolicy.USE_FULLBRIGHT ->
+                    FullbrightNightPolicy.setFullbright(current, value);
+            case FullbrightNightPolicy.ALWAYS_NIGHT ->
+                    FullbrightNightPolicy.setAlwaysNight(current, value);
+            case FullbrightNightPolicy.FORCE_BOTH ->
+                    FullbrightNightPolicy.setForceBoth(current, value);
+            default -> current;
+        };
+        applyLightingState(next);
+        return true;
+    }
+
     static void setFullbrightEnabled(boolean enabled) {
-        if (CONFIG.fullbrightEnabled == enabled) return;
-        CONFIG.fullbrightEnabled = enabled;
-        TrackerStore.save(CONFIG);
+        applyLightingState(FullbrightNightPolicy.setFullbright(lightingState(), enabled));
     }
 
     public static boolean isAutoSprintEnabled() {
@@ -4029,6 +4250,8 @@ private static int toggle(FabricClientCommandSource source) {
                 Other:
                 /rot slayer status | carry ...
                 /rot termsim [ping]
+                /rot superboom add|remove|list
+                /rot dcarry add|remove|list|history
                 /rot toggle|reset|status
 
                 Old aliases /rotclient, /miningtracker, /miningui still open

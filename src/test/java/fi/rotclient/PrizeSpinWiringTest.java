@@ -27,7 +27,7 @@ final class PrizeSpinWiringTest {
         assertTrue(mixin.contains("PrizeSpinRuntime.renderChest"));
         assertTrue(mixin.contains("PrizeSpinRuntime.swallowClicks"));
         assertTrue(runtime.contains("Does not click slots"));
-        assertEquals(124, QolUtilityCatalog.modules().size());
+        assertEquals(131, QolUtilityCatalog.modules().size());
         String lower = (catalog + extras + config + mixin + runtime).toLowerCase();
         assertFalse(lower.contains("skyocean"));
         assertFalse(lower.contains("owdding"));

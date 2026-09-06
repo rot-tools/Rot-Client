@@ -111,6 +111,6 @@ final class TempleSkyblockAutomationPolicyTest {
         assertEquals("G", config.readKeybind("qol.ghosts.keybind"));
         assertTrue(config.resetModuleToDefaults("qol.ghosts"));
         assertFalse(config.isModuleEnabled("qol.ghosts"));
-        assertTrue(config.extras().ghostsShowPowered);
+        assertFalse(config.extras().ghostsShowPowered);
     }
 }

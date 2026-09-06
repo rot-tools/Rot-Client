@@ -58,6 +58,8 @@ final class RotClientProfileSettings {
 
     // General runtime feature preferences.
     boolean fullbrightEnabled;
+    boolean alwaysNightEnabled;
+    boolean lightingForceBoth;
     boolean autoSprintEnabled;
     boolean cameraEnabled;
 

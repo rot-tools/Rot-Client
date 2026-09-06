@@ -110,6 +110,14 @@ final class TrajectoryPredictorTest {
 
 final class SecretHitboxesPolicyTest {
     @Test
+    void f7BossLeversKeepVanillaHitboxes() {
+        assertFalse(SecretHitboxesPolicy.expandLeverAt(61, 136, 142, 7));
+        assertFalse(SecretHitboxesPolicy.expandLeverAt(59, 133, 142, 7));
+        assertTrue(SecretHitboxesPolicy.expandLeverAt(61, 136, 142, 6));
+        assertTrue(SecretHitboxesPolicy.expandLeverAt(0, 70, 0, 7));
+    }
+
+    @Test
     void dungeonGateDefaultsOnAndFullCubeWhenEnabled() {
         assertEquals(
                 SecretHitboxesPolicy.ShapeId.NONE,
@@ -160,6 +168,16 @@ final class SecretHitboxesPolicyTest {
                 SecretHitboxesPolicy.oldLeverShape(
                         SecretHitboxesPolicy.AttachFace.WALL,
                         SecretHitboxesPolicy.Cardinal.EAST));
+        assertEquals(
+                SecretHitboxesPolicy.ShapeId.LEVER_CEILING,
+                SecretHitboxesPolicy.oldLeverShape(
+                        SecretHitboxesPolicy.AttachFace.CEILING,
+                        SecretHitboxesPolicy.Cardinal.NORTH));
+        assertEquals(
+                SecretHitboxesPolicy.ShapeId.LEVER_FLOOR,
+                SecretHitboxesPolicy.oldLeverShape(
+                        SecretHitboxesPolicy.AttachFace.FLOOR,
+                        SecretHitboxesPolicy.Cardinal.NORTH));
     }
 }
 

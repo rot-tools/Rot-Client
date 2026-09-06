@@ -42,6 +42,26 @@ class SlayerSessionEngineTest {
     }
 
     @Test
+    void tarantulaTierFivePhaseOneDoesNotCountAsAKill() {
+        SlayerSessionEngine engine = new SlayerSessionEngine();
+        engine.onChat("SLAYER QUEST STARTED!", 1_000L);
+        SlayerPolicy.EntityDescriptor phaseOne = SlayerPolicy.classifyTag(
+                "☠ Tarantula Broodfather 10M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor phaseTwo = SlayerPolicy.classifyTag(
+                "☠ Conjoined Brood 20M❤", "Owner: LocalPlayer").orElseThrow();
+
+        assertTrue(engine.observeEntity(10, phaseOne, "LocalPlayer", 2_000L).spawned());
+        SlayerSessionEngine.DeathResult first = engine.onEntityDeath(10, 8_000L);
+        assertFalse(first.bossKilled());
+        assertEquals(0, engine.snapshot(8_000L).bossesKilled());
+
+        assertTrue(engine.observeEntity(11, phaseTwo, "LocalPlayer", 8_500L).spawned());
+        SlayerSessionEngine.DeathResult second = engine.onEntityDeath(11, 16_000L);
+        assertTrue(second.bossKilled());
+        assertEquals(1, engine.snapshot(16_000L).bossesKilled());
+    }
+
+    @Test
     void otherPlayersBossDoesNotMutatePersonalStatsButCompletesMatchingCarry() {
         SlayerSessionEngine engine = new SlayerSessionEngine();
         assertTrue(engine.addCarry(
@@ -155,7 +175,7 @@ class SlayerSessionEngineTest {
         SlayerSessionEngine engine = new SlayerSessionEngine();
         engine.onChat("SLAYER QUEST STARTED!", 1_000L);
         SlayerPolicy.EntityDescriptor boss = SlayerPolicy.classifyTag(
-                "â˜  Voidgloom Seraph IV 210Mâ¤", "Owner: LocalPlayer").orElseThrow();
+                "☠ Voidgloom Seraph IV 210M❤", "Owner: LocalPlayer").orElseThrow();
         engine.observeEntity(7, boss, "LocalPlayer", 2_000L);
         engine.onEntityDeath(7, 5_000L);
         engine.observeDrop("Warden Heart");

@@ -20,5 +20,15 @@ final class SlayerTimeMessagePolicyTest {
         assertFalse(SlayerTimeMessagePolicy.shouldAnnounce(
                 true, true, true, true,
                 SlayerPolicy.EntityRole.BOSS, 10_000L, 20_500L, 20_000L));
+        SlayerPolicy.EntityDescriptor t5PhaseOne = SlayerPolicy.classifyTag(
+                "☠ Tarantula Broodfather 10M❤", "Owner: LocalPlayer").orElseThrow();
+        SlayerPolicy.EntityDescriptor t5PhaseTwo = SlayerPolicy.classifyTag(
+                "☠ Conjoined Brood 20M❤", "Owner: LocalPlayer").orElseThrow();
+        assertFalse(SlayerTimeMessagePolicy.shouldAnnounce(
+                true, true, true, true,
+                SlayerPolicy.EntityRole.BOSS, 10_000L, 20_000L, 0L, t5PhaseOne));
+        assertTrue(SlayerTimeMessagePolicy.shouldAnnounce(
+                true, true, true, true,
+                SlayerPolicy.EntityRole.BOSS, 10_000L, 20_000L, 0L, t5PhaseTwo));
     }
 }

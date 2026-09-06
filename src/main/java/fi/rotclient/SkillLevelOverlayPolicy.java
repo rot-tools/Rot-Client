@@ -1,6 +1,7 @@
 package fi.rotclient;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,8 +11,12 @@ import java.util.regex.Pattern;
  * level. Maxed skills use a distinct color chosen in config (aqua by default).
  */
 public final class SkillLevelOverlayPolicy {
-    public static final int DEFAULT_LEVEL_COLOR = 0xFFFF8AA8;
-    public static final int DEFAULT_MAX_COLOR = 0xFFE9D5FF;
+    public static final int DEFAULT_LEVEL_COLOR = 0xFFFFFFFF;
+    public static final int DEFAULT_MAX_COLOR = 0xFF55FFFF;
+    public static final int LABEL_BACKGROUND = 0xE0101018;
+
+    public record LabelBox(int left, int top, int right, int bottom) {
+    }
 
     private static final Pattern LEVEL_LINE =
             Pattern.compile(
@@ -39,12 +44,17 @@ public final class SkillLevelOverlayPolicy {
     public static Optional<Overlay> parse(String hoverName, List<String> loreLines, int stackCount) {
         Integer level = null;
         boolean max = false;
+        boolean inProgress = false;
         Integer progressImplied = null;
+        String skillHint = hoverName;
         if (loreLines != null) {
             for (String raw : loreLines) {
                 String text = MenuKeybindPolicy.stripGuiText(raw);
                 if (text.isEmpty()) {
                     continue;
+                }
+                if (isSkillName(text)) {
+                    skillHint = text;
                 }
                 if (isMaxPhrase(text)) {
                     max = true;
@@ -54,6 +64,9 @@ public final class SkillLevelOverlayPolicy {
                     int next = Integer.parseInt(progress.group(1));
                     if (next > 1) {
                         progressImplied = next - 1;
+                    }
+                    if (!isMaxPhrase(text)) {
+                        inProgress = true;
                     }
                 }
                 if (SKIP_LINE.matcher(text).find()) {
@@ -92,11 +105,24 @@ public final class SkillLevelOverlayPolicy {
         if (level == null) {
             return Optional.empty();
         }
+        if (!max && !inProgress) {
+            int cap = maxLevelFor(skillHint);
+            if (cap <= 0) {
+                cap = maxLevelFor(hoverName);
+            }
+            if (cap > 0 && level >= cap) {
+                max = true;
+            }
+        }
         return Optional.of(new Overlay(level, max));
     }
 
     public static int colorFor(boolean max, int inProgressArgb, int maxArgb) {
-        return max ? maxArgb : inProgressArgb;
+        int chosen = max ? maxArgb : inProgressArgb;
+        if ((chosen >>> 24) == 0) {
+            chosen |= 0xFF000000;
+        }
+        return chosen;
     }
 
     /** Bottom-right of a 16px item, matching vanilla stack counts. */
@@ -108,15 +134,47 @@ public final class SkillLevelOverlayPolicy {
         return slotY + 8;
     }
 
+    public static LabelBox labelBackground(int slotX, int slotY, int textWidth) {
+        int x = labelX(slotX, textWidth);
+        int y = labelY(slotY);
+        int width = Math.max(1, textWidth);
+        return new LabelBox(x - 1, y - 1, x + width + 1, y + 9);
+    }
+
     static boolean isMaxPhrase(String text) {
         if (text == null || text.isBlank()) {
             return false;
         }
-        String lower = text.toLowerCase();
-        return lower.equals("max level")
-                || lower.contains("maxed")
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("maxed")
+                || lower.contains("max level")
                 || lower.contains("maximum level")
                 || lower.contains("reached the max");
+    }
+
+    static int maxLevelFor(String name) {
+        String hover = MenuKeybindPolicy.stripGuiText(name).toLowerCase(Locale.ROOT);
+        if (hover.contains("runecrafting") || hover.contains("social")) {
+            return 25;
+        }
+        if (hover.contains("foraging")) {
+            return 57;
+        }
+        if (hover.contains("farming")
+                || hover.contains("mining")
+                || hover.contains("combat")
+                || hover.contains("enchanting")
+                || hover.contains("taming")) {
+            return 60;
+        }
+        if (hover.contains("fishing")
+                || hover.contains("alchemy")
+                || hover.contains("carpentry")
+                || hover.contains("hunting")
+                || hover.contains("catacombs")) {
+            return 50;
+        }
+        return 0;
     }
 
     static boolean isSkillName(String hoverName) {

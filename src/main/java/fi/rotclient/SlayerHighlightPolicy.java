@@ -6,6 +6,8 @@ public final class SlayerHighlightPolicy {
     public static final double LOCAL_FIGHT_MARKER_RANGE = 28.0D;
     /** Thrown Yang Glyphs often land farther from the boss than other fight markers. */
     public static final double YANG_GLYPH_PLAYER_RANGE = 48.0D;
+    /** A newly thrown Yang Glyph stand still sits next to the owned Voidgloom. */
+    public static final double YANG_GLYPH_THROW_ORIGIN_RANGE = 12.0D;
 
     public record Options(
             boolean onlyMine,
@@ -14,6 +16,20 @@ public final class SlayerHighlightPolicy {
             boolean demons,
             boolean targetLines,
             double maxTargetLineDistance) {
+    }
+
+    /**
+     * One Yang Glyph candidate. Latch at the owned throw, then keep that stand
+     * instead of grabbing a nearby player's beacon.
+     */
+    public record YangGlyphTrack(
+            boolean alreadyTrackingThisStand,
+            boolean glyphAlreadyClaimed,
+            boolean ownedThrowActive,
+            boolean hasOwnedBoss,
+            double distanceToThrowOrigin,
+            double distanceToNearestForeignBoss,
+            double distanceToPlayer) {
     }
 
     private SlayerHighlightPolicy() {
@@ -89,7 +105,8 @@ public final class SlayerHighlightPolicy {
 
     /**
      * Local-quest markers near the player still count when the owned boss is
-     * across the arena, which is how thrown Yang Glyphs land.
+     * across the arena. Yang Glyphs do not use this fallback; they latch at
+     * the owned throw and then follow that stand.
      */
     public static boolean shouldDrawLocalFightMarker(
             boolean hasOwnedBoss,
@@ -108,22 +125,54 @@ public final class SlayerHighlightPolicy {
                 && distanceToPlayer <= LOCAL_FIGHT_MARKER_RANGE;
     }
 
-    public static boolean shouldTrackYangGlyph(
-            boolean hasOwnedBoss,
+    /**
+     * Follow the local player's Yang Glyph only. A nearby player's beacon is
+     * not "close enough" just because the local Voidgloom quest is active.
+     */
+    public static boolean shouldTrackYangGlyph(YangGlyphTrack probe) {
+        if (probe == null) {
+            return false;
+        }
+        if (probe.alreadyTrackingThisStand()) {
+            return inRange(probe.distanceToPlayer(), YANG_GLYPH_PLAYER_RANGE);
+        }
+        if (probe.glyphAlreadyClaimed() || !probe.ownedThrowActive()) {
+            return false;
+        }
+        if (!inRange(probe.distanceToPlayer(), YANG_GLYPH_PLAYER_RANGE)) {
+            return false;
+        }
+        if (!probe.hasOwnedBoss()
+                || !inRange(probe.distanceToThrowOrigin(), YANG_GLYPH_THROW_ORIGIN_RANGE)) {
+            return false;
+        }
+        return closerToLocalBoss(
+                probe.distanceToThrowOrigin(), probe.distanceToNearestForeignBoss());
+    }
+
+    public static boolean shouldAdoptSittingYangGlyph(
+            boolean nearTrackedFlightPath,
+            YangGlyphTrack probe) {
+        return nearTrackedFlightPath || shouldTrackYangGlyph(probe);
+    }
+
+    public static boolean closerToLocalBoss(
             double distanceToOwnedBoss,
-            boolean localQuestActive,
-            double distanceToPlayer) {
-        if (shouldDrawLocalFightMarker(
-                hasOwnedBoss, distanceToOwnedBoss, localQuestActive, distanceToPlayer)) {
+            double distanceToNearestForeignBoss) {
+        if (!Double.isFinite(distanceToOwnedBoss) || distanceToOwnedBoss < 0.0D) {
+            return false;
+        }
+        if (!Double.isFinite(distanceToNearestForeignBoss) || distanceToNearestForeignBoss < 0.0D) {
             return true;
         }
-        return localQuestActive
-                && Double.isFinite(distanceToPlayer)
-                && distanceToPlayer >= 0.0D
-                && distanceToPlayer <= YANG_GLYPH_PLAYER_RANGE;
+        return distanceToOwnedBoss < distanceToNearestForeignBoss;
     }
 
     public static double clampTargetLineDistance(double value) {
         return Math.max(4.0D, Math.min(64.0D, value));
+    }
+
+    private static boolean inRange(double distance, double maxDistance) {
+        return Double.isFinite(distance) && distance >= 0.0D && distance <= maxDistance;
     }
 }

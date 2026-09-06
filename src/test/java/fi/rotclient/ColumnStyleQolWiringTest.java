@@ -91,6 +91,7 @@ final class ColumnStyleQolWiringTest {
         assertTrue(json.contains("KeyboardInputEtherwarpMixin"));
         assertTrue(json.contains("KeyboardHandlerWardrobeMixin"));
         assertTrue(json.contains("CreeperRendererGhostsMixin"));
+        assertTrue(json.contains("CreeperPoweredGhostsMixin"));
         String mouse = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/MouseHandlerEtherwarpMixin.java"),
                 StandardCharsets.UTF_8);
@@ -148,6 +149,7 @@ final class ColumnStyleQolWiringTest {
                 "src/client/java/fi/rotclient/mixin/LevelRendererEtherwarpMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(levelRenderer.contains("SlayerRuntime.renderGizmos"));
+        assertTrue(levelRenderer.contains("GhostsRuntime.renderGizmos"));
         String entitySuppress = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/QolVisualRuntime.java"),
                 StandardCharsets.UTF_8);

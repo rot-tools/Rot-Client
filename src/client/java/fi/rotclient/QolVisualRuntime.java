@@ -50,6 +50,9 @@ public final class QolVisualRuntime {
         if (entity == null) {
             return false;
         }
+        if (entity instanceof Player player && DungeonRuntime.shouldHideTeammate(player)) {
+            return true;
+        }
         SuppressFlags flags = suppressFlags();
         if (!flags.any) {
             return false;
@@ -225,7 +228,7 @@ public final class QolVisualRuntime {
         }
         if (particleId != null
                 && !Double.isNaN(x)
-                && SkyblockFlavorRuntime.hideImplosion(particleId.toString(), x, y, z)) {
+                && SkyBlockUtilityRuntime.hideImplosion(particleId.toString(), x, y, z)) {
             return true;
         }
         return RenderOptimizerPolicy.shouldSuppressExtraParticle(
@@ -265,7 +268,7 @@ public final class QolVisualRuntime {
         if (!qol.renderOptimizerEnabled) {
             return false;
         }
-        return SkyblockFlavorPolicy.shouldHideClouds(
+        return SkyBlockUtilityPolicy.shouldHideClouds(
                 qol.extras().hideIslandClouds,
                 SkyBlockAreaDetector.detect().displayName());
     }
@@ -280,9 +283,9 @@ public final class QolVisualRuntime {
                 + " "
                 + MiningLeftoverRuntime.scoreboardText();
         boolean nightVision = client.player.hasEffect(MobEffects.NIGHT_VISION);
-        return SkyblockFlavorPolicy.netherFogFactor(
+        return SkyBlockUtilityPolicy.netherFogFactor(
                 qol.extras().netherFog,
-                SkyblockFlavorPolicy.isCrimsonIsle(area),
+                SkyBlockUtilityPolicy.isCrimsonIsle(area),
                 nightVision,
                 qol.extras().netherFogScale);
     }
@@ -302,7 +305,7 @@ public final class QolVisualRuntime {
         }
         boolean self = entity.getId() == client.player.getId();
         int percent = self ? qol.extras().armorSelf : qol.extras().armorOthers;
-        return SkyblockFlavorPolicy.hideArmor(percent);
+        return SkyBlockUtilityPolicy.hideArmor(percent);
     }
 
     public static boolean shouldHideBreakParticles() {

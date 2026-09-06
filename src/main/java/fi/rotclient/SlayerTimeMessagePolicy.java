@@ -28,4 +28,28 @@ public final class SlayerTimeMessagePolicy {
         }
         return nowMillis - lastAnnounceAtMillis >= ANNOUNCE_COOLDOWN_MILLIS;
     }
+
+    public static boolean shouldAnnounce(
+            boolean featureEnabled,
+            boolean lineEnabled,
+            boolean bossKilled,
+            boolean owned,
+            SlayerPolicy.EntityRole role,
+            long durationMillis,
+            long nowMillis,
+            long lastAnnounceAtMillis,
+            SlayerPolicy.EntityDescriptor descriptor) {
+        if (SlayerFightPolicy.isTarantulaTierFivePhaseOne(descriptor)) {
+            return false;
+        }
+        return shouldAnnounce(
+                featureEnabled,
+                lineEnabled,
+                bossKilled,
+                owned,
+                role,
+                durationMillis,
+                nowMillis,
+                lastAnnounceAtMillis);
+    }
 }

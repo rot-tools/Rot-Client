@@ -25,22 +25,30 @@ public final class SlayerRngCatalog {
      * wrappers, extra punctuation, and a few Hypixel aliases.
      */
     public static Optional<Entry> resolve(String raw) {
+        return resolve(raw, null);
+    }
+
+    public static Optional<Entry> resolve(String raw, SlayerPolicy.SlayerType family) {
         String name = SlayerRngMeterPolicy.displayName(raw);
         Optional<Entry> exact = byDisplay(name);
-        if (exact.isPresent()) {
+        if (exact.isPresent() && familyMatches(exact.get(), family)) {
             return exact;
         }
         String key = normalize(name);
         if (key.isBlank()) {
             return Optional.empty();
         }
+        key = aliasKey(key);
         Optional<Entry> id = byId(key.replace(' ', '_'));
-        if (id.isPresent()) {
+        if (id.isPresent() && familyMatches(id.get(), family)) {
             return id;
         }
         Entry best = null;
         int bestLen = 0;
         for (Entry entry : ENTRIES) {
+            if (!familyMatches(entry, family)) {
+                continue;
+            }
             String display = normalize(entry.display());
             if (display.length() < 4) {
                 continue;
@@ -53,6 +61,21 @@ public final class SlayerRngCatalog {
             }
         }
         return Optional.ofNullable(best);
+    }
+
+    private static boolean familyMatches(Entry entry, SlayerPolicy.SlayerType family) {
+        return family == null || entry == null || entry.type() == family;
+    }
+
+    private static String aliasKey(String key) {
+        return switch (key) {
+            case "ender artifact upgrader", "ender artefact upgrade", "ender artefact upgrader"
+                    -> "ender artifact upgrade";
+            case "enchant rune", "enchanting rune", "enchanting rune i" -> "enchant rune i";
+            case "endersnake rune", "ender snake rune i" -> "endersnake rune i";
+            case "end rune" -> "end rune i";
+            default -> key;
+        };
     }
 
     private static List<Entry> build(){

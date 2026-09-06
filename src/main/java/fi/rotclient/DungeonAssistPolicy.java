@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,6 +101,8 @@ public final class DungeonAssistPolicy {
     private static final Pattern ENRAGED = Pattern.compile("^⚠ (\\w+) is enraged! ⚠$");
     private static final Pattern TERMINAL = Pattern.compile(
             "(.+) (?:activated|completed) a (terminal|device|lever)! \\((\\d)/(\\d)\\)");
+    private static final Pattern TITLE_PROGRESS = Pattern.compile(
+            "^(\\w+) (activated|completed) a (terminal|device|lever)! \\((\\d)/(\\d)\\)$");
     private static final Pattern BLESSING = Pattern.compile(
             "(?i)blessing of (power|time|life|wisdom|stone)(?:\\s+([IVX]+|\\d+))?");
     private static final Pattern RAGNAROCK_CANCEL = Pattern.compile(
@@ -134,7 +137,6 @@ public final class DungeonAssistPolicy {
             Map.entry("spirit stone", "SPIRIT_DECOY"),
             Map.entry("warped stone", "AOTE_STONE"));
     private static Map<String, Long> shippedPrices;
-    private static final Pattern BLAZE_HP = Pattern.compile("(\\d[\\d,]*)/(\\d[\\d,]*)");
     private static final Pattern ROOM_FAIL = Pattern.compile("(?i)(puzzle fail|wrong! you didn't click)");
     private static final Pattern PARTY_FINDER_TITLE = Pattern.compile("(?i)party finder|dungeon finder");
     private static final Pattern SALVAGE_TITLE = Pattern.compile("(?i)salvage|autonpc|trades");
@@ -170,25 +172,79 @@ public final class DungeonAssistPolicy {
     private DungeonAssistPolicy() {
     }
 
+    public static final char QUIZ_OPTION_A = '\u24D0';
+    public static final char QUIZ_OPTION_B = '\u24D1';
+    public static final char QUIZ_OPTION_C = '\u24D2';
+
     public static Optional<String> quizAnswer(String question) {
+        List<String> answers = quizAnswers(question);
+        return answers.isEmpty() ? Optional.empty() : Optional.of(answers.getFirst());
+    }
+
+    public static List<String> quizAnswers(String question) {
         String text = DungeonPolicy.normalize(question)
-                .replaceFirst("(?i)^\\[(?:npc|statue)]\\s+oruo the magician:\\s*", "")
+                .replaceFirst("(?i)^\\[(?:npc|statue)]\\s+oruo the (?:magician|omniscient):\\s*", "")
                 .replaceFirst("(?i)^question \\d+:\\s*", "")
                 .trim();
-        if (text.isBlank()) {
-            return Optional.empty();
+        if (text.isBlank() || isQuizOptionLine(text)) {
+            return List.of();
         }
         if (text.equalsIgnoreCase("What SkyBlock year is it?")) {
-            return Optional.of("Year " + skyBlockYear(System.currentTimeMillis()));
+            return List.of("Year " + skyBlockYear(System.currentTimeMillis()));
         }
         if (text.trim().equalsIgnoreCase("glass?")) {
             text = "What is the name of the vendor in the Hub who sells stained glass?";
         }
-        List<String> answers = QUIZ.get(text);
-        if (answers != null && !answers.isEmpty()) {
-            return Optional.of(answers.getFirst());
+        List<String> answers = quizAnswersFor(text);
+        return answers == null || answers.isEmpty() ? List.of() : List.copyOf(answers);
+    }
+
+    public static boolean isQuizOptionLine(String message) {
+        String text = DungeonPolicy.normalize(message).trim();
+        if (text.isEmpty()) {
+            return false;
         }
-        return Optional.empty();
+        char mark = text.charAt(0);
+        return mark == QUIZ_OPTION_A || mark == QUIZ_OPTION_B || mark == QUIZ_OPTION_C;
+    }
+
+    public static OptionalInt quizCorrectOption(String optionLine, List<String> acceptedAnswers) {
+        if (acceptedAnswers == null || acceptedAnswers.isEmpty()) {
+            return OptionalInt.empty();
+        }
+        String text = DungeonPolicy.normalize(optionLine).trim();
+        if (text.isEmpty()) {
+            return OptionalInt.empty();
+        }
+        int index = switch (text.charAt(0)) {
+            case QUIZ_OPTION_A -> 0;
+            case QUIZ_OPTION_B -> 1;
+            case QUIZ_OPTION_C -> 2;
+            default -> -1;
+        };
+        if (index < 0) {
+            return OptionalInt.empty();
+        }
+        for (String answer : acceptedAnswers) {
+            if (answer != null && !answer.isBlank() && text.endsWith(answer)) {
+                return OptionalInt.of(index);
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    private static List<String> quizAnswersFor(String text) {
+        List<String> direct = QUIZ.get(text);
+        if (direct != null) {
+            return direct;
+        }
+        for (Map.Entry<String, List<String>> entry : QUIZ.entrySet()) {
+            String key = entry.getKey();
+            if (text.contains(key) || key.contains(text)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public static int skyBlockYear(long epochMillis) {
@@ -239,38 +295,132 @@ public final class DungeonAssistPolicy {
         return matcher.find() ? Optional.of(Integer.parseInt(matcher.group(1))) : Optional.empty();
     }
 
-    public static F7Title f7Title(String chat) {
-        String text = DungeonPolicy.normalize(chat);
-        if (CRYSTAL.matcher(text).matches()) {
-            return F7Title.CRYSTAL;
+    public record F7TitleFields(F7Title kind, String name, String player, String current, String total) {
+        public F7TitleFields {
+            name = name == null ? "" : name;
+            player = player == null ? "" : player;
+            current = current == null ? "" : current;
+            total = total == null ? "" : total;
         }
-        if (ENRAGED.matcher(text).matches()) {
-            return F7Title.ENRAGED;
-        }
-        Matcher terminal = TERMINAL.matcher(text);
-        if (terminal.matches()) {
-            return "lever".equalsIgnoreCase(terminal.group(2)) ? F7Title.GATE : F7Title.TERMINAL;
-        }
-        return F7Title.NONE;
     }
 
-    public static Optional<String> f7TitleText(String chat) {
+    public static F7Title f7Title(String chat) {
+        return f7TitleFields(chat).map(F7TitleFields::kind).orElse(F7Title.NONE);
+    }
+
+    public static Optional<F7TitleFields> f7TitleFields(String chat) {
         String text = DungeonPolicy.normalize(chat);
         Matcher crystal = CRYSTAL.matcher(text);
         if (crystal.matches()) {
-            return Optional.of("Crystals " + crystal.group(1) + "/" + crystal.group(2));
+            return Optional.of(new F7TitleFields(
+                    F7Title.CRYSTAL, "Crystal", "", crystal.group(1), crystal.group(2)));
         }
         Matcher enraged = ENRAGED.matcher(text);
         if (enraged.matches()) {
-            return Optional.of(enraged.group(1) + " Enraged");
+            return Optional.of(new F7TitleFields(
+                    F7Title.ENRAGED, enraged.group(1), "", "", ""));
         }
         Matcher terminal = TERMINAL.matcher(text);
         if (terminal.matches()) {
-            return Optional.of(terminal.group(2).substring(0, 1).toUpperCase(Locale.ROOT)
-                    + terminal.group(2).substring(1)
-                    + " " + terminal.group(3) + "/" + terminal.group(4));
+            String kind = terminal.group(2);
+            String pretty = kind.substring(0, 1).toUpperCase(Locale.ROOT) + kind.substring(1);
+            F7Title type = "lever".equalsIgnoreCase(kind) ? F7Title.GATE : F7Title.TERMINAL;
+            return Optional.of(new F7TitleFields(
+                    type, pretty, terminal.group(1), terminal.group(3), terminal.group(4)));
         }
         return Optional.empty();
+    }
+
+    public static Optional<String> f7TitleText(String chat) {
+        return f7TitleText(chat, "", "", "", "");
+    }
+
+    public static Optional<String> f7TitleText(
+            String chat,
+            String crystalTemplate,
+            String witherTemplate,
+            String terminalTemplate,
+            String gateTemplate) {
+        Optional<F7TitleFields> parsed = f7TitleFields(chat);
+        if (parsed.isEmpty()) {
+            return Optional.empty();
+        }
+        F7TitleFields fields = parsed.get();
+        String fallback = switch (fields.kind()) {
+            case CRYSTAL -> "Crystals " + fields.current() + "/" + fields.total();
+            case ENRAGED -> fields.name() + " Enraged";
+            case TERMINAL, GATE -> fields.name() + " " + fields.current() + "/" + fields.total();
+            case NONE -> "";
+        };
+        String template = switch (fields.kind()) {
+            case CRYSTAL -> crystalTemplate;
+            case ENRAGED -> witherTemplate;
+            case TERMINAL -> terminalTemplate;
+            case GATE -> gateTemplate;
+            case NONE -> "";
+        };
+        if (template == null || template.isBlank()) {
+            return fallback.isBlank() ? Optional.empty() : Optional.of(fallback);
+        }
+        return Optional.of(applyTitleTemplate(template, fields));
+    }
+
+    public static String applyTitleTemplate(String template, F7TitleFields fields) {
+        F7TitleFields safe = fields == null
+                ? new F7TitleFields(F7Title.NONE, "", "", "", "")
+                : fields;
+        String text = template == null ? "" : template;
+        return text.replace("{name}", safe.name())
+                .replace("{player}", safe.player())
+                .replace("{current}", safe.current())
+                .replace("{total}", safe.total())
+                .trim();
+    }
+
+    public static boolean isProgressTitle(String title) {
+        String text = DungeonPolicy.normalize(title);
+        if (TITLE_PROGRESS.matcher(text).find()) {
+            return true;
+        }
+        Optional<F7TitleFields> fields = f7TitleFields(title);
+        if (fields.isEmpty()) {
+            return false;
+        }
+        F7Title kind = fields.get().kind();
+        return kind == F7Title.TERMINAL || kind == F7Title.GATE;
+    }
+
+    public static boolean otherProgressTitle(String title, String localName) {
+        if (localName == null || localName.isBlank()) {
+            return false;
+        }
+        String text = DungeonPolicy.normalize(title);
+        Matcher matcher = TITLE_PROGRESS.matcher(text);
+        if (matcher.find()) {
+            return !DungeonGoldorPolicy.namesMatch(matcher.group(1), localName);
+        }
+        Optional<F7TitleFields> fields = f7TitleFields(title);
+        if (fields.isEmpty()) {
+            return false;
+        }
+        F7Title kind = fields.get().kind();
+        if (kind != F7Title.TERMINAL && kind != F7Title.GATE) {
+            return false;
+        }
+        return !DungeonGoldorPolicy.namesMatch(fields.get().player(), localName);
+    }
+
+    public static boolean hideProgressTitleAtDevice(
+            boolean hideAtSs,
+            boolean hideAtPre4,
+            boolean atSs,
+            boolean atPre4,
+            boolean inP3,
+            String title) {
+        if (!inP3 || !isProgressTitle(title)) {
+            return false;
+        }
+        return (hideAtSs && atSs) || (hideAtPre4 && atPre4);
     }
 
     public static F7Timer f7TimerFromChat(String chat) {
@@ -487,13 +637,84 @@ public final class DungeonAssistPolicy {
         return List.copyOf(lines);
     }
 
+    public record MapChip(String text, int color) {
+        public MapChip {
+            text = text == null ? "" : text;
+        }
+    }
+
+    public static List<MapChip> mapStatusBar(
+            DungeonPolicy.Sidebar sidebar,
+            boolean secrets,
+            boolean crypts,
+            boolean score,
+            boolean deaths,
+            boolean mimicKilled,
+            boolean puzzlesComplete) {
+        if (sidebar == null) {
+            return List.of();
+        }
+        List<MapChip> chips = new ArrayList<>();
+        if (secrets && !sidebar.secrets().isEmpty()) {
+            chips.add(new MapChip("Secrets: " + sidebar.secrets(), 0xFF55FF55));
+        }
+        if (crypts && sidebar.crypts() >= 0) {
+            chips.add(new MapChip("Crypts: " + sidebar.crypts(), 0xFFE7E5E4));
+        }
+        if (score && sidebar.score() >= 0) {
+            chips.add(new MapChip("Score: " + sidebar.score(), 0xFFFACC15));
+        }
+        if (deaths && sidebar.deaths() >= 0) {
+            chips.add(new MapChip(
+                    "Deaths: " + sidebar.deaths(),
+                    sidebar.deaths() > 0 ? 0xFFEF4444 : 0xFF22C55E));
+        }
+        chips.add(new MapChip(
+                "M: " + (mimicKilled ? "+" : "x"),
+                mimicKilled ? 0xFF22C55E : 0xFFEF4444));
+        chips.add(new MapChip(
+                "P: " + (puzzlesComplete ? "+" : "x"),
+                puzzlesComplete ? 0xFF22C55E : 0xFFEF4444));
+        return List.copyOf(chips);
+    }
+
+    public static List<MapChip> mapStatusBar(
+            DungeonPolicy.Sidebar sidebar,
+            boolean secrets,
+            boolean crypts,
+            boolean score,
+            boolean deaths,
+            boolean mimicKilled,
+            boolean puzzlesComplete,
+            boolean mimicChip,
+            boolean puzzleChip) {
+        List<MapChip> chips = new ArrayList<>(mapStatusBar(
+                sidebar, secrets, crypts, score, deaths, mimicKilled, puzzlesComplete));
+        if (mimicChip && puzzleChip) {
+            return chips;
+        }
+        List<MapChip> filtered = new ArrayList<>();
+        for (MapChip chip : chips) {
+            if (chip.text().startsWith("M:") && !mimicChip) {
+                continue;
+            }
+            if (chip.text().startsWith("P:") && !puzzleChip) {
+                continue;
+            }
+            filtered.add(chip);
+        }
+        return List.copyOf(filtered);
+    }
+
     public static String scoreTitleText(int score, int threshold) {
         return Math.max(1, threshold) + " Score!";
     }
 
     public static Optional<String> leapTarget(String chat) {
-        Matcher matcher = Pattern.compile("(?i)leaped to ([A-Za-z0-9_]{1,16})")
-                .matcher(DungeonPolicy.normalize(chat));
+        String text = DungeonPolicy.normalize(chat);
+        Matcher matcher = Pattern.compile(
+                        "(?i)(?:you have teleported to|you leaped to) ([A-Za-z0-9_]{1,16})")
+                .matcher(text);
         if (matcher.find()) {
             return Optional.of(matcher.group(1));
         }
@@ -515,15 +736,67 @@ public final class DungeonAssistPolicy {
     }
 
     public static Optional<Integer> blazeHealth(String hologram) {
-        Matcher matcher = BLAZE_HP.matcher(DungeonPolicy.normalize(hologram).replace(",", ""));
-        if (!matcher.find()) {
-            return Optional.empty();
+        return DungeonPolicy.blazeHealth(hologram);
+    }
+
+    /**
+     * Ice (Higher Blaze) is lowest HP first. Magma (Lower Blaze) is highest first.
+     * Room name wins, then packed ice vs magma underfoot, then the Y=69 split.
+     */
+    public static final double BLAZE_SPLIT_Y = 69.0D;
+
+    public static boolean isBlazeIceBlock(String blockId) {
+        String id = DungeonLeftoverPolicy.path(blockId);
+        return id.equals("packed_ice")
+                || id.equals("blue_ice")
+                || id.equals("ice")
+                || id.equals("frosted_ice");
+    }
+
+    public static boolean isBlazeMagmaBlock(String blockId) {
+        String id = DungeonLeftoverPolicy.path(blockId);
+        return id.equals("magma_block")
+                || id.equals("magma")
+                || id.equals("netherrack")
+                || id.contains("nether_brick");
+    }
+
+    public static boolean blazeLowestFirst(
+            String roomName,
+            boolean iceNearPlayer,
+            boolean magmaNearPlayer,
+            double lowestY,
+            double highestY) {
+        return blazeLowestFirst(
+                roomName, iceNearPlayer, magmaNearPlayer, Double.NaN, lowestY, highestY);
+    }
+
+    public static boolean blazeLowestFirst(
+            String roomName,
+            boolean iceNearPlayer,
+            boolean magmaNearPlayer,
+            double playerY,
+            double lowestY,
+            double highestY) {
+        String name = roomName == null ? "" : roomName.trim().toLowerCase(Locale.ROOT);
+        if (name.contains("lower blaze")) {
+            return false;
         }
-        try {
-            return Optional.of(Integer.parseInt(matcher.group(1)));
-        } catch (NumberFormatException ignored) {
-            return Optional.empty();
+        if (name.contains("higher blaze") || name.contains("upper blaze")) {
+            return true;
         }
+        if (iceNearPlayer != magmaNearPlayer) {
+            return iceNearPlayer;
+        }
+        if (Double.isFinite(highestY) && highestY < BLAZE_SPLIT_Y
+                && Double.isFinite(lowestY) && lowestY < BLAZE_SPLIT_Y) {
+            return false;
+        }
+        if (Double.isFinite(lowestY) && lowestY > BLAZE_SPLIT_Y
+                && Double.isFinite(highestY) && highestY > BLAZE_SPLIT_Y) {
+            return true;
+        }
+        return !Double.isFinite(playerY) || playerY >= BLAZE_SPLIT_Y;
     }
 
     public static List<Integer> sortBlazeHealth(List<Integer> health, boolean lowestFirst) {
@@ -671,7 +944,7 @@ public final class DungeonAssistPolicy {
         answers.put("What is the status of Sadan?", List.of("Necromancer Lord"));
         answers.put("What is the status of Maxor, Storm, Goldor, and Necron?",
                 List.of("The Wither Lords"));
-        answers.put("How many total Fairy Souls are there?", List.of("247 Fairy Souls"));
+        answers.put("How many total Fairy Souls are there?", List.of("289 Fairy Souls"));
         answers.put("How many Fairy Souls are there in Spider's Den?", List.of("19 Fairy Souls"));
         answers.put("How many Fairy Souls are there in Spiders Den?", List.of("19 Fairy Souls"));
         answers.put("How many Fairy Souls are there in The End?", List.of("12 Fairy Souls"));
@@ -684,18 +957,23 @@ public final class DungeonAssistPolicy {
         answers.put("How many Fairy Souls are there in Deep Caverns?", List.of("21 Fairy Souls"));
         answers.put("How many Fairy Souls are there in Gold Mine?", List.of("12 Fairy Souls"));
         answers.put("How many Fairy Souls are there in Dungeon Hub?", List.of("7 Fairy Souls"));
+        answers.put("How many Fairy Souls are there in Backwater Bayou?", List.of("5 Fairy Souls"));
         answers.put("Which brother is on the Spider's Den?", List.of("Rick"));
         answers.put("Which brother is on the Spiders Den?", List.of("Rick"));
         answers.put("What is the name of Rick's brother?", List.of("Pat"));
         answers.put("What is the name of the vendor in the Hub who sells stained glass?",
                 List.of("Wool Weaver"));
+        answers.put("What is the name of the vendor in the Hub who sells stained",
+                List.of("Wool Weaver"));
         answers.put("What is the name of the person that upgrades pets?", List.of("Kat"));
         answers.put("What is the name of the lady of the Nether?", List.of("Elle"));
         answers.put("Which villager in the Village gives you a Rogue Sword?", List.of("Jamie"));
-        answers.put("How many unique minions are there?", List.of("68 Minions"));
+        answers.put("How many unique minions are there?", List.of("61 Minions"));
         answers.put("Which of these enemies does not spawn in the Spider's Den?",
                 List.of("Wither Skeleton"));
-        answers.put("Which of these monsters only spawns at night?", List.of("Zombie Villager"));
+        answers.put("Which of these enemies does not spawn in the Spiders Den?",
+                List.of("Wither Skeleton"));
+        answers.put("Which of these monsters only spawns at night?", List.of("Zombie Villager", "Ghast"));
         answers.put("Which of these is not a dragon in The End?", List.of("Elder Dragon"));
         return answers;
     }

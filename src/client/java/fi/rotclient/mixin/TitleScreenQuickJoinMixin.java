@@ -1,6 +1,6 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.SkyblockFlavorRuntime;
+import fi.rotclient.SkyBlockUtilityRuntime;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -27,7 +27,7 @@ abstract class TitleScreenQuickJoinMixin {
     private void rotclient$addQuickJoin(CallbackInfo ci) {
         rotclient$quickJoin = null;
         rotclient$multiplayer = null;
-        if (!SkyblockFlavorRuntime.quickJoinEnabled()) {
+        if (!SkyBlockUtilityRuntime.quickJoinEnabled()) {
             return;
         }
         Screen screen = (Screen) (Object) this;
@@ -44,11 +44,11 @@ abstract class TitleScreenQuickJoinMixin {
             return;
         }
         multiplayer.setWidth(98);
-        String ip = SkyblockFlavorRuntime.quickJoinIp();
+        String ip = SkyBlockUtilityRuntime.quickJoinIp();
         rotclient$multiplayer = multiplayer;
         rotclient$quickJoin = Button.builder(
-                        Component.literal(SkyblockFlavorRuntime.quickJoinLabel()),
-                        button -> SkyblockFlavorRuntime.connectQuickJoin(screen))
+                        Component.literal(SkyBlockUtilityRuntime.quickJoinLabel()),
+                        button -> SkyBlockUtilityRuntime.connectQuickJoin(screen))
                 .bounds(multiplayer.getX() + 102, multiplayer.getY(), 98, 20)
                 .tooltip(Tooltip.create(Component.literal("Connects to " + ip)))
                 .build();

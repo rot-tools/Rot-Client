@@ -7,6 +7,7 @@ import fi.rotclient.DungeonLeapOverlayRuntime;
 import fi.rotclient.DungeonPolicy;
 import fi.rotclient.PrizeSpinRuntime;
 import fi.rotclient.DungeonRuntime;
+import fi.rotclient.DungeonTerminalClickRuntime;
 import fi.rotclient.ExperimentSolverRuntime;
 import fi.rotclient.InventoryChromeRuntime;
 import fi.rotclient.InventoryButtonsRuntime;
@@ -117,6 +118,8 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 imageHeight,
                 mouseX,
                 mouseY);
+        DungeonTerminalClickRuntime.render(screen, graphics);
+        DungeonRuntime.renderMenuExtras(screen, graphics, leftPos, topPos);
         ClientBoundaryGuard.run("STORAGE_OVERLAY_RENDER", () ->
                 StorageOverlayRuntime.render(
                 screen,
@@ -165,6 +168,10 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 () -> StorageOverlayRuntime.shouldReplaceVanilla(screen),
                 false))) {
             ci.cancel();
+            return;
+        }
+        if (DungeonRuntime.shouldHideTerminalHeader(screen)) {
+            ci.cancel();
         }
     }
 
@@ -195,7 +202,8 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             int mouseY,
             CallbackInfo ci) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
-        if (ExperimentSolverRuntime.shouldHideTooltip(screen)) {
+        if (ExperimentSolverRuntime.shouldHideTooltip(screen)
+                || DungeonRuntime.shouldHideTerminalTooltip(screen)) {
             ci.cancel();
             return;
         }
@@ -251,6 +259,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 mouseY,
                 hoveredSlot);
         StorageOverlayRuntime.applyValueTooltip(graphics, mouseX, mouseY);
+        InventoryChromeRuntime.applyValueTooltip(graphics, mouseX, mouseY);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
@@ -306,6 +315,11 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             return;
         }
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        DungeonTerminalClickRuntime.record(
+                screen,
+                (int) Math.round(event.x()),
+                (int) Math.round(event.y()),
+                event.button());
         if (DungeonLeapOverlayRuntime.click(
                 screen,
                 (int) Math.round(event.x()),
@@ -386,6 +400,8 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 (AbstractContainerScreen<?>) (Object) this,
                 slot)
                 || ExperimentSolverRuntime.shouldHideWrongSlot(
+                        (AbstractContainerScreen<?>) (Object) this, slot)
+                || DungeonRuntime.shouldHideTerminalSlot(
                         (AbstractContainerScreen<?>) (Object) this, slot)) {
             ci.cancel();
             return;
@@ -405,6 +421,18 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
         }
     }
 
+    @Inject(method = "extractSlot", at = @At("RETURN"))
+    private void rotclient$maskCooldownOverlay(
+            GuiGraphicsExtractor graphics,
+            Slot slot,
+            int mouseX,
+            int mouseY,
+            CallbackInfo ci) {
+        if (slot != null && !slot.getItem().isEmpty()) {
+            DungeonRuntime.paintMaskOverlay(graphics, slot.x, slot.y, slot.getItem());
+        }
+    }
+
     @Inject(method = "slotClicked", at = @At("HEAD"), cancellable = true)
     private void rotclient$blockHiddenOffhand(
             Slot slot,
@@ -413,6 +441,11 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ContainerInput input,
             CallbackInfo ci) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        if (Boolean.TRUE.equals(ClientBoundaryGuard.call("STORAGE_SLOT_INPUT", () ->
+                StorageOverlayRuntime.shouldBlockSlotInput(screen, slot, slotId, input), true))) {
+            ci.cancel();
+            return;
+        }
         if (slot != null && StallMarketRuntime.shouldBlockClick(
                 screen, slot, button, StallMarketRuntime.controlHeld())) {
             ci.cancel();
@@ -440,10 +473,16 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                         screen.getTitle() == null
                                 ? ""
                                 : screen.getTitle().getString())
-                        != DungeonPolicy.Terminal.NONE
-                && DungeonRuntime.enqueueTerminalClick(slot.index, button)) {
-            ci.cancel();
-            return;
+                        != DungeonPolicy.Terminal.NONE) {
+            if (DungeonRuntime.shouldCancelTerminalSlot(screen, slot.index)) {
+                ci.cancel();
+                return;
+            }
+            DungeonRuntime.noteTerminalSlotClick(screen, slot.index);
+            if (DungeonRuntime.enqueueTerminalClick(slot.index, button)) {
+                ci.cancel();
+                return;
+            }
         }
         if (slot != null && SlayerRuntime.shouldBlockMaddoxClick(screen, slot.getItem())) {
             ci.cancel();

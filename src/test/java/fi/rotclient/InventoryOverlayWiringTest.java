@@ -24,12 +24,35 @@ final class InventoryOverlayWiringTest {
         assertTrue(runtime.contains("drawClickHint"));
         assertTrue(runtime.contains("renderColorEditor"));
         assertTrue(runtime.contains("afterForeground"));
+        assertTrue(runtime.contains("skillLevelsBackground"));
+        assertTrue(runtime.contains("showSkyblockInventoryUi"));
+        assertTrue(runtime.contains("hideInventoryStatusEffects"));
+        assertTrue(runtime.contains("valueMarkRect(leftPos, topPos,"));
+        assertTrue(runtime.contains("skyblockInventoryUi"));
         assertTrue(runtime.contains("drawPaintBucketIcon"));
         assertTrue(runtime.contains("snapshotEquipmentSets"));
         assertTrue(runtime.contains("paintChrome"));
+        assertTrue(runtime.contains("InventoryOverlayPolicy.CHROME_CACHE_FILE"));
+        assertTrue(runtime.contains("loadCache"));
+        assertTrue(runtime.contains("scheduleSave"));
+        assertTrue(runtime.contains("flushForShutdown"));
+        assertTrue(runtime.contains("shouldKeepExistingCache"));
+        assertTrue(runtime.contains("shouldReloadChromeCache"));
+        assertTrue(runtime.contains("shouldSkipEmptyChromeSave"));
+        assertTrue(runtime.contains("StorageOverlayRuntime.stackToCache"));
+        assertTrue(runtime.contains("StorageOverlayRuntime.stackFromCache"));
+        assertTrue(runtime.contains("addProperty(\"petKnownEmpty\""));
+        assertTrue(!runtime.contains("EQUIPMENT[i] = ItemStack.EMPTY"));
         assertTrue(!runtime.contains("mascotCoverRect"));
         assertTrue(!runtime.contains("0xC008080C"));
         assertTrue(runtime.contains("editorResetRect"));
+        assertTrue(runtime.contains("editorCloseRect"));
+        assertTrue(runtime.contains("dismissColorEditor"));
+        assertTrue(runtime.contains("dashboardButtonRect"));
+        assertTrue(runtime.contains("drawRotLetterIcon"));
+        assertTrue(runtime.contains("renderValueMark"));
+        assertTrue(runtime.contains("RotClientClient.openClickGui"));
+        assertTrue(runtime.contains("InventoryValuePolicy"));
         assertTrue(runtime.contains("defaultChromeColor"));
         assertTrue(runtime.contains("extractInventoryBackground"));
         assertTrue(runtime.contains("chromeFillRects"));
@@ -62,6 +85,7 @@ final class InventoryOverlayWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(buttons.contains("RotClientTheme.BUTTON_HOVER"));
         assertTrue(buttons.contains("RotClientTheme.drawOutline"));
+        assertTrue(buttons.contains("showSkyblockInventoryUi"));
         assertTrue(!buttons.contains("0xD0182A38"));
 
         String dashboard = Files.readString(Path.of(
@@ -69,5 +93,16 @@ final class InventoryOverlayWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(dashboard.contains("qol.inventory_overlay.open_colors"));
         assertTrue(dashboard.contains("InventoryChromeColorsScreen"));
+
+        String client = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/RotClientClient.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(client.contains("InventoryChromeRuntime.flushForShutdown"));
+        assertTrue(client.contains("InventoryChromeRuntime.loadCache"));
+
+        String catalog = Files.readString(Path.of(
+                "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(catalog.contains("Last seen equipment and the chosen pet are stored locally"));
     }
 }

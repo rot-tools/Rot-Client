@@ -7,9 +7,7 @@ import java.util.UUID;
  *
  * The id is the stable internal identity and must not change when the user
  * renames the profile. The visible name is completely user-controlled.
- *
- * Profile-specific settings will be added to this object once the profile
- * persistence/management layer is in place.
+ * Settings live on {@link RotClientProfileSettings}.
  */
 final class RotClientProfile {
     static final int MAX_NAME_LENGTH = 48;

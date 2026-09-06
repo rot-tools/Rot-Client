@@ -81,6 +81,7 @@ public final class HudLayoutLandingPolicy {
         grouped.put("Kuudra", new ArrayList<>());
         grouped.put("Events", new ArrayList<>());
         grouped.put("Foraging", new ArrayList<>());
+        grouped.put("GUI", new ArrayList<>());
         grouped.put("Other", new ArrayList<>());
         for (HudLayerCatalog.Layer layer : HudLayerCatalog.vanillaLayers()) {
             grouped.get("Vanilla / Hypixel").add(rowFromLayer(layer));
@@ -106,6 +107,20 @@ public final class HudLayoutLandingPolicy {
                 true,
                 "qol.wardrobe_keybinds",
                 "Player"));
+        addExtra(grouped, extra(
+                "qol.dungeon_carry",
+                "Dungeon Carry Display",
+                "Active dungeon-floor carry progress. Settings match Modules → Dungeon Carry Tracker.",
+                true,
+                "qol.dungeon_carry",
+                "Dungeons"));
+        addExtra(grouped, extra(
+                "qol.dungeon_watcher",
+                "Blood Timers",
+                "Watcher speak/move/spawn timers. Settings match Modules → Watcher Helper.",
+                true,
+                "qol.dungeon_watcher",
+                "Dungeons"));
         addExtra(grouped, extra(
                 "qol.slayer_carry",
                 "Slayer Carry Display",
@@ -155,6 +170,13 @@ public final class HudLayoutLandingPolicy {
                 false,
                 "qol.stall_market",
                 "Other"));
+        addExtra(grouped, extra(
+                "qol.custom_scoreboard",
+                "Custom Scoreboard",
+                "Rebuilt SkyBlock sidebar. Settings match Modules → GUI.",
+                true,
+                "qol.custom_scoreboard",
+                "GUI"));
         for (HudLayerCatalog.Layer layer : HudLayerCatalog.rotOverlays()) {
             addExtra(grouped, rowFromLayer(layer));
         }
@@ -254,6 +276,8 @@ public final class HudLayoutLandingPolicy {
             case "fishing" -> new Disable("qol.fishing_helper.hook_timer_hud", false);
             case "mining" -> new Disable("qol.mining_helpers.ability_hud", false);
             case "dungeon" -> new Disable("qol.dungeon_hud", true);
+            case "dungeon_carry" -> new Disable("qol.dungeon_carry", true);
+            case "dungeon_watcher" -> new Disable("qol.dungeon_watcher", true);
             case "slayer" -> new Disable("qol.slayer_display", true);
             case "slayer_progress" -> new Disable("qol.slayer_progress", true);
             case "slayer_rng" -> new Disable("qol.slayer_drops.rng_hud", false);
@@ -269,6 +293,7 @@ public final class HudLayoutLandingPolicy {
             case "iota_arrows" -> new Disable("qol.iota.arrow_tracker", false);
             case "kuudra_alerts" -> new Disable("qol.iota", true);
             case "stall_bin" -> new Disable("qol.stall_market.bin_overlay", false);
+            case "custom_scoreboard" -> new Disable("qol.custom_scoreboard", true);
             case "mining_tracker" -> new Disable(MiningTrackerCatalogPolicy.TRACKER, true);
             case "powder_chest" -> new Disable(MiningTrackerCatalogPolicy.POWDER_HUD, false);
             default -> null;
@@ -336,6 +361,9 @@ public final class HudLayoutLandingPolicy {
         }
         if (id.contains("stall")) {
             return "Other";
+        }
+        if (id.contains("custom_scoreboard") || id.contains("scoreboard") && !id.contains("hide_scoreboard")) {
+            return "GUI";
         }
         return "Other";
     }

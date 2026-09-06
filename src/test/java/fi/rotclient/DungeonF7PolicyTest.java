@@ -3,6 +3,7 @@ package fi.rotclient;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -14,6 +15,8 @@ final class DungeonF7PolicyTest {
         assertTrue(DungeonF7Policy.crystalPickup("Henri picked up an Energy Crystal!"));
         assertTrue(DungeonF7Policy.crystalSpawnChat("[BOSS] Maxor: YOU TRICKED ME!"));
         assertTrue(DungeonF7Policy.crystalSpawnChat("[BOSS] Maxor: THAT BEAM! IT HURTS! IT HURTS!!"));
+        assertEquals(34, DungeonF7Policy.CRYSTAL_RESPAWN_TICKS);
+        assertEquals(1_700L, DungeonF7Policy.CRYSTAL_RESPAWN_MILLIS);
         assertTrue(DungeonF7Policy.holdingEnergyCrystal("Energy Crystal"));
         assertTrue(DungeonF7Policy.melodyTerminalTitle("Click the button on time!"));
         assertEquals(DungeonF7Policy.WitherBoss.MAXOR, DungeonF7Policy.witherBoss("Maxor 300M❤"));
@@ -30,6 +33,13 @@ final class DungeonF7PolicyTest {
         assertTrue(DungeonF7Policy.isSimonButton(110, 121, 93));
         assertFalse(DungeonF7Policy.isSimonButton(110, 121, 91));
         assertEquals(16, DungeonF7Policy.simonButtons().size());
+        assertEquals(16, DungeonF7Policy.simonLanterns().size());
+        assertTrue(DungeonF7Policy.isSimonLantern(111, 120, 92));
+        assertFalse(DungeonF7Policy.isSimonLantern(110, 120, 92));
+        assertEquals(new EmberDungeonPolicy.IntVec(110, 121, 93),
+                DungeonF7Policy.simonButtonForLantern(111, 121, 93));
+        assertTrue(DungeonF7Policy.isSimonSequenceLit("minecraft:sea_lantern"));
+        assertFalse(DungeonF7Policy.isSimonSequenceLit("minecraft:obsidian"));
         assertEquals(0xFF22C55E, DungeonF7Policy.simonColor(0, 0xFF22C55E, 0xFFFACC15, 0xFF38BDF8));
         assertEquals(0xFFFACC15, DungeonF7Policy.simonColor(1, 0xFF22C55E, 0xFFFACC15, 0xFF38BDF8));
     }
@@ -58,15 +68,24 @@ final class DungeonF7PolicyTest {
         assertEquals(List.of(
                 new DungeonPolicy.TerminalClick(34, 0),
                 new DungeonPolicy.TerminalClick(43, 0)), extra);
+        assertEquals(List.of(new DungeonPolicy.TerminalClick(34, 0)),
+                DungeonPolicy.melodySkipClicks(ready, true, true, "Edges", 3));
         assertTrue(DungeonPolicy.melodySkipClicks(ready, false, true, "Edges").isEmpty());
         assertTrue(DungeonPolicy.melodySkipClicks(
                 new DungeonPolicy.MelodyState(0, 0, 0), true, false, "Edges").isEmpty());
+        assertEquals(List.of(
+                new DungeonPolicy.TerminalClick(25, 0),
+                new DungeonPolicy.TerminalClick(34, 0),
+                new DungeonPolicy.TerminalClick(43, 0)),
+                DungeonPolicy.melodySkipClicks(
+                        new DungeonPolicy.MelodyState(0, 4, 4), true, false, "Edges"));
     }
 
     @Test
     void stormDeathRelicLookAndDragonPads() {
         assertTrue(DungeonF7Policy.stormDeath(
                 "[BOSS] Storm: I should have known that I stood no chance."));
+        assertEquals("Henri", DungeonF7Policy.melodyPlayer("Party > Henri: Melody 2/3").orElseThrow());
         assertEquals("Henri", DungeonF7Policy.melodyPlayer("Party > Henri: Melody 2/4").orElseThrow());
         assertTrue(DungeonF7Policy.holdingRelic("Corrupted Red Relic", "Red"));
         assertEquals(5, DungeonF7Policy.dragonPads().size());
@@ -86,7 +105,9 @@ final class DungeonF7PolicyTest {
         assertTrue(DungeonF7Policy.p3GateDestroyed("The gate has been destroyed!"));
         assertEquals("P3  T 3/7  D 1/7  L 0/7", DungeonF7Policy.p3HudLine(3, 1, 0));
         assertEquals(16, DungeonF7Policy.melodySlotForDigit(1));
+        assertEquals(34, DungeonF7Policy.melodySlotForDigit(3));
         assertEquals(43, DungeonF7Policy.melodySlotForDigit(4));
+        assertEquals(-1, DungeonF7Policy.melodySlotForDigit(4, 3));
         assertTrue(DungeonF7Policy.protectTerminal(1_000L, 1_200L, 400));
         assertFalse(DungeonF7Policy.protectTerminal(1_000L, 1_500L, 400));
         assertEquals("Any Key", DungeonF7Policy.normalizeCloseChestMode("any key"));
@@ -94,6 +115,28 @@ final class DungeonF7PolicyTest {
                 "[BOSS] Wither King: I will now summon my dragons!"));
         assertEquals("Goldor frenzy 60t", DungeonF7Policy.goldorFrenzyLine(60));
         assertEquals("Purple pad 20t", DungeonF7Policy.purplePadLine(20));
+        assertEquals("Dragon spawn 5.0s", DungeonF7Policy.dragonSpawnLine(5_000L, 0L));
+        assertEquals("167t", DungeonF7Policy.formatCountdown("Maxor", 8_350L, true, true, false));
+        assertEquals("Maxor 8.0s", DungeonF7Policy.formatCountdown("Maxor", 8_000L, false, true, true));
+        assertEquals(840, DungeonF7Policy.clampRelicSpawnTicks(840));
+        assertEquals(42_000L, DungeonF7Policy.relicSpawnMillis(840));
+        assertEquals("Healer", DungeonF7Policy.normalizeSoloClass("healer"));
+        assertEquals(List.of("Ice", "Soul", "Power", "Flame", "Apex"),
+                DungeonF7Policy.dragonFocusOrder(true));
+        assertEquals("Dragons Power > Flame > Apex > Ice > Soul  Solo Tank",
+                DungeonF7Policy.dragonPriorityLine(false, Set.of(), "Tank"));
+        assertEquals("Dragons Power > Flame > Apex  Solo Healer",
+                DungeonF7Policy.dragonPriorityLine(false, Set.of("ice", "soul"), "Healer"));
+        assertEquals("Ice", DungeonF7Policy.dragonPadName("Ice Dragon 12M").orElseThrow());
+        assertTrue(DungeonF7Policy.dragonKillChat("The Ice Dragon was slain!"));
+        assertFalse(DungeonF7Policy.dragonKillChat("[BOSS] Wither King: I will now summon my dragons!"));
+        assertTrue(DungeonF7Policy.slotInSolution(
+                List.of(new DungeonPolicy.TerminalClick(10, 0)), 10));
+        assertTrue(DungeonF7Policy.shouldBlockWrongTerminalSlot(true, false, true, false));
+        assertFalse(DungeonF7Policy.shouldBlockWrongTerminalSlot(true, true, true, false));
+        assertTrue(DungeonF7Policy.shouldHideClickedSlot(true, true, false, false));
+        assertFalse(DungeonF7Policy.shouldHideClickedSlot(true, true, true, false));
+        assertFalse(DungeonF7Policy.shouldHideClickedSlot(true, true, false, true));
     }
 
     @Test

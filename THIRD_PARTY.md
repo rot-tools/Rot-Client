@@ -9,6 +9,13 @@ repository or the playable JAR. Quality-of-life modules are Rot-owned
 implementations (`fi.rotclient`). Feature overlap with community clients is
 behavior-level only.
 
+## Magical Map layout (CC0)
+
+Dungeon HUD map scan, 128×128 paper layout, floor start corners, and default
+room/door colors are adapted from NoammAddons Magical Map code, which is
+CC0 1.0 Universal. The Rot implementation stays in `DungeonMapPolicy` and
+the dungeon HUD overlay. Public catalog copy does not use that project name.
+
 ## Source Sans 3 (Adobe)
 
 | Item | Value |
@@ -23,6 +30,14 @@ behavior-level only.
 
 The font may be bundled with Rot Client. It must not be sold by itself. Do not
 use the reserved name 'Source' for a modified font without Adobe's permission.
+
+## Catacombs puzzle boards (BSD-3-Clause)
+
+Ice Fill floors, Boulder clicks, and Water Board lever timings under
+`src/main/resources/rotclient/dungeons/` (`iceFillFloors.json`,
+`boulderSolutions.json`, `waterSolutions.json`) are adapted from the Odin
+client puzzle solvers, licensed BSD-3-Clause. Public catalog copy does not
+use that project name.
 
 ## Hypixel public item and Bazaar facts
 

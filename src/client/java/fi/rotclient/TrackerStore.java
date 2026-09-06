@@ -212,6 +212,9 @@ final class TrackerStore {
         if (qolJson == null || !qolJson.has("skillLevelsEnabled")) {
             qol.skillLevelsEnabled = true;
         }
+        if (qolJson == null || !qolJson.has("skillLevelsBackground")) {
+            qol.skillLevelsBackground = true;
+        }
         if (qolJson == null || !qolJson.has("petHudEnabled")) {
             qol.petHudEnabled = true;
         }

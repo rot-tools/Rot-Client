@@ -35,6 +35,10 @@ public final class IotaRuntime {
     private IotaRuntime() {
     }
 
+    static IotaPolicy.ArrowSnapshot arrows() {
+        return arrows;
+    }
+
     static void clear() {
         leftLatched = false;
         rightLatched = false;

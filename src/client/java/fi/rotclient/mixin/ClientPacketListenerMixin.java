@@ -128,6 +128,8 @@ abstract class ClientPacketListenerMixin {
     @Inject(method = "handleContainerContent", at = @At("TAIL"))
     private void rotclient$inventoryContentPacket(ClientboundContainerSetContentPacket packet, CallbackInfo ci) {
         if (!onClientThread()) return;
+        fi.rotclient.ClientBoundaryGuard.run("STORAGE_CONTENT_PACKET", () ->
+                fi.rotclient.StorageOverlayRuntime.onContainerContent(packet.containerId(), packet.items().size()));
         fi.rotclient.RotClientClient.onInventoryPacket("content-packet");
         ExperimentSolverRuntime.onContainerRefresh();
         AutoExperimentsRuntime.onSlotUpdate();
@@ -265,6 +267,7 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread() || packet == null) {
             return;
         }
+        fi.rotclient.DungeonRuntime.onEntityMetadata(packet.id());
         if (!QolVisualRuntime.animationFixEnabled()) {
             return;
         }

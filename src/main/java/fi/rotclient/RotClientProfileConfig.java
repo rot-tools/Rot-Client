@@ -9,8 +9,8 @@ import java.util.UUID;
 /**
  * Root persisted configuration for user-created Rot Client profiles.
  *
- * This class only owns profile metadata and which profile is active.
- * Actual profile-specific settings will be added later.
+ * This class owns profile metadata, the active profile id, and each
+ * profile's {@link RotClientProfileSettings} snapshot.
  *
  * An empty profile list is valid. Rot Client does not create predefined
  * profiles for the user.

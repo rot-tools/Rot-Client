@@ -2,6 +2,7 @@ package fi.rotclient;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -57,6 +58,10 @@ public final class StorageOverlayPolicy {
     public static final int BACKPACK_PAGES = 18;
     /** Selector index when the page is known but Storage overview was never opened. */
     public static final int COMMAND_SELECTOR_SLOT = -1;
+    public static final String CACHE_FILE = "rotclient-storage-cache.json";
+    public static final String OVERVIEW_COMMAND = "storage";
+    public static final int PREFETCH_SETTLE_TICKS = 8;
+    public static final int PREFETCH_TIMEOUT_TICKS = 40;
     public static final int SEARCH_GLOW_PURPLE = 0xFFB14CFF;
     public static final int SEARCH_GLOW_RED = 0xFFFF2D55;
     public static final int SEARCH_GLOW_PERIOD_MS = 1100;
@@ -189,6 +194,30 @@ public final class StorageOverlayPolicy {
     public static int clampScrollSpeed(int speed) { return Math.max(1, Math.min(40, speed)); }
     public static int clampSpacing(int value) { return Math.max(0, Math.min(40, value)); }
 
+    /** Columns are a maximum; every card must fit at the current Minecraft GUI scale. */
+    public static int fittedColumns(int screenWidth, int requested, int padding, int margin) {
+        int gap = clampSpacing(padding);
+        int inset = Math.max(INNER_PADDING, clampSpacing(margin));
+        int available = screenWidth - 8 - inset * 2 - INNER_PADDING - SCROLL_BAR_WIDTH;
+        int fitting = Math.max(1, (available + gap) / (pageWidth() + gap));
+        return Math.min(clampColumns(requested), fitting);
+    }
+
+    public static int layoutColumns(OverlayLayout layout, int padding) {
+        int gap = clampSpacing(padding);
+        return Math.max(1, (layout.innerWidth() + gap) / (pageWidth() + gap));
+    }
+
+    public static boolean slotFullyVisible(OverlayLayout layout, int x, int y) {
+        return layout != null && x >= layout.innerX() && y >= layout.innerY()
+                && x + 16 <= layout.innerX() + layout.innerWidth()
+                && y + 16 <= layout.innerY() + layout.innerHeight();
+    }
+
+    public static boolean allowPageScroll(boolean blockItemScroll, boolean overItem) {
+        return !blockItemScroll || !overItem;
+    }
+
     /** Keeps a local overlay scroll offset inside the received page content. */
     public static int clampScrollOffset(int requested, int contentHeight, int viewportHeight) {
         int maximum = Math.max(0, Math.max(0, contentHeight) - Math.max(0, viewportHeight));
@@ -235,7 +264,7 @@ public final class StorageOverlayPolicy {
             int padding,
             int configuredHeight,
             int margin) {
-        int cols = clampColumns(columns);
+        int cols = fittedColumns(screenWidth, columns, padding, margin);
         int gap = clampSpacing(padding);
         int inset = Math.max(INNER_PADDING, clampSpacing(margin));
         int innerWidth = cols * pageWidth() + Math.max(0, cols - 1) * gap;
@@ -259,7 +288,7 @@ public final class StorageOverlayPolicy {
         int closeSize = CLOSE_BUTTON_SIZE;
         int closeX = panelX + panelWidth - 6 - closeSize;
         int closeY = panelY + Math.max(2, (HEADER_HEIGHT - closeSize) / 2);
-        int searchWidth = SEARCH_WIDTH;
+        int searchWidth = Math.min(SEARCH_WIDTH, Math.max(40, closeX - 6 - (innerX + 52)));
         int searchHeight = SEARCH_HEIGHT;
         int searchX = closeX - 6 - searchWidth;
         int searchY = panelY + Math.max(2, (HEADER_HEIGHT - searchHeight) / 2);
@@ -504,24 +533,258 @@ public final class StorageOverlayPolicy {
      * A freshly opened page often arrives with empty slots for a few ticks.
      * Keep the last non-empty preview instead of wiping it.
      */
-    /**
-     * A freshly opened page often arrives with empty slots for a few ticks.
-     * Keep the last non-empty preview instead of wiping it.
-     */
     public static boolean shouldKeepExistingCache(boolean existingHasItems, boolean incomingAllEmpty) {
-        return existingHasItems && incomingAllEmpty;
+        return shouldKeepExistingCache(existingHasItems, incomingAllEmpty, false);
+    }
+
+    public static boolean shouldKeepExistingCache(
+            boolean existingHasItems, boolean incomingAllEmpty, boolean fullSnapshotReceived) {
+        return existingHasItems && incomingAllEmpty && !fullSnapshotReceived;
     }
 
     /**
      * Bare player heads without SkyBlock NBT or a skull texture are the
      * Steve placeholder. Do not let those overwrite a richer cached stack.
+     * Once this visit has seen real live items, empty slots are real empties.
      */
     public static boolean incomingIsPlaceholder(
             boolean existingHasIdentity, boolean incomingHasIdentity, boolean incomingEmpty) {
+        return incomingIsPlaceholder(existingHasIdentity, incomingHasIdentity, incomingEmpty, false);
+    }
+
+    public static boolean incomingIsPlaceholder(
+            boolean existingHasIdentity,
+            boolean incomingHasIdentity,
+            boolean incomingEmpty,
+            boolean liveTrustedThisVisit) {
+        if (liveTrustedThisVisit) {
+            return false;
+        }
         if (incomingEmpty) {
             return existingHasIdentity;
         }
         return existingHasIdentity && !incomingHasIdentity;
+    }
+
+    /**
+     * Draw live menu stacks only after this visit has received real items.
+     * Until then keep the last cached preview so a freshly selected page does
+     * not flash empty Steve heads over a known backpack.
+     */
+    public static boolean useLiveDisplay(boolean pageActive, boolean liveTrustedThisVisit) {
+        return pageActive && liveTrustedThisVisit;
+    }
+
+    /**
+     * Codec JSON often round-trips a player head without PROFILE. Fall back to
+     * the explicit texture / NBT fields when the decoded stack has no identity.
+     */
+    public static boolean codecStackNeedsFallback(
+            boolean decodedEmpty,
+            boolean decodedHasIdentity,
+            boolean jsonHasTexture,
+            boolean jsonHasNbt,
+            boolean jsonHasMarketId) {
+        boolean jsonHasExtras = jsonHasTexture || jsonHasNbt || jsonHasMarketId;
+        if (decodedEmpty) {
+            return jsonHasExtras;
+        }
+        if (decodedHasIdentity) {
+            return false;
+        }
+        return jsonHasExtras;
+    }
+
+    /**
+     * Reload from disk when memory is empty, or once more after the world
+     * exists so ItemStack codec JSON can decode. Do not loop if there is no file.
+     */
+    public static boolean shouldReloadCache(
+            boolean alreadyLoaded,
+            boolean memoryEmpty,
+            boolean fileExists,
+            boolean codecReady,
+            boolean levelReady) {
+        if (!fileExists) {
+            return !alreadyLoaded;
+        }
+        // Empty is a legitimate cached result, not a request to reread disk every frame.
+        if (!alreadyLoaded) {
+            return true;
+        }
+        return levelReady && !codecReady;
+    }
+
+    /**
+     * An empty in-memory overlay must not replace a file that already has pages.
+     */
+    public static boolean shouldSkipEmptyStorageSave(
+            boolean memoryHasItems, boolean diskHadItems, boolean explicitClear) {
+        return shouldSkipEmptyStorageSave(memoryHasItems, diskHadItems, explicitClear, false);
+    }
+
+    public static boolean shouldSkipEmptyStorageSave(
+            boolean memoryHasItems, boolean diskHadItems, boolean explicitClear, boolean allPagesConfirmedEmpty) {
+        if (explicitClear || allPagesConfirmedEmpty) {
+            return false;
+        }
+        return !memoryHasItems && diskHadItems;
+    }
+
+    /**
+     * After world unload, ItemStacks may no longer encode. Keep the last good file.
+     */
+    public static boolean shouldSkipUnreadyShutdownSave(boolean levelReady, boolean diskHadItems) {
+        return !levelReady && diskHadItems;
+    }
+
+    public static boolean pageNeedsRefresh(
+            boolean unlocked, boolean hasIdentityItem, boolean refreshAll) {
+        if (!unlocked) {
+            return false;
+        }
+        if (refreshAll) {
+            return true;
+        }
+        return !hasIdentityItem;
+    }
+
+    /**
+     * Older caches already remember item order. Treat a file as a finished
+     * first Storage walk only when every recorded selector already has a page.
+     */
+    public static boolean inferDirectoryScanCompleted(
+            boolean jsonHasFlag,
+            boolean jsonFlag,
+            Collection<Page> cached,
+            Collection<Page> selectors) {
+        if (jsonHasFlag) {
+            return jsonFlag;
+        }
+        return directoryScanComplete(false, selectors, cached);
+    }
+
+    public static boolean directoryScanComplete(
+            boolean alreadyComplete,
+            Collection<Page> unlocked,
+            Collection<Page> alreadyCached) {
+        if (alreadyComplete) {
+            return true;
+        }
+        if (unlocked == null || unlocked.isEmpty()) {
+            return false;
+        }
+        java.util.Set<Page> cached = alreadyCached == null
+                ? java.util.Set.of()
+                : Set.copyOf(alreadyCached);
+        for (Page page : unlocked) {
+            if (page != null && !cached.contains(page)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * First Storage open walks unlocked pages that have never been observed
+     * so the overlay can remember slot order. Later opens only reopen pages
+     * the player clicked. Dashboard Reload still walks every unlocked page.
+     */
+    public static List<Page> pagesToPrefetch(
+            Collection<Page> unlocked,
+            Collection<Page> alreadyCached,
+            Collection<Page> clickedSinceScan,
+            boolean directoryScanCompleted,
+            boolean userRequestedReload) {
+        if (unlocked == null || unlocked.isEmpty()) {
+            return List.of();
+        }
+        if (userRequestedReload) {
+            return prefetchOrder(unlocked);
+        }
+        if (!directoryScanCompleted) {
+            java.util.Set<Page> cached = alreadyCached == null
+                    ? java.util.Set.of()
+                    : Set.copyOf(alreadyCached);
+            List<Page> missing = new ArrayList<>();
+            for (Page page : prefetchOrder(unlocked)) {
+                if (!cached.contains(page)) {
+                    missing.add(page);
+                }
+            }
+            return List.copyOf(missing);
+        }
+        if (clickedSinceScan == null || clickedSinceScan.isEmpty()) {
+            return List.of();
+        }
+        java.util.Set<Page> allowed = Set.copyOf(unlocked);
+        List<Page> clicked = new ArrayList<>();
+        for (Page page : clickedSinceScan) {
+            if (page == null || !allowed.contains(page)) {
+                continue;
+            }
+            clicked.remove(page);
+            clicked.add(page);
+        }
+        java.util.Collections.reverse(clicked);
+        return List.copyOf(clicked);
+    }
+
+    /** Last click stays last so {@link #pagesToPrefetch} can load it first. */
+    public static List<Page> withClickedPage(Collection<Page> pending, Page page) {
+        if (page == null) {
+            return pending == null ? List.of() : List.copyOf(pending);
+        }
+        List<Page> next = new ArrayList<>();
+        if (pending != null) {
+            for (Page existing : pending) {
+                if (existing != null && !existing.equals(page)) {
+                    next.add(existing);
+                }
+            }
+        }
+        next.add(page);
+        return List.copyOf(next);
+    }
+
+    public static boolean shouldStartPrefetch(
+            boolean overviewVisible,
+            boolean idle,
+            boolean alreadyCompletedThisOpen,
+            boolean userRequested,
+            int unlockedPages,
+            int pagesNeedingRefresh) {
+        if (!overviewVisible || !idle || unlockedPages <= 0) {
+            return false;
+        }
+        if (userRequested) {
+            return true;
+        }
+        if (alreadyCompletedThisOpen) {
+            return false;
+        }
+        return pagesNeedingRefresh > 0;
+    }
+
+    public static boolean prefetchPageSettled(
+            boolean titleMatches, boolean hasIdentityItems, int ticksOnPage) {
+        int ticks = Math.max(0, ticksOnPage);
+        if (!titleMatches) {
+            return ticks >= PREFETCH_TIMEOUT_TICKS;
+        }
+        if (hasIdentityItems && ticks >= PREFETCH_SETTLE_TICKS) {
+            return true;
+        }
+        return ticks >= PREFETCH_TIMEOUT_TICKS;
+    }
+
+    public static List<Page> prefetchOrder(Collection<Page> pages) {
+        if (pages == null || pages.isEmpty()) {
+            return List.of();
+        }
+        return pages.stream()
+                .sorted(Comparator.comparing(Page::kind).thenComparingInt(Page::number))
+                .toList();
     }
 
     public record CachedStack(String itemId, int count, String name) {

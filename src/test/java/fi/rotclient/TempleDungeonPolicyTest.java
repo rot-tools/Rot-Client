@@ -58,4 +58,33 @@ final class TempleDungeonPolicyTest {
         assertEquals(12.0F, TempleDungeonPolicy.cameraZoom(false, true, true, 4, 12.0F), 0.01F);
         assertEquals(12.0F, TempleDungeonPolicy.cameraZoom(true, false, true, 4, 12.0F), 0.01F);
     }
+
+    @Test
+    void keyDropSkullsLockedChestAndClickedSecretPolicy() {
+        assertEquals(
+                TempleDungeonPolicy.KeySkull.WITHER,
+                TempleDungeonPolicy.keySkull("2865274b-3097-394e-8149-ec629c72d850"));
+        assertEquals(
+                TempleDungeonPolicy.KeySkull.BLOOD,
+                TempleDungeonPolicy.keySkull("73F6D1F9-DF41-3D1D-B98C-E1442D915885"));
+        assertEquals(TempleDungeonPolicy.KeySkull.NONE, TempleDungeonPolicy.keySkull("not-a-key"));
+        assertEquals("Wither Key Dropped",
+                TempleDungeonPolicy.keyDropTitle(TempleDungeonPolicy.KeySkull.WITHER));
+        assertTrue(TempleDungeonPolicy.keyDropClass(DungeonPolicy.DungeonClass.ARCHER, false));
+        assertTrue(TempleDungeonPolicy.keyDropClass(DungeonPolicy.DungeonClass.MAGE, false));
+        assertFalse(TempleDungeonPolicy.keyDropClass(DungeonPolicy.DungeonClass.HEALER, false));
+        assertTrue(TempleDungeonPolicy.keyDropClass(DungeonPolicy.DungeonClass.HEALER, true));
+        assertTrue(TempleDungeonPolicy.keyPickupClearsDrop("A Wither Key was picked up!"));
+        assertTrue(TempleDungeonPolicy.keyPickupClearsDrop("[MVP+] Henri has obtained Blood Key!"));
+        assertFalse(TempleDungeonPolicy.keyPickupClearsDrop("Henri opened a WITHER door!"));
+        assertTrue(TempleDungeonPolicy.lockedChestChat("This chest is locked!"));
+        assertTrue(TempleDungeonPolicy.lockedChestChat("§cThat chest is locked!"));
+        assertFalse(TempleDungeonPolicy.lockedChestChat("You opened a chest."));
+        assertEquals(7, TempleDungeonPolicy.clampSecretStaySeconds(7));
+        assertEquals(1, TempleDungeonPolicy.clampSecretStaySeconds(0));
+        assertEquals(120, TempleDungeonPolicy.clampSecretStaySeconds(999));
+        assertTrue(TempleDungeonPolicy.shouldBoxSecretClick(true, true, false, false, true));
+        assertFalse(TempleDungeonPolicy.shouldBoxSecretClick(true, true, true, false, true));
+        assertTrue(TempleDungeonPolicy.shouldBoxSecretClick(true, true, true, true, true));
+    }
 }

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  * screenshot slice (master stars, clouds, nether fog, totem, armor, icons,
  * quick join).
  */
-public final class SkyblockFlavorPolicy {
+public final class SkyBlockUtilityPolicy {
     public static final int DEFAULT_PREVIOUS_SERVER_SECONDS = 360;
     public static final int MIN_PREVIOUS_SERVER_SECONDS = 30;
     public static final int MAX_PREVIOUS_SERVER_SECONDS = 3_600;
@@ -56,7 +56,7 @@ public final class SkyblockFlavorPolicy {
     };
     private static final Map<Character, String> MOB_ICON_LABELS = mobIconLabels();
 
-    private SkyblockFlavorPolicy() {
+    private SkyBlockUtilityPolicy() {
     }
 
     public static boolean shouldPingDetector(int previousHits, int nextHits) {

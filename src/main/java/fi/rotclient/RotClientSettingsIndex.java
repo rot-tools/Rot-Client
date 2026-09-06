@@ -251,17 +251,7 @@ final class RotClientSettingsIndex {
                 List.of("move hud", "drag hud", "layout", "scale", "position",
                         "editor", "hud", "reset")));
 
-        entries.add(new Entry(
-                "qol.fullbright",
-                "Fullbright",
-                "Toggle client fullbright / gamma assist.",
-                "QoL",
-                Destination.QOL_SETTINGS,
-                List.of("brightness", "gamma", "night vision")));
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
-            if ("qol.fullbright".equals(module.id())) {
-                continue; // already added above for stable label
-            }
             List<String> moduleAliases = new ArrayList<>(module.searchAliases());
             moduleAliases.add(module.name());
             entries.add(new Entry(

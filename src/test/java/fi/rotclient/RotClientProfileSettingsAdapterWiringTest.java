@@ -146,4 +146,26 @@ final class RotClientProfileSettingsAdapterWiringTest {
         assertTrue(source.contains(
                 "QolUtilityConfig.class"));
     }
+
+    @Test
+    void captureAndApplyKeepLightingPreferences() {
+        TrackerConfig config = new TrackerConfig();
+        config.fullbrightEnabled = true;
+        config.alwaysNightEnabled = true;
+        config.lightingForceBoth = true;
+
+        RotClientProfileSettings settings =
+                RotClientProfileSettingsAdapter.capture(config);
+
+        assertTrue(settings.fullbrightEnabled);
+        assertTrue(settings.alwaysNightEnabled);
+        assertTrue(settings.lightingForceBoth);
+
+        TrackerConfig target = new TrackerConfig();
+        RotClientProfileSettingsAdapter.apply(settings, target);
+
+        assertTrue(target.fullbrightEnabled);
+        assertTrue(target.alwaysNightEnabled);
+        assertTrue(target.lightingForceBoth);
+    }
 }

@@ -68,6 +68,14 @@ final class TermSimPolicyTest {
                 DungeonPolicy.Terminal.NUMBERS, first.layout().title(),
                 TermSimPolicy.terminalItems(first.layout()));
         assertEquals(remaining.size() - 1, after.size());
+        int red = 0;
+        for (TermSimPolicy.Slot slot : layout.slots()) {
+            if (slot.itemId().contains("red_stained_glass")) {
+                red++;
+            }
+        }
+        assertEquals(TermSimPolicy.NUMBERS_COUNT, red);
+        assertEquals(14, remaining.size());
     }
 
     @Test
@@ -125,6 +133,28 @@ final class TermSimPolicyTest {
         TermSimPolicy.ClickResult result = TermSimPolicy.click(aligned, button, 0);
         assertTrue(result.accepted());
         assertEquals(clock.currentRow() + 1, result.layout().melody().currentRow());
+    }
+
+    @Test
+    void melodyCompletesAfterFourRows() {
+        TermSimPolicy.Layout current = TermSimPolicy.generate(TermSimPolicy.Kind.MELODY, new Random(9));
+        int completed = 0;
+        for (int step = 0; step < 12; step++) {
+            for (int i = 0; i < 80 && current.melody().limeColumn() != current.melody().magentaColumn(); i++) {
+                current = TermSimPolicy.tickMelody(current);
+            }
+            int buttonSlot = current.melody().currentRow() * 9 + 7;
+            TermSimPolicy.ClickResult click = TermSimPolicy.click(current, buttonSlot, 0);
+            assertTrue(click.accepted());
+            current = click.layout();
+            completed++;
+            if (click.complete()) {
+                assertEquals(4, completed);
+                assertEquals(TermSimPolicy.MELODY_PLAY_ROWS + 1, current.melody().currentRow());
+                return;
+            }
+        }
+        throw new AssertionError("4-row Melody should complete after four matching clicks");
     }
 
     @Test

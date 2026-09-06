@@ -1,7 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.HateDoorsRuntime;
-import fi.rotclient.SkyblockFlavorRuntime;
+import fi.rotclient.SkyBlockUtilityRuntime;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -23,7 +23,7 @@ abstract class LevelHateDoorsMixin {
         }
         BlockState rewritten = HateDoorsRuntime.rewrite(pos, cir.getReturnValue());
         if (rewritten == null) {
-            rewritten = SkyblockFlavorRuntime.rewriteCarpet(cir.getReturnValue());
+            rewritten = SkyBlockUtilityRuntime.rewriteCarpet(cir.getReturnValue());
         }
         if (rewritten != null) {
             cir.setReturnValue(rewritten);

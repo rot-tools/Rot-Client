@@ -174,7 +174,7 @@ class SlayerQolCatalogTest {
                     case NUMBER -> assertNotNull(config.readNumber(setting.id()), setting.id());
                     case TEXT -> assertNotNull(config.readText(setting.id()), setting.id());
                     case COLOR -> assertNotNull(config.readColor(setting.id()), setting.id());
-                    case ACTION, SECTION, ENUM, KEYBIND -> {
+                    case ACTION, SECTION, ENUM, KEYBIND, SQUARE -> {
                         // Actions are covered by the catalog-wide dashboard-action test.
                     }
                 }

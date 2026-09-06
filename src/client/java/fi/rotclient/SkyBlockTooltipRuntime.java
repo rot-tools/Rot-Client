@@ -30,7 +30,7 @@ public final class SkyBlockTooltipRuntime {
         List<String> lore = InventoryChromeRuntime.loreLines(stack);
         if (extras.infoTooltipsEnabled) {
             if (extras.infoRevertMasterStars && !lines.isEmpty()) {
-                SkyblockFlavorPolicy.revertMasterStars(
+                SkyBlockUtilityPolicy.revertMasterStars(
                                 true,
                                 lines.get(0).getString(),
                                 SkyBlockItemData.dungeonStars(stack))
@@ -43,15 +43,16 @@ public final class SkyBlockTooltipRuntime {
                     extras.infoHexColor,
                     extras.infoMuseum,
                     extras.infoItemId,
-                    SkyBlockItemData.infoSnapshot(stack))) {
+                    SkyBlockItemData.infoSnapshot(stack),
+                    extras.athen().qualityStyle)) {
                 lines.add(Component.literal(line));
             }
-            String stars = SkyblockFlavorPolicy.starTooltip(
+            String stars = SkyBlockUtilityPolicy.starTooltip(
                     extras.infoStarCount, SkyBlockItemData.dungeonStars(stack));
             if (!stars.isBlank()) {
                 lines.add(Component.literal(stars));
             }
-            String candy = SkyblockFlavorPolicy.petCandyTooltip(
+            String candy = SkyBlockUtilityPolicy.petCandyTooltip(
                     extras.infoPetCandy, SkyBlockItemData.petCandyUsed(stack));
             if (!candy.isBlank()) {
                 lines.add(Component.literal(candy));
@@ -87,7 +88,35 @@ public final class SkyBlockTooltipRuntime {
         }
         ItemToolsRuntime.appendMuseumTooltip(stack, lines);
         ItemToolsRuntime.appendCraftTooltip(stack, lines);
+        appendPartyFinderStats(extras, stack, lore, lines);
         appendCalendarDates(extras, stack, lore, lines);
+    }
+
+    private static void appendPartyFinderStats(
+            QolSkyblockExtras extras,
+            ItemStack stack,
+            List<String> lore,
+            List<Component> lines) {
+        DungeonAthenSettings athen = extras.athen();
+        if (!extras.dungeonMenusEnabled || !athen.pfShowStats) {
+            return;
+        }
+        if (!DungeonAssistPolicy.isPartyFinderMenu(screenTitle())) {
+            return;
+        }
+        if (DungeonPartyFinderPolicy.loreHasStats(lore)) {
+            return;
+        }
+        String player = DungeonPartyFinderPolicy.partyLeader(
+                stack.getHoverName().getString(), lore).orElse("");
+        if (player.isBlank()) {
+            return;
+        }
+        String floor = DungeonCarryPolicy.normalizeFloor(DungeonRuntime.sidebar().floor());
+        DungeonPartyJoinRuntime.prefetch(player, floor);
+        var stats = DungeonPartyJoinRuntime.cached(player, floor);
+        lines.add(Component.literal(DungeonPartyFinderPolicy.statsLine(
+                player, stats.orElse(null))));
     }
 
     private static void appendCalendarDates(
@@ -101,9 +130,9 @@ public final class SkyBlockTooltipRuntime {
                 stack.getHoverName().getString(),
                 lore,
                 System.currentTimeMillis());
-        String minister = SkyblockFlavorPolicy.ministerTooltip(
+        String minister = SkyBlockUtilityPolicy.ministerTooltip(
                 extras.calendarDateEnabled && extras.calendarMinister,
-                SkyblockFlavorPolicy.parseMinister(lore).orElse(SkyblockFlavorRuntime.ministerName()));
+                SkyBlockUtilityPolicy.parseMinister(lore).orElse(SkyBlockUtilityRuntime.ministerName()));
         if (entries.isEmpty() && minister.isBlank()) {
             return;
         }

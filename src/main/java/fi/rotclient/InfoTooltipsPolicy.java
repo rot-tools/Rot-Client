@@ -35,14 +35,25 @@ public final class InfoTooltipsPolicy {
             boolean museum,
             boolean itemId,
             Snapshot snapshot) {
+        return lines(enabled, dungeonQuality, createdDate, hexColor, museum, itemId, snapshot, "");
+    }
+
+    public static List<String> lines(
+            boolean enabled,
+            boolean dungeonQuality,
+            boolean createdDate,
+            boolean hexColor,
+            boolean museum,
+            boolean itemId,
+            Snapshot snapshot,
+            String qualityStyle) {
         List<String> out = new ArrayList<>();
         if (!enabled || snapshot == null) {
             return out;
         }
         if (dungeonQuality && snapshot.qualityBoost() > 0) {
-            String color = snapshot.qualityBoost() >= 50 ? "§c§l" : "§6";
-            out.add("§bQuality: " + color + snapshot.qualityBoost() + "/50§r§b, Tier "
-                    + snapshot.itemTier());
+            out.add(DungeonAthenPortPolicy.formatQuality(
+                    qualityStyle, snapshot.qualityBoost(), 50, snapshot.itemTier()));
         }
         if (createdDate && snapshot.createdEpochMs() > 0L) {
             out.add("§bCreated: §6" + formatDate(snapshot.createdEpochMs()));

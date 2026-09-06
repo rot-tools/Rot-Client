@@ -47,4 +47,54 @@ class SlayerRngMeterPolicyTest {
         assertEquals(12_345L, selected.storedXp());
         assertEquals("Smite VI", SlayerRngMeterPolicy.displayName("Enchanted Book (Smite VI)"));
     }
+
+    @Test
+    void readsVoidgloomSelectionFromTypeMenuAndPaginatedMeter() {
+        assertTrue(SlayerRngMeterPolicy.isRngMeterInventory("Voidgloom Seraph RNG Meter (1/2)"));
+        assertEquals(
+                SlayerPolicy.SlayerType.VOIDGLOOM,
+                SlayerRngMeterPolicy.familyFromTitle("Voidgloom Seraph RNG Meter (1/2)").orElseThrow());
+        assertEquals(
+                SlayerPolicy.SlayerType.VOIDGLOOM,
+                SlayerRngMeterPolicy.chatFamily(
+                        "You set your Voidgloom Seraph RNG Meter to drop Judgement Core!").orElseThrow());
+        assertTrue(SlayerRngMeterPolicy.isSlayerTypeMenu("Voidgloom Seraph"));
+        assertTrue(SlayerRngMeterPolicy.isSlayerTypeMenu("Enderman"));
+
+        SlayerRngMeterPolicy.Selection fromTypeMenu = SlayerRngMeterPolicy.fromSlayerMenu(
+                "Voidgloom Seraph",
+                List.of(
+                        new SlayerRngMeterPolicy.SlotView(31, "Start Tier IV", List.of("Click to start")),
+                        new SlayerRngMeterPolicy.SlotView(
+                                22,
+                                "RNG Meter",
+                                List.of(
+                                        "Voidgloom Seraph",
+                                        "Selected Drop",
+                                        "",
+                                        "Judgement Core",
+                                        "Progress: 12,345/885,562")))).orElseThrow();
+        assertEquals("Judgement Core", fromTypeMenu.itemName());
+        assertEquals(12_345L, fromTypeMenu.storedXp());
+        assertEquals(SlayerPolicy.SlayerType.VOIDGLOOM, fromTypeMenu.family());
+
+        SlayerRngMeterPolicy.Selection fromMeter = SlayerRngMeterPolicy.fromRngMeterInventory(
+                "Voidgloom Seraph RNG Meter (1/2)",
+                List.of(new SlayerRngMeterPolicy.SlotView(
+                        11,
+                        "Enchanted Book",
+                        List.of("Mana Steal I", "Progress: 1,000/11,183", "§a§lSELECTED")))).orElseThrow();
+        assertEquals("Mana Steal I", fromMeter.itemName());
+        assertEquals(SlayerPolicy.SlayerType.VOIDGLOOM, fromMeter.family());
+    }
+
+    @Test
+    void doesNotTreatAnUnselectedVoidgloomMeterItemAsEmptyWhenSlotThirtyFiveHasNoDrop() {
+        assertTrue(SlayerRngMeterPolicy.fromSlayerMenu(
+                "Voidgloom Seraph",
+                List.of(new SlayerRngMeterPolicy.SlotView(
+                        35,
+                        "Back",
+                        List.of("Click to go back")))).isEmpty());
+    }
 }

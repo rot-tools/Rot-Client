@@ -43,14 +43,6 @@ final class QolUtilityDashboard {
         HUD
     }
     private DrawerKind drawerKind = DrawerKind.MODULE;
-    private String openHudPieceToggleId = "";
-    private String openHudPieceEditorId = "";
-    private String openHudMenuModuleId = "";
-    private int hudMenuCardX;
-    private int hudMenuCardY;
-    private final RotClientScrollState hudMenuScroll = new RotClientScrollState();
-    private String hudMenuQuery = "";
-    private boolean hudMenuSearchFocused;
     private int listContentHeight;
     private int drawerContentHeight;
     private String headerHoverTip = "";
@@ -77,7 +69,6 @@ final class QolUtilityDashboard {
         if (changed) {
             activePage = page;
             closeDrawer();
-            closeHudMenu();
             listScroll.reset();
         }
         if (changed || closedLanding) {
@@ -124,8 +115,6 @@ final class QolUtilityDashboard {
     void closeDrawer() {
         openModuleId = "";
         drawerKind = DrawerKind.MODULE;
-        openHudPieceToggleId = "";
-        openHudPieceEditorId = "";
         pendingModuleResetConfirm = false;
         pendingHudStyleResetConfirm = false;
         openEnumSettingId = "";
@@ -135,15 +124,7 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         draggingNumberSettingId = "";
         drawerScroll.reset();
-        closeHudMenu();
         persistWorkspaceView();
-    }
-
-    private void closeHudMenu() {
-        openHudMenuModuleId = "";
-        hudMenuQuery = "";
-        hudMenuSearchFocused = false;
-        hudMenuScroll.reset();
     }
 
     void openModule(String moduleId) {
@@ -167,8 +148,6 @@ final class QolUtilityDashboard {
         }
         openModuleId = module.id();
         drawerKind = DrawerKind.MODULE;
-        openHudPieceToggleId = "";
-        openHudPieceEditorId = "";
         pendingModuleResetConfirm = false;
         pendingHudStyleResetConfirm = false;
         openEnumSettingId = "";
@@ -178,21 +157,15 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         collapsedDrawerSections.clear();
         drawerScroll.reset();
-        closeHudMenu();
         persistWorkspaceView();
     }
 
     void openHudSettings(String moduleId) {
-        openHudSettings(moduleId, "", "");
-    }
-
-    void openHudSettings(String moduleId, String toggleId, String editorId) {
         QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
         if (module == null) {
             return;
         }
-        HudElementCatalog.HudPiece piece = HudDrawerPolicy.resolvePiece(module, toggleId, editorId);
-        if (piece == null) {
+        if (HudElementCatalog.hudPieces(module).isEmpty()) {
             openModule(module.id());
             return;
         }
@@ -205,8 +178,6 @@ final class QolUtilityDashboard {
         }
         openModuleId = module.id();
         drawerKind = DrawerKind.HUD;
-        openHudPieceToggleId = piece.toggleId();
-        openHudPieceEditorId = piece.editorId();
         pendingModuleResetConfirm = false;
         pendingHudStyleResetConfirm = false;
         openEnumSettingId = "";
@@ -216,7 +187,6 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         collapsedDrawerSections.clear();
         drawerScroll.reset();
-        closeHudMenu();
         persistWorkspaceView();
     }
 
@@ -225,7 +195,6 @@ final class QolUtilityDashboard {
         hudLayoutLanding = false;
         activePage = QolUtilityCatalog.Group.HUD_DISPLAY;
         closeDrawer();
-        closeHudMenu();
         listScroll.reset();
         persistWorkspaceView();
     }
@@ -235,7 +204,6 @@ final class QolUtilityDashboard {
         appearanceLanding = false;
         activePage = QolUtilityCatalog.Group.HUD_DISPLAY;
         closeDrawer();
-        closeHudMenu();
         listScroll.reset();
         persistWorkspaceView();
     }
@@ -287,58 +255,39 @@ final class QolUtilityDashboard {
         return isDrawerOpen() && drawerKind == DrawerKind.HUD;
     }
 
-    private HudElementCatalog.HudPiece openHudPiece(QolUtilityCatalog.ModuleDef module) {
-        return HudDrawerPolicy.resolvePiece(module, openHudPieceToggleId, openHudPieceEditorId);
-    }
-
     private String hudDrawerTitle(QolUtilityCatalog.ModuleDef module) {
-        if (!hudDrawerOpen() || module == null) {
-            return module == null ? "" : module.name();
+        if (module == null) {
+            return "";
         }
-        HudElementCatalog.HudPiece piece = openHudPiece(module);
-        String label = piece == null ? "" : piece.label();
-        if (label.isBlank() || "HUD".equalsIgnoreCase(label)) {
-            return module.name() + " HUD";
+        if (!hudDrawerOpen()) {
+            return module.name();
         }
-        return module.name() + " · " + label;
+        String name = module.name() == null ? "" : module.name();
+        if (name.toUpperCase(Locale.ROOT).endsWith(" HUD")) {
+            return name;
+        }
+        return name + " HUD";
     }
 
     private java.util.List<QolUtilityCatalog.SettingDef> currentDrawerSettings(
             QolUtilityCatalog.ModuleDef module) {
         if (hudDrawerOpen()) {
             java.util.ArrayList<QolUtilityCatalog.SettingDef> rows = new java.util.ArrayList<>();
-            HudElementCatalog.HudPiece piece = openHudPiece(module);
-            if (piece != null && HudDrawerPolicy.usesQolHudStyle(piece)) {
+            if (!HudDrawerPolicy.uniqueStyleFocus(module).isBlank()) {
                 rows.addAll(HudDrawerPolicy.styleSettings());
             }
-            rows.addAll(HudDrawerPolicy.hudCatalogSettings(module, piece));
+            rows.addAll(HudDrawerPolicy.allHudCatalogSettings(module));
             return rows;
         }
         return HudDrawerPolicy.moduleCatalogSettings(module);
     }
 
-    private boolean hudPieceVisible(
-            QolUtilityCatalog.ModuleDef module,
-            HudElementCatalog.HudPiece piece) {
-        if (HudDrawerPolicy.hudVisibilityUsesModuleEnable(piece)) {
-            return isEnabled(module);
-        }
-        return Boolean.TRUE.equals(readDrawerBoolean(piece.toggleId()));
-    }
-
-    private void toggleHudPieceVisible(
-            QolUtilityCatalog.ModuleDef module,
-            HudElementCatalog.HudPiece piece) {
-        if (HudDrawerPolicy.hudVisibilityUsesModuleEnable(piece)) {
-            setEnabled(module, !isEnabled(module));
-            return;
-        }
-        boolean next = !Boolean.TRUE.equals(readDrawerBoolean(piece.toggleId()));
-        writeDrawerBoolean(piece.toggleId(), next);
+    private boolean hudDrawerShowsEnableRow(QolUtilityCatalog.ModuleDef module) {
+        return hudDrawerOpen() && HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module);
     }
 
     private String hudStyleFocus(QolUtilityCatalog.ModuleDef module) {
-        return HudDrawerPolicy.styleFocusId(openHudPiece(module));
+        return HudDrawerPolicy.uniqueStyleFocus(module);
     }
 
     private HudStyleState hudStyle(QolUtilityCatalog.ModuleDef module) {
@@ -372,6 +321,10 @@ final class QolUtilityDashboard {
     }
 
     private Boolean readDrawerBoolean(String settingId) {
+        Boolean lighting = RotClientClient.readLightingSetting(settingId);
+        if (lighting != null) {
+            return lighting;
+        }
         if (isHudStyleSetting(settingId)) {
             QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openModuleId);
             HudStyleState style = hudStyle(module);
@@ -417,6 +370,9 @@ final class QolUtilityDashboard {
     }
 
     private void writeDrawerBoolean(String settingId, boolean value) {
+        if (RotClientClient.writeLightingSetting(settingId, value)) {
+            return;
+        }
         if (isHudStyleSetting(settingId)) {
             QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openModuleId);
             HudStyleState style = hudStyle(module);
@@ -510,7 +466,7 @@ final class QolUtilityDashboard {
 
     private boolean isEnabled(QolUtilityCatalog.ModuleDef module) {
         return switch (module.id()) {
-            case "qol.fullbright" -> config.fullbrightEnabled;
+            case "qol.fullbright" -> config.fullbrightEnabled || config.alwaysNightEnabled;
             case "qol.auto_sprint" -> config.autoSprintEnabled;
             case "qol.camera" -> config.cameraEnabled;
             case "qol.mining_tracker" -> config.enabled;
@@ -522,7 +478,13 @@ final class QolUtilityDashboard {
 
     private void setEnabled(QolUtilityCatalog.ModuleDef module, boolean enabled) {
         switch (module.id()) {
-            case "qol.fullbright" -> RotClientClient.setFullbrightEnabled(enabled);
+            case "qol.fullbright" -> {
+                boolean was = isEnabled(module);
+                RotClientClient.setLightingCardEnabled(enabled);
+                if (was != enabled) {
+                    RotClientClient.notifyQolModuleToggled(module.name(), enabled);
+                }
+            }
             case "qol.auto_sprint" -> RotClientClient.setAutoSprintEnabled(enabled);
             case "qol.camera" -> RotClientClient.setCameraEnabled(enabled);
             case "qol.mining_tracker" -> {
@@ -567,9 +529,8 @@ final class QolUtilityDashboard {
             int mouseY) {
         int contentWidth = contentRight - contentLeft;
         boolean drawerOpen = isDrawerOpen();
-        boolean hudMenuOpen = openHudMenuModuleId != null && !openHudMenuModuleId.isBlank();
         boolean enumOpen = openEnumSettingId != null && !openEnumSettingId.isBlank();
-        boolean modal = drawerOpen || hudMenuOpen || enumOpen;
+        boolean modal = drawerOpen || enumOpen;
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
         boolean overlay = drawerOpen;
         int listW = contentWidth;
@@ -735,9 +696,6 @@ final class QolUtilityDashboard {
                     contentWidth,
                     Math.max(1, contentBottom - contentTop));
         }
-        if (hudMenuOpen) {
-            drawHudMenu(graphics, font, mouseX, mouseY);
-        }
 
         if (drawerOpen) {
             int drawerX = contentRight - drawerW;
@@ -864,7 +822,10 @@ final class QolUtilityDashboard {
     }
 
     private boolean anyUtilityActive() {
-        if (config.fullbrightEnabled || config.autoSprintEnabled || config.cameraEnabled) {
+        if (config.fullbrightEnabled
+                || config.alwaysNightEnabled
+                || config.autoSprintEnabled
+                || config.cameraEnabled) {
             return true;
         }
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
@@ -888,13 +849,12 @@ final class QolUtilityDashboard {
                 mouseX, mouseY, x, y, width, QolUtilityUiMath.CARD_HEIGHT);
         boolean enabled = isEnabled(module);
         boolean selected = module.id().equals(openModuleId);
-        boolean hudMenuOpen = module.id().equals(openHudMenuModuleId);
-        int fill = selected || hudMenuOpen
+        int fill = selected
                 ? RotClientTheme.SELECTED_ROW
                 : (hover ? RotClientTheme.HOVER_ROW : RotClientTheme.SURFACE_ALT);
         RotClientUiDraw.roundedFill(
                 graphics, x, y, x + width, y + QolUtilityUiMath.CARD_HEIGHT, fill, panelRadius());
-        int outline = selected || hudMenuOpen
+        int outline = selected
                 ? RotClientTheme.VIOLET
                 : (enabled && runtimeAvailable(module)
                         ? accentColor()
@@ -1023,7 +983,6 @@ final class QolUtilityDashboard {
         if (!hudPieces.isEmpty() && runtimeAvailable(module)) {
             int hudX = QolUtilityUiMath.hudControlX(x);
             int hudY = QolUtilityUiMath.hudControlY(y, QolUtilityUiMath.CARD_HEIGHT);
-            boolean menu = HudElementCatalog.hudControlOpensMenu(module);
             RotClientUiDraw.drawButton(
                     graphics,
                     font,
@@ -1033,7 +992,7 @@ final class QolUtilityDashboard {
                     hudY,
                     QolUtilityUiMath.HUD_CONTROL_WIDTH,
                     QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT,
-                    menu ? "HUD ▾" : "HUD",
+                    "HUD",
                     false,
                     true);
         }
@@ -1058,143 +1017,6 @@ final class QolUtilityDashboard {
                     true);
         }
         return hoverTip;
-    }
-
-    private void drawHudMenu(
-            GuiGraphicsExtractor graphics,
-            Font font,
-            int mouseX,
-            int mouseY) {
-        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openHudMenuModuleId);
-        if (module == null) {
-            closeHudMenu();
-            return;
-        }
-        java.util.List<HudElementCatalog.HudPiece> pieces = HudElementCatalog.hudPieces(module);
-        if (pieces.isEmpty()) {
-            closeHudMenu();
-            return;
-        }
-        java.util.List<Integer> matches = hudMenuMatches(pieces);
-        boolean search = OverflowListPolicy.needsSearch(pieces.size());
-        int menuX = QolUtilityUiMath.hudMenuX(hudMenuCardX);
-        int preferredY = QolUtilityUiMath.hudMenuY(hudMenuCardY, QolUtilityUiMath.CARD_HEIGHT);
-        int menuW = QolUtilityUiMath.HUD_MENU_WIDTH;
-        int screenH = host == null ? 480 : Math.max(64, host.height);
-        int preferredH = OverflowListPolicy.menuHeight(
-                Math.max(1, matches.size()),
-                QolUtilityUiMath.HUD_MENU_ROW_HEIGHT,
-                search);
-        int menuH = OverflowListPolicy.clampedHeight(preferredH, screenH, preferredY);
-        int menuY = OverflowListPolicy.clampY(preferredY, menuH, screenH);
-        int bodyTop = QolUtilityUiMath.hudMenuBodyTop(menuY, search);
-        int bodyBottom = menuY + menuH - 4;
-        hudMenuScroll.setBounds(
-                matches.size() * QolUtilityUiMath.HUD_MENU_ROW_HEIGHT,
-                Math.max(1, bodyBottom - bodyTop));
-        hudMenuScroll.advanceSeconds(RotClientUiClock.seconds());
-
-        RotClientUiDraw.roundedFill(
-                graphics,
-                menuX,
-                menuY,
-                menuX + menuW,
-                menuY + menuH,
-                RotClientTheme.SURFACE_ALT,
-                RotClientUiDraw.RADIUS_SM);
-        RotClientUiDraw.roundedOutline(
-                graphics,
-                menuX,
-                menuY,
-                menuX + menuW,
-                menuY + menuH,
-                RotClientTheme.VIOLET,
-                RotClientUiDraw.RADIUS_SM);
-        if (search) {
-            int fieldY = menuY + 4;
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    menuX + 6,
-                    fieldY,
-                    menuX + menuW - 6,
-                    fieldY + QolUtilityUiMath.HUD_MENU_SEARCH_HEIGHT - 4,
-                    hudMenuSearchFocused ? RotClientTheme.FIELD : RotClientTheme.BUTTON,
-                    RotClientUiDraw.RADIUS_SM);
-            String shown = hudMenuQuery.isBlank() ? "Search…" : hudMenuQuery;
-            RotClientUiDraw.text(graphics, font,
-                    RotClientUiDraw.ellipsizeAndHover(
-                            font, shown, menuW - 20, menuX + 12, fieldY + 4, 12),
-                    menuX + 12,
-                    fieldY + 4,
-                    hudMenuQuery.isBlank() ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,
-                    false);
-        }
-        graphics.enableScissor(menuX, bodyTop, menuX + menuW, bodyBottom);
-        RotClientUiMotion.pushFractionalScroll(graphics, hudMenuScroll);
-        try {
-            int scroll = hudMenuScroll.scrollPixels();
-            for (int visible = 0; visible < matches.size(); visible++) {
-                HudElementCatalog.HudPiece piece = pieces.get(matches.get(visible));
-                int rowY = bodyTop + visible * QolUtilityUiMath.HUD_MENU_ROW_HEIGHT - scroll;
-                if (rowY + QolUtilityUiMath.HUD_MENU_ROW_HEIGHT < bodyTop
-                        || rowY > bodyBottom) {
-                    continue;
-                }
-                boolean rowHover = QolUtilityUiMath.hitHudMenuRow(
-                        mouseX, mouseY, menuX, menuY, visible, search, scroll);
-                if (rowHover) {
-                    RotClientUiDraw.roundedFill(
-                            graphics,
-                            menuX + 4,
-                            rowY,
-                            menuX + menuW - 4,
-                            rowY + QolUtilityUiMath.HUD_MENU_ROW_HEIGHT,
-                            RotClientTheme.HOVER_ROW,
-                            RotClientUiDraw.RADIUS_SM);
-                }
-                RotClientUiDraw.text(graphics, font,
-                        RotClientUiDraw.ellipsizeAndHover(
-                                font,
-                                piece.label(),
-                                menuW - 80,
-                                menuX + 10,
-                                rowY + 8,
-                                12),
-                        menuX + 10,
-                        rowY + 8,
-                        RotClientTheme.TEXT,
-                        false);
-                RotClientUiDraw.text(graphics, font,
-                        "Open →",
-                        menuX + menuW - 8 - font.width("Open →"),
-                        rowY + 8,
-                        RotClientTheme.VIOLET,
-                        false);
-            }
-        } finally {
-            RotClientUiMotion.pop(graphics);
-            graphics.disableScissor();
-        }
-        if (hudMenuScroll.canScroll()) {
-            RotClientUiDraw.drawScrollbar(
-                    graphics,
-                    menuX + menuW - RotClientUiDraw.SCROLLBAR_WIDTH - 2,
-                    bodyTop,
-                    bodyBottom,
-                    hudMenuScroll.contentHeight(),
-                    hudMenuScroll.scrollPixels(),
-                    false,
-                    hudMenuScroll.isThumbDragging());
-        }
-    }
-
-    private java.util.List<Integer> hudMenuMatches(
-            java.util.List<HudElementCatalog.HudPiece> pieces) {
-        java.util.List<String> labels = new java.util.ArrayList<>();
-        for (HudElementCatalog.HudPiece piece : pieces) {
-            labels.add(piece.label());
-        }
-        return OverflowListPolicy.matchingIndices(labels, hudMenuQuery);
     }
 
     private void drawDrawer(
@@ -1269,9 +1091,8 @@ final class QolUtilityDashboard {
         graphics.enableScissor(x, bodyTop, x + width, bodyBottom);
         RotClientUiMotion.pushFractionalScroll(graphics, drawerScroll);
         try {
-        if (hudDrawerOpen()) {
-            HudElementCatalog.HudPiece piece = openHudPiece(module);
-            boolean hudOn = hudPieceVisible(module, piece);
+        if (hudDrawerShowsEnableRow(module)) {
+            boolean hudOn = isEnabled(module);
             drawDrawerToggleRow(
                     graphics,
                     font,
@@ -1285,7 +1106,7 @@ final class QolUtilityDashboard {
                     mouseY,
                     runtimeAvailable(module));
             rowY += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 8;
-        } else if (module.toggleable() && runtimeAvailable(module)) {
+        } else if (!hudDrawerOpen() && module.toggleable() && runtimeAvailable(module)) {
             boolean enabled = isEnabled(module);
             drawDrawerToggleRow(
                     graphics,
@@ -1679,6 +1500,14 @@ final class QolUtilityDashboard {
                     y + 12,
                     value != null && value && !disabled,
                     hover);
+        } else if (setting.type() == QolUtilityCatalog.SettingType.SQUARE) {
+            Boolean value = readDrawerBoolean(setting.id());
+            RotClientUiDraw.drawSquareLatch(
+                    graphics,
+                    x + width - 28,
+                    y + 12,
+                    value != null && value && !disabled,
+                    hover);
         } else if (setting.type() == QolUtilityCatalog.SettingType.COLOR) {
             Integer color = readDrawerColor(setting.id());
             int swatch = color == null ? RotClientTheme.HUD_ACCENT : color;
@@ -1978,8 +1807,7 @@ final class QolUtilityDashboard {
 
     boolean capturingText() {
         return (listeningTextSettingId != null && !listeningTextSettingId.isBlank())
-                || enumSearchFocused
-                || hudMenuSearchFocused;
+                || enumSearchFocused;
     }
 
     boolean captureKey(int glfwKey) {
@@ -1995,21 +1823,6 @@ final class QolUtilityDashboard {
             if (glfwKey == GLFW.GLFW_KEY_BACKSPACE && !enumQuery.isEmpty()) {
                 enumQuery = enumQuery.substring(
                         0, enumQuery.offsetByCodePoints(enumQuery.length(), -1));
-                return true;
-            }
-            return glfwKey == GLFW.GLFW_KEY_BACKSPACE;
-        }
-        if (hudMenuSearchFocused
-                && openHudMenuModuleId != null
-                && !openHudMenuModuleId.isBlank()) {
-            if (glfwKey == GLFW.GLFW_KEY_ESCAPE) {
-                closeHudMenu();
-                return true;
-            }
-            if (glfwKey == GLFW.GLFW_KEY_BACKSPACE && !hudMenuQuery.isEmpty()) {
-                hudMenuQuery = hudMenuQuery.substring(
-                        0, hudMenuQuery.offsetByCodePoints(hudMenuQuery.length(), -1));
-                hudMenuScroll.reset();
                 return true;
             }
             return glfwKey == GLFW.GLFW_KEY_BACKSPACE;
@@ -2059,19 +1872,6 @@ final class QolUtilityDashboard {
             enumQuery += Character.toString(codePoint);
             return true;
         }
-        if (hudMenuSearchFocused
-                && openHudMenuModuleId != null
-                && !openHudMenuModuleId.isBlank()) {
-            if (!allowedChatCharacter || codePoint < 32) {
-                return true;
-            }
-            if (hudMenuQuery.length() >= 32) {
-                return true;
-            }
-            hudMenuQuery += Character.toString(codePoint);
-            hudMenuScroll.reset();
-            return true;
-        }
         if (!capturingText()) {
             return false;
         }
@@ -2118,9 +1918,6 @@ final class QolUtilityDashboard {
         }
         int mx = (int) Math.round(mouseX);
         int my = (int) Math.round(mouseY);
-        if (handleHudMenuClick(button, mx, my)) {
-            return true;
-        }
         int contentWidth = contentRight - contentLeft;
         boolean drawerOpen = isDrawerOpen();
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
@@ -2171,7 +1968,6 @@ final class QolUtilityDashboard {
             if (pageFilter != chipHit) {
                 pageFilter = chipHit;
                 listScroll.reset();
-                closeHudMenu();
             }
             return true;
         }
@@ -2242,7 +2038,6 @@ final class QolUtilityDashboard {
         java.util.List<HudElementCatalog.HudPiece> hudPieces =
                 HudElementCatalog.hudPieces(module);
         boolean hasHud = !hudPieces.isEmpty() && runtimeAvailable(module);
-        boolean hudOpensMenu = HudElementCatalog.hudControlOpensMenu(module);
         boolean settingsHit = !module.settings().isEmpty()
                 && QolUtilityUiMath.hitSettingsButton(
                         mx, my, cardX, cardY, cardW, QolUtilityUiMath.CARD_HEIGHT);
@@ -2259,9 +2054,8 @@ final class QolUtilityDashboard {
                 !module.settings().isEmpty(),
                 module.toggleable() && runtimeAvailable(module),
                 hasHud,
-                hudOpensMenu);
+                false);
         if (action == QolUtilityUiMath.CardAction.OPEN_SETTINGS) {
-            closeHudMenu();
             if (MiningTrackerCatalogPolicy.APPEARANCE.equals(module.id())) {
                 openAppearanceLanding();
                 return true;
@@ -2270,88 +2064,12 @@ final class QolUtilityDashboard {
             return true;
         }
         if (action == QolUtilityUiMath.CardAction.TOGGLE) {
-            closeHudMenu();
             setEnabled(module, !isEnabled(module));
             return true;
         }
         if (action == QolUtilityUiMath.CardAction.OPEN_HUD_SETTINGS) {
-            closeHudMenu();
-            HudElementCatalog.HudPiece piece = hudPieces.isEmpty() ? null : hudPieces.get(0);
-            openHudSettings(
-                    module.id(),
-                    piece == null ? "" : piece.toggleId(),
-                    piece == null ? "" : piece.editorId());
+            openHudSettings(module.id());
             return true;
-        }
-        if (action == QolUtilityUiMath.CardAction.OPEN_HUD_MENU) {
-            if (module.id().equals(openHudMenuModuleId)) {
-                closeHudMenu();
-            } else {
-                openHudMenuModuleId = module.id();
-                hudMenuCardX = cardX;
-                hudMenuCardY = cardY;
-                hudMenuQuery = "";
-                hudMenuSearchFocused = OverflowListPolicy.needsSearch(
-                        HudElementCatalog.hudPieces(module).size());
-                hudMenuScroll.reset();
-            }
-            return true;
-        }
-        closeHudMenu();
-        return true;
-    }
-
-    private int[] hudMenuGeometry(java.util.List<HudElementCatalog.HudPiece> pieces) {
-        java.util.List<Integer> matches = hudMenuMatches(pieces);
-        boolean search = OverflowListPolicy.needsSearch(pieces.size());
-        int menuX = QolUtilityUiMath.hudMenuX(hudMenuCardX);
-        int preferredY = QolUtilityUiMath.hudMenuY(hudMenuCardY, QolUtilityUiMath.CARD_HEIGHT);
-        int screenH = host == null ? 480 : Math.max(64, host.height);
-        int preferredH = OverflowListPolicy.menuHeight(
-                Math.max(1, matches.size()),
-                QolUtilityUiMath.HUD_MENU_ROW_HEIGHT,
-                search);
-        int menuH = OverflowListPolicy.clampedHeight(preferredH, screenH, preferredY);
-        int menuY = OverflowListPolicy.clampY(preferredY, menuH, screenH);
-        return new int[] {menuX, menuY, menuH, search ? 1 : 0};
-    }
-
-    private boolean handleHudMenuClick(int button, int mx, int my) {
-        if (openHudMenuModuleId == null || openHudMenuModuleId.isBlank()) {
-            return false;
-        }
-        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openHudMenuModuleId);
-        java.util.List<HudElementCatalog.HudPiece> pieces =
-                module == null ? java.util.List.of() : HudElementCatalog.hudPieces(module);
-        int[] geo = hudMenuGeometry(pieces);
-        int menuX = geo[0];
-        int menuY = geo[1];
-        int menuH = geo[2];
-        boolean search = geo[3] == 1;
-        boolean inside = RotClientUiDraw.inside(
-                mx, my, menuX, menuY, QolUtilityUiMath.HUD_MENU_WIDTH, menuH);
-        if (!inside) {
-            closeHudMenu();
-            return true;
-        }
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT || module == null) {
-            return true;
-        }
-        if (search && my < QolUtilityUiMath.hudMenuBodyTop(menuY, true)) {
-            hudMenuSearchFocused = true;
-            return true;
-        }
-        hudMenuSearchFocused = false;
-        java.util.List<Integer> matches = hudMenuMatches(pieces);
-        int scroll = hudMenuScroll.scrollPixels();
-        for (int visible = 0; visible < matches.size(); visible++) {
-            HudElementCatalog.HudPiece piece = pieces.get(matches.get(visible));
-            if (QolUtilityUiMath.hitHudMenuRow(
-                    mx, my, menuX, menuY, visible, search, scroll)) {
-                closeHudMenu();
-                openHudSettings(module.id(), piece.toggleId(), piece.editorId());
-                return true;
-            }
         }
         return true;
     }
@@ -2385,16 +2103,16 @@ final class QolUtilityDashboard {
         int rowX = drawerX + 12;
         int rowW = drawerW - 24;
 
-        if (hudDrawerOpen()) {
+        if (hudDrawerShowsEnableRow(module)) {
             if (RotClientUiDraw.inside(
                     mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_ROW_HEIGHT)) {
                 if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                    toggleHudPieceVisible(module, openHudPiece(module));
+                    setEnabled(module, !isEnabled(module));
                 }
                 return true;
             }
             rowY += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 8;
-        } else if (module.toggleable() && runtimeAvailable(module)) {
+        } else if (!hudDrawerOpen() && module.toggleable() && runtimeAvailable(module)) {
             if (RotClientUiDraw.inside(
                     mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_ROW_HEIGHT)) {
                 if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
@@ -2570,6 +2288,10 @@ final class QolUtilityDashboard {
             return true;
         }
         boolean reset = qol().resetModuleToDefaults(module.id());
+        if ("qol.fullbright".equals(module.id())) {
+            RotClientClient.resetLightingModule();
+            reset = true;
+        }
         if ("qol.auto_sprint".equals(module.id())
                 || "qol.camera".equals(module.id())) {
             setEnabled(module, false);
@@ -2582,7 +2304,7 @@ final class QolUtilityDashboard {
             QolUtilityCatalog.ModuleDef module,
             QolUtilityCatalog.SettingDef setting) {
         switch (setting.type()) {
-            case TOGGLE -> {
+            case TOGGLE, SQUARE -> {
                 Boolean current = readDrawerBoolean(setting.id());
                 writeDrawerBoolean(setting.id(), current == null || !current);
             }
@@ -2603,6 +2325,16 @@ final class QolUtilityDashboard {
         if (settingId.endsWith("_hud_editor")) {
             RotClientClient.openHudEditor(
                     host, HudElementCatalog.focusIdForHudEditorSetting(settingId));
+            return;
+        }
+        if ("qol.custom_scoreboard.reset_appearance".equals(settingId)) {
+            qol().extras().board().resetAppearance();
+            TrackerStore.save(config);
+            return;
+        }
+        if ("qol.custom_scoreboard.reset_events".equals(settingId)) {
+            qol().extras().board().resetEvents();
+            TrackerStore.save(config);
             return;
         }
         if (host instanceof MiningUiScreen screen) {
@@ -2641,6 +2373,10 @@ final class QolUtilityDashboard {
             Minecraft.getInstance().gui.setScreen(new ItemSearchScreen(host, ""));
             return;
         }
+        if ("qol.dungeon_carry.open_manager".equals(settingId)) {
+            Minecraft.getInstance().gui.setScreen(new DungeonCarryManagerScreen(host));
+            return;
+        }
         if ("qol.slayer_carry.open_manager".equals(settingId)) {
             Minecraft.getInstance().gui.setScreen(new SlayerCarryManagerScreen(host));
             return;
@@ -2654,7 +2390,16 @@ final class QolUtilityDashboard {
             }
             return;
         }
-        if ("qol.storage_overlay.clear_cache".equals(settingId)) {
+        if ("qol.storage_overlay.clear_cache".equals(settingId) || "qol.storage_overlay.reload_pages".equals(settingId)) {
+            if ("qol.storage_overlay.reload_pages".equals(settingId)) {
+                StorageOverlayRuntime.requestReloadAll();
+                Minecraft client = Minecraft.getInstance();
+                if (client.player != null) {
+                    client.player.sendSystemMessage(RotClientChat.message(
+                            "Reloading Ender Chests and Backpacks from the server."));
+                }
+                return;
+            }
             StorageOverlayRuntime.clearObservedPages();
             Minecraft client = Minecraft.getInstance();
             if (client.player != null) {
@@ -2687,6 +2432,24 @@ final class QolUtilityDashboard {
             if (client.player != null) {
                 client.player.sendSystemMessage(RotClientChat.message(
                         "Kuudra split personal bests cleared."));
+            }
+            return;
+        }
+        if ("qol.dungeon_f7.reset_term_pbs".equals(settingId)) {
+            DungeonRuntime.resetTerminalPersonalBests();
+            Minecraft client = Minecraft.getInstance();
+            if (client.player != null) {
+                client.player.sendSystemMessage(RotClientChat.message(
+                        "Goldor terminal personal bests cleared."));
+            }
+            return;
+        }
+        if ("qol.dungeon_f7.reset_predev_pb".equals(settingId)) {
+            DungeonRuntime.resetPredevPersonalBest();
+            Minecraft client = Minecraft.getInstance();
+            if (client.player != null) {
+                client.player.sendSystemMessage(RotClientChat.message(
+                        "Predev personal best cleared."));
             }
             return;
         }
@@ -3108,20 +2871,6 @@ final class QolUtilityDashboard {
             int contentBottom) {
         int mx = (int) Math.round(mouseX);
         int my = (int) Math.round(mouseY);
-        if (openHudMenuModuleId != null && !openHudMenuModuleId.isBlank()) {
-            QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openHudMenuModuleId);
-            java.util.List<HudElementCatalog.HudPiece> pieces =
-                    module == null ? java.util.List.of() : HudElementCatalog.hudPieces(module);
-            int[] geo = hudMenuGeometry(pieces);
-            if (RotClientUiDraw.inside(
-                    mx, my, geo[0], geo[1], QolUtilityUiMath.HUD_MENU_WIDTH, geo[2])) {
-                if (hudMenuScroll.canScroll()) {
-                    hudMenuScroll.scrollBySteps(verticalAmount, 28);
-                }
-                return true;
-            }
-            return true;
-        }
         int contentWidth = contentRight - contentLeft;
         boolean drawerOpen = isDrawerOpen();
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
@@ -3146,7 +2895,6 @@ final class QolUtilityDashboard {
             if (!listScroll.canScroll()) {
                 return false;
             }
-            closeHudMenu();
             listScroll.scrollBySteps(verticalAmount, 40);
             return true;
         }
@@ -3253,8 +3001,12 @@ final class QolUtilityDashboard {
             return "Press a key…  ·  ESC clears";
         }
         List<String> on = new ArrayList<>();
-        if (config.fullbrightEnabled) {
+        if (config.fullbrightEnabled && config.alwaysNightEnabled) {
+            on.add("FB+NIGHT");
+        } else if (config.fullbrightEnabled) {
             on.add("FB");
+        } else if (config.alwaysNightEnabled) {
+            on.add("NIGHT");
         }
         if (config.autoSprintEnabled) {
             on.add("SPRINT");

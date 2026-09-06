@@ -135,6 +135,12 @@ final class RotClientProfileSettingsAdapter {
         settings.fullbrightEnabled =
                 config.fullbrightEnabled;
 
+        settings.alwaysNightEnabled =
+                config.alwaysNightEnabled;
+
+        settings.lightingForceBoth =
+                config.lightingForceBoth;
+
         settings.autoSprintEnabled =
                 config.autoSprintEnabled;
 
@@ -279,6 +285,12 @@ final class RotClientProfileSettingsAdapter {
 
         config.fullbrightEnabled =
                 safe.fullbrightEnabled;
+
+        config.alwaysNightEnabled =
+                safe.alwaysNightEnabled;
+
+        config.lightingForceBoth =
+                safe.lightingForceBoth;
 
         config.autoSprintEnabled =
                 safe.autoSprintEnabled;

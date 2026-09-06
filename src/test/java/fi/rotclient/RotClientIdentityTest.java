@@ -38,8 +38,8 @@ final class RotClientIdentityTest {
         assertTrue(root.has("breaks"));
         assertTrue(root.getAsJsonObject("breaks").has("miningtracker"));
         assertFalse(raw.contains("Rot Client contributors"));
-        assertTrue(raw.contains("\"name\": \"OgRudolf\"")
-                || raw.contains("\"name\":\"OgRudolf\""));
+        assertTrue(raw.contains("\"name\": \"Rot Tools\"")
+                || raw.contains("\"name\":\"Rot Tools\""));
         assertEquals(
                 "https://github.com/rot-tools/Rot-Client",
                 root.getAsJsonObject("contact").get("homepage").getAsString());

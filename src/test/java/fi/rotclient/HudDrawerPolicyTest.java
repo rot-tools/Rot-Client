@@ -92,4 +92,69 @@ final class HudDrawerPolicyTest {
         assertEquals("powder_chest", piece.focusId());
         assertFalse(HudDrawerPolicy.hudVisibilityUsesModuleEnable(piece));
     }
+
+    @Test
+    void dungeonHudCombinedDrawerOwnsLineTogglesAndKeepsResetsInSettings() {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById("qol.dungeon_hud");
+        var hud = HudDrawerPolicy.allHudCatalogSettings(module);
+        var settings = HudDrawerPolicy.moduleCatalogSettings(module);
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.floor".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.dungeon_hud.secrets".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map_mode".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.room_names".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map_scale".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.section_map".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.dungeon_hud.open_hud_editor".equals(setting.id())));
+        assertFalse(hud.stream().anyMatch(
+                setting -> "qol.dungeon_hud.reset_split_pbs".equals(setting.id())));
+        assertFalse(hud.stream().anyMatch(
+                setting -> "qol.dungeon_hud.cheater_darken_factor".equals(setting.id())));
+        assertTrue(settings.stream().anyMatch(
+                setting -> "qol.dungeon_hud.reset_split_pbs".equals(setting.id())));
+        assertTrue(settings.stream().anyMatch(
+                setting -> "qol.dungeon_hud.cheater_darken_factor".equals(setting.id())));
+        assertEquals("dungeon", HudDrawerPolicy.uniqueStyleFocus(module));
+        assertFalse(HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module));
+    }
+
+    @Test
+    void performanceHudCombinedDrawerOwnsFpsTpsPing() {
+        QolUtilityCatalog.ModuleDef module =
+                QolUtilityCatalog.findById("qol.performance_hud");
+        var hud = HudDrawerPolicy.allHudCatalogSettings(module);
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.performance_hud.show_fps".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.performance_hud.show_tps".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.performance_hud.show_ping".equals(setting.id())));
+        assertEquals("performance", HudDrawerPolicy.uniqueStyleFocus(module));
+    }
+
+    @Test
+    void slayerDisplayCombinedHudMatchesSinglePieceRows() {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById("qol.slayer_display");
+        HudElementCatalog.HudPiece piece = HudElementCatalog.hudPieces(module).get(0);
+        assertEquals(
+                HudDrawerPolicy.hudCatalogSettings(module, piece),
+                HudDrawerPolicy.allHudCatalogSettings(module));
+        assertTrue(HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module));
+        assertEquals("slayer", HudDrawerPolicy.uniqueStyleFocus(module));
+    }
+
+    @Test
+    void playerDisplayCombinedHudSkipsSharedStyleFocus() {
+        QolUtilityCatalog.ModuleDef module =
+                QolUtilityCatalog.findById("qol.player_display");
+        var hud = HudDrawerPolicy.allHudCatalogSettings(module);
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.player_display.health_hud".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.player_display.mana_hud".equals(setting.id())));
+        assertEquals("", HudDrawerPolicy.uniqueStyleFocus(module));
+        assertFalse(HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module));
+    }
 }

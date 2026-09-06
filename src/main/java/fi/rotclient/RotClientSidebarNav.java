@@ -53,6 +53,7 @@ final class RotClientSidebarNav {
         QOL_EVENTS,
         QOL_MINING,
         QOL_GARDEN,
+        QOL_GUI,
         QOL_UTILITIES,
         QOL_HUD_DISPLAY,
         QOL_RENDER,
@@ -735,6 +736,9 @@ final class RotClientSidebarNav {
             case QOL_GARDEN ->
                     QolUtilityCatalog.Group.GARDEN;
 
+            case QOL_GUI ->
+                    QolUtilityCatalog.Group.GUI;
+
             case QOL_UTILITIES ->
                     QolUtilityCatalog.Group.UTILITIES;
 
@@ -785,6 +789,9 @@ final class RotClientSidebarNav {
 
             case GARDEN ->
                     HitTarget.QOL_GARDEN;
+
+            case GUI ->
+                    HitTarget.QOL_GUI;
 
             case UTILITIES ->
                     HitTarget.QOL_UTILITIES;
@@ -903,6 +910,7 @@ final class RotClientSidebarNav {
                  QOL_EVENTS,
                  QOL_MINING,
                  QOL_GARDEN,
+                 QOL_GUI,
                  QOL_UTILITIES,
                  QOL_HUD_DISPLAY,
                  QOL_RENDER,

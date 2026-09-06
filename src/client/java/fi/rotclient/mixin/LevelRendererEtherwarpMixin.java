@@ -1,9 +1,11 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.ClientBoundaryGuard;
 import fi.rotclient.DungeonRuntime;
 import fi.rotclient.DianaRuntime;
 import fi.rotclient.FishingSuiteRuntime;
 import fi.rotclient.ForagingRuntime;
+import fi.rotclient.GhostsRuntime;
 import fi.rotclient.IotaKuudraRuntime;
 import fi.rotclient.MiningLeftoverRuntime;
 import fi.rotclient.MobHighlightRuntime;
@@ -24,17 +26,18 @@ abstract class LevelRendererEtherwarpMixin {
     @Inject(method = "collectPerFrameRenderThreadGizmos", at = @At("RETURN"))
     private void rotclient$etherwarpGizmos(
             CallbackInfoReturnable<Gizmos.TemporaryCollection> cir) {
-        QolVisualRuntime.renderEtherwarpGizmos();
-        QolVisualRuntime.renderTrajectoryGizmos();
-        QolVisualRuntime.renderWorldScannerGizmos();
-        QolVisualRuntime.renderWaypointGizmos();
-        IotaKuudraRuntime.renderGizmos();
-        MobHighlightRuntime.renderGizmos();
-        SlayerRuntime.renderGizmos();
-        DungeonRuntime.renderGizmos();
-        FishingSuiteRuntime.renderGizmos();
-        MiningLeftoverRuntime.renderGizmos();
-        DianaRuntime.renderGizmos();
-        ForagingRuntime.renderGizmos();
+        ClientBoundaryGuard.run("ETHERWARP_GIZMOS", () -> QolVisualRuntime.renderEtherwarpGizmos());
+        ClientBoundaryGuard.run("TRAJECTORY_GIZMOS", () -> QolVisualRuntime.renderTrajectoryGizmos());
+        ClientBoundaryGuard.run("WORLD_SCANNER_GIZMOS", () -> QolVisualRuntime.renderWorldScannerGizmos());
+        ClientBoundaryGuard.run("WAYPOINT_GIZMOS", () -> QolVisualRuntime.renderWaypointGizmos());
+        ClientBoundaryGuard.run("IOTA_KUUDRA_GIZMOS", () -> IotaKuudraRuntime.renderGizmos());
+        ClientBoundaryGuard.run("MOB_HIGHLIGHT_GIZMOS", () -> MobHighlightRuntime.renderGizmos());
+        ClientBoundaryGuard.run("SLAYER_GIZMOS", () -> SlayerRuntime.renderGizmos());
+        ClientBoundaryGuard.run("DUNGEON_GIZMOS", () -> DungeonRuntime.renderGizmos());
+        ClientBoundaryGuard.run("FISHING_GIZMOS", () -> FishingSuiteRuntime.renderGizmos());
+        ClientBoundaryGuard.run("MINING_LEFTOVER_GIZMOS", () -> MiningLeftoverRuntime.renderGizmos());
+        ClientBoundaryGuard.run("DIANA_GIZMOS", () -> DianaRuntime.renderGizmos());
+        ClientBoundaryGuard.run("FORAGING_GIZMOS", () -> ForagingRuntime.renderGizmos());
+        ClientBoundaryGuard.run("GHOSTS_GIZMOS", () -> GhostsRuntime.renderGizmos());
     }
 }

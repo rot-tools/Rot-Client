@@ -41,7 +41,10 @@ public final class SlotBindsRuntime {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled || qol.slotBindSetKey == null || qol.slotBindSetKey.isBlank()) {
+        if (!qol.slotBindsEnabled
+                || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
+                || qol.slotBindSetKey == null
+                || qol.slotBindSetKey.isBlank()) {
             return false;
         }
         if (QolKeybindNames.resolveGlfwKey(qol.slotBindSetKey, "") != glfwKey) {
@@ -61,7 +64,9 @@ public final class SlotBindsRuntime {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled || input != ContainerInput.QUICK_MOVE) {
+        if (!qol.slotBindsEnabled
+                || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
+                || input != ContainerInput.QUICK_MOVE) {
             return false;
         }
         OptionalInt partner = SlotBindsPolicy.boundPartner(
@@ -100,7 +105,8 @@ public final class SlotBindsRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled) {
+        if (!qol.slotBindsEnabled
+                || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())) {
             return;
         }
         int hoveredIndex = hovered == null ? -1 : hovered.index;

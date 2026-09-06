@@ -14,6 +14,8 @@ public final class QolModuleKeybindRuntime {
 
     private static boolean termSimWasDown;
 
+    private static boolean boardWasDown;
+
     private QolModuleKeybindRuntime() {
     }
 
@@ -39,6 +41,9 @@ public final class QolModuleKeybindRuntime {
                 window, extras.freecamKeybind, freecamWasDown, "qol.freecam", "Free Camera");
         termSimWasDown = fireOpen(
                 window, extras.dungeonTermSimKeybind, termSimWasDown, extras.dungeonTermSimEnabled);
+        boardWasDown = fire(
+                window, extras.board().keybind, boardWasDown,
+                CustomScoreboardPolicy.MODULE_ID, "Custom Scoreboard");
     }
 
     private static boolean fireOpen(long window, String keyName, boolean wasDown, boolean enabled) {
@@ -71,5 +76,6 @@ public final class QolModuleKeybindRuntime {
         ghostsWasDown = false;
         freecamWasDown = false;
         termSimWasDown = false;
+        boardWasDown = false;
     }
 }

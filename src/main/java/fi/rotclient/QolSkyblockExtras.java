@@ -141,7 +141,10 @@ final class QolSkyblockExtras {
 
     boolean ghostsEnabled;
     boolean ghostsShowGhosts;
-    boolean ghostsShowPowered = true;
+    boolean ghostsShowPowered;
+    String ghostsHighlightStyle = GhostsPolicy.DEFAULT_HIGHLIGHT;
+    int ghostsFillColor = GhostsPolicy.DEFAULT_FILL;
+    int ghostsOutlineColor = GhostsPolicy.DEFAULT_OUTLINE;
     String ghostsKeybind = "";
 
     boolean autoDojoEnabled;
@@ -326,13 +329,17 @@ final class QolSkyblockExtras {
     boolean dungeonHudFloor = true;
     boolean dungeonHudCleared = true;
     boolean dungeonHudInvincibility = true;
+    boolean dungeonHudMaskOverlay = true;
+    int dungeonHudMaskOverlayColor = DungeonPolicy.MASK_OVERLAY_COLOR;
     boolean dungeonHudTerracotta = true;
     boolean dungeonHudBlessings = true;
     boolean dungeonHudF7Timers = true;
     boolean dungeonHudRagnarock = true;
     boolean dungeonHudMelody = true;
+    boolean dungeonHudMelodyOther = true;
     boolean dungeonHudQuiz = true;
     boolean dungeonHudMap = true;
+    String dungeonHudMapMode = DungeonMapPolicy.MAP_MODE_EXPLORED;
     boolean dungeonHudMapDoors = true;
     boolean dungeonHudMapPlayers = true;
     boolean dungeonHudMapExtra = true;
@@ -342,7 +349,23 @@ final class QolSkyblockExtras {
     boolean dungeonHudScoreOverlay = true;
     boolean dungeonHudClassIcons = true;
     boolean dungeonHudHeadMarkers = true;
+    boolean dungeonHudRoomNames = true;
+    boolean dungeonHudRoomSecrets = true;
+    boolean dungeonHudPlayerNames = true;
+    boolean dungeonHudMapMimic = true;
+    boolean dungeonHudMapPuzzles = true;
+    int dungeonHudMapScale = DungeonMapPolicy.HUD_CELL;
     boolean dungeonHudPuzzleTimer = true;
+    boolean dungeonHudWarpCooldown = true;
+    boolean dungeonHudSecretSpawn = true;
+    boolean dungeonHudExplosiveShot = true;
+    boolean dungeonHudUnclaimedChests = true;
+    boolean dungeonHudChestWarning = true;
+    int dungeonHudChestWarningCount = DungeonBladePolicy.CHEST_WARNING_DEFAULT;
+    boolean dungeonHudExtraStats = true;
+    boolean dungeonHudLedge = true;
+    boolean dungeonHudLedgeYellow = true;
+    boolean dungeonHudLedgeAll;
     boolean dungeonHudRunTimers = true;
     boolean dungeonHudShowSplitPbs = true;
     String dungeonSplitPbs = "";
@@ -392,6 +415,13 @@ final class QolSkyblockExtras {
     int dungeonEspChestColor = 0xFFFF55FF;
     int dungeonEspSimonColor = 0xFFFFFF00;
     boolean dungeonEspSecretWaypoints = true;
+    boolean dungeonEspHideCollected = true;
+    boolean dungeonEspSecretClicked = true;
+    int dungeonEspSecretClickedColor = TempleDungeonPolicy.SECRET_CLICKED_COLOR;
+    int dungeonEspSecretClickedLockedColor = TempleDungeonPolicy.SECRET_LOCKED_COLOR;
+    int dungeonEspSecretClickedSeconds = TempleDungeonPolicy.SECRET_CLICKED_DEFAULT_SECONDS;
+    boolean dungeonEspSecretClickedBoss;
+    boolean dungeonEspItems = true;
     boolean dungeonEspIcedMobs = true;
     boolean dungeonEspHateDoors = true;
     boolean dungeonEspHateWither = true;
@@ -421,8 +451,18 @@ final class QolSkyblockExtras {
     boolean dungeonAnnounceRagnarock = true;
     boolean dungeonAnnounceRooms = true;
     boolean dungeonAnnounceMelody = true;
+    boolean dungeonAnnounceMelodyParty;
+    String dungeonAnnounceMelodyMessage = DungeonBladePolicy.DEFAULT_MELODY_PARTY;
+    boolean dungeonAnnounceMelodyProgress;
+    boolean dungeonAnnounceDeath;
+    String dungeonAnnounceDeathMessage = DungeonBladePolicy.DEFAULT_DEATH_MESSAGE;
+    boolean dungeonAnnouncePosition;
     boolean dungeonAnnounceSecretChime = true;
     boolean dungeonAnnounceDuplicateClass = true;
+    boolean dungeonAnnouncePlayerCount = true;
+    boolean dungeonAnnounceLocation = true;
+    boolean dungeonAnnounceKeyDrop = true;
+    boolean dungeonAnnounceKeyDropAll;
     boolean dungeonAnnounceAutoUlt;
     boolean dungeonLeapEnabled;
     boolean dungeonLeapHighlight = true;
@@ -445,6 +485,10 @@ final class QolSkyblockExtras {
     boolean dungeonTerminalsMelodySkipFirstRow;
     String dungeonTerminalsMelodySkipMode = "Edges";
     boolean dungeonTerminalsSounds;
+    boolean dungeonTerminalsCompleteSounds;
+    boolean dungeonTerminalsStopTooltips = true;
+    boolean dungeonTerminalsHideClicked;
+    boolean dungeonTerminalsBlockWrongSlots;
     boolean dungeonTerminalsHumanOrder = true;
     boolean dungeonTerminalsMelodyKeys = true;
     boolean dungeonTerminalsProtect;
@@ -477,15 +521,25 @@ final class QolSkyblockExtras {
     int dungeonRequeueDelay = DungeonPolicy.DEFAULT_REQUEUE_DELAY_TICKS;
     boolean dungeonPuzzlesEnabled;
     boolean dungeonPuzzlesQuiz = true;
+    boolean dungeonPuzzlesQuizBoxes = true;
+    boolean dungeonPuzzlesQuizTimer = true;
     boolean dungeonPuzzlesWeirdos = true;
     boolean dungeonPuzzlesBlaze = true;
     boolean dungeonPuzzlesIce = true;
+    boolean dungeonPuzzlesIcePath = true;
+    boolean dungeonPuzzlesIceOptimize;
     boolean dungeonPuzzlesWater = true;
+    boolean dungeonPuzzlesWaterOptimized;
     boolean dungeonPuzzlesBoulder = true;
     boolean dungeonPuzzlesTpMaze = true;
+    boolean dungeonPuzzlesCreeperBeams = true;
+    boolean dungeonPuzzlesTicTacToe = true;
     boolean dungeonF7Enabled;
     boolean dungeonF7Titles = true;
     boolean dungeonF7Timers = true;
+    boolean dungeonF7TimerTicks;
+    boolean dungeonF7TimerSymbol = true;
+    boolean dungeonF7TimerPrefix = true;
     boolean dungeonF7Simon = true;
     boolean dungeonF7SimonAuto;
     boolean dungeonF7HideDiorite = true;
@@ -517,6 +571,17 @@ final class QolSkyblockExtras {
     boolean dungeonF7TitleWither = true;
     boolean dungeonF7TitleTerminal = true;
     boolean dungeonF7TitleGate = true;
+    boolean dungeonF7HideOtherTitles = true;
+    boolean dungeonF7HideTitlesAtSs = true;
+    boolean dungeonF7HideTitlesAtPre4 = true;
+    boolean dungeonF7HideAtSs = true;
+    boolean dungeonF7HideAtSsPreTerms = true;
+    boolean dungeonF7HideAfterLeap = true;
+    boolean dungeonF7HideAfterLeapBoss = true;
+    String dungeonF7TitleCrystalText = "Crystals {current}/{total}";
+    String dungeonF7TitleWitherText = "{name} Enraged";
+    String dungeonF7TitleTerminalText = "{name} {current}/{total}";
+    String dungeonF7TitleGateText = "{name} {current}/{total}";
     boolean dungeonF7TimerMaxor;
     boolean dungeonF7TimerStorm;
     boolean dungeonF7TimerPad = true;
@@ -524,6 +589,10 @@ final class QolSkyblockExtras {
     boolean dungeonF7TimerGoldor = true;
     boolean dungeonF7TimerNecron = true;
     boolean dungeonF7Crystals = true;
+    boolean dungeonF7MaxorStun = true;
+    boolean dungeonF7StormCrush = true;
+    boolean dungeonF7StormLb = true;
+    boolean dungeonF7TermStart = true;
     boolean dungeonF7CrystalSpawn = true;
     boolean dungeonF7CrystalPlace = true;
     boolean dungeonF7CrystalAlert = true;
@@ -538,7 +607,27 @@ final class QolSkyblockExtras {
     boolean dungeonF7DragonArrows = true;
     boolean dungeonF7DragonHealth = true;
     boolean dungeonF7DragonBoxes = true;
+    boolean dungeonF7DragonTracers;
+    boolean dungeonF7DragonPriority;
+    boolean dungeonF7DragonPaul;
+    String dungeonF7DragonSoloClass = "Tank";
     boolean dungeonF7P3Display = true;
+    boolean dungeonF7SharpShooter = true;
+    boolean dungeonF7SharpAim;
+    boolean dungeonF7SharpComplete = true;
+    int dungeonF7SharpMarkedColor = DungeonGoldorPolicy.MARKED_COLOR;
+    int dungeonF7SharpTargetColor = DungeonGoldorPolicy.TARGET_COLOR;
+    int dungeonF7SharpAim1Color = DungeonGoldorPolicy.FIRST_AIM_COLOR;
+    int dungeonF7SharpAim2Color = DungeonGoldorPolicy.SECOND_AIM_COLOR;
+    int dungeonF7SharpAim3Color = DungeonGoldorPolicy.THIRD_AIM_COLOR;
+    boolean dungeonF7TermTimes = true;
+    boolean dungeonF7TermPbs = true;
+    String dungeonF7TermPbTimes = "";
+    boolean dungeonF7Predev = true;
+    boolean dungeonF7PredevAll;
+    long dungeonF7PredevPbMs;
+    boolean dungeonF7SsComplete = true;
+    boolean dungeonF7Pre4Complete = true;
     boolean dungeonF7DragonTimer = true;
     boolean dungeonF7GoldorFrenzy;
     boolean dungeonF7PurplePad;
@@ -549,11 +638,16 @@ final class QolSkyblockExtras {
     int dungeonF7SimonOtherColor = 0xFF38BDF8;
     boolean dungeonF7SimonBlockWrong;
     boolean dungeonF7SimonTrigger;
+    boolean dungeonF7SimonSounds;
     boolean dungeonF7ArrowBlockWrong;
     boolean dungeonF7I4Predict = true;
     int dungeonF7I4PredictColor = 0xFF38BDF8;
     boolean dungeonF7RelicSpawn;
+    int dungeonF7RelicSpawnTicks = DungeonF7Policy.DEFAULT_RELIC_SPAWN_TICKS;
+    boolean dungeonF7RelicBeacon = true;
     boolean dungeonF7RelicPlace;
+    boolean dungeonF7RelicHighlight = true;
+    boolean dungeonF7RelicBlockWrong;
     boolean dungeonMenusEnabled;
     boolean dungeonMenusSalvage = true;
     boolean dungeonMenusPartyFinder = true;
@@ -568,6 +662,22 @@ final class QolSkyblockExtras {
     int dungeonMenusProfitColor = 0x80F59E0B;
     boolean dungeonMenusCloseChest;
     String dungeonMenusCloseChestMode = "Auto";
+    DungeonAthenSettings athen = new DungeonAthenSettings();
+    CustomScoreboardSettings customScoreboard = new CustomScoreboardSettings();
+
+    DungeonAthenSettings athen() {
+        if (athen == null) {
+            athen = new DungeonAthenSettings();
+        }
+        return athen;
+    }
+
+    CustomScoreboardSettings board() {
+        if (customScoreboard == null) {
+            customScoreboard = new CustomScoreboardSettings();
+        }
+        return customScoreboard;
+    }
     boolean cameraClip;
     boolean cameraCustomDistance;
     double cameraDistance = TempleDungeonPolicy.DEFAULT_CAMERA_DISTANCE;
@@ -641,6 +751,8 @@ final class QolSkyblockExtras {
     int slayerDropsPriceTitleMinimum = 1_000_000;
     boolean slayerDropsRecentHighlight = true;
     java.util.List<String> slayerDropFilter = new java.util.ArrayList<>();
+    java.util.Map<String, String> slayerRngMeterSelectedByFamily = new java.util.LinkedHashMap<>();
+    java.util.Map<String, Long> slayerRngMeterStoredXpByFamily = new java.util.LinkedHashMap<>();
     boolean slayerCarryEnabled;
     boolean slayerCarryAnnounceParty = true;
     boolean slayerCarryShowSpawnMessage = true;
@@ -842,13 +954,13 @@ final class QolSkyblockExtras {
     boolean hideNausea;
     boolean hideStuckArrows;
     String vignetteMode = VIGNETTE_NONE;
-    String hideIslandClouds = SkyblockFlavorPolicy.CLOUD_OFF;
+    String hideIslandClouds = SkyBlockUtilityPolicy.CLOUD_OFF;
     boolean netherFog = true;
-    double netherFogScale = SkyblockFlavorPolicy.DEFAULT_NETHER_FOG_SCALE;
+    double netherFogScale = SkyBlockUtilityPolicy.DEFAULT_NETHER_FOG_SCALE;
     boolean totemAnimation = true;
     boolean mobIcons;
-    int armorSelf = SkyblockFlavorPolicy.DEFAULT_ARMOR_PERCENT;
-    int armorOthers = SkyblockFlavorPolicy.DEFAULT_ARMOR_PERCENT;
+    int armorSelf = SkyBlockUtilityPolicy.DEFAULT_ARMOR_PERCENT;
+    int armorOthers = SkyBlockUtilityPolicy.DEFAULT_ARMOR_PERCENT;
 
     boolean freecamEnabled;
     double freecamSpeed = FreecamPolicy.DEFAULT_SPEED;
@@ -1068,7 +1180,8 @@ final class QolSkyblockExtras {
             case "qol.custom_resource_pack" -> customResourcePackEnabled;
             case "qol.iota" -> iotaAddonsEnabled;
             case "qol.stall_market" -> stallMarketEnabled;
-            default -> false;
+            case "qol.custom_scoreboard" -> board().enabled;
+            default -> Boolean.TRUE.equals(athen().readBoolean(moduleId));
         };
     }
 
@@ -1162,14 +1275,23 @@ final class QolSkyblockExtras {
             case "qol.custom_resource_pack" -> customResourcePackEnabled = enabled;
             case "qol.iota" -> iotaAddonsEnabled = enabled;
             case "qol.stall_market" -> stallMarketEnabled = enabled;
+            case "qol.custom_scoreboard" -> board().enabled = enabled;
             default -> {
-                return false;
+                if (!athen().setModuleEnabled(moduleId, enabled)) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
     Boolean readBoolean(String settingId) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")) {
+            Boolean value = board().readBoolean(settingId);
+            if (value != null) {
+                return value;
+            }
+        }
         return switch (settingId) {
             case "qol.animation_fix.dyes" -> animationDyes;
             case "qol.animation_fix.skins" -> animationSkins;
@@ -1362,11 +1484,13 @@ final class QolSkyblockExtras {
             case "qol.dungeon_hud.floor" -> dungeonHudFloor;
             case "qol.dungeon_hud.cleared" -> dungeonHudCleared;
             case "qol.dungeon_hud.invincibility" -> dungeonHudInvincibility;
+            case "qol.dungeon_hud.mask_overlay" -> dungeonHudMaskOverlay;
             case "qol.dungeon_hud.terracotta" -> dungeonHudTerracotta;
             case "qol.dungeon_hud.blessings" -> dungeonHudBlessings;
             case "qol.dungeon_hud.f7_timers" -> dungeonHudF7Timers;
             case "qol.dungeon_hud.ragnarock" -> dungeonHudRagnarock;
             case "qol.dungeon_hud.melody" -> dungeonHudMelody;
+            case "qol.dungeon_hud.melody_other" -> dungeonHudMelodyOther;
             case "qol.dungeon_hud.quiz" -> dungeonHudQuiz;
             case "qol.dungeon_hud.map" -> dungeonHudMap;
             case "qol.dungeon_hud.map_doors" -> dungeonHudMapDoors;
@@ -1378,7 +1502,21 @@ final class QolSkyblockExtras {
             case "qol.dungeon_hud.score_overlay" -> dungeonHudScoreOverlay;
             case "qol.dungeon_hud.class_icons" -> dungeonHudClassIcons;
             case "qol.dungeon_hud.head_markers" -> dungeonHudHeadMarkers;
+            case "qol.dungeon_hud.room_names" -> dungeonHudRoomNames;
+            case "qol.dungeon_hud.room_secrets" -> dungeonHudRoomSecrets;
+            case "qol.dungeon_hud.player_names" -> dungeonHudPlayerNames;
+            case "qol.dungeon_hud.map_mimic" -> dungeonHudMapMimic;
+            case "qol.dungeon_hud.map_puzzles" -> dungeonHudMapPuzzles;
             case "qol.dungeon_hud.puzzle_timer" -> dungeonHudPuzzleTimer;
+            case "qol.dungeon_hud.warp_cooldown" -> dungeonHudWarpCooldown;
+            case "qol.dungeon_hud.secret_spawn" -> dungeonHudSecretSpawn;
+            case "qol.dungeon_hud.explosive_shot" -> dungeonHudExplosiveShot;
+            case "qol.dungeon_hud.unclaimed_chests" -> dungeonHudUnclaimedChests;
+            case "qol.dungeon_hud.chest_warning" -> dungeonHudChestWarning;
+            case "qol.dungeon_hud.extra_stats" -> dungeonHudExtraStats;
+            case "qol.dungeon_hud.ledge" -> dungeonHudLedge;
+            case "qol.dungeon_hud.ledge_yellow" -> dungeonHudLedgeYellow;
+            case "qol.dungeon_hud.ledge_all" -> dungeonHudLedgeAll;
             case "qol.dungeon_hud.run_timers" -> dungeonHudRunTimers;
             case "qol.dungeon_hud.show_split_pbs" -> dungeonHudShowSplitPbs;
             case "qol.dungeon_hud.kuudra_splits" -> dungeonHudKuudraSplits;
@@ -1396,6 +1534,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.crystals" -> dungeonEspCrystals;
             case "qol.dungeon_esp.secrets" -> dungeonEspSecrets;
             case "qol.dungeon_esp.secret_waypoints" -> dungeonEspSecretWaypoints;
+            case "qol.dungeon_esp.hide_collected" -> dungeonEspHideCollected;
+            case "qol.dungeon_esp.secret_clicked" -> dungeonEspSecretClicked;
+            case "qol.dungeon_esp.secret_clicked_boss" -> dungeonEspSecretClickedBoss;
+            case "qol.dungeon_esp.items" -> dungeonEspItems;
             case "qol.dungeon_esp.iced_mobs" -> dungeonEspIcedMobs;
             case "qol.dungeon_esp.simon" -> dungeonEspSimon;
             case "qol.dungeon_esp.hate_doors" -> dungeonEspHateDoors;
@@ -1427,8 +1569,16 @@ final class QolSkyblockExtras {
             case "qol.dungeon_announce.ragnarock" -> dungeonAnnounceRagnarock;
             case "qol.dungeon_announce.rooms" -> dungeonAnnounceRooms;
             case "qol.dungeon_announce.melody" -> dungeonAnnounceMelody;
+            case "qol.dungeon_announce.melody_party" -> dungeonAnnounceMelodyParty;
+            case "qol.dungeon_announce.melody_progress" -> dungeonAnnounceMelodyProgress;
+            case "qol.dungeon_announce.death" -> dungeonAnnounceDeath;
+            case "qol.dungeon_announce.position" -> dungeonAnnouncePosition;
             case "qol.dungeon_announce.secret_chime" -> dungeonAnnounceSecretChime;
             case "qol.dungeon_announce.duplicate_class" -> dungeonAnnounceDuplicateClass;
+            case "qol.dungeon_announce.player_count" -> dungeonAnnouncePlayerCount;
+            case "qol.dungeon_announce.location" -> dungeonAnnounceLocation;
+            case "qol.dungeon_announce.key_drop" -> dungeonAnnounceKeyDrop;
+            case "qol.dungeon_announce.key_drop_all" -> dungeonAnnounceKeyDropAll;
             case "qol.dungeon_announce.auto_ult" -> dungeonAnnounceAutoUlt;
             case "qol.dungeon_leap.highlight" -> dungeonLeapHighlight;
             case "qol.dungeon_leap.custom_gui" -> dungeonLeapCustomGui;
@@ -1447,6 +1597,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.melody_skip" -> dungeonTerminalsMelodySkip;
             case "qol.dungeon_terminals.melody_skip_first_row" -> dungeonTerminalsMelodySkipFirstRow;
             case "qol.dungeon_terminals.sounds" -> dungeonTerminalsSounds;
+            case "qol.dungeon_terminals.complete_sounds" -> dungeonTerminalsCompleteSounds;
+            case "qol.dungeon_terminals.stop_tooltips" -> dungeonTerminalsStopTooltips;
+            case "qol.dungeon_terminals.hide_clicked" -> dungeonTerminalsHideClicked;
+            case "qol.dungeon_terminals.block_wrong_slots" -> dungeonTerminalsBlockWrongSlots;
             case "qol.dungeon_terminals.human_order" -> dungeonTerminalsHumanOrder;
             case "qol.dungeon_terminals.melody_keys" -> dungeonTerminalsMelodyKeys;
             case "qol.dungeon_terminals.protect" -> dungeonTerminalsProtect;
@@ -1459,18 +1613,35 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.clone" -> dungeonTerminalsClone;
             case "qol.dungeon_terminals.hitboxes" -> dungeonTerminalsHitboxes;
             case "qol.dungeon_puzzles.quiz" -> dungeonPuzzlesQuiz;
+            case "qol.dungeon_puzzles.quiz_boxes" -> dungeonPuzzlesQuizBoxes;
+            case "qol.dungeon_puzzles.quiz_timer" -> dungeonPuzzlesQuizTimer;
             case "qol.dungeon_puzzles.weirdos" -> dungeonPuzzlesWeirdos;
             case "qol.dungeon_puzzles.blaze" -> dungeonPuzzlesBlaze;
             case "qol.dungeon_puzzles.ice" -> dungeonPuzzlesIce;
+            case "qol.dungeon_puzzles.ice_path" -> dungeonPuzzlesIcePath;
+            case "qol.dungeon_puzzles.ice_optimize" -> dungeonPuzzlesIceOptimize;
             case "qol.dungeon_puzzles.water" -> dungeonPuzzlesWater;
+            case "qol.dungeon_puzzles.water_optimized" -> dungeonPuzzlesWaterOptimized;
             case "qol.dungeon_puzzles.boulder" -> dungeonPuzzlesBoulder;
             case "qol.dungeon_puzzles.tp_maze" -> dungeonPuzzlesTpMaze;
+            case "qol.dungeon_puzzles.creeper_beams" -> dungeonPuzzlesCreeperBeams;
+            case "qol.dungeon_puzzles.tic_tac_toe" -> dungeonPuzzlesTicTacToe;
             case "qol.dungeon_f7.titles" -> dungeonF7Titles;
             case "qol.dungeon_f7.title_crystal" -> dungeonF7TitleCrystal;
             case "qol.dungeon_f7.title_wither" -> dungeonF7TitleWither;
             case "qol.dungeon_f7.title_terminal" -> dungeonF7TitleTerminal;
             case "qol.dungeon_f7.title_gate" -> dungeonF7TitleGate;
+            case "qol.dungeon_f7.hide_other_titles" -> dungeonF7HideOtherTitles;
+            case "qol.dungeon_f7.hide_titles_at_ss" -> dungeonF7HideTitlesAtSs;
+            case "qol.dungeon_f7.hide_titles_at_pre4" -> dungeonF7HideTitlesAtPre4;
+            case "qol.dungeon_f7.hide_at_ss" -> dungeonF7HideAtSs;
+            case "qol.dungeon_f7.hide_at_ss_pre_terms" -> dungeonF7HideAtSsPreTerms;
+            case "qol.dungeon_f7.hide_after_leap" -> dungeonF7HideAfterLeap;
+            case "qol.dungeon_f7.hide_after_leap_boss" -> dungeonF7HideAfterLeapBoss;
             case "qol.dungeon_f7.timers" -> dungeonF7Timers;
+            case "qol.dungeon_f7.timer_ticks" -> dungeonF7TimerTicks;
+            case "qol.dungeon_f7.timer_symbol" -> dungeonF7TimerSymbol;
+            case "qol.dungeon_f7.timer_prefix" -> dungeonF7TimerPrefix;
             case "qol.dungeon_f7.timer_maxor" -> dungeonF7TimerMaxor;
             case "qol.dungeon_f7.timer_storm" -> dungeonF7TimerStorm;
             case "qol.dungeon_f7.timer_pad" -> dungeonF7TimerPad;
@@ -1478,6 +1649,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.timer_goldor" -> dungeonF7TimerGoldor;
             case "qol.dungeon_f7.timer_necron" -> dungeonF7TimerNecron;
             case "qol.dungeon_f7.crystals" -> dungeonF7Crystals;
+            case "qol.dungeon_f7.maxor_stun" -> dungeonF7MaxorStun;
+            case "qol.dungeon_f7.storm_crush" -> dungeonF7StormCrush;
+            case "qol.dungeon_f7.storm_lb" -> dungeonF7StormLb;
+            case "qol.dungeon_f7.term_start" -> dungeonF7TermStart;
             case "qol.dungeon_f7.crystal_spawn" -> dungeonF7CrystalSpawn;
             case "qol.dungeon_f7.crystal_place" -> dungeonF7CrystalPlace;
             case "qol.dungeon_f7.crystal_alert" -> dungeonF7CrystalAlert;
@@ -1488,7 +1663,19 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.dragon_arrows" -> dungeonF7DragonArrows;
             case "qol.dungeon_f7.dragon_health" -> dungeonF7DragonHealth;
             case "qol.dungeon_f7.dragon_boxes" -> dungeonF7DragonBoxes;
+            case "qol.dungeon_f7.dragon_tracers" -> dungeonF7DragonTracers;
+            case "qol.dungeon_f7.dragon_priority" -> dungeonF7DragonPriority;
+            case "qol.dungeon_f7.dragon_paul" -> dungeonF7DragonPaul;
             case "qol.dungeon_f7.p3_display" -> dungeonF7P3Display;
+            case "qol.dungeon_f7.sharp_shooter" -> dungeonF7SharpShooter;
+            case "qol.dungeon_f7.sharp_aim" -> dungeonF7SharpAim;
+            case "qol.dungeon_f7.sharp_complete" -> dungeonF7SharpComplete;
+            case "qol.dungeon_f7.term_times" -> dungeonF7TermTimes;
+            case "qol.dungeon_f7.term_pbs" -> dungeonF7TermPbs;
+            case "qol.dungeon_f7.predev" -> dungeonF7Predev;
+            case "qol.dungeon_f7.predev_all" -> dungeonF7PredevAll;
+            case "qol.dungeon_f7.ss_complete" -> dungeonF7SsComplete;
+            case "qol.dungeon_f7.pre4_complete" -> dungeonF7Pre4Complete;
             case "qol.dungeon_f7.dragon_timer" -> dungeonF7DragonTimer;
             case "qol.dungeon_f7.goldor_frenzy" -> dungeonF7GoldorFrenzy;
             case "qol.dungeon_f7.purple_pad" -> dungeonF7PurplePad;
@@ -1498,6 +1685,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.simon_block_wrong" -> dungeonF7SimonBlockWrong;
             case "qol.dungeon_f7.simon_auto" -> dungeonF7SimonAuto;
             case "qol.dungeon_f7.simon_trigger" -> dungeonF7SimonTrigger;
+            case "qol.dungeon_f7.simon_sounds" -> dungeonF7SimonSounds;
             case "qol.dungeon_f7.hide_diorite" -> dungeonF7HideDiorite;
             case "qol.dungeon_f7.arrow_align" -> dungeonF7ArrowAlign;
             case "qol.dungeon_f7.arrow_block_wrong" -> dungeonF7ArrowBlockWrong;
@@ -1516,7 +1704,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.relics" -> dungeonF7Relics;
             case "qol.dungeon_f7.relic_look" -> dungeonF7RelicLook;
             case "qol.dungeon_f7.relic_spawn" -> dungeonF7RelicSpawn;
+            case "qol.dungeon_f7.relic_beacon" -> dungeonF7RelicBeacon;
             case "qol.dungeon_f7.relic_place" -> dungeonF7RelicPlace;
+            case "qol.dungeon_f7.relic_highlight" -> dungeonF7RelicHighlight;
+            case "qol.dungeon_f7.relic_block_wrong" -> dungeonF7RelicBlockWrong;
             case "qol.dungeon_f7.breaker_prevent_secrets" -> dungeonF7BreakerPreventSecrets;
             case "qol.dungeon_f7.breaker_charges" -> dungeonF7BreakerCharges;
             case "qol.dungeon_f7.auto_superboom" -> dungeonF7AutoSuperboom;
@@ -1748,11 +1939,15 @@ final class QolSkyblockExtras {
             case "qol.stall_market.angry_coop" -> stallAngryCoop;
             case "qol.stall_market.bin_overlay" -> stallBinOverlay;
             case "qol.stall_market.ah_highlight" -> stallAhHighlight;
-            default -> null;
+            default -> athen().readBoolean(settingId);
         };
     }
 
     boolean writeBoolean(String settingId, boolean value) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")
+                && board().writeBoolean(settingId, value)) {
+            return true;
+        }
         switch (settingId) {
             case "qol.animation_fix.dyes" -> animationDyes = value;
             case "qol.animation_fix.skins" -> animationSkins = value;
@@ -1944,11 +2139,13 @@ final class QolSkyblockExtras {
             case "qol.dungeon_hud.floor" -> dungeonHudFloor = value;
             case "qol.dungeon_hud.cleared" -> dungeonHudCleared = value;
             case "qol.dungeon_hud.invincibility" -> dungeonHudInvincibility = value;
+            case "qol.dungeon_hud.mask_overlay" -> dungeonHudMaskOverlay = value;
             case "qol.dungeon_hud.terracotta" -> dungeonHudTerracotta = value;
             case "qol.dungeon_hud.blessings" -> dungeonHudBlessings = value;
             case "qol.dungeon_hud.f7_timers" -> dungeonHudF7Timers = value;
             case "qol.dungeon_hud.ragnarock" -> dungeonHudRagnarock = value;
             case "qol.dungeon_hud.melody" -> dungeonHudMelody = value;
+            case "qol.dungeon_hud.melody_other" -> dungeonHudMelodyOther = value;
             case "qol.dungeon_hud.quiz" -> dungeonHudQuiz = value;
             case "qol.dungeon_hud.map" -> dungeonHudMap = value;
             case "qol.dungeon_hud.map_doors" -> dungeonHudMapDoors = value;
@@ -1960,11 +2157,30 @@ final class QolSkyblockExtras {
             case "qol.dungeon_hud.score_overlay" -> dungeonHudScoreOverlay = value;
             case "qol.dungeon_hud.class_icons" -> dungeonHudClassIcons = value;
             case "qol.dungeon_hud.head_markers" -> dungeonHudHeadMarkers = value;
+            case "qol.dungeon_hud.room_names" -> dungeonHudRoomNames = value;
+            case "qol.dungeon_hud.room_secrets" -> dungeonHudRoomSecrets = value;
+            case "qol.dungeon_hud.player_names" -> dungeonHudPlayerNames = value;
+            case "qol.dungeon_hud.map_mimic" -> dungeonHudMapMimic = value;
+            case "qol.dungeon_hud.map_puzzles" -> dungeonHudMapPuzzles = value;
             case "qol.dungeon_hud.puzzle_timer" -> dungeonHudPuzzleTimer = value;
+            case "qol.dungeon_hud.warp_cooldown" -> dungeonHudWarpCooldown = value;
+            case "qol.dungeon_hud.secret_spawn" -> dungeonHudSecretSpawn = value;
+            case "qol.dungeon_hud.explosive_shot" -> dungeonHudExplosiveShot = value;
+            case "qol.dungeon_hud.unclaimed_chests" -> dungeonHudUnclaimedChests = value;
+            case "qol.dungeon_hud.chest_warning" -> dungeonHudChestWarning = value;
+            case "qol.dungeon_hud.extra_stats" -> dungeonHudExtraStats = value;
+            case "qol.dungeon_hud.ledge" -> dungeonHudLedge = value;
+            case "qol.dungeon_hud.ledge_yellow" -> dungeonHudLedgeYellow = value;
+            case "qol.dungeon_hud.ledge_all" -> dungeonHudLedgeAll = value;
             case "qol.dungeon_hud.run_timers" -> dungeonHudRunTimers = value;
             case "qol.dungeon_hud.show_split_pbs" -> dungeonHudShowSplitPbs = value;
             case "qol.dungeon_hud.kuudra_splits" -> dungeonHudKuudraSplits = value;
-            case "qol.dungeon_hud.cheater_map" -> dungeonHudCheaterMap = value;
+            case "qol.dungeon_hud.cheater_map" -> {
+                dungeonHudCheaterMap = value;
+                dungeonHudMapMode = value
+                        ? DungeonMapPolicy.MAP_MODE_REVEAL
+                        : DungeonMapPolicy.MAP_MODE_EXPLORED;
+            }
             case "qol.dungeon_hud.cheater_names" -> dungeonHudCheaterNames = value;
             case "qol.dungeon_hud.cheater_darken" -> dungeonHudCheaterDarken = value;
             case "qol.dungeon_esp.starred" -> dungeonEspStarred = value;
@@ -1978,6 +2194,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.crystals" -> dungeonEspCrystals = value;
             case "qol.dungeon_esp.secrets" -> dungeonEspSecrets = value;
             case "qol.dungeon_esp.secret_waypoints" -> dungeonEspSecretWaypoints = value;
+            case "qol.dungeon_esp.hide_collected" -> dungeonEspHideCollected = value;
+            case "qol.dungeon_esp.secret_clicked" -> dungeonEspSecretClicked = value;
+            case "qol.dungeon_esp.secret_clicked_boss" -> dungeonEspSecretClickedBoss = value;
+            case "qol.dungeon_esp.items" -> dungeonEspItems = value;
             case "qol.dungeon_esp.iced_mobs" -> dungeonEspIcedMobs = value;
             case "qol.dungeon_esp.simon" -> dungeonEspSimon = value;
             case "qol.dungeon_esp.hate_doors" -> dungeonEspHateDoors = value;
@@ -2009,8 +2229,16 @@ final class QolSkyblockExtras {
             case "qol.dungeon_announce.ragnarock" -> dungeonAnnounceRagnarock = value;
             case "qol.dungeon_announce.rooms" -> dungeonAnnounceRooms = value;
             case "qol.dungeon_announce.melody" -> dungeonAnnounceMelody = value;
+            case "qol.dungeon_announce.melody_party" -> dungeonAnnounceMelodyParty = value;
+            case "qol.dungeon_announce.melody_progress" -> dungeonAnnounceMelodyProgress = value;
+            case "qol.dungeon_announce.death" -> dungeonAnnounceDeath = value;
+            case "qol.dungeon_announce.position" -> dungeonAnnouncePosition = value;
             case "qol.dungeon_announce.secret_chime" -> dungeonAnnounceSecretChime = value;
             case "qol.dungeon_announce.duplicate_class" -> dungeonAnnounceDuplicateClass = value;
+            case "qol.dungeon_announce.player_count" -> dungeonAnnouncePlayerCount = value;
+            case "qol.dungeon_announce.location" -> dungeonAnnounceLocation = value;
+            case "qol.dungeon_announce.key_drop" -> dungeonAnnounceKeyDrop = value;
+            case "qol.dungeon_announce.key_drop_all" -> dungeonAnnounceKeyDropAll = value;
             case "qol.dungeon_announce.auto_ult" -> dungeonAnnounceAutoUlt = value;
             case "qol.dungeon_leap.highlight" -> dungeonLeapHighlight = value;
             case "qol.dungeon_leap.custom_gui" -> dungeonLeapCustomGui = value;
@@ -2029,6 +2257,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.melody_skip" -> dungeonTerminalsMelodySkip = value;
             case "qol.dungeon_terminals.melody_skip_first_row" -> dungeonTerminalsMelodySkipFirstRow = value;
             case "qol.dungeon_terminals.sounds" -> dungeonTerminalsSounds = value;
+            case "qol.dungeon_terminals.complete_sounds" -> dungeonTerminalsCompleteSounds = value;
+            case "qol.dungeon_terminals.stop_tooltips" -> dungeonTerminalsStopTooltips = value;
+            case "qol.dungeon_terminals.hide_clicked" -> dungeonTerminalsHideClicked = value;
+            case "qol.dungeon_terminals.block_wrong_slots" -> dungeonTerminalsBlockWrongSlots = value;
             case "qol.dungeon_terminals.human_order" -> dungeonTerminalsHumanOrder = value;
             case "qol.dungeon_terminals.melody_keys" -> dungeonTerminalsMelodyKeys = value;
             case "qol.dungeon_terminals.protect" -> dungeonTerminalsProtect = value;
@@ -2041,18 +2273,35 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.clone" -> dungeonTerminalsClone = value;
             case "qol.dungeon_terminals.hitboxes" -> dungeonTerminalsHitboxes = value;
             case "qol.dungeon_puzzles.quiz" -> dungeonPuzzlesQuiz = value;
+            case "qol.dungeon_puzzles.quiz_boxes" -> dungeonPuzzlesQuizBoxes = value;
+            case "qol.dungeon_puzzles.quiz_timer" -> dungeonPuzzlesQuizTimer = value;
             case "qol.dungeon_puzzles.weirdos" -> dungeonPuzzlesWeirdos = value;
             case "qol.dungeon_puzzles.blaze" -> dungeonPuzzlesBlaze = value;
             case "qol.dungeon_puzzles.ice" -> dungeonPuzzlesIce = value;
+            case "qol.dungeon_puzzles.ice_path" -> dungeonPuzzlesIcePath = value;
+            case "qol.dungeon_puzzles.ice_optimize" -> dungeonPuzzlesIceOptimize = value;
             case "qol.dungeon_puzzles.water" -> dungeonPuzzlesWater = value;
+            case "qol.dungeon_puzzles.water_optimized" -> dungeonPuzzlesWaterOptimized = value;
             case "qol.dungeon_puzzles.boulder" -> dungeonPuzzlesBoulder = value;
             case "qol.dungeon_puzzles.tp_maze" -> dungeonPuzzlesTpMaze = value;
+            case "qol.dungeon_puzzles.creeper_beams" -> dungeonPuzzlesCreeperBeams = value;
+            case "qol.dungeon_puzzles.tic_tac_toe" -> dungeonPuzzlesTicTacToe = value;
             case "qol.dungeon_f7.titles" -> dungeonF7Titles = value;
             case "qol.dungeon_f7.title_crystal" -> dungeonF7TitleCrystal = value;
             case "qol.dungeon_f7.title_wither" -> dungeonF7TitleWither = value;
             case "qol.dungeon_f7.title_terminal" -> dungeonF7TitleTerminal = value;
             case "qol.dungeon_f7.title_gate" -> dungeonF7TitleGate = value;
+            case "qol.dungeon_f7.hide_other_titles" -> dungeonF7HideOtherTitles = value;
+            case "qol.dungeon_f7.hide_titles_at_ss" -> dungeonF7HideTitlesAtSs = value;
+            case "qol.dungeon_f7.hide_titles_at_pre4" -> dungeonF7HideTitlesAtPre4 = value;
+            case "qol.dungeon_f7.hide_at_ss" -> dungeonF7HideAtSs = value;
+            case "qol.dungeon_f7.hide_at_ss_pre_terms" -> dungeonF7HideAtSsPreTerms = value;
+            case "qol.dungeon_f7.hide_after_leap" -> dungeonF7HideAfterLeap = value;
+            case "qol.dungeon_f7.hide_after_leap_boss" -> dungeonF7HideAfterLeapBoss = value;
             case "qol.dungeon_f7.timers" -> dungeonF7Timers = value;
+            case "qol.dungeon_f7.timer_ticks" -> dungeonF7TimerTicks = value;
+            case "qol.dungeon_f7.timer_symbol" -> dungeonF7TimerSymbol = value;
+            case "qol.dungeon_f7.timer_prefix" -> dungeonF7TimerPrefix = value;
             case "qol.dungeon_f7.timer_maxor" -> dungeonF7TimerMaxor = value;
             case "qol.dungeon_f7.timer_storm" -> dungeonF7TimerStorm = value;
             case "qol.dungeon_f7.timer_pad" -> dungeonF7TimerPad = value;
@@ -2060,6 +2309,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.timer_goldor" -> dungeonF7TimerGoldor = value;
             case "qol.dungeon_f7.timer_necron" -> dungeonF7TimerNecron = value;
             case "qol.dungeon_f7.crystals" -> dungeonF7Crystals = value;
+            case "qol.dungeon_f7.maxor_stun" -> dungeonF7MaxorStun = value;
+            case "qol.dungeon_f7.storm_crush" -> dungeonF7StormCrush = value;
+            case "qol.dungeon_f7.storm_lb" -> dungeonF7StormLb = value;
+            case "qol.dungeon_f7.term_start" -> dungeonF7TermStart = value;
             case "qol.dungeon_f7.crystal_spawn" -> dungeonF7CrystalSpawn = value;
             case "qol.dungeon_f7.crystal_place" -> dungeonF7CrystalPlace = value;
             case "qol.dungeon_f7.crystal_alert" -> dungeonF7CrystalAlert = value;
@@ -2070,7 +2323,19 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.dragon_arrows" -> dungeonF7DragonArrows = value;
             case "qol.dungeon_f7.dragon_health" -> dungeonF7DragonHealth = value;
             case "qol.dungeon_f7.dragon_boxes" -> dungeonF7DragonBoxes = value;
+            case "qol.dungeon_f7.dragon_tracers" -> dungeonF7DragonTracers = value;
+            case "qol.dungeon_f7.dragon_priority" -> dungeonF7DragonPriority = value;
+            case "qol.dungeon_f7.dragon_paul" -> dungeonF7DragonPaul = value;
             case "qol.dungeon_f7.p3_display" -> dungeonF7P3Display = value;
+            case "qol.dungeon_f7.sharp_shooter" -> dungeonF7SharpShooter = value;
+            case "qol.dungeon_f7.sharp_aim" -> dungeonF7SharpAim = value;
+            case "qol.dungeon_f7.sharp_complete" -> dungeonF7SharpComplete = value;
+            case "qol.dungeon_f7.term_times" -> dungeonF7TermTimes = value;
+            case "qol.dungeon_f7.term_pbs" -> dungeonF7TermPbs = value;
+            case "qol.dungeon_f7.predev" -> dungeonF7Predev = value;
+            case "qol.dungeon_f7.predev_all" -> dungeonF7PredevAll = value;
+            case "qol.dungeon_f7.ss_complete" -> dungeonF7SsComplete = value;
+            case "qol.dungeon_f7.pre4_complete" -> dungeonF7Pre4Complete = value;
             case "qol.dungeon_f7.dragon_timer" -> dungeonF7DragonTimer = value;
             case "qol.dungeon_f7.goldor_frenzy" -> dungeonF7GoldorFrenzy = value;
             case "qol.dungeon_f7.purple_pad" -> dungeonF7PurplePad = value;
@@ -2080,6 +2345,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.simon_block_wrong" -> dungeonF7SimonBlockWrong = value;
             case "qol.dungeon_f7.simon_auto" -> dungeonF7SimonAuto = value;
             case "qol.dungeon_f7.simon_trigger" -> dungeonF7SimonTrigger = value;
+            case "qol.dungeon_f7.simon_sounds" -> dungeonF7SimonSounds = value;
             case "qol.dungeon_f7.hide_diorite" -> dungeonF7HideDiorite = value;
             case "qol.dungeon_f7.arrow_align" -> dungeonF7ArrowAlign = value;
             case "qol.dungeon_f7.arrow_block_wrong" -> dungeonF7ArrowBlockWrong = value;
@@ -2098,7 +2364,10 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.relics" -> dungeonF7Relics = value;
             case "qol.dungeon_f7.relic_look" -> dungeonF7RelicLook = value;
             case "qol.dungeon_f7.relic_spawn" -> dungeonF7RelicSpawn = value;
+            case "qol.dungeon_f7.relic_beacon" -> dungeonF7RelicBeacon = value;
             case "qol.dungeon_f7.relic_place" -> dungeonF7RelicPlace = value;
+            case "qol.dungeon_f7.relic_highlight" -> dungeonF7RelicHighlight = value;
+            case "qol.dungeon_f7.relic_block_wrong" -> dungeonF7RelicBlockWrong = value;
             case "qol.dungeon_f7.breaker_prevent_secrets" -> dungeonF7BreakerPreventSecrets = value;
             case "qol.dungeon_f7.breaker_charges" -> dungeonF7BreakerCharges = value;
             case "qol.dungeon_f7.auto_superboom" -> dungeonF7AutoSuperboom = value;
@@ -2340,13 +2609,21 @@ final class QolSkyblockExtras {
             case "qol.stall_market.bin_overlay" -> stallBinOverlay = value;
             case "qol.stall_market.ah_highlight" -> stallAhHighlight = value;
             default -> {
-                return false;
+                if (!athen().writeBoolean(settingId, value)) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
     Double readNumber(String settingId) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")) {
+            Double value = board().readNumber(settingId);
+            if (value != null) {
+                return value;
+            }
+        }
         return switch (settingId) {
             case "qol.price_tooltips.burgers" -> (double) priceBurgerCount;
             case "qol.viewmodel.swing_speed" -> (double) viewmodelSwingSpeed;
@@ -2374,10 +2651,14 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.delay" -> (double) dungeonTerminalsDelay;
             case "qol.dungeon_terminals.protect_ms" -> (double) dungeonTerminalsProtectMs;
             case "qol.dungeon_f7.relic_look_time" -> (double) dungeonF7RelicLookTime;
+            case "qol.dungeon_f7.relic_spawn_ticks" -> (double) dungeonF7RelicSpawnTicks;
             case "qol.dungeon_f7.auto_i4_rotation" -> (double) dungeonF7AutoI4Rotation;
             case "qol.dungeon_termsim.ping" -> (double) dungeonTermSimPing;
             case "qol.dungeon_esp.trigger_delay" -> (double) dungeonEspTriggerDelay;
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor;
+            case "qol.dungeon_hud.map_scale" -> (double) dungeonHudMapScale;
+            case "qol.dungeon_hud.chest_warning_count" -> (double) dungeonHudChestWarningCount;
+            case "qol.dungeon_esp.secret_clicked_seconds" -> (double) dungeonEspSecretClickedSeconds;
             case "qol.dungeon_f7.superboom_delay" -> (double) dungeonF7SuperboomDelay;
             case "qol.auto_dojo.control_predict" -> (double) autoDojoControlPredict;
             case "qol.auto_dojo.mastery_delay" -> (double) autoDojoMasteryDelay;
@@ -2432,11 +2713,15 @@ final class QolSkyblockExtras {
             case "qol.render_optimizer.nether_fog_scale" -> netherFogScale;
             case "qol.render_optimizer.armor_self" -> (double) armorSelf;
             case "qol.render_optimizer.armor_others" -> (double) armorOthers;
-            default -> null;
+            default -> athen().readNumber(settingId);
         };
     }
 
     boolean writeNumber(String settingId, double value) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")
+                && board().writeNumber(settingId, value)) {
+            return true;
+        }
         switch (settingId) {
             case "qol.price_tooltips.burgers" ->
                     priceBurgerCount = PriceTooltipsPolicy.clampBurgers((int) Math.round(value));
@@ -2477,6 +2762,8 @@ final class QolSkyblockExtras {
                     DungeonF7Policy.clampTermProtectMs((int) Math.round(value));
             case "qol.dungeon_f7.relic_look_time" -> dungeonF7RelicLookTime =
                     DungeonF7Policy.clampRelicLookMs((int) Math.round(value));
+            case "qol.dungeon_f7.relic_spawn_ticks" -> dungeonF7RelicSpawnTicks =
+                    DungeonF7Policy.clampRelicSpawnTicks((int) Math.round(value));
             case "qol.dungeon_f7.auto_i4_rotation" -> dungeonF7AutoI4Rotation =
                     DungeonF7Policy.clampI4RotationMs((int) Math.round(value));
             case "qol.dungeon_termsim.ping" -> dungeonTermSimPing =
@@ -2485,6 +2772,12 @@ final class QolSkyblockExtras {
                     DungeonLeftoverPolicy.clampTriggerDelay((int) Math.round(value));
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor =
                     Math.max(0.0D, Math.min(1.0D, value));
+            case "qol.dungeon_hud.map_scale" -> dungeonHudMapScale =
+                    DungeonMapPolicy.clampHudCell((int) Math.round(value));
+            case "qol.dungeon_hud.chest_warning_count" -> dungeonHudChestWarningCount =
+                    DungeonBladePolicy.clampChestWarning((int) Math.round(value));
+            case "qol.dungeon_esp.secret_clicked_seconds" -> dungeonEspSecretClickedSeconds =
+                    TempleDungeonPolicy.clampSecretStaySeconds((int) Math.round(value));
             case "qol.dungeon_f7.superboom_delay" -> dungeonF7SuperboomDelay =
                     Math.max(1, Math.min(10, (int) Math.round(value)));
             case "qol.auto_dojo.control_predict" -> autoDojoControlPredict =
@@ -2586,24 +2879,35 @@ final class QolSkyblockExtras {
             case "qol.stall_market.sell_threshold" ->
                     stallSellThreshold = StallMarketPolicy.clampSellThreshold(Math.round(value));
             case "qol.render_optimizer.nether_fog_scale" ->
-                    netherFogScale = SkyblockFlavorPolicy.clampFogScale(value);
+                    netherFogScale = SkyBlockUtilityPolicy.clampFogScale(value);
             case "qol.render_optimizer.armor_self" ->
-                    armorSelf = SkyblockFlavorPolicy.clampArmorPercent((int) Math.round(value));
+                    armorSelf = SkyBlockUtilityPolicy.clampArmorPercent((int) Math.round(value));
             case "qol.render_optimizer.armor_others" ->
-                    armorOthers = SkyblockFlavorPolicy.clampArmorPercent((int) Math.round(value));
+                    armorOthers = SkyBlockUtilityPolicy.clampArmorPercent((int) Math.round(value));
             default -> {
-                return false;
+                if (!athen().writeNumber(settingId, value)) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
     String readEnum(String settingId) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")) {
+            String value = board().readEnum(settingId);
+            if (value != null) {
+                return value;
+            }
+        }
+        if ("qol.dungeon_hud.map_mode".equals(settingId)) {
+            return dungeonMapMode();
+        }
         if ("qol.render_optimizer.vignette".equals(settingId)) {
             return normalizeVignette(vignetteMode);
         }
         if ("qol.render_optimizer.hide_island_clouds".equals(settingId)) {
-            return SkyblockFlavorPolicy.normalizeCloudMode(hideIslandClouds);
+            return SkyBlockUtilityPolicy.normalizeCloudMode(hideIslandClouds);
         }
         if ("qol.auto_sell.click_type".equals(settingId)) {
             return AutoSellPolicy.normalizeClickType(autoSellClickType);
@@ -2638,16 +2942,30 @@ final class QolSkyblockExtras {
         if ("qol.iota.stun_pod".equals(settingId)) {
             return IotaKuudraPolicy.normalizeStunPod(iotaStunPod);
         }
-        return null;
+        if ("qol.ghosts.highlight_style".equals(settingId)) {
+            return GhostsPolicy.normalizeHighlight(ghostsHighlightStyle);
+        }
+        if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
+            return DungeonF7Policy.normalizeSoloClass(dungeonF7DragonSoloClass);
+        }
+        return athen().readEnum(settingId);
     }
 
     boolean writeEnum(String settingId, String value) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")
+                && board().writeEnum(settingId, value)) {
+            return true;
+        }
+        if ("qol.dungeon_hud.map_mode".equals(settingId)) {
+            applyDungeonMapMode(value);
+            return true;
+        }
         if ("qol.render_optimizer.vignette".equals(settingId)) {
             vignetteMode = normalizeVignette(value);
             return true;
         }
         if ("qol.render_optimizer.hide_island_clouds".equals(settingId)) {
-            hideIslandClouds = SkyblockFlavorPolicy.normalizeCloudMode(value);
+            hideIslandClouds = SkyBlockUtilityPolicy.normalizeCloudMode(value);
             return true;
         }
         if ("qol.auto_sell.click_type".equals(settingId)) {
@@ -2694,10 +3012,40 @@ final class QolSkyblockExtras {
             iotaStunPod = IotaKuudraPolicy.normalizeStunPod(value);
             return true;
         }
-        return false;
+        if ("qol.ghosts.highlight_style".equals(settingId)) {
+            ghostsHighlightStyle = GhostsPolicy.normalizeHighlight(value);
+            return true;
+        }
+        if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
+            dungeonF7DragonSoloClass = DungeonF7Policy.normalizeSoloClass(value);
+            return true;
+        }
+        return athen().writeEnum(settingId, value);
+    }
+
+    String dungeonMapMode() {
+        if (dungeonHudCheaterMap) {
+            return DungeonMapPolicy.MAP_MODE_REVEAL;
+        }
+        return DungeonMapPolicy.normalizeMapMode(dungeonHudMapMode);
+    }
+
+    boolean dungeonMapRevealHidden() {
+        return DungeonMapPolicy.revealsHidden(dungeonMapMode());
+    }
+
+    private void applyDungeonMapMode(String value) {
+        dungeonHudMapMode = DungeonMapPolicy.normalizeMapMode(value);
+        dungeonHudCheaterMap = DungeonMapPolicy.revealsHidden(dungeonHudMapMode);
     }
 
     Integer readColor(String settingId) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")) {
+            Integer value = board().readColor(settingId);
+            if (value != null) {
+                return value;
+            }
+        }
         return switch (settingId) {
             case "qol.active_pet_highlight.color" -> activePetHighlightColor;
             case "qol.anvil_helper.color" -> anvilHelperColor;
@@ -2739,6 +3087,8 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.crystal_color" -> dungeonEspCrystalColor;
             case "qol.dungeon_esp.secret_color" -> dungeonEspSecretColor;
             case "qol.dungeon_esp.chest_color" -> dungeonEspChestColor;
+            case "qol.dungeon_esp.secret_clicked_color" -> dungeonEspSecretClickedColor;
+            case "qol.dungeon_esp.secret_clicked_locked_color" -> dungeonEspSecretClickedLockedColor;
             case "qol.dungeon_esp.simon_color" -> dungeonEspSimonColor;
             case "qol.dungeon_esp.livid_color" -> dungeonEspLividColor;
             case "qol.dungeon_esp.thorn_color" -> dungeonEspThornColor;
@@ -2758,6 +3108,11 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.gate_color" -> dungeonF7GateColor;
             case "qol.dungeon_f7.i4_color" -> dungeonF7I4Color;
             case "qol.dungeon_f7.i4_predict_color" -> dungeonF7I4PredictColor;
+            case "qol.dungeon_f7.sharp_marked_color" -> dungeonF7SharpMarkedColor;
+            case "qol.dungeon_f7.sharp_target_color" -> dungeonF7SharpTargetColor;
+            case "qol.dungeon_f7.sharp_aim1_color" -> dungeonF7SharpAim1Color;
+            case "qol.dungeon_f7.sharp_aim2_color" -> dungeonF7SharpAim2Color;
+            case "qol.dungeon_f7.sharp_aim3_color" -> dungeonF7SharpAim3Color;
             case "qol.dungeon_f7.maxor_color" -> dungeonF7MaxorColor;
             case "qol.dungeon_f7.storm_color" -> dungeonF7StormColor;
             case "qol.dungeon_f7.goldor_color" -> dungeonF7GoldorColor;
@@ -2765,6 +3120,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.simon_first_color" -> dungeonF7SimonFirstColor;
             case "qol.dungeon_f7.simon_second_color" -> dungeonF7SimonSecondColor;
             case "qol.dungeon_f7.simon_other_color" -> dungeonF7SimonOtherColor;
+            case "qol.dungeon_hud.mask_overlay_color" -> dungeonHudMaskOverlayColor;
             case "qol.dungeon_menus.salvage50_color" -> dungeonMenusSalvage50Color;
             case "qol.dungeon_menus.salvage_low_color" -> dungeonMenusSalvageLowColor;
             case "qol.dungeon_menus.profit_color" -> dungeonMenusProfitColor;
@@ -2780,11 +3136,17 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill;
             case "qol.custom_cursor.outline" -> customCursorOutline;
             case "qol.custom_cursor.accent" -> customCursorAccent;
-            default -> null;
+            case "qol.ghosts.fill_color" -> ghostsFillColor;
+            case "qol.ghosts.outline_color" -> ghostsOutlineColor;
+            default -> athen().readColor(settingId);
         };
     }
 
     boolean writeColor(String settingId, int argb) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")
+                && board().writeColor(settingId, argb)) {
+            return true;
+        }
         switch (settingId) {
             case "qol.active_pet_highlight.color" -> activePetHighlightColor = argb;
             case "qol.anvil_helper.color" -> anvilHelperColor = argb;
@@ -2826,6 +3188,8 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.crystal_color" -> dungeonEspCrystalColor = argb;
             case "qol.dungeon_esp.secret_color" -> dungeonEspSecretColor = argb;
             case "qol.dungeon_esp.chest_color" -> dungeonEspChestColor = argb;
+            case "qol.dungeon_esp.secret_clicked_color" -> dungeonEspSecretClickedColor = argb;
+            case "qol.dungeon_esp.secret_clicked_locked_color" -> dungeonEspSecretClickedLockedColor = argb;
             case "qol.dungeon_esp.simon_color" -> dungeonEspSimonColor = argb;
             case "qol.dungeon_esp.livid_color" -> dungeonEspLividColor = argb;
             case "qol.dungeon_esp.thorn_color" -> dungeonEspThornColor = argb;
@@ -2845,6 +3209,11 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.gate_color" -> dungeonF7GateColor = argb;
             case "qol.dungeon_f7.i4_color" -> dungeonF7I4Color = argb;
             case "qol.dungeon_f7.i4_predict_color" -> dungeonF7I4PredictColor = argb;
+            case "qol.dungeon_f7.sharp_marked_color" -> dungeonF7SharpMarkedColor = argb;
+            case "qol.dungeon_f7.sharp_target_color" -> dungeonF7SharpTargetColor = argb;
+            case "qol.dungeon_f7.sharp_aim1_color" -> dungeonF7SharpAim1Color = argb;
+            case "qol.dungeon_f7.sharp_aim2_color" -> dungeonF7SharpAim2Color = argb;
+            case "qol.dungeon_f7.sharp_aim3_color" -> dungeonF7SharpAim3Color = argb;
             case "qol.dungeon_f7.maxor_color" -> dungeonF7MaxorColor = argb;
             case "qol.dungeon_f7.storm_color" -> dungeonF7StormColor = argb;
             case "qol.dungeon_f7.goldor_color" -> dungeonF7GoldorColor = argb;
@@ -2852,6 +3221,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.simon_first_color" -> dungeonF7SimonFirstColor = argb;
             case "qol.dungeon_f7.simon_second_color" -> dungeonF7SimonSecondColor = argb;
             case "qol.dungeon_f7.simon_other_color" -> dungeonF7SimonOtherColor = argb;
+            case "qol.dungeon_hud.mask_overlay_color" -> dungeonHudMaskOverlayColor = argb;
             case "qol.dungeon_menus.salvage50_color" -> dungeonMenusSalvage50Color = argb;
             case "qol.dungeon_menus.salvage_low_color" -> dungeonMenusSalvageLowColor = argb;
             case "qol.dungeon_menus.profit_color" -> dungeonMenusProfitColor = argb;
@@ -2867,8 +3237,12 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill = argb;
             case "qol.custom_cursor.outline" -> customCursorOutline = argb;
             case "qol.custom_cursor.accent" -> customCursorAccent = argb;
+            case "qol.ghosts.fill_color" -> ghostsFillColor = argb;
+            case "qol.ghosts.outline_color" -> ghostsOutlineColor = argb;
             default -> {
-                return false;
+                if (!athen().writeColor(settingId, argb)) {
+                    return false;
+                }
             }
         }
         return true;
@@ -2887,6 +3261,7 @@ final class QolSkyblockExtras {
                 infoStarCount = d.infoStarCount;
                 infoPetCandy = d.infoPetCandy;
                 infoRevertMasterStars = d.infoRevertMasterStars;
+                athen().copyModule(moduleId, d.athen());
             }
             case "qol.price_tooltips" -> {
                 priceTooltipsEnabled = d.priceTooltipsEnabled;
@@ -3017,6 +3392,9 @@ final class QolSkyblockExtras {
                 ghostsEnabled = d.ghostsEnabled;
                 ghostsShowGhosts = d.ghostsShowGhosts;
                 ghostsShowPowered = d.ghostsShowPowered;
+                ghostsHighlightStyle = d.ghostsHighlightStyle;
+                ghostsFillColor = d.ghostsFillColor;
+                ghostsOutlineColor = d.ghostsOutlineColor;
                 ghostsKeybind = d.ghostsKeybind;
             }
             case "qol.auto_dojo" -> {
@@ -3223,13 +3601,17 @@ final class QolSkyblockExtras {
                 dungeonHudFloor = d.dungeonHudFloor;
                 dungeonHudCleared = d.dungeonHudCleared;
                 dungeonHudInvincibility = d.dungeonHudInvincibility;
+                dungeonHudMaskOverlay = d.dungeonHudMaskOverlay;
+                dungeonHudMaskOverlayColor = d.dungeonHudMaskOverlayColor;
                 dungeonHudTerracotta = d.dungeonHudTerracotta;
                 dungeonHudBlessings = d.dungeonHudBlessings;
                 dungeonHudF7Timers = d.dungeonHudF7Timers;
                 dungeonHudRagnarock = d.dungeonHudRagnarock;
                 dungeonHudMelody = d.dungeonHudMelody;
+                dungeonHudMelodyOther = d.dungeonHudMelodyOther;
                 dungeonHudQuiz = d.dungeonHudQuiz;
                 dungeonHudMap = d.dungeonHudMap;
+                dungeonHudMapMode = d.dungeonHudMapMode;
                 dungeonHudMapDoors = d.dungeonHudMapDoors;
                 dungeonHudMapPlayers = d.dungeonHudMapPlayers;
                 dungeonHudMapExtra = d.dungeonHudMapExtra;
@@ -3239,7 +3621,23 @@ final class QolSkyblockExtras {
                 dungeonHudScoreOverlay = d.dungeonHudScoreOverlay;
                 dungeonHudClassIcons = d.dungeonHudClassIcons;
                 dungeonHudHeadMarkers = d.dungeonHudHeadMarkers;
+                dungeonHudRoomNames = d.dungeonHudRoomNames;
+                dungeonHudRoomSecrets = d.dungeonHudRoomSecrets;
+                dungeonHudPlayerNames = d.dungeonHudPlayerNames;
+                dungeonHudMapMimic = d.dungeonHudMapMimic;
+                dungeonHudMapPuzzles = d.dungeonHudMapPuzzles;
+                dungeonHudMapScale = d.dungeonHudMapScale;
                 dungeonHudPuzzleTimer = d.dungeonHudPuzzleTimer;
+                dungeonHudWarpCooldown = d.dungeonHudWarpCooldown;
+                dungeonHudSecretSpawn = d.dungeonHudSecretSpawn;
+                dungeonHudExplosiveShot = d.dungeonHudExplosiveShot;
+                dungeonHudUnclaimedChests = d.dungeonHudUnclaimedChests;
+                dungeonHudChestWarning = d.dungeonHudChestWarning;
+                dungeonHudChestWarningCount = d.dungeonHudChestWarningCount;
+                dungeonHudExtraStats = d.dungeonHudExtraStats;
+                dungeonHudLedge = d.dungeonHudLedge;
+                dungeonHudLedgeYellow = d.dungeonHudLedgeYellow;
+                dungeonHudLedgeAll = d.dungeonHudLedgeAll;
                 dungeonHudRunTimers = d.dungeonHudRunTimers;
                 dungeonHudShowSplitPbs = d.dungeonHudShowSplitPbs;
                 dungeonSplitPbs = d.dungeonSplitPbs;
@@ -3285,6 +3683,13 @@ final class QolSkyblockExtras {
                 dungeonEspCrystals = d.dungeonEspCrystals;
                 dungeonEspSecrets = d.dungeonEspSecrets;
                 dungeonEspSecretWaypoints = d.dungeonEspSecretWaypoints;
+                dungeonEspHideCollected = d.dungeonEspHideCollected;
+                dungeonEspSecretClicked = d.dungeonEspSecretClicked;
+                dungeonEspSecretClickedColor = d.dungeonEspSecretClickedColor;
+                dungeonEspSecretClickedLockedColor = d.dungeonEspSecretClickedLockedColor;
+                dungeonEspSecretClickedSeconds = d.dungeonEspSecretClickedSeconds;
+                dungeonEspSecretClickedBoss = d.dungeonEspSecretClickedBoss;
+                dungeonEspItems = d.dungeonEspItems;
                 dungeonEspIcedMobs = d.dungeonEspIcedMobs;
                 dungeonEspSimon = d.dungeonEspSimon;
                 dungeonEspWitherColor = d.dungeonEspWitherColor;
@@ -3322,8 +3727,18 @@ final class QolSkyblockExtras {
                 dungeonAnnounceRagnarock = d.dungeonAnnounceRagnarock;
                 dungeonAnnounceRooms = d.dungeonAnnounceRooms;
                 dungeonAnnounceMelody = d.dungeonAnnounceMelody;
+                dungeonAnnounceMelodyParty = d.dungeonAnnounceMelodyParty;
+                dungeonAnnounceMelodyMessage = d.dungeonAnnounceMelodyMessage;
+                dungeonAnnounceMelodyProgress = d.dungeonAnnounceMelodyProgress;
+                dungeonAnnounceDeath = d.dungeonAnnounceDeath;
+                dungeonAnnounceDeathMessage = d.dungeonAnnounceDeathMessage;
+                dungeonAnnouncePosition = d.dungeonAnnouncePosition;
                 dungeonAnnounceSecretChime = d.dungeonAnnounceSecretChime;
                 dungeonAnnounceDuplicateClass = d.dungeonAnnounceDuplicateClass;
+                dungeonAnnouncePlayerCount = d.dungeonAnnouncePlayerCount;
+                dungeonAnnounceLocation = d.dungeonAnnounceLocation;
+                dungeonAnnounceKeyDrop = d.dungeonAnnounceKeyDrop;
+                dungeonAnnounceKeyDropAll = d.dungeonAnnounceKeyDropAll;
                 dungeonAnnounceAutoUlt = d.dungeonAnnounceAutoUlt;
             }
             case "qol.dungeon_leap" -> {
@@ -3351,6 +3766,10 @@ final class QolSkyblockExtras {
                 dungeonTerminalsMelodySkipFirstRow = d.dungeonTerminalsMelodySkipFirstRow;
                 dungeonTerminalsMelodySkipMode = d.dungeonTerminalsMelodySkipMode;
                 dungeonTerminalsSounds = d.dungeonTerminalsSounds;
+                dungeonTerminalsCompleteSounds = d.dungeonTerminalsCompleteSounds;
+                dungeonTerminalsStopTooltips = d.dungeonTerminalsStopTooltips;
+                dungeonTerminalsHideClicked = d.dungeonTerminalsHideClicked;
+                dungeonTerminalsBlockWrongSlots = d.dungeonTerminalsBlockWrongSlots;
                 dungeonTerminalsHumanOrder = d.dungeonTerminalsHumanOrder;
                 dungeonTerminalsMelodyKeys = d.dungeonTerminalsMelodyKeys;
                 dungeonTerminalsProtect = d.dungeonTerminalsProtect;
@@ -3374,6 +3793,7 @@ final class QolSkyblockExtras {
                 dungeonTerminalsMelodyColumnColor = d.dungeonTerminalsMelodyColumnColor;
                 dungeonTerminalsMelodyIndicatorColor = d.dungeonTerminalsMelodyIndicatorColor;
                 dungeonTerminalsMelodyWrongColor = d.dungeonTerminalsMelodyWrongColor;
+                athen().copyModule(moduleId, d.athen());
             }
             case "qol.dungeon_termsim" -> {
                 dungeonTermSimEnabled = d.dungeonTermSimEnabled;
@@ -3381,6 +3801,7 @@ final class QolSkyblockExtras {
                 dungeonTermSimPing = d.dungeonTermSimPing;
                 dungeonTermSimShowPbs = d.dungeonTermSimShowPbs;
                 dungeonTermSimPbs = d.dungeonTermSimPbs;
+                athen().copyModule(moduleId, d.athen());
             }
             case "qol.dungeon_requeue" -> {
                 dungeonRequeueEnabled = d.dungeonRequeueEnabled;
@@ -3389,12 +3810,19 @@ final class QolSkyblockExtras {
             case "qol.dungeon_puzzles" -> {
                 dungeonPuzzlesEnabled = d.dungeonPuzzlesEnabled;
                 dungeonPuzzlesQuiz = d.dungeonPuzzlesQuiz;
+                dungeonPuzzlesQuizBoxes = d.dungeonPuzzlesQuizBoxes;
+                dungeonPuzzlesQuizTimer = d.dungeonPuzzlesQuizTimer;
                 dungeonPuzzlesWeirdos = d.dungeonPuzzlesWeirdos;
                 dungeonPuzzlesBlaze = d.dungeonPuzzlesBlaze;
                 dungeonPuzzlesIce = d.dungeonPuzzlesIce;
+                dungeonPuzzlesIcePath = d.dungeonPuzzlesIcePath;
+                dungeonPuzzlesIceOptimize = d.dungeonPuzzlesIceOptimize;
                 dungeonPuzzlesWater = d.dungeonPuzzlesWater;
+                dungeonPuzzlesWaterOptimized = d.dungeonPuzzlesWaterOptimized;
                 dungeonPuzzlesBoulder = d.dungeonPuzzlesBoulder;
                 dungeonPuzzlesTpMaze = d.dungeonPuzzlesTpMaze;
+                dungeonPuzzlesCreeperBeams = d.dungeonPuzzlesCreeperBeams;
+                dungeonPuzzlesTicTacToe = d.dungeonPuzzlesTicTacToe;
             }
             case "qol.dungeon_f7" -> {
                 dungeonF7Enabled = d.dungeonF7Enabled;
@@ -3403,7 +3831,21 @@ final class QolSkyblockExtras {
                 dungeonF7TitleWither = d.dungeonF7TitleWither;
                 dungeonF7TitleTerminal = d.dungeonF7TitleTerminal;
                 dungeonF7TitleGate = d.dungeonF7TitleGate;
+                dungeonF7HideOtherTitles = d.dungeonF7HideOtherTitles;
+                dungeonF7HideTitlesAtSs = d.dungeonF7HideTitlesAtSs;
+                dungeonF7HideTitlesAtPre4 = d.dungeonF7HideTitlesAtPre4;
+                dungeonF7HideAtSs = d.dungeonF7HideAtSs;
+                dungeonF7HideAtSsPreTerms = d.dungeonF7HideAtSsPreTerms;
+                dungeonF7HideAfterLeap = d.dungeonF7HideAfterLeap;
+                dungeonF7HideAfterLeapBoss = d.dungeonF7HideAfterLeapBoss;
+                dungeonF7TitleCrystalText = d.dungeonF7TitleCrystalText;
+                dungeonF7TitleWitherText = d.dungeonF7TitleWitherText;
+                dungeonF7TitleTerminalText = d.dungeonF7TitleTerminalText;
+                dungeonF7TitleGateText = d.dungeonF7TitleGateText;
                 dungeonF7Timers = d.dungeonF7Timers;
+                dungeonF7TimerTicks = d.dungeonF7TimerTicks;
+                dungeonF7TimerSymbol = d.dungeonF7TimerSymbol;
+                dungeonF7TimerPrefix = d.dungeonF7TimerPrefix;
                 dungeonF7TimerMaxor = d.dungeonF7TimerMaxor;
                 dungeonF7TimerStorm = d.dungeonF7TimerStorm;
                 dungeonF7TimerPad = d.dungeonF7TimerPad;
@@ -3411,6 +3853,10 @@ final class QolSkyblockExtras {
                 dungeonF7TimerGoldor = d.dungeonF7TimerGoldor;
                 dungeonF7TimerNecron = d.dungeonF7TimerNecron;
                 dungeonF7Crystals = d.dungeonF7Crystals;
+                dungeonF7MaxorStun = d.dungeonF7MaxorStun;
+                dungeonF7StormCrush = d.dungeonF7StormCrush;
+                dungeonF7StormLb = d.dungeonF7StormLb;
+                dungeonF7TermStart = d.dungeonF7TermStart;
                 dungeonF7CrystalSpawn = d.dungeonF7CrystalSpawn;
                 dungeonF7CrystalPlace = d.dungeonF7CrystalPlace;
                 dungeonF7CrystalAlert = d.dungeonF7CrystalAlert;
@@ -3425,7 +3871,27 @@ final class QolSkyblockExtras {
                 dungeonF7DragonArrows = d.dungeonF7DragonArrows;
                 dungeonF7DragonHealth = d.dungeonF7DragonHealth;
                 dungeonF7DragonBoxes = d.dungeonF7DragonBoxes;
+                dungeonF7DragonTracers = d.dungeonF7DragonTracers;
+                dungeonF7DragonPriority = d.dungeonF7DragonPriority;
+                dungeonF7DragonPaul = d.dungeonF7DragonPaul;
+                dungeonF7DragonSoloClass = d.dungeonF7DragonSoloClass;
                 dungeonF7P3Display = d.dungeonF7P3Display;
+                dungeonF7SharpShooter = d.dungeonF7SharpShooter;
+                dungeonF7SharpAim = d.dungeonF7SharpAim;
+                dungeonF7SharpComplete = d.dungeonF7SharpComplete;
+                dungeonF7SharpMarkedColor = d.dungeonF7SharpMarkedColor;
+                dungeonF7SharpTargetColor = d.dungeonF7SharpTargetColor;
+                dungeonF7SharpAim1Color = d.dungeonF7SharpAim1Color;
+                dungeonF7SharpAim2Color = d.dungeonF7SharpAim2Color;
+                dungeonF7SharpAim3Color = d.dungeonF7SharpAim3Color;
+                dungeonF7TermTimes = d.dungeonF7TermTimes;
+                dungeonF7TermPbs = d.dungeonF7TermPbs;
+                dungeonF7TermPbTimes = d.dungeonF7TermPbTimes;
+                dungeonF7Predev = d.dungeonF7Predev;
+                dungeonF7PredevAll = d.dungeonF7PredevAll;
+                dungeonF7PredevPbMs = d.dungeonF7PredevPbMs;
+                dungeonF7SsComplete = d.dungeonF7SsComplete;
+                dungeonF7Pre4Complete = d.dungeonF7Pre4Complete;
                 dungeonF7DragonTimer = d.dungeonF7DragonTimer;
                 dungeonF7GoldorFrenzy = d.dungeonF7GoldorFrenzy;
                 dungeonF7PurplePad = d.dungeonF7PurplePad;
@@ -3437,6 +3903,7 @@ final class QolSkyblockExtras {
                 dungeonF7SimonBlockWrong = d.dungeonF7SimonBlockWrong;
                 dungeonF7SimonAuto = d.dungeonF7SimonAuto;
                 dungeonF7SimonTrigger = d.dungeonF7SimonTrigger;
+                dungeonF7SimonSounds = d.dungeonF7SimonSounds;
                 dungeonF7HideDiorite = d.dungeonF7HideDiorite;
                 dungeonF7ArrowAlign = d.dungeonF7ArrowAlign;
                 dungeonF7ArrowBlockWrong = d.dungeonF7ArrowBlockWrong;
@@ -3459,7 +3926,11 @@ final class QolSkyblockExtras {
                 dungeonF7RelicLook = d.dungeonF7RelicLook;
                 dungeonF7RelicLookTime = d.dungeonF7RelicLookTime;
                 dungeonF7RelicSpawn = d.dungeonF7RelicSpawn;
+                dungeonF7RelicSpawnTicks = d.dungeonF7RelicSpawnTicks;
+                dungeonF7RelicBeacon = d.dungeonF7RelicBeacon;
                 dungeonF7RelicPlace = d.dungeonF7RelicPlace;
+                dungeonF7RelicHighlight = d.dungeonF7RelicHighlight;
+                dungeonF7RelicBlockWrong = d.dungeonF7RelicBlockWrong;
                 dungeonF7BreakerPreventSecrets = d.dungeonF7BreakerPreventSecrets;
                 dungeonF7BreakerCharges = d.dungeonF7BreakerCharges;
                 dungeonF7AutoSuperboom = d.dungeonF7AutoSuperboom;
@@ -3467,6 +3938,7 @@ final class QolSkyblockExtras {
                 dungeonF7SuperboomDelay = d.dungeonF7SuperboomDelay;
                 dungeonF7GateColor = d.dungeonF7GateColor;
                 dungeonF7I4Color = d.dungeonF7I4Color;
+                athen().copyModule(moduleId, d.athen());
             }
             case "qol.dungeon_menus" -> {
                 dungeonMenusEnabled = d.dungeonMenusEnabled;
@@ -3483,6 +3955,7 @@ final class QolSkyblockExtras {
                 dungeonMenusProfitColor = d.dungeonMenusProfitColor;
                 dungeonMenusCloseChest = d.dungeonMenusCloseChest;
                 dungeonMenusCloseChestMode = d.dungeonMenusCloseChestMode;
+                athen().copyModule(moduleId, d.athen());
             }
             case "qol.camera" -> {
                 cameraClip = d.cameraClip;
@@ -3945,17 +4418,47 @@ final class QolSkyblockExtras {
                 stallAhHighlight = d.stallAhHighlight;
                 stallSearchKeybind = d.stallSearchKeybind;
             }
+            case "qol.custom_scoreboard" -> board().copyFrom(d.board());
             default -> {
-                return false;
+                if (!athen().handlesModule(moduleId)) {
+                    return false;
+                }
+                athen().copyModule(moduleId, d.athen());
             }
         }
         return true;
     }
 
     String readText(String settingId) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")) {
+            String value = board().readText(settingId);
+            if (value != null) {
+                return value;
+            }
+        }
         if ("qol.dungeon_leap.message".equals(settingId)) {
             return dungeonLeapMessage == null || dungeonLeapMessage.isBlank()
                     ? "ILY {name}" : dungeonLeapMessage;
+        }
+        if ("qol.dungeon_announce.melody_message".equals(settingId)) {
+            return dungeonAnnounceMelodyMessage == null || dungeonAnnounceMelodyMessage.isBlank()
+                    ? DungeonBladePolicy.DEFAULT_MELODY_PARTY : dungeonAnnounceMelodyMessage;
+        }
+        if ("qol.dungeon_announce.death_message".equals(settingId)) {
+            return dungeonAnnounceDeathMessage == null || dungeonAnnounceDeathMessage.isBlank()
+                    ? DungeonBladePolicy.DEFAULT_DEATH_MESSAGE : dungeonAnnounceDeathMessage;
+        }
+        if ("qol.dungeon_f7.title_crystal_text".equals(settingId)) {
+            return safe(dungeonF7TitleCrystalText);
+        }
+        if ("qol.dungeon_f7.title_wither_text".equals(settingId)) {
+            return safe(dungeonF7TitleWitherText);
+        }
+        if ("qol.dungeon_f7.title_terminal_text".equals(settingId)) {
+            return safe(dungeonF7TitleTerminalText);
+        }
+        if ("qol.dungeon_f7.title_gate_text".equals(settingId)) {
+            return safe(dungeonF7TitleGateText);
         }
         if ("qol.auto_sell.list".equals(settingId)) {
             return AutoSellPolicy.formatList(autoSellItems);
@@ -3979,12 +4482,42 @@ final class QolSkyblockExtras {
         if ("qol.slayer_carry.inferno_t3_prices".equals(settingId)) return safe(slayerCarryInfernoT3Prices);
         if ("qol.slayer_carry.inferno_t4_prices".equals(settingId)) return safe(slayerCarryInfernoT4Prices);
         if ("qol.storage_overlay.search_query".equals(settingId)) return safe(storageOverlaySearchQuery);
-        return null;
+        return athen().readText(settingId);
     }
 
     boolean writeText(String settingId, String value) {
+        if (settingId != null && settingId.startsWith("qol.custom_scoreboard.")
+                && board().writeText(settingId, value)) {
+            return true;
+        }
         if ("qol.dungeon_leap.message".equals(settingId)) {
             dungeonLeapMessage = value == null || value.isBlank() ? "ILY {name}" : value;
+            return true;
+        }
+        if ("qol.dungeon_announce.melody_message".equals(settingId)) {
+            dungeonAnnounceMelodyMessage = value == null || value.isBlank()
+                    ? DungeonBladePolicy.DEFAULT_MELODY_PARTY : value;
+            return true;
+        }
+        if ("qol.dungeon_announce.death_message".equals(settingId)) {
+            dungeonAnnounceDeathMessage = value == null || value.isBlank()
+                    ? DungeonBladePolicy.DEFAULT_DEATH_MESSAGE : value;
+            return true;
+        }
+        if ("qol.dungeon_f7.title_crystal_text".equals(settingId)) {
+            dungeonF7TitleCrystalText = value == null ? "" : value;
+            return true;
+        }
+        if ("qol.dungeon_f7.title_wither_text".equals(settingId)) {
+            dungeonF7TitleWitherText = value == null ? "" : value;
+            return true;
+        }
+        if ("qol.dungeon_f7.title_terminal_text".equals(settingId)) {
+            dungeonF7TitleTerminalText = value == null ? "" : value;
+            return true;
+        }
+        if ("qol.dungeon_f7.title_gate_text".equals(settingId)) {
+            dungeonF7TitleGateText = value == null ? "" : value;
             return true;
         }
         if ("qol.auto_sell.list".equals(settingId)) {
@@ -4018,7 +4551,7 @@ final class QolSkyblockExtras {
         if ("qol.slayer_carry.inferno_t3_prices".equals(settingId)) { slayerCarryInfernoT3Prices = stored; return true; }
         if ("qol.slayer_carry.inferno_t4_prices".equals(settingId)) { slayerCarryInfernoT4Prices = stored; return true; }
         if ("qol.storage_overlay.search_query".equals(settingId)) { storageOverlaySearchQuery = stored; return true; }
-        return false;
+        return athen().writeText(settingId, value);
     }
 
     private static String safe(String value) {
@@ -4026,6 +4559,10 @@ final class QolSkyblockExtras {
     }
 
     String readKeybind(String settingId) {
+        if ("qol.custom_scoreboard.keybind".equals(settingId)) {
+            String value = board().keybind;
+            return value == null ? "" : value;
+        }
         return switch (settingId) {
             case "qol.cheater_wardrobe.slot_1" -> cheaterWardrobeSlot1;
             case "qol.cheater_wardrobe.slot_2" -> cheaterWardrobeSlot2;
@@ -4048,12 +4585,16 @@ final class QolSkyblockExtras {
             case "qol.iota.toggle_right" -> iotaToggleRightKeybind == null ? "" : iotaToggleRightKeybind;
             case "qol.stall_market.search_keybind" -> stallSearchKeybind == null ? "" : stallSearchKeybind;
             case "qol.storage_overlay.item_search_keybind" -> storageItemSearchKeybind == null ? "" : storageItemSearchKeybind;
-            default -> null;
+            default -> athen().readKeybind(settingId);
         };
     }
 
     boolean writeKeybind(String settingId, String value) {
         String stored = value == null ? "" : value.trim();
+        if ("qol.custom_scoreboard.keybind".equals(settingId)) {
+            board().keybind = stored;
+            return true;
+        }
         switch (settingId) {
             case "qol.cheater_wardrobe.slot_1" -> cheaterWardrobeSlot1 = stored;
             case "qol.cheater_wardrobe.slot_2" -> cheaterWardrobeSlot2 = stored;
@@ -4077,7 +4618,9 @@ final class QolSkyblockExtras {
             case "qol.stall_market.search_keybind" -> stallSearchKeybind = stored;
             case "qol.storage_overlay.item_search_keybind" -> storageItemSearchKeybind = stored;
             default -> {
-                return false;
+                if (!athen().writeKeybind(settingId, stored)) {
+                    return false;
+                }
             }
         }
         return true;

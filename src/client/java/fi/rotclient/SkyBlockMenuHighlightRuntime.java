@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
@@ -50,6 +51,10 @@ public final class SkyBlockMenuHighlightRuntime {
             }
         }
         if (extras.dungeonLeapEnabled || extras.dungeonTerminalsEnabled || extras.dungeonMenusEnabled) {
+            DungeonAthenSettings athen = extras.athen();
+            int pad = DungeonAthenPortPolicy.overlayPad(athen.termUiPadding);
+            int gap = DungeonAthenPortPolicy.overlayGap(athen.termUiSlotGap);
+            boolean fillSlots = athen.termSlotsFill;
             for (int index = 0; index < screen.getMenu().slots.size(); index++) {
                 Slot slot = screen.getMenu().slots.get(index);
                 if (slot == null) {
@@ -57,8 +62,31 @@ public final class SkyBlockMenuHighlightRuntime {
                 }
                 int color = DungeonRuntime.highlightColor(screen, index);
                 if (color != 0) {
-                    fill(graphics, leftPos + slot.x, topPos + slot.y, color);
+                    int x = leftPos + slot.x - pad;
+                    int y = topPos + slot.y - pad;
+                    int size = 16 + pad * 2 - Math.min(gap, 4);
+                    if (fillSlots) {
+                        fill(graphics, x, y, color, size);
+                    } else {
+                        outlineRect(graphics, x, y, size, color);
+                    }
+                    String label = DungeonRuntime.overlayLabel(screen, index);
+                    if (!label.isBlank()) {
+                        Minecraft client = Minecraft.getInstance();
+                        if (client != null && client.font != null) {
+                            RotClientUiDraw.text(
+                                    graphics,
+                                    client.font,
+                                    label,
+                                    leftPos + slot.x + 1,
+                                    topPos + slot.y + 4,
+                                    0xFFFFFFFF,
+                                    true);
+                        }
+                    }
                 }
+                DungeonRuntime.renderPartyFinderSlot(
+                        screen, graphics, slot, index, leftPos, topPos);
             }
         }
         if (CommissionDisplayPolicy.isCommissionsMenu(title)
@@ -149,6 +177,18 @@ public final class SkyBlockMenuHighlightRuntime {
     }
 
     private static void fill(GuiGraphicsExtractor graphics, int x, int y, int color) {
-        graphics.fill(x, y, x + 16, y + 16, color);
+        fill(graphics, x, y, color, 16);
+    }
+
+    private static void fill(GuiGraphicsExtractor graphics, int x, int y, int color, int size) {
+        graphics.fill(x, y, x + size, y + size, color);
+    }
+
+    private static void outlineRect(GuiGraphicsExtractor graphics, int x, int y, int size, int color) {
+        int edge = ItemRarityPolicy.withAlpha(color, 0.95F);
+        graphics.fill(x, y, x + size, y + 2, edge);
+        graphics.fill(x, y + size - 2, x + size, y + size, edge);
+        graphics.fill(x, y, x + 2, y + size, edge);
+        graphics.fill(x + size - 2, y, x + size, y + size, edge);
     }
 }

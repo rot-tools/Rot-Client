@@ -207,6 +207,27 @@ final class PlayerDisplayMathTest {
                 false);
         assertTrue(combatTick.isEmpty());
         assertTrue(unused.isEmpty());
+        Optional<String> hudTokens = SkyBlockStatBarParser.filterActionBar(
+                "3 T1 T2 T3 T4 5,224/4,849 2,782/2,782",
+                true,
+                true,
+                true,
+                false,
+                false,
+                false);
+        assertTrue(hudTokens.isEmpty());
+        Optional<String> questWithTokens = SkyBlockStatBarParser.filterActionBar(
+                "T1 100/200 Quest complete! T3 50/100",
+                true,
+                false,
+                true,
+                false,
+                false,
+                false);
+        assertTrue(questWithTokens.isPresent());
+        assertTrue(questWithTokens.get().contains("Quest complete!"));
+        assertFalse(questWithTokens.get().contains("T1"));
+        assertFalse(questWithTokens.get().contains("T3"));
     }
 
     @Test
@@ -253,6 +274,18 @@ final class PlayerDisplayMathTest {
                 true);
         assertTrue(quest.isPresent());
         assertTrue(quest.get().contains("Quest complete!"));
+    }
+
+    @Test
+    void hypixelHudIconTokensStillParseHealthManaAndDefense() {
+        SkyBlockStatBarParser.Stats stats = parsed(
+                "T1 1,234/2,000 T2 500 T3 400/500 T4 40");
+        assertEquals(1234.0D, stats.health().orElse(-1), 0.001D);
+        assertEquals(2000.0D, stats.maxHealth().orElse(-1), 0.001D);
+        assertEquals(500.0D, stats.defense().orElse(-1), 0.001D);
+        assertEquals(400.0D, stats.mana().orElse(-1), 0.001D);
+        assertEquals(500.0D, stats.maxMana().orElse(-1), 0.001D);
+        assertEquals(40.0D, stats.overflowMana().orElse(-1), 0.001D);
     }
 
     @Test

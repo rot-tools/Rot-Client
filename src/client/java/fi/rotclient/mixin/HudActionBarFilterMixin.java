@@ -1,7 +1,9 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.DungeonRuntime;
 import fi.rotclient.IotaKuudraRuntime;
 import fi.rotclient.NameHiderRuntime;
+import fi.rotclient.PlayerDisplayHidePolicy;
 import fi.rotclient.RotClientClient;
 import fi.rotclient.SkyBlockStatBarParser;
 import net.minecraft.client.gui.Hud;
@@ -31,19 +33,20 @@ abstract class HudActionBarFilterMixin {
             return message;
         }
         RotClientClient.observePlayerDisplayText(message.getString());
-        if (!RotClientClient.shouldFilterActionBar()) {
+        PlayerDisplayHidePolicy.ActionHides hides = RotClientClient.actionBarHides();
+        if (!hides.any()) {
             return NameHiderRuntime.apply(message);
         }
         String raw = message.getString();
         Optional<String> filtered = SkyBlockStatBarParser.filterActionBar(
                 raw,
-                RotClientClient.hideActionHealth(),
-                RotClientClient.hideActionDefense(),
-                RotClientClient.hideActionMana(),
-                RotClientClient.hideActionOverflow(),
-                RotClientClient.hideActionSpeed(),
-                RotClientClient.hideActionVitality(),
-                RotClientClient.hideActionLocation());
+                hides.health(),
+                hides.defense(),
+                hides.mana(),
+                hides.overflow(),
+                hides.speed(),
+                hides.vitality(),
+                hides.location());
         if (filtered.isEmpty()) {
             return Component.empty();
         }
@@ -60,7 +63,11 @@ abstract class HudActionBarFilterMixin {
             ordinal = 0)
     private Component rotclient$hideNameInTitle(Component title) {
         IotaKuudraRuntime.onTitle(title);
-        return NameHiderRuntime.apply(title);
+        Component named = NameHiderRuntime.apply(title);
+        if (DungeonRuntime.shouldHideHudTitle(named)) {
+            return Component.empty();
+        }
+        return named;
     }
 
     @ModifyVariable(

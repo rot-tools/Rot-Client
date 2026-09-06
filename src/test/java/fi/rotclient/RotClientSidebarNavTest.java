@@ -101,6 +101,10 @@ final class RotClientSidebarNavTest {
                 RotClientSidebarNav.hitTargetForQolGroup(
                         QolUtilityCatalog.Group.GARDEN));
         assertEquals(
+                RotClientSidebarNav.HitTarget.QOL_GUI,
+                RotClientSidebarNav.hitTargetForQolGroup(
+                        QolUtilityCatalog.Group.GUI));
+        assertEquals(
                 RotClientSidebarNav.SECTION_QOL,
                 RotClientSidebarNav.sectionForModule(DashboardModule.MINING_TRACKER));
         assertEquals(
@@ -116,6 +120,7 @@ final class RotClientSidebarNavTest {
         RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
                 58, List.of(RotClientSidebarNav.SECTION_SETTINGS));
         assertTrue(layout.hudLayoutVisible());
+        assertTrue(layout.profilesVisible());
         assertFalse(layout.qolChildrenVisible());
         assertEquals(
                 RotClientSidebarNav.HitTarget.HUD_LAYOUT,
@@ -126,10 +131,16 @@ final class RotClientSidebarNavTest {
                 RotClientSidebarNav.hitTest(
                         layout, 20, layout.appearanceY() + 8, 8, 180, 8, 180));
         assertEquals(
+                RotClientSidebarNav.HitTarget.PROFILES,
+                RotClientSidebarNav.hitTest(
+                        layout, 20, layout.profilesY() + 8, 8, 180, 8, 180));
+        assertEquals(
                 RotClientSidebarNav.HitTarget.SECTION_QOL,
                 RotClientSidebarNav.hitTest(
                         layout, 20, layout.qolHeaderY() + 1, 8, 180, 8, 180));
         assertTrue(layout.hudLayoutY() + RotClientSidebarNav.ITEM_HEIGHT
+                <= layout.profilesY());
+        assertTrue(layout.profilesY() + RotClientSidebarNav.ITEM_HEIGHT
                 <= layout.qolHeaderY());
     }
 

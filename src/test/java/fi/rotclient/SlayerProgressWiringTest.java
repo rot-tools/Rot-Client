@@ -41,4 +41,19 @@ final class SlayerProgressWiringTest {
         assertFalse(section.contains("ENGINE.snapshot("));
         assertTrue(section.contains("latestProgress"));
     }
+
+    @Test
+    void ownedBossHologramsIncludeHypixelIdOffsets() throws IOException {
+        String runtime = Files.readString(
+                Path.of("src/client/java/fi/rotclient/SlayerRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(runtime.contains("SlayerPolicy.HOLOGRAM_ID_OFFSETS"));
+        assertTrue(runtime.contains("entity.getId() + offset"));
+        assertTrue(runtime.contains("entity.getId() + 1"));
+        assertTrue(runtime.contains("entity.getId() + 2"));
+        assertTrue(runtime.contains("entity.getId() + 3"));
+        assertTrue(runtime.contains("CommissionDisplayRuntime.tabLines"));
+        assertTrue(runtime.contains("SlayerProgressPolicy.parseLines"));
+        assertTrue(runtime.contains("applyProgress("));
+    }
 }

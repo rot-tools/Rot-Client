@@ -71,7 +71,7 @@ configuration or session files into this repository.
 | Action | What it does |
 | --- | --- |
 | **Right Shift** | Opens the dashboard (Click GUI key, rebindable) |
-| **Sidebar** | Overview, Visuals (Appearance and HUD Elements Editor), then Modules |
+| **Sidebar** | Overview, Visuals (Appearance, HUD Elements Editor, Profiles), then Modules |
 | **Overview** | Session / tracker / powder chips, then Go-to cards: Modules, Visuals, Mining, Events |
 | `/rot` or `/rot ui` | Same dashboard |
 | `/rot qol` | QoL module catalog |
@@ -82,17 +82,19 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**124** quality-of-life modules ship in one catalog, grouped by task. Wired means a catalog entry, saved settings, a runtime bridge, and automated contracts. The module-by-module table lives in [QoL Utilities](docs/QOL_UTILITIES.md).
+**131** quality-of-life modules ship in one catalog, grouped by task. Wired means a catalog entry, saved settings, a runtime bridge, and automated contracts. The module-by-module table lives in [QoL Utilities](docs/QOL_UTILITIES.md).
 
 | Area | What you get |
 | --- | --- |
+| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global |
+| **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Hotkey macros, wardrobe swapper, chat commands, auto sprint, inventory walk, market guard |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
 | **Render** | Fullbright, viewmodel, player size, camera, Free Camera, legacy textures |
 | **Combat** | Auto clicker, trajectories, etherwarp helper, mob highlight |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
-| **Dungeons** | HUD and map, ESP, secret hitboxes, terminals, puzzles, F7 helpers, reward reels |
+| **Dungeons** | HUD and map, ESP, secret hitboxes, terminals, puzzles, F7 helpers, carry tracker, reward reels |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | World scanner, commissions, Scatha, Glacite, HOTM helpers |
@@ -121,6 +123,9 @@ The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/Min
 | `/rot session ...` | Pause, resume, reset, copy, or save Current Session |
 | `/rot history ...` | List, open, copy, or delete history records |
 | `/rot slayer ...` | Slayer status, stats, and carry list |
+| `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history |
+| `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (look at a block) |
+| `/rot termsim [ping]` | Local terminal simulator hub |
 | `/rot autoclicker ...` | Auto Clicker item whitelist |
 | `/rot fortune auto\|<mining> [material]` | Material Fortune input |
 
@@ -157,6 +162,8 @@ A green build proves packaging. It does not prove in-game correctness. See [Cont
 - [QoL utilities](docs/QOL_UTILITIES.md)
 - [Branding](docs/BRANDING.md)
 - [Issues](https://github.com/rot-tools/Rot-Client/issues)
+- [Discussions](https://github.com/rot-tools/Rot-Client/discussions) — category welcome posts
+- [Wiki](https://github.com/rot-tools/Rot-Client/wiki) — player guide
 
 ## Credits
 

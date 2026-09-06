@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 final class HudLayerHidePolicyTest {
     @Test
     void catalogListsVanillaHidesAndRotOverlays() throws Exception {
@@ -52,6 +54,62 @@ final class HudLayerHidePolicyTest {
                 HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
         assertFalse(HudLayerHidePolicy.shouldHide(
                 HudLayerHidePolicy.Layer.HOTBAR, HudLayerHidePolicy.flags(qol)));
+    }
+
+    @Test
+    void customScoreboardHidesVanillaSidebarWhenShowing() {
+        QolUtilityConfig qol = new QolUtilityConfig();
+        qol.setModuleEnabled("qol.hud_layout", false);
+        qol.setModuleEnabled(CustomScoreboardPolicy.MODULE_ID, true);
+        try {
+            SkyBlockAreaDetector.clearSkyblockPresence();
+            assertFalse(HudLayerHidePolicy.shouldHide(
+                    HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
+            SkyBlockAreaDetector.updateSkyblockPresence(List.of("SKYBLOCK"));
+            assertTrue(HudLayerHidePolicy.shouldHide(
+                    HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
+            qol.writeBoolean("qol.custom_scoreboard.hide_vanilla", false);
+            assertFalse(HudLayerHidePolicy.shouldHide(
+                    HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
+        } finally {
+            SkyBlockAreaDetector.clearSkyblockPresence();
+        }
+    }
+
+    @Test
+    void playerDisplayVanillaHidesStopWhenModuleOff() {
+        QolUtilityConfig qol = new QolUtilityConfig();
+        qol.setModuleEnabled("qol.player_display", true);
+        qol.writeBoolean("qol.player_display.hide_vanilla_health", true);
+        qol.writeBoolean("qol.player_display.hide_vanilla_food", true);
+        qol.writeBoolean("qol.player_display.hide_vanilla_armor", true);
+        qol.writeBoolean("qol.player_display.hide_vanilla_xp", true);
+        assertTrue(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.HEALTH, HudLayerHidePolicy.flags(qol)));
+        qol.setModuleEnabled("qol.player_display", false);
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.HEALTH, HudLayerHidePolicy.flags(qol)));
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.FOOD, HudLayerHidePolicy.flags(qol)));
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.ARMOR, HudLayerHidePolicy.flags(qol)));
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.XP, HudLayerHidePolicy.flags(qol)));
+    }
+
+    @Test
+    void optimizerHidesStopWhenModuleOff() {
+        QolUtilityConfig optimizer = new QolUtilityConfig();
+        optimizer.setModuleEnabled("qol.render_optimizer", true);
+        optimizer.writeBoolean("qol.render_optimizer.hide_boss_bar", true);
+        optimizer.writeBoolean("qol.render_optimizer.hide_food_bar", true);
+        assertTrue(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.BOSS, HudLayerHidePolicy.flags(optimizer)));
+        optimizer.setModuleEnabled("qol.render_optimizer", false);
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.BOSS, HudLayerHidePolicy.flags(optimizer)));
+        assertFalse(HudLayerHidePolicy.shouldHide(
+                HudLayerHidePolicy.Layer.FOOD, HudLayerHidePolicy.flags(optimizer)));
     }
 
     @Test

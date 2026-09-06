@@ -41,7 +41,7 @@ abstract class MultiPlayerGameModeMixin {
             BlockPos pos,
             Direction face,
             CallbackInfoReturnable<Boolean> cir) {
-        if (DungeonRuntime.shouldSkipBreakerSecretMine(pos)) {
+        if (DungeonRuntime.tryBreakerInstamine(pos) || DungeonRuntime.shouldSkipBreakerSecretMine(pos)) {
             cir.setReturnValue(false);
         }
     }
@@ -87,5 +87,34 @@ abstract class MultiPlayerGameModeMixin {
         if (DungeonRuntime.shouldCancelBlockUse(hit.getBlockPos(), sneaking)) {
             cir.setReturnValue(InteractionResult.FAIL);
         }
+    }
+
+    @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
+    private void rotclient$blockWrongF7Entity(
+            Player player,
+            Entity entity,
+            net.minecraft.world.phys.EntityHitResult hit,
+            InteractionHand hand,
+            CallbackInfoReturnable<InteractionResult> cir) {
+        boolean sneaking = player != null && player.isShiftKeyDown();
+        if (player == null) {
+            Minecraft client = Minecraft.getInstance();
+            sneaking = client != null && client.player != null && client.player.isShiftKeyDown();
+        }
+        if (DungeonRuntime.shouldCancelEntityUse(entity, sneaking)) {
+            cir.setReturnValue(InteractionResult.FAIL);
+        }
+    }
+
+    @Inject(method = "useItemOn", at = @At("RETURN"))
+    private void rotclient$f7ClickSound(
+            LocalPlayer player,
+            InteractionHand hand,
+            BlockHitResult hit,
+            CallbackInfoReturnable<InteractionResult> cir) {
+        if (hit == null || cir.getReturnValue() == InteractionResult.FAIL) {
+            return;
+        }
+        DungeonRuntime.onBlockUsed(hit.getBlockPos());
     }
 }

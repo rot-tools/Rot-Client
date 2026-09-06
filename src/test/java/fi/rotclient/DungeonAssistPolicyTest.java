@@ -24,7 +24,26 @@ class DungeonAssistPolicyTest {
                 "[NPC] Relieved: The reward is not in my chest!").orElseThrow());
         assertEquals("Stalker", DungeonAssistPolicy.quizAnswer(
                 "[NPC] Oruo the Magician: What is the status of The Watcher?").orElseThrow());
+        assertEquals("Stalker", DungeonAssistPolicy.quizAnswer(
+                "[STATUE] Oruo the Omniscient: What is the status of The Watcher?").orElseThrow());
+        assertEquals("289 Fairy Souls",
+                DungeonAssistPolicy.quizAnswer("How many total Fairy Souls are there?").orElseThrow());
+        assertEquals("61 Minions",
+                DungeonAssistPolicy.quizAnswer("How many unique minions are there?").orElseThrow());
+        assertEquals("5 Fairy Souls", DungeonAssistPolicy.quizAnswer(
+                "How many Fairy Souls are there in Backwater Bayou?").orElseThrow());
         assertEquals(1, DungeonAssistPolicy.skyBlockYear(1_560_275_700_000L));
+        assertEquals(0, DungeonAssistPolicy.quizCorrectOption(
+                DungeonAssistPolicy.QUIZ_OPTION_A + " Stalker",
+                List.of("Stalker")).orElseThrow());
+        assertEquals(2, DungeonAssistPolicy.quizCorrectOption(
+                DungeonAssistPolicy.QUIZ_OPTION_C + " Wool Weaver",
+                List.of("Wool Weaver")).orElseThrow());
+        assertTrue(DungeonAssistPolicy.quizCorrectOption(
+                DungeonAssistPolicy.QUIZ_OPTION_B + " Wrong",
+                List.of("Stalker")).isEmpty());
+        assertTrue(DungeonAssistPolicy.quizAnswers(
+                DungeonAssistPolicy.QUIZ_OPTION_A + " Stalker").isEmpty());
     }
 
     @Test
@@ -33,8 +52,31 @@ class DungeonAssistPolicyTest {
                 DungeonAssistPolicy.f7Title("2/3 Energy Crystals are now active!"));
         assertEquals("Crystals 2/3",
                 DungeonAssistPolicy.f7TitleText("2/3 Energy Crystals are now active!").orElseThrow());
+        assertEquals("Crystals 2/3",
+                DungeonAssistPolicy.f7TitleText(
+                        "2/3 Energy Crystals are now active!",
+                        "Crystals {current}/{total}",
+                        "{name} Enraged",
+                        "{name} {current}/{total}",
+                        "{name} {current}/{total}").orElseThrow());
+        assertEquals("Henri 3/7",
+                DungeonAssistPolicy.f7TitleText(
+                        "Henri activated a terminal! (3/7)",
+                        "",
+                        "",
+                        "{player} {current}/{total}",
+                        "").orElseThrow());
         assertEquals(DungeonAssistPolicy.F7Title.TERMINAL,
                 DungeonAssistPolicy.f7Title("Henri activated a terminal! (3/7)"));
+        assertTrue(DungeonAssistPolicy.otherProgressTitle("Bob completed a terminal! (3/7)", "Henri"));
+        assertFalse(DungeonAssistPolicy.otherProgressTitle("Henri completed a terminal! (3/7)", "Henri"));
+        assertFalse(DungeonAssistPolicy.otherProgressTitle("2/3 Energy Crystals are now active!", "Henri"));
+        assertTrue(DungeonAssistPolicy.hideProgressTitleAtDevice(
+                true, false, true, false, true, "Bob completed a terminal! (3/7)"));
+        assertFalse(DungeonAssistPolicy.hideProgressTitleAtDevice(
+                true, false, true, false, true, "Device Completed!"));
+        assertFalse(DungeonAssistPolicy.hideProgressTitleAtDevice(
+                true, false, true, false, false, "Bob completed a terminal! (3/7)"));
         assertEquals(DungeonAssistPolicy.F7Timer.GOLDOR,
                 DungeonAssistPolicy.f7TimerFromChat("[BOSS] Goldor: Who dares trespass into my domain?"));
         assertEquals(DungeonAssistPolicy.GOLDOR_MILLIS,
@@ -70,6 +112,20 @@ class DungeonAssistPolicyTest {
         assertEquals(548_000_000L, summary.profit());
         assertTrue(summary.hudLines(true).getFirst().contains("+"));
         assertEquals(List.of(100, 400), DungeonAssistPolicy.sortBlazeHealth(List.of(400, 100), true));
+        assertEquals(List.of(400, 100), DungeonAssistPolicy.sortBlazeHealth(List.of(400, 100), false));
+        assertEquals(10_000, DungeonAssistPolicy.blazeHealth("[Lv15] Blaze 9,000/10,000❤").orElseThrow());
+        assertTrue(DungeonAssistPolicy.blazeLowestFirst("Higher Blaze", false, true, 50.0D, 60.0D));
+        assertFalse(DungeonAssistPolicy.blazeLowestFirst("Lower Blaze", true, false, 80.0D, 90.0D));
+        assertTrue(DungeonAssistPolicy.blazeLowestFirst("Blaze", true, false, 50.0D, 60.0D));
+        assertFalse(DungeonAssistPolicy.blazeLowestFirst("Blaze", false, true, 80.0D, 90.0D));
+        assertTrue(DungeonAssistPolicy.blazeLowestFirst("Blaze", false, false, 72.0D, 90.0D));
+        assertFalse(DungeonAssistPolicy.blazeLowestFirst("Blaze", false, false, 50.0D, 65.0D));
+        assertTrue(DungeonAssistPolicy.blazeLowestFirst(
+                "Blaze", true, true, 75.0D, 50.0D, 90.0D));
+        assertFalse(DungeonAssistPolicy.blazeLowestFirst(
+                "Blaze", true, true, 50.0D, 50.0D, 90.0D));
+        assertTrue(DungeonAssistPolicy.isBlazeIceBlock("minecraft:packed_ice"));
+        assertTrue(DungeonAssistPolicy.isBlazeMagmaBlock("magma_block"));
     }
 
     @Test
@@ -81,9 +137,19 @@ class DungeonAssistPolicyTest {
                 "Deaths: 0"));
         List<String> footer = DungeonAssistPolicy.mapExtraInfo(sidebar, true, true, true, true);
         assertEquals(List.of("Secrets: 0/33", "Crypts: 2", "Score: 142", "Deaths: 0"), footer);
+        List<DungeonAssistPolicy.MapChip> bar = DungeonAssistPolicy.mapStatusBar(
+                sidebar, true, true, true, true, false, false);
+        assertEquals("Secrets: 0/33", bar.getFirst().text());
+        assertEquals("M: x", bar.get(4).text());
+        assertEquals("P: x", bar.get(5).text());
+        List<DungeonAssistPolicy.MapChip> noChips = DungeonAssistPolicy.mapStatusBar(
+                sidebar, true, true, true, true, false, false, false, false);
+        assertEquals(4, noChips.size());
         assertEquals("270 Score!", DungeonAssistPolicy.scoreTitleText(270, 270));
         assertEquals("ILY Henri", DungeonAssistPolicy.leapAnnounce("ILY {name}", "Henri"));
         assertEquals("Bob", DungeonAssistPolicy.leapTarget("You leaped to Bob!").orElseThrow());
+        assertEquals("Henri", DungeonAssistPolicy.leapTarget("You have teleported to Henri!").orElseThrow());
+        assertTrue(DungeonAssistPolicy.leapTarget("Henri leaped to you!").isEmpty());
         assertEquals(40, DungeonAssistPolicy.clampOpacity(40));
     }
 }

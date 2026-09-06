@@ -13,7 +13,7 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All 124 current catalog entries are wired and automated-tested. The group-wide
+All 131 current catalog entries are wired and automated-tested. The group-wide
 runtime matrix is still pending, so this table intentionally does not claim
 that every option is release-ready.
 
@@ -24,14 +24,15 @@ that every option is release-ready.
 | Combat | Auto Clicker; Hide Players; Trajectories; Etherwarp; Auto Dojo; Mob Highlight | Wired · automated tested · runtime matrix pending |
 | Events | Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Dagger Swap; Enderman Laser Hider; Attunement Display; Auto Soulcry; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras | Wired · automated tested · runtime matrix pending |
-| Dungeons | Secret Hitboxes; Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Term Sim; Requeue; Puzzles; F7 Boss; Dungeon Menus (including overlay-only chest prize reel); Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
+| Dungeons | Secret Hitboxes; Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Term Sim; Requeue; Puzzles; F7 Boss; Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Hover Terms; Party Finder Join Stats; Soulsand Triggerbot; Terminal Click Trails; Watcher Helper; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
 | Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; World Scanner; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
 | Foraging | Foraging Trees; Foraging Audio; Foraging Helpers; Foraging Cheats | Wired · automated tested · runtime matrix pending |
 | Garden | Farm Keys | Wired · automated tested · runtime matrix pending |
-| HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance and HUD Elements Editor are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Camera; Free Camera; Legacy SkyBlock Textures; Dark SkyBlock Pack | Wired · automated tested · runtime matrix pending |
+| GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
+| HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Camera; Free Camera; Legacy SkyBlock Textures; Dark SkyBlock Pack | Wired · automated tested · runtime matrix pending |
 | Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; Auto Experiments; Auto Harp; No Cursor Reset; Click GUI | Wired · automated tested · runtime matrix pending |
 | Utilities | Hotkey Macros; Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Wardrobe Swapper; Chat Commands (including overlay-only Vanguard prize reel); Auto Conversation; Auto Sprint; Inventory Walk; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard | Wired · automated tested · runtime matrix pending |
 
@@ -45,6 +46,12 @@ Leftovers wired onto the same parents: volcano geyser box, sulphur sponge box, T
 
 World Scanner worm-lava spots stay on Mining (`qol.world_scanner.worm`).
 
+## Dungeons (Athen / Nebulune port)
+
+Existing Dungeons parents keep saved configs. Superboom is click-triggered with extra walls via `/rot superboom`. Auto Terms uses millisecond delays and First/Random/Closest/Furthest order. Queue Terms drops stale clicks after 800 ms. Breaker instamine, chest-close delays, and Item Quality `#cur/#max/#floor` stay on the existing cards.
+
+New cards: Dungeon Carry Tracker (`/rot dcarry`), Hover Terms, Party Finder Join Stats (SkyCrypt `sky.shiiyu.moe`, not starred.foo), Soulsand Triggerbot, Terminal Click Trails, Watcher Helper. Cheat-tagged options stay off until opt-in. Terminal Simulator stays local `/rot termsim`.
+
 ## Daily Reward Claim
 
 `qol.reward_claim` (Interface / Inventory, default **off**) opens Hypixel daily-reward choices inside Rot Client when chat contains a `rewards.hypixel.net/claim-reward/` link. The module fetches the claim page, shows three Rot-themed cards, and POSTs the selected option. Hide Chat Link, Keep In Client, and Wait For Ad default on once the parent is enabled: the vanilla website-confirm screen is blocked while a claim loads, and if Hypixel marks the page as not skippable Claim waits the posted ad duration instead of opening the ad. Automated-tested; Minecraft playtest pending.
@@ -57,7 +64,7 @@ World Scanner worm-lava spots stay on Mining (`qol.world_scanner.worm`).
 
 ## Hotkey Macros
 
-`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) and runs backward-compatible macro logic on the same parent (catalog remains **124**). Custom macros are one line each: `KEY[+LIMIT] | message[,,message] | SEND/TYPE/EDIT/CYCLE/RANDOM/REPEAT | ASSERT/SUBMIT/VETO/AVOID | HOLD/VANILLA/RELEASE`. Placeholders (`%pos%`, `%x+3%`, `%clipboard%`, `%#regex%`, …), a 4-per-20-tick default rate limit, and a 256-character SEND cap are supported. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
+`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) and runs backward-compatible macro logic on the same parent (catalog remains **131**). Custom macros are one line each: `KEY[+LIMIT] | message[,,message] | SEND/TYPE/EDIT/CYCLE/RANDOM/REPEAT | ASSERT/SUBMIT/VETO/AVOID | HOLD/VANILLA/RELEASE`. Placeholders (`%pos%`, `%x+3%`, `%clipboard%`, `%#regex%`, …), a 4-per-20-tick default rate limit, and a 256-character SEND cap are supported. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
 
 ## Protocol and test scope
 
@@ -71,6 +78,21 @@ The runtime logic matches Hypixel-style GUI titles, scoreboard text, item
 `ExtraAttributes` ids, chat messages, and commands so the Serveri exercises
 the same protocol contracts. This does not make local automation acceptable on
 the official network.
+
+## Fullbright and Night
+
+`qol.fullbright` stays one Render / Lighting card (catalog still **131**). Child
+rows are Fullbright, Always Night, and Force both on (square latch, accent red
+when armed). The two modes are exclusive unless Force both is on. Releasing
+force while both are on keeps Fullbright. Flags persist in `rotclient.json`
+and are **not** SkyBlock-gated: Hypixel lobby, SkyBlock, hub, and instance
+switches keep the same saved state.
+
+Always Night is client-only sky and lightmap override (no `/time` packets).
+Turning it on in an already-loaded world plays a vanilla-style dusk once, then
+parks the moon. A new world while it is already on snaps to that parked night
+and does not replay dusk. Fullbright is an instant lightmap. End and Nether
+skyboxes are skipped. Automated-tested; Minecraft playtest pending.
 
 ## Wardrobe Swapper
 
@@ -123,9 +145,18 @@ Storage Overlay replaces supported Storage menus with a compact
 overview. It caches only pages observed from genuine server-provided Storage,
 Ender Chest, or Backpack containers, skipping the control row, and navigates
 through the recorded overview selector or the real `/enderchest` / `/backpack`
-commands. Settings cover active-page outline, overview columns and height,
-scroll direction/speed, spacing, and tooltip behavior. The cache is
-process-memory only.
+commands. Opening Storage walks unlocked pages that have never been cached so cards
+are not blank after a first look; later opens only reload Ender Chests and
+Backpacks you actually clicked. A dashboard Reload Storage Pages action still
+walks every unlocked page. Selected pages show live stacks; other cards keep
+the last cached preview without treating loading placeholders as empty. Observed
+pages persist in `rotclient-storage-cache.json`, including skull textures when
+the item codec drops PROFILE on reload.
+
+Inventory Overlay paints necklace, cloak, belt, and gloves plus the chosen pet
+on survival inventory. Those last-seen stacks persist in
+`rotclient-inventory-chrome-cache.json` with the same item encoding as Storage
+Overlay, so the bars are not empty after logging back into SkyBlock.
 
 Inventory Buttons renders user-configured command buttons around supported
 containers. The editor changes command, icon, size, anchors, and offsets and

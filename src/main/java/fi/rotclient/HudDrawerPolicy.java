@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Shared HUD-settings drawer contract: which catalog rows belong in the HUD
- * popup versus module Settings, plus synthetic look/scale rows.
+ * drawer versus module Settings, plus synthetic look/scale rows.
  */
 public final class HudDrawerPolicy {
     public static final String HUD_VISIBLE = "rotclient.hud_style.visible";
@@ -137,6 +137,85 @@ public final class HudDrawerPolicy {
         return List.copyOf(out);
     }
 
+    /**
+     * Every HUD-owned catalog row for a module, in catalog order. Used when the
+     * card HUD button opens one combined drawer instead of a per-piece popup.
+     */
+    public static List<QolUtilityCatalog.SettingDef> allHudCatalogSettings(
+            QolUtilityCatalog.ModuleDef module) {
+        if (module == null) {
+            return List.of();
+        }
+        List<HudElementCatalog.HudPiece> pieces = HudElementCatalog.hudPieces(module);
+        Set<String> seen = new HashSet<>();
+        List<QolUtilityCatalog.SettingDef> out = new ArrayList<>();
+        for (QolUtilityCatalog.SettingDef setting : module.settings()) {
+            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
+                if (sectionHasCombinedHudChild(module, setting.id(), pieces) && seen.add(setting.id())) {
+                    out.add(setting);
+                }
+                continue;
+            }
+            String id = setting.id();
+            if (id == null || id.isBlank() || seen.contains(id)) {
+                continue;
+            }
+            if (!isCombinedHudSetting(setting, module, pieces)) {
+                continue;
+            }
+            seen.add(id);
+            out.add(setting);
+        }
+        return List.copyOf(out);
+    }
+
+    /**
+     * Shared look/scale focus when this module is one overlay. Blank when
+     * several standalone HUD pieces would disagree (Player Display).
+     */
+    public static String uniqueStyleFocus(QolUtilityCatalog.ModuleDef module) {
+        if (module == null) {
+            return "";
+        }
+        int standalone = 0;
+        String found = "";
+        for (HudElementCatalog.HudPiece piece : HudElementCatalog.hudPieces(module)) {
+            if (piece.hasToggle() && isStandaloneHudToggle(piece.toggleId())) {
+                standalone++;
+            }
+            if (!usesQolHudStyle(piece)) {
+                continue;
+            }
+            String focus = styleFocusId(piece);
+            if (focus.isBlank()) {
+                continue;
+            }
+            if (found.isBlank()) {
+                found = focus;
+            } else if (!found.equals(focus)) {
+                return "";
+            }
+        }
+        if (standalone > 1) {
+            return "";
+        }
+        return found;
+    }
+
+    public static boolean hudDrawerShowsModuleEnableRow(
+            QolUtilityCatalog.ModuleDef module) {
+        List<HudElementCatalog.HudPiece> pieces = HudElementCatalog.hudPieces(module);
+        if (pieces.isEmpty()) {
+            return false;
+        }
+        for (HudElementCatalog.HudPiece piece : pieces) {
+            if (!hudVisibilityUsesModuleEnable(piece)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static HudElementCatalog.HudPiece resolvePiece(
             QolUtilityCatalog.ModuleDef module,
             String toggleId,
@@ -161,6 +240,49 @@ public final class HudDrawerPolicy {
             }
         }
         return pieces.get(0);
+    }
+
+    private static boolean isCombinedHudSetting(
+            QolUtilityCatalog.SettingDef setting,
+            QolUtilityCatalog.ModuleDef module,
+            List<HudElementCatalog.HudPiece> pieces) {
+        if (HudElementCatalog.isHudVisibilityToggle(setting)) {
+            return true;
+        }
+        String id = setting.id();
+        if (setting.type() == QolUtilityCatalog.SettingType.ACTION
+                && id != null
+                && id.endsWith("_hud_editor")) {
+            return true;
+        }
+        for (HudElementCatalog.HudPiece piece : pieces) {
+            if (isHudDrawerSetting(setting, module, piece)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean sectionHasCombinedHudChild(
+            QolUtilityCatalog.ModuleDef module,
+            String sectionId,
+            List<HudElementCatalog.HudPiece> pieces) {
+        boolean inSection = false;
+        for (QolUtilityCatalog.SettingDef setting : module.settings()) {
+            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
+                inSection = setting.id().equals(sectionId);
+                continue;
+            }
+            if (inSection && isCombinedHudSetting(setting, module, pieces)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isStandaloneHudToggle(String id) {
+        String key = normalize(id);
+        return key.endsWith(".hud") || key.endsWith("_hud");
     }
 
     private static boolean hasModuleDrawerChild(

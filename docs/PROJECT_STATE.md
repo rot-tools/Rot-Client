@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | 124 wired QoL modules. Dashboard chrome is **Rot Client** in accent red on the by-line. Appearance and HUD Elements Editor stay on Visuals when switching between them. Appearance and HUD Elements Editor are Visuals-only (not HUD & Display cards). World editor shows only enabled overlays. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | 131 wired QoL modules. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** in accent red on the by-line. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client (by-line, accent red). Author/owner: Rot Tools |
@@ -21,14 +21,19 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,035 tests**, 300 suites, 0 failures, 0 errors, 0 skipped; client compilation and clean build passed. Playable JAR SHA-256 `44BB777B9CF09682B66C79946F97867F299C8E426D1201414A5DD73606ECD834`. |
-| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 13 groups and **124** catalog parents. Appearance and HUD Elements Editor are Visuals-only; unhandled clicks dismiss the landing. Ready for Runtime Test. |
+| Automated baseline | Current working tree: **2,158 tests**, 318 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `A4EF98E2C34E0EFE26D3A88C4F98FBE9AB7B8E599DF6596634C84B317BA5D9D4`. |
+| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 14 groups and **131** catalog parents. Settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
 The current client source is compile-tested with Java 25. Gradle's Java 25 toolchain provisions the compiler and test runtime even when `JAVA_HOME` points elsewhere. `MiningSessionEngine` remains transient classification, correlation, dedupe, parity, and diagnostic state; accepted `OTHER_MINED` quantities persist in the separate `RotClientCurrentSession` ledger and feed read-only HUD and Analytics projections. Live material and gemstone target ledgers remain authoritative.
 
-Persistence uses `rotclient.json`, `rotclient-current-session.json`, and `rotclient-session-history.json`. Legacy `miningtracker.json` and `miningtracker-session-history.json` are migrated by byte-copy on first launch when the new files do not exist; legacy files are not deleted.
+Persistence uses `rotclient.json`, `rotclient-profiles.json`,
+`rotclient-current-session.json`, `rotclient-session-history.json`,
+`rotclient-storage-cache.json`, and `rotclient-inventory-chrome-cache.json`.
+Legacy `miningtracker.json` and
+`miningtracker-session-history.json` are migrated by byte-copy on first launch
+when the new files do not exist; legacy files are not deleted.
 
 ## Runtime-tested features
 
@@ -101,7 +106,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The 124-parent catalog lock, evidence-state guards, status-badge layout, and
+- The 131-parent catalog lock, evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -169,7 +174,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 124 modules across Utilities, Render, HUD & Display,
+- QoL catalog wiring for 131 modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -247,6 +252,22 @@ These constraints are part of the current safety model:
 - Start New still updates separate History and Current Session files. Recognized
   process-interruption boundaries now use a bounded startup recovery marker;
   unreadable marker data fails closed and power-loss atomicity is not claimed.
+- Dungeon awareness (2026-09-05): Entrance HUD floor, Hypixel -200 room-core
+  grid, Magical Map wither/blood/entrance world boxes (Depth Check still hides
+  through walls), hashed-room secret cache this run, Extra Stats requeue from
+  chat or GUI without matching `the catacombs -`. Starred ESP remains nearby.
+  No party secret websocket.
+- Dungeon map HUD (2026-09-06): 128 Magical Map paper (floor start corners,
+  Hypixel room/door palette, unopened gray, split names, yaw heads). Scan every
+  tick; hashing stays throttled. Map Mode is Explored or Reveal Hidden.
+  DUNG-001 / DUNG-009 stay Ready for Runtime Test. Automated tests are not
+  runtime Complete.
+- Dungeon leftover helpers (2026-09-06) on existing 131 parents: named ground-drop
+  highlight, 7s clicked-secret boxes, Wither/Blood key-drop HUD, Pre-4 device
+  complete, hide other Goldor progress titles, mute those titles at SS/Pre-4,
+  hide teammates at Simon Says and for 3s after leap, teammate Melody HUD from
+  party `%`, held relic pad, wrong-relic block (cheat, off). DUNG-010 stays
+  Ready for Runtime Test, not runtime Complete.
 
 For a class-by-class briefing of the shipped JAR (what to open first, Policy vs Runtime vs Mixin, dashboard vs mining vs Current Session), see [`docs/CODE_WALKTHROUGH.md`](CODE_WALKTHROUGH.md).
 
@@ -265,21 +286,28 @@ For a class-by-class briefing of the shipped JAR (what to open first, Policy vs 
 
 Use this order for the next checkpoint:
 
-1. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
+1. Playtest the Serveri dungeon checklist (close and relaunch Prism): 128
+   Magical Map paper (layout, names, no lag); Entrance HUD Floor Entrance; Door
+   Highlight world boxes with Depth Check off vs on; hashed-room secrets after
+   leaving a room; Mimic/Prince/Bat and blood/Watcher alerts; F7 P3 other
+   players’ terminal chat plus Melody 3 / Numbers 10; Extra Stats requeue
+   without a dungeon-start false fire. Do not mark DUNG-001 / DUNG-009 runtime
+   Complete.
+2. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
    and the expanded Slayer foundation are automated-tested, including
    Cocoon/Dagger/Laser behavior, Attunement, Auto Soulcry, Vengeance, sound
    filtering, configurable carry prices/webhooks, persistent history, RNG
    projection, and per-drop Big Drops filters. Storage Overlay and editable
    Inventory Buttons are implemented and automated-tested.
-2. Runtime-test the accumulated QoL batch later in one controlled pass, covering
+3. Runtime-test the accumulated QoL batch later in one controlled pass, covering
    dashboard persistence, UI/window behavior, Wardrobe Swapper, Slayer
    Cocoon/Dagger/Laser behavior, inventory
    overlay, tooltips/viewmodel/render helpers, Experiments, Harp, GFS, Sell, and
    Ghosts.
-3. Return to mining M1, Gemstone tracking, and Powder Chest Tracker after the QoL
+4. Return to mining M1, Gemstone tracking, and Powder Chest Tracker after the QoL
    batch. Their current checkpoint is preserved; the remaining material/area
    controls, tool swaps, and Gemstone Spread case are deliberately deferred.
-4. Validate Session History 2.0 in a controlled session:
+5. Validate Session History 2.0 in a controlled session:
 
    - Current Session item rows and valuation remain unchanged when History is
      opened or copied.
@@ -316,7 +344,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: 124 wired modules across thirteen task-oriented groups, with
+- QoL dashboard: 131 wired modules across fourteen task-oriented groups, with
   automation-style development features disabled by default and scoped to the
   local Serveri. No separate server-detection
   branch is planned.

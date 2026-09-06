@@ -35,9 +35,14 @@ final class SlayerHighlightWiringTest {
         assertTrue(runtime.contains("pruneAndPaintSittingBeacons("));
         assertTrue(runtime.contains("nearPowerOrb("));
         assertTrue(runtime.contains("observeContainer("));
+        assertTrue(runtime.contains("isThrownYangGlyphStand("));
         assertTrue(runtime.contains("shouldTrackYangGlyph("));
+        assertTrue(runtime.contains("shouldAdoptSittingYangGlyph("));
+        assertTrue(runtime.contains("YangGlyphTrack"));
+        assertTrue(runtime.contains("yangGlyphClaimed"));
         assertTrue(runtime.contains("adoptSittingBeacon("));
         assertTrue(runtime.contains("YANG_GLYPH_BEAM_HEIGHT"));
         assertTrue(!runtime.contains("SITTING_BEACONS.keySet().retainAll(liveSitting)"));
+        assertTrue(!runtime.contains("&& !fightingVoidgloom"));
     }
 }
