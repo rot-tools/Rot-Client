@@ -21,7 +21,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,158 tests**, 318 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `A4EF98E2C34E0EFE26D3A88C4F98FBE9AB7B8E599DF6596634C84B317BA5D9D4`. |
+| Automated baseline | Current working tree: **2,189 tests**, 323 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `CAF467410B1057844D33AA39D59BDC5FFEB5BB7E7CC676692E11383BACDF0F16`. |
 | Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 14 groups and **131** catalog parents. Settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
