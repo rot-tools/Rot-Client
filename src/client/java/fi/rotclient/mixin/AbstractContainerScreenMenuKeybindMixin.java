@@ -14,6 +14,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import fi.rotclient.RotClientPetPickerRuntime;
+import fi.rotclient.RotClientWardrobePickerRuntime;
+
 
 @Mixin(AbstractContainerScreen.class)
 abstract class AbstractContainerScreenMenuKeybindMixin {
@@ -25,6 +28,24 @@ abstract class AbstractContainerScreenMenuKeybindMixin {
             KeyEvent event,
             CallbackInfoReturnable<Boolean> cir) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+
+        if (RotClientPetPickerRuntime.handleKeyPressed(
+                screen,
+                event.key())) {
+
+            cir.setReturnValue(true);
+            return;
+        }
+
+
+        if (RotClientWardrobePickerRuntime.handleKeyPressed(
+                screen,
+                event.key())) {
+
+            cir.setReturnValue(true);
+            return;
+        }
+
         if (StorageOverlayRuntime.keyPressed(event)) {
             cir.setReturnValue(true);
             return;
@@ -41,11 +62,29 @@ abstract class AbstractContainerScreenMenuKeybindMixin {
             MouseButtonEvent event,
             boolean doubleClick,
             CallbackInfoReturnable<Boolean> cir) {
-        AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
-        if (StallMarketRuntime.shouldBlockClick(
-                screen, hoveredSlot, event.button(), event.hasControlDown())
-                || DungeonRuntime.handleContainerMouse(screen, event.button())
-                || MenuKeybindRuntime.handleMousePressed(screen, event.button())) {
+        AbstractContainerScreen<?> screen =
+                (AbstractContainerScreen<?>) (Object) this;
+
+        if (RotClientPetPickerRuntime.handleMousePressed(
+                screen,
+                hoveredSlot,
+                event.button())
+                || RotClientWardrobePickerRuntime.handleMousePressed(
+                screen,
+                hoveredSlot,
+                event.button())
+                || StallMarketRuntime.shouldBlockClick(
+                screen,
+                hoveredSlot,
+                event.button(),
+                event.hasControlDown())
+                || DungeonRuntime.handleContainerMouse(
+                screen,
+                event.button())
+                || MenuKeybindRuntime.handleMousePressed(
+                screen,
+                event.button())) {
+
             cir.setReturnValue(true);
         }
     }

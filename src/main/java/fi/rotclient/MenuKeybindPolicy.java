@@ -22,7 +22,12 @@ public final class MenuKeybindPolicy {
     public static final int LOADOUT_NEXT_SLOT = 44;
     public static final int LOADOUT_PREVIOUS_SLOT = 17;
 
-    public static final int[] PET_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20};
+    public static final int[] PET_SLOTS = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34,
+            37, 38, 39, 40, 41, 42, 43
+    };
     public static final int[] LOADOUT_SLOTS = {
             14, 15, 16, 23, 24, 25, 32, 33, 34, 41, 42, 43};
 

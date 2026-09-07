@@ -43,6 +43,7 @@ final class RotClientSidebarNav {
         APPEARANCE,
         HUD_LAYOUT,
         PROFILES,
+        LOADOUTS,
         SECTION_QOL,
         QOL_COMBAT,
         QOL_SLAYER,
@@ -73,6 +74,7 @@ final class RotClientSidebarNav {
             int appearanceY,
             int hudLayoutY,
             int profilesY,
+            int loadoutsY,
             int qolHeaderY,
             int[] qolPageYs,
             boolean miningExpanded,
@@ -124,6 +126,11 @@ final class RotClientSidebarNav {
                     && profilesY >= 0;
         }
 
+        boolean loadoutsVisible() {
+            return settingsClipHeight() > 0
+                    && loadoutsY >= 0;
+        }
+
         boolean qolChildrenVisible() {
             return qolClipHeight() > 0;
         }
@@ -140,7 +147,7 @@ final class RotClientSidebarNav {
 
         int settingsClipHeight() {
             return RotClientEase.shownPixels(
-                    childStackHeight(3),
+                    childStackHeight(4),
                     settingsOpen);
         }
 
@@ -437,10 +444,11 @@ final class RotClientSidebarNav {
         /*
          * Visuals / settings section.
          *
-         * Three children:
+         * Four children:
          * 1. Appearance
          * 2. HUD Elements Editor
          * 3. Profiles
+         * 4. Loadouts
          */
         int settingsHeaderY = y;
 
@@ -456,8 +464,11 @@ final class RotClientSidebarNav {
         int profilesY =
                 y + (ITEM_HEIGHT + ITEM_GAP) * 2;
 
+        int loadoutsY =
+                y + (ITEM_HEIGHT + ITEM_GAP) * 3;
+
         y += RotClientEase.shownPixels(
-                childStackHeight(3),
+                childStackHeight(4),
                 settingsOpen);
 
         /*
@@ -505,6 +516,7 @@ final class RotClientSidebarNav {
                 appearanceY,
                 hudLayoutY,
                 profilesY,
+                loadoutsY,
                 qolHeaderY,
                 qolPageYs,
                 mining,
@@ -659,6 +671,17 @@ final class RotClientSidebarNav {
                 layout.appearanceY(),
                 layout.settingsClipHeight())) {
             return HitTarget.PROFILES;
+        }
+
+        if (inClippedItem(
+                localX,
+                localY,
+                itemX,
+                itemW,
+                layout.loadoutsY(),
+                layout.appearanceY(),
+                layout.settingsClipHeight())) {
+            return HitTarget.LOADOUTS;
         }
 
         if (inHeader(
@@ -897,6 +920,9 @@ final class RotClientSidebarNav {
 
             case PROFILES ->
                     layout.profilesY();
+
+            case LOADOUTS ->
+                    layout.loadoutsY();
 
             case SECTION_QOL ->
                     layout.qolHeaderY();
