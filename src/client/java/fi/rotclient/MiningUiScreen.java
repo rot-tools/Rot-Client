@@ -2575,12 +2575,65 @@ final class MiningUiScreen extends Screen {
                         }
 
                         /*
-                         * Delete
+                         * Pet picker
                          */
                         if (inside(
                                 mouseX,
                                 mouseY,
                                 menuX,
+                                menuY + 32,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                            boolean opened =
+                                    RotClientPetPickerRuntime.begin(
+                                            loadout.id,
+                                            this);
+
+                            loadoutPageError =
+                                    opened
+                                            ? ""
+                                            : "Could not open the Pets menu.";
+
+                            return true;
+                        }
+
+                        /*
+                         * Equipment picker
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX + actionWidth + gap,
+                                menuY + 32,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                            boolean opened =
+                                    RotClientEquipmentPickerRuntime.begin(
+                                            loadout.id,
+                                            this);
+
+                            loadoutPageError =
+                                    opened
+                                            ? ""
+                                            : "Could not open the Equipment Wardrobe.";
+
+                            return true;
+                        }
+
+                        /*
+                         * Delete
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX
+                                        + (actionWidth + gap) * 2,
                                 menuY + 32,
                                 actionWidth,
                                 BUTTON_HEIGHT)) {
@@ -4708,10 +4761,40 @@ final class MiningUiScreen extends Screen {
                             + loadout.wardrobeSlotNumber
                             : "Wardrobe: None";
 
+            String petLabel;
+
+            if (loadout.petUuid == null
+                    || loadout.petUuid.isBlank()) {
+
+                petLabel =
+                        "Pet: None";
+
+            } else if (loadout.petName == null
+                    || loadout.petName.isBlank()) {
+
+                petLabel =
+                        "Pet: Selected";
+
+            } else {
+                petLabel =
+                        "Pet: "
+                                + loadout.petName;
+            }
+
+            String equipmentLabel =
+                    loadout.equipmentSetNumber > 0
+                            ? "Equipment: Set "
+                            + loadout.equipmentSetNumber
+                            : "Equipment: None";
+
             String loadoutDetail =
                     settingsLabel
-                            + "  ·  "
-                            + wardrobeLabel;
+                            + "  \u00B7  "
+                            + wardrobeLabel
+                            + "  \u00B7  "
+                            + petLabel
+                            + "  \u00B7  "
+                            + equipmentLabel;
 
             RotClientUiDraw.text(
                     graphics,
@@ -4826,11 +4909,45 @@ final class MiningUiScreen extends Screen {
                         false,
                         true);
 
+                /*
+                 * Change Pet.
+                 */
                 drawProfileActionButton(
                         graphics,
                         mouseX,
                         mouseY,
                         menuX,
+                        menuY + 32,
+                        actionWidth,
+                        "PET",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Change Equipment Set.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX + actionWidth + gap,
+                        menuY + 32,
+                        actionWidth,
+                        "EQUIPMENT",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Delete loadout.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX
+                                + (actionWidth + gap) * 2,
                         menuY + 32,
                         actionWidth,
                         "DELETE",

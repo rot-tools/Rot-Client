@@ -562,38 +562,121 @@ public final class  InventoryChromeRuntime {
 
     private static void snapshotEquipmentSets(List<Slot> slots) {
         int column = -1;
-        int containerEnd = Math.max(0, slots.size() - 36);
+
         for (int i = 36; i < Math.min(45, slots.size()); i++) {
-            ItemStack stack = stackIn(slots, i);
-            var found = InventoryOverlayPolicy.equipmentSetsColumn(i, itemPath(stack));
+            ItemStack stack =
+                    stackIn(slots, i);
+
+            var found =
+                    InventoryOverlayPolicy
+                            .equipmentSetsColumn(
+                                    i,
+                                    itemPath(stack));
+
             if (found.isPresent()) {
-                column = found.getAsInt();
+                column =
+                        found.getAsInt();
+
                 break;
             }
         }
+
         if (column < 0) {
             return;
         }
-        ItemStack[] next = new ItemStack[] {
-                ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY};
-        for (int i = 0; i < containerEnd; i++) {
-            if (!InventoryOverlayPolicy.isEquipmentSetsPieceSlot(i, column)) {
-                continue;
-            }
-            ItemStack stack = stackIn(slots, i);
-            if (stack.isEmpty() || InventoryOverlayPolicy.isPlaceholder(
-                    stack.getHoverName().getString(), itemPath(stack))) {
-                continue;
-            }
-            int kind = InventoryOverlayPolicy.classifyEquipmentIndex(
-                    stack.getHoverName().getString(), loreLines(stack));
-            next[kind >= 0 ? kind : Math.min(i / 9, next.length - 1)] = stack.copy();
-        }
-        if (InventoryOverlayPolicy.shouldKeepExistingCache(
-                hasAnyEquipment(), allEmpty(next))) {
+
+        noteEquipmentSet(
+                slots,
+                column);
+    }
+
+    /**
+     * Immediately updates the inventory-overlay Equipment cache from one
+     * Equipment Wardrobe column.
+     *
+     * Used both by normal visible Equipment menus and hidden loadout switching.
+     */
+    static void noteEquipmentSet(
+            List<Slot> slots,
+            int column) {
+
+        if (slots == null
+                || column < 0
+                || column > 8) {
+
             return;
         }
-        System.arraycopy(next, 0, EQUIPMENT, 0, EQUIPMENT.length);
+
+        ItemStack[] next =
+                new ItemStack[] {
+                        ItemStack.EMPTY,
+                        ItemStack.EMPTY,
+                        ItemStack.EMPTY,
+                        ItemStack.EMPTY};
+
+        int containerEnd =
+                Math.max(
+                        0,
+                        slots.size() - 36);
+
+        for (int i = 0; i < containerEnd; i++) {
+            if (!InventoryOverlayPolicy
+                    .isEquipmentSetsPieceSlot(
+                            i,
+                            column)) {
+
+                continue;
+            }
+
+            ItemStack stack =
+                    stackIn(
+                            slots,
+                            i);
+
+            if (stack.isEmpty()
+                    || InventoryOverlayPolicy
+                    .isPlaceholder(
+                            stack.getHoverName()
+                                    .getString(),
+                            itemPath(stack))) {
+
+                continue;
+            }
+
+            int kind =
+                    InventoryOverlayPolicy
+                            .classifyEquipmentIndex(
+                                    stack.getHoverName()
+                                            .getString(),
+                                    loreLines(stack));
+
+            int targetIndex =
+                    kind >= 0
+                            ? kind
+                            : Math.min(
+                                    i / 9,
+                                    next.length - 1);
+
+            next[targetIndex] =
+                    stack.copy();
+        }
+
+        if (InventoryOverlayPolicy
+                .shouldKeepExistingCache(
+                        hasAnyEquipment(),
+                        allEmpty(next))) {
+
+            return;
+        }
+
+        System.arraycopy(
+                next,
+                0,
+                EQUIPMENT,
+                0,
+                EQUIPMENT.length);
+
+        persistObserved();
     }
 
     private static void snapshotStatsMenuPet(List<Slot> slots) {

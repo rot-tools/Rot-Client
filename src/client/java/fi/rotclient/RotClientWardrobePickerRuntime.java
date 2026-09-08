@@ -265,6 +265,16 @@ public final class RotClientWardrobePickerRuntime {
             return true;
         }
 
+        RotClientLoadout activeLoadout =
+                RotClientClient
+                        .loadouts()
+                        .activeLoadout();
+
+        boolean updateLive =
+                activeLoadout != null
+                        && activeLoadout.matchesId(
+                                pendingLoadoutId);
+
         boolean saved =
                 RotClientClient
                         .loadouts()
@@ -277,6 +287,16 @@ public final class RotClientWardrobePickerRuntime {
         }
 
         finishAndReturn();
+
+        /*
+         * Apply the changed Wardrobe immediately only when this loadout is
+         * already the active one.
+         */
+        if (updateLive) {
+            WardrobeAutoEquipRuntime
+                    .beginLoadoutEquip(
+                            globalWardrobeNumber);
+        }
 
         return true;
     }

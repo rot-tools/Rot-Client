@@ -8,24 +8,18 @@ package fi.rotclient;
  * 1. Select/persist the target loadout.
  * 2. Switch the optional linked Settings Profile.
  * 3. Equip the configured Wardrobe set.
- * 4. After Wardrobe finishes, equip the configured Pet.
+ * 4. Equip the configured Pet.
+ * 5. Equip the configured Equipment Set.
  *
- * Equipment / hotbar / inventory stages can be appended later.
+ * Hotbar / inventory stages can be appended later.
  */
 final class RotClientLoadoutActivationCoordinator {
     private final RotClientLoadoutManager loadouts;
     private final RotClientProfileController profiles;
 
-    /*
-     * Pet activation is queued while the asynchronous Wardrobe runtime
-     * finishes.
-     */
     private String pendingPetUuid = "";
-
-    /*
-     * Small handoff delay between closing Wardrobe and opening Pets.
-     */
-    private int petHandoffTicks;
+    private int pendingEquipmentSetNumber;
+    private int gearHandoffTicks;
 
     RotClientLoadoutActivationCoordinator(
             RotClientLoadoutManager loadouts,
@@ -45,11 +39,6 @@ final class RotClientLoadoutActivationCoordinator {
         this.profiles = profiles;
     }
 
-    /**
-     * Begins activation of an existing loadout.
-     *
-     * Gear stages continue asynchronously on subsequent client ticks.
-     */
     boolean activate(String loadoutId) {
         RotClientLoadout target =
                 loadouts.findById(loadoutId);
@@ -58,9 +47,6 @@ final class RotClientLoadoutActivationCoordinator {
             return false;
         }
 
-        /*
-         * Do not overlap two gear activation sequences.
-         */
         if (gearActivationBusy()) {
             return false;
         }
@@ -73,16 +59,10 @@ final class RotClientLoadoutActivationCoordinator {
                         ? null
                         : previous.id;
 
-        /*
-         * Persist the target first.
-         */
         if (!loadouts.activate(target.id)) {
             return false;
         }
 
-        /*
-         * If there is no Settings Profile, continue directly to gear.
-         */
         if (!target.hasLinkedSettingsProfile()) {
             if (startGearActivation(target)) {
                 return true;
@@ -95,9 +75,6 @@ final class RotClientLoadoutActivationCoordinator {
             return false;
         }
 
-        /*
-         * Switch linked Rot Client settings before touching gear.
-         */
         if (profiles.switchTo(
                 target.settingsProfileId)) {
 
@@ -119,57 +96,58 @@ final class RotClientLoadoutActivationCoordinator {
         return false;
     }
 
-    /**
-     * Advances asynchronous loadout activation.
-     *
-     * In particular, Pets must not start until the hidden Wardrobe operation
-     * has completely finished.
-     */
     void tick() {
-        if (pendingPetUuid == null
-                || pendingPetUuid.isBlank()) {
-
+        if (!hasPendingGearStages()) {
             return;
         }
 
-        /*
-         * Wardrobe includes its delayed hidden-container close in busy().
-         */
         if (WardrobeAutoEquipRuntime.busy()) {
-            petHandoffTicks = 1;
+            gearHandoffTicks = 1;
             return;
         }
 
-        /*
-         * Never start another Pets operation on top of an existing one.
-         */
         if (RotClientPetAutoEquipRuntime.busy()) {
+            gearHandoffTicks = 1;
             return;
         }
 
-        /*
-         * Give Minecraft/Hypixel one client tick between the two menus.
-         */
-        if (petHandoffTicks > 0) {
-            petHandoffTicks--;
+        if (RotClientEquipmentAutoEquipRuntime.busy()) {
             return;
         }
 
-        String petUuid =
-                pendingPetUuid;
+        if (gearHandoffTicks > 0) {
+            gearHandoffTicks--;
+            return;
+        }
 
-        pendingPetUuid = "";
-        petHandoffTicks = 0;
+        if (pendingPetUuid != null
+                && !pendingPetUuid.isBlank()) {
 
-        RotClientPetAutoEquipRuntime
-                .begin(petUuid);
+            String petUuid =
+                    pendingPetUuid;
+
+            if (RotClientPetAutoEquipRuntime
+                    .begin(petUuid)) {
+
+                pendingPetUuid = "";
+                gearHandoffTicks = 1;
+            }
+
+            return;
+        }
+
+        if (pendingEquipmentSetNumber > 0) {
+            int equipmentSetNumber =
+                    pendingEquipmentSetNumber;
+
+            if (RotClientEquipmentAutoEquipRuntime
+                    .begin(equipmentSetNumber)) {
+
+                pendingEquipmentSetNumber = 0;
+            }
+        }
     }
 
-    /**
-     * Starts the first required gear stage.
-     *
-     * No configured value means "leave the player's current gear unchanged".
-     */
     private boolean startGearActivation(
             RotClientLoadout target) {
 
@@ -177,16 +155,18 @@ final class RotClientLoadoutActivationCoordinator {
             return false;
         }
 
-        clearPendingPet();
+        clearPendingGear();
 
         String petUuid =
                 target.petUuid == null
                         ? ""
                         : target.petUuid.trim();
 
-        /*
-         * Wardrobe runs first.
-         */
+        int equipmentSetNumber =
+                Math.max(
+                        0,
+                        target.equipmentSetNumber);
+
         if (target.wardrobeSlotNumber > 0) {
             boolean started =
                     WardrobeAutoEquipRuntime
@@ -197,44 +177,64 @@ final class RotClientLoadoutActivationCoordinator {
                 return false;
             }
 
-            /*
-             * Queue the Pet stage. tick() starts it only after Wardrobe is
-             * completely finished.
-             */
             if (!petUuid.isBlank()) {
                 pendingPetUuid =
                         petUuid;
-
-                petHandoffTicks = 1;
             }
 
+            if (equipmentSetNumber > 0) {
+                pendingEquipmentSetNumber =
+                        equipmentSetNumber;
+            }
+
+            gearHandoffTicks = 1;
             return true;
         }
 
-        /*
-         * No Wardrobe configured. Start Pet immediately when configured.
-         */
         if (!petUuid.isBlank()) {
-            return RotClientPetAutoEquipRuntime
-                    .begin(petUuid);
+            if (equipmentSetNumber > 0) {
+                pendingEquipmentSetNumber =
+                        equipmentSetNumber;
+            }
+
+            boolean started =
+                    RotClientPetAutoEquipRuntime
+                            .begin(petUuid);
+
+            if (!started) {
+                clearPendingGear();
+                return false;
+            }
+
+            gearHandoffTicks = 1;
+            return true;
         }
 
-        /*
-         * Neither Wardrobe nor Pet is configured.
-         */
+        if (equipmentSetNumber > 0) {
+            return RotClientEquipmentAutoEquipRuntime
+                    .begin(equipmentSetNumber);
+        }
+
         return true;
     }
 
-    private boolean gearActivationBusy() {
+    private boolean hasPendingGearStages() {
         return (pendingPetUuid != null
                 && !pendingPetUuid.isBlank())
-                || WardrobeAutoEquipRuntime.busy()
-                || RotClientPetAutoEquipRuntime.busy();
+                || pendingEquipmentSetNumber > 0;
     }
 
-    private void clearPendingPet() {
+    private boolean gearActivationBusy() {
+        return hasPendingGearStages()
+                || WardrobeAutoEquipRuntime.busy()
+                || RotClientPetAutoEquipRuntime.busy()
+                || RotClientEquipmentAutoEquipRuntime.busy();
+    }
+
+    private void clearPendingGear() {
         pendingPetUuid = "";
-        petHandoffTicks = 0;
+        pendingEquipmentSetNumber = 0;
+        gearHandoffTicks = 0;
     }
 
     private void restorePrevious(

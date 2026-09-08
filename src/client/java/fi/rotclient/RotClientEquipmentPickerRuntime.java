@@ -226,6 +226,16 @@ public final class RotClientEquipmentPickerRuntime {
             return true;
         }
 
+        RotClientLoadout activeLoadout =
+                RotClientClient
+                        .loadouts()
+                        .activeLoadout();
+
+        boolean updateLive =
+                activeLoadout != null
+                        && activeLoadout.matchesId(
+                                pendingLoadoutId);
+
         boolean saved =
                 RotClientClient
                         .loadouts()
@@ -238,6 +248,15 @@ public final class RotClientEquipmentPickerRuntime {
         }
 
         finishAndReturn();
+
+        /*
+         * Apply the changed Equipment Set immediately only when this loadout
+         * is already the active one.
+         */
+        if (updateLive) {
+            RotClientEquipmentAutoEquipRuntime
+                    .begin(equipmentSetNumber);
+        }
 
         return true;
     }

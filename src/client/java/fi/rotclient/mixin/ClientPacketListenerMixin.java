@@ -141,6 +141,7 @@ abstract class ClientPacketListenerMixin {
             return;
         }
         if (RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
+                || fi.rotclient.RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
                 || WardrobeAutoEquipRuntime.consumeOpenScreen(packet)) {
 
             ci.cancel();
@@ -153,6 +154,7 @@ abstract class ClientPacketListenerMixin {
             return;
         }
         RotClientPetAutoEquipRuntime.onContainerClosed();
+        fi.rotclient.RotClientEquipmentAutoEquipRuntime.onContainerClosed();
         WardrobeAutoEquipRuntime.onContainerClosed();
         ExperimentSolverRuntime.onScreenClosed();
         AutoExperimentsRuntime.reset();

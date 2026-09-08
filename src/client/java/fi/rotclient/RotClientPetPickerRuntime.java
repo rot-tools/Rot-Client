@@ -278,6 +278,16 @@ public final class RotClientPetPickerRuntime {
             return true;
         }
 
+        RotClientLoadout activeLoadout =
+                RotClientClient
+                        .loadouts()
+                        .activeLoadout();
+
+        boolean updateLive =
+                activeLoadout != null
+                        && activeLoadout.matchesId(
+                                pendingLoadoutId);
+
         boolean saved =
                 RotClientClient
                         .loadouts()
@@ -291,6 +301,15 @@ public final class RotClientPetPickerRuntime {
         }
 
         finishAndReturn();
+
+        /*
+         * Editing the currently active loadout should update the live player
+         * immediately. Inactive loadouts remain configuration-only.
+         */
+        if (updateLive) {
+            RotClientPetAutoEquipRuntime
+                    .begin(petUuid);
+        }
 
         return true;
     }
