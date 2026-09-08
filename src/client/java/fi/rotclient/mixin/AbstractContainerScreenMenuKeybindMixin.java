@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import fi.rotclient.RotClientPetPickerRuntime;
 import fi.rotclient.RotClientWardrobePickerRuntime;
+import fi.rotclient.RotClientEquipmentPickerRuntime;
 
 
 @Mixin(AbstractContainerScreen.class)
@@ -28,6 +29,14 @@ abstract class AbstractContainerScreenMenuKeybindMixin {
             KeyEvent event,
             CallbackInfoReturnable<Boolean> cir) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+
+        if (RotClientEquipmentPickerRuntime.handleKeyPressed(
+                screen,
+                event.key())) {
+
+            cir.setReturnValue(true);
+            return;
+        }
 
         if (RotClientPetPickerRuntime.handleKeyPressed(
                 screen,
@@ -66,6 +75,10 @@ abstract class AbstractContainerScreenMenuKeybindMixin {
                 (AbstractContainerScreen<?>) (Object) this;
 
         if (RotClientPetPickerRuntime.handleMousePressed(
+                screen,
+                hoveredSlot,
+                event.button())
+                || RotClientEquipmentPickerRuntime.handleMousePressed(
                 screen,
                 hoveredSlot,
                 event.button())

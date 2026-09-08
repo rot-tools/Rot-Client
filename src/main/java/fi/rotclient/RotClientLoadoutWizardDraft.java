@@ -14,6 +14,11 @@ final class RotClientLoadoutWizardDraft {
      * 0 means no wardrobe selection.
      */
     int wardrobeSlotNumber;
+    /**
+     * 1-based SkyBlock Equipment Set number.
+     * 0 means no equipment-set selection.
+     */
+    int equipmentSetNumber;
 
     String petUuid = "";
 
@@ -33,5 +38,6 @@ final class RotClientLoadoutWizardDraft {
         settingsProfileId = "";
         petUuid = "";
         petName = "";
+        equipmentSetNumber = 0;
     }
 }

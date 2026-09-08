@@ -74,6 +74,7 @@ final class RotClientLoadoutConfig {
          * existing loadout.
          */
         if (!loadouts.isEmpty()
+                && !activeLoadoutId.isBlank()
                 && findById(activeLoadoutId) == null) {
 
             activeLoadoutId =

@@ -72,19 +72,14 @@ final class RotClientLoadoutManager {
                 RotClientLoadout.create(
                         normalizedName);
 
-        String previousActiveId =
-                config.activeLoadoutId;
-
         config.loadouts.add(loadout);
 
-        config.activeLoadoutId =
-                loadout.id;
-
+        /*
+         * Creating a loadout only saves it.
+         * Activation happens when the user selects it.
+         */
         if (!saveNow()) {
             config.loadouts.remove(loadout);
-
-            config.activeLoadoutId =
-                    previousActiveId;
 
             return null;
         }
@@ -361,6 +356,38 @@ final class RotClientLoadoutManager {
          * Persistence failed. Keep the in-memory state aligned with disk.
          */
         loadout.wardrobeSlotNumber =
+                previous;
+
+        return false;
+    }
+
+    boolean setEquipmentSet(
+            String loadoutId,
+            int equipmentSetNumber) {
+
+        RotClientLoadout loadout =
+                findById(loadoutId);
+
+        if (loadout == null
+                || equipmentSetNumber < 0) {
+
+            return false;
+        }
+
+        int previous =
+                loadout.equipmentSetNumber;
+
+        loadout.equipmentSetNumber =
+                equipmentSetNumber;
+
+        if (saveNow()) {
+            return true;
+        }
+
+        /*
+         * Persistence failed. Keep the in-memory state aligned with disk.
+         */
+        loadout.equipmentSetNumber =
                 previous;
 
         return false;

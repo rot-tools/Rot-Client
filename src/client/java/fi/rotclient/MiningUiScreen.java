@@ -131,6 +131,7 @@ final class MiningUiScreen extends Screen {
         NAME,
         WARDROBE,
         PET,
+        EQUIPMENT,
         SETTINGS,
         REVIEW
     }
@@ -754,6 +755,7 @@ final class MiningUiScreen extends Screen {
     private void cancelLoadoutWizard() {
         RotClientWardrobePickerRuntime.cancel();
         RotClientPetPickerRuntime.cancel();
+        RotClientEquipmentPickerRuntime.cancel();
 
         loadoutWizardDraft.reset();
 
@@ -762,6 +764,7 @@ final class MiningUiScreen extends Screen {
 
         loadoutCreateOpen = false;
         loadoutNameFocused = false;
+
 
         loadoutNameInput = "";
         loadoutCreateSettingsProfileId = "";
@@ -788,6 +791,23 @@ final class MiningUiScreen extends Screen {
 
         loadoutWizardStep =
                 LoadoutWizardStep.WARDROBE;
+    }
+
+    private void openLoadoutWizardEquipmentPicker() {
+        boolean opened =
+                RotClientEquipmentPickerRuntime.beginDraft(
+                        this,
+                        selected -> {
+                            loadoutWizardDraft.equipmentSetNumber =
+                                    selected;
+
+                            loadoutCreateError = "";
+                        });
+
+        if (!opened) {
+            loadoutCreateError =
+                    "Could not open the Equipment Wardrobe.";
+        }
     }
 
     private void openLoadoutWizardPetPicker() {
@@ -2833,7 +2853,7 @@ final class MiningUiScreen extends Screen {
                     BUTTON_HEIGHT)) {
 
                 loadoutWizardStep =
-                        LoadoutWizardStep.SETTINGS;
+                        LoadoutWizardStep.EQUIPMENT;
 
                 loadoutCreateError = "";
 
@@ -2843,6 +2863,88 @@ final class MiningUiScreen extends Screen {
             /*
              * Cancel entire wizard.
              */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            return true;
+        }
+
+        /*
+         * Step 4: Equipment
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.EQUIPMENT) {
+
+            int formY =
+                    top + 42;
+
+            /*
+             * Open the real Hypixel Equipment Wardrobe.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    BUTTON_HEIGHT)) {
+
+                openLoadoutWizardEquipmentPicker();
+                return true;
+            }
+
+            int actionY =
+                    formY + 100;
+
+            /*
+             * Back -> Pet.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.PET;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Next -> Settings.
+             *
+             * Equipment is optional, so this is always available.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.SETTINGS;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
             if (inside(
                     mouseX,
                     mouseY,
@@ -2905,7 +3007,7 @@ final class MiningUiScreen extends Screen {
                         BUTTON_HEIGHT)) {
 
                     loadoutWizardStep =
-                            LoadoutWizardStep.PET;
+                            LoadoutWizardStep.EQUIPMENT;
 
                     loadoutCreateError = "";
 
@@ -2962,7 +3064,7 @@ final class MiningUiScreen extends Screen {
                     top + 42;
 
             int actionY =
-                    formY + 144;
+                    formY + 160;
 
             /*
              * Back -> Settings.
@@ -3255,9 +3357,26 @@ final class MiningUiScreen extends Screen {
             }
         }
 
+
         /*
-         * Apply the optional Settings Profile link.
+         * Apply the optional Equipment Set selection.
          */
+        if (loadoutWizardDraft.equipmentSetNumber > 0) {
+            boolean equipmentSaved =
+                    manager.setEquipmentSet(
+                            created.id,
+                            loadoutWizardDraft.equipmentSetNumber);
+
+            if (!equipmentSaved) {
+                manager.delete(
+                        created.id);
+
+                loadoutCreateError =
+                        "Could not save the Equipment Set selection.";
+
+                return;
+            }
+        }
         if (loadoutWizardDraft.settingsProfileId != null
                 && !loadoutWizardDraft.settingsProfileId.isBlank()) {
 
@@ -3667,7 +3786,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.sectionLabel(
                     graphics,
                     font,
-                    "NEW LOADOUT · 1 / 5",
+                    "NEW LOADOUT \u00B7 1 / 6",
                     contentLeft + 14,
                     formY + 10);
 
@@ -3828,7 +3947,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.sectionLabel(
                     graphics,
                     font,
-                    "NEW LOADOUT · 2 / 5",
+                    "NEW LOADOUT \u00B7 2 / 6",
                     contentLeft + 14,
                     formY + 10);
 
@@ -3941,7 +4060,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.sectionLabel(
                     graphics,
                     font,
-                    "NEW LOADOUT · 3 / 5",
+                    "NEW LOADOUT \u00B7 3 / 6",
                     contentLeft + 14,
                     formY + 10);
 
@@ -4029,6 +4148,117 @@ final class MiningUiScreen extends Screen {
 
         } else if (loadoutCreateOpen
                 && loadoutWizardStep
+                == LoadoutWizardStep.EQUIPMENT) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    132;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 4 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Optionally choose the SkyBlock Equipment Set for this loadout.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            String equipmentStatus =
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "Selected: Equipment Set "
+                            + loadoutWizardDraft.equipmentSetNumber
+                            : "Selected: None";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    equipmentStatus,
+                    contentLeft + 14,
+                    formY + 46,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "CHANGE EQUIPMENT SET"
+                            : "CHOOSE EQUIPMENT SET",
+                    false,
+                    false,
+                    true);
+
+            int actionY =
+                    formY + 100;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    "NEXT",
+                    true,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
                 == LoadoutWizardStep.SETTINGS) {
 
             int formY =
@@ -4054,7 +4284,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.sectionLabel(
                     graphics,
                     font,
-                    "NEW LOADOUT · 4 / 5",
+                    "NEW LOADOUT \u00B7 5 / 6",
                     contentLeft + 14,
                     formY + 10);
 
@@ -4132,7 +4362,7 @@ final class MiningUiScreen extends Screen {
                     top + 42;
 
             int formHeight =
-                    180;
+                    196;
 
             RotClientUiDraw.drawElevatedCard(
                     graphics,
@@ -4151,7 +4381,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.sectionLabel(
                     graphics,
                     font,
-                    "NEW LOADOUT · 5 / 5",
+                    "NEW LOADOUT \u00B7 6 / 6",
                     contentLeft + 14,
                     formY + 10);
 
@@ -4203,6 +4433,20 @@ final class MiningUiScreen extends Screen {
                     RotClientTheme.TEXT_MUTED,
                     false);
 
+            String equipmentReview =
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "Equipment: Set "
+                            + loadoutWizardDraft.equipmentSetNumber
+                            : "Equipment: None";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    equipmentReview,
+                    contentLeft + 14,
+                    formY + 94,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
             String settingsReview;
 
             if (loadoutWizardDraft.settingsProfileId == null
@@ -4228,7 +4472,7 @@ final class MiningUiScreen extends Screen {
                     font,
                     settingsReview,
                     contentLeft + 14,
-                    formY + 94,
+                    formY + 110,
                     RotClientTheme.TEXT_MUTED,
                     false);
 
@@ -4238,13 +4482,13 @@ final class MiningUiScreen extends Screen {
                         font,
                         loadoutCreateError,
                         contentLeft + 14,
-                        formY + 96,
+                        formY + 128,
                         RotClientTheme.WARNING,
                         false);
             }
 
             int actionY =
-                    formY + 144;
+                    formY + 160;
 
             drawProfileActionButton(
                     graphics,
