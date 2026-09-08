@@ -77,6 +77,20 @@ public final class RotClientUiDraw {
         graphics.text(font, RotClientFonts.vanilla(value), x, y, color, shadow);
     }
 
+    public static void legacyText(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            String value,
+            int x,
+            int y,
+            int color,
+            boolean shadow) {
+        if (graphics == null || font == null) {
+            return;
+        }
+        graphics.text(font, RotClientFonts.legacy(value), x, y, color, shadow);
+    }
+
     /**
      * Dashboard glyphs: a dark halo plus an optional extra 1px stroke so letters
      * stay readable on near-black panels.
@@ -618,6 +632,64 @@ public final class RotClientUiDraw {
                 y + height,
                 hover ? RotClientTheme.BORDER_BRIGHT : RotClientTheme.BORDER,
                 RADIUS_XS);
+    }
+
+    static void drawBitmapIcon(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            String[] rows,
+            int color) {
+        if (graphics == null || rows == null) {
+            return;
+        }
+        for (int row = 0; row < rows.length; row++) {
+            String line = rows[row];
+            if (line == null) {
+                continue;
+            }
+            for (int col = 0; col < line.length(); col++) {
+                char cell = line.charAt(col);
+                if (cell == '.' || cell == ' ') {
+                    continue;
+                }
+                graphics.fill(x + col, y + row, x + col + 1, y + row + 1, color);
+            }
+        }
+    }
+
+    static void drawHeaderCommunityLink(
+            GuiGraphicsExtractor graphics,
+            RotClientHeaderLinksPolicy.Rect hit,
+            String[] glyph,
+            boolean hover) {
+        if (graphics == null || hit == null) {
+            return;
+        }
+        if (hover) {
+            roundedFill(
+                    graphics,
+                    hit.x(),
+                    hit.y(),
+                    hit.x() + hit.width(),
+                    hit.y() + hit.height(),
+                    withAlpha(RotClientTheme.HUD_ACCENT, 0x40),
+                    RADIUS_XS);
+            roundedOutline(
+                    graphics,
+                    hit.x(),
+                    hit.y(),
+                    hit.x() + hit.width(),
+                    hit.y() + hit.height(),
+                    RotClientTheme.HUD_ACCENT,
+                    RADIUS_XS);
+        }
+        drawBitmapIcon(
+                graphics,
+                hit.iconX(),
+                hit.iconY(),
+                glyph,
+                hover ? RotClientTheme.ERROR : RotClientTheme.HUD_ACCENT);
     }
 
     static void drawRainbowSwatch(GuiGraphicsExtractor graphics, int x, int y, int size) {

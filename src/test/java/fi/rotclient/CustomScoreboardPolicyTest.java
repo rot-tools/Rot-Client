@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
 
@@ -187,6 +186,115 @@ final class CustomScoreboardPolicyTest {
         assertFalse(qol.isModuleEnabled(CustomScoreboardPolicy.MODULE_ID));
     }
 
+    @Test
+    void powderUsesHeaderAndIslandTint() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Powder";
+        settings.hideIrrelevant = false;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                new CustomScoreboardPolicy.BoardView(
+                        true,
+                        false,
+                        "SKYBLOCK",
+                        List.of("§2᠅ §2Mithril Powder: §254,646"),
+                        List.of(),
+                        "Dwarven Mines",
+                        "Dwarven Village",
+                        "Banana",
+                        "",
+                        OptionalLong.empty(),
+                        OptionalLong.empty(),
+                        false,
+                        1_000L),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("§9§lPowder"));
+        assertTrue(text.contains("Mithril"));
+        assertTrue(text.contains("54,646"));
+    }
+
+    @Test
+    void chunkedStatsAreCurrenciesNotHealth() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Chunked Stats";
+        settings.chunkedStats = "Purse\nBits";
+        settings.hideEmpty = false;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§6Purse: §61,000", "§bBits: §b20"), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("1,000"));
+        assertTrue(text.contains("20"));
+        assertTrue(text.contains("§f|"));
+        assertFalse(text.toLowerCase().contains("health"));
+    }
+
+    @Test
+    void hideEmptySkipsZeroPurse() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Purse";
+        settings.hideEmpty = true;
+        CustomScoreboardPolicy.ComposeResult hidden = CustomScoreboardPolicy.compose(
+                view(List.of("§6Purse: §60"), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertFalse(joined(hidden).contains("Purse"));
+        settings.hideEmpty = false;
+        CustomScoreboardPolicy.ComposeResult shown = CustomScoreboardPolicy.compose(
+                view(List.of("§6Purse: §60"), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertTrue(joined(shown).contains("Purse"));
+    }
+
+    @Test
+    void jacobContestKeepsFollowLines() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Events";
+        settings.eventPriority = "Jacob Contest";
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§eJacob's Contest", "§aWheat", "§eEnds in 12m"), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("Jacob's Contest"));
+        assertTrue(text.contains("Wheat"));
+    }
+
+    @Test
+    void motesStayOffTheBoardOutsideTheRift() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Motes";
+        settings.hideEmpty = false;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§dMotes: §d12,000"), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertFalse(joined(result).contains("Motes"));
+    }
+
+    @Test
+    void legacyCodesKeepGoldAndRgbWithoutLeavingX() {
+        assertEquals("Purse: 10", LegacyMcText.strip("§6Purse: §610"));
+        assertEquals("Purse: 10", LegacyMcText.strip("§x§f§f§a§a§0§0Purse: 10"));
+        assertEquals("§6", LegacyMcText.encodeColor(0xFFAA00));
+        assertEquals("§x§1§2§3§4§5§6", LegacyMcText.encodeColor(0x123456));
+        List<LegacyMcText.Span> gold = LegacyMcText.parse("§6§lSKYBLOCK");
+        assertEquals(1, gold.size());
+        assertEquals("SKYBLOCK", gold.get(0).text());
+        assertEquals(0xFFAA00, gold.get(0).rgb());
+        assertTrue(gold.get(0).bold());
+        List<LegacyMcText.Span> rgb = LegacyMcText.parse("§x§1§2§3§4§5§6Hi");
+        assertEquals(0x123456, rgb.get(0).rgb());
+        assertEquals("Hi", rgb.get(0).text());
+        CustomScoreboardLines.Hit hit = CustomScoreboardLines.classify(
+                "§x§f§f§a§a§0§0Purse: §x§f§f§a§a§0§01,000");
+        assertEquals(CustomScoreboardLines.Kind.PURSE, hit.kind());
+        assertEquals("1,000", hit.capture());
+    }
+
     private static CustomScoreboardPolicy.ComposeResult compose(List<String> sidebar, List<String> tab) {
         return CustomScoreboardPolicy.compose(
                 view(sidebar, tab),
@@ -211,7 +319,7 @@ final class CustomScoreboardPolicyTest {
                 "",
                 OptionalLong.empty(),
                 OptionalLong.empty(),
-                Map.of(),
+                false,
                 now);
     }
 

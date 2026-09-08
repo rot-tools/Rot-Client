@@ -288,7 +288,7 @@ public final class DungeonLeftoverPolicy {
         if (text.isBlank()) {
             return SplitEvent.NONE;
         }
-        if (text.contains("extra stats") || DungeonPolicy.isDungeonEnd(chat)) {
+        if (DungeonPolicy.isDungeonEnd(chat)) {
             return SplitEvent.RUN_END;
         }
         if (text.contains("[boss]")
@@ -455,6 +455,35 @@ public final class DungeonLeftoverPolicy {
                     entry));
         }
         return cells;
+    }
+
+    /**
+     * Digit 1-4: custom GUI uses class-sorted overlay cells. Vanilla Leap
+     * uses chest order of living heads so keys match the Hypixel menu.
+     */
+    public static Optional<LeapEntry> leapDigitTarget(
+            List<LeapEntry> players, int digit, boolean customGui) {
+        if (digit < 1 || digit > 4) {
+            return Optional.empty();
+        }
+        if (customGui) {
+            List<LeapCell> cells = leapOverlay(400, 240, players);
+            LeapEntry entry = cells.get(digit - 1).entry();
+            return entry == null ? Optional.empty() : Optional.of(entry);
+        }
+        List<LeapEntry> living = new ArrayList<>();
+        if (players != null) {
+            for (LeapEntry entry : players) {
+                if (entry != null && !entry.dead()) {
+                    living.add(entry);
+                }
+            }
+        }
+        int index = digit - 1;
+        if (index >= living.size()) {
+            return Optional.empty();
+        }
+        return Optional.of(living.get(index));
     }
 
     public static Optional<LeapCell> cellAt(List<LeapCell> cells, int mouseX, int mouseY) {

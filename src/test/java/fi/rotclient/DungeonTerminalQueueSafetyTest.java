@@ -30,5 +30,6 @@ final class DungeonTerminalQueueSafetyTest {
                         + "== DungeonPolicy.Terminal.NONE"));
         assertTrue(runtime.contains("termQueue.clear();"));
         assertTrue(runtime.contains("melodySkipQueue.clear();"));
+        assertTrue(runtime.contains("if (!title.equals(lastTermTitle))"));
     }
 }

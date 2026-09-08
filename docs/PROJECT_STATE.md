@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | 131 wired QoL modules. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** in accent red on the by-line. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | 131 wired QoL modules. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Extra Stats requeue is the Hypixel header only (not party chat, not live `Team Score:`); compact reprint waits until the dump finishes. Simon Says records the ordered sea-lantern sequence each round. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** in accent red on the by-line, with red GitHub and Discord logos in the omnibox header. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client (by-line, accent red). Author/owner: Rot Tools |
@@ -21,7 +21,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,189 tests**, 323 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `CAF467410B1057844D33AA39D59BDC5FFEB5BB7E7CC676692E11383BACDF0F16`. |
+| Automated baseline | Current working tree: **2,202 tests**, 324 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `DF9C3B8950CAD47F2D85E683E9F183AB22004B0D139EFABD6DFE09C6601BA573`. |
 | Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 14 groups and **131** catalog parents. Settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
@@ -254,8 +254,9 @@ These constraints are part of the current safety model:
   unreadable marker data fails closed and power-loss atomicity is not claimed.
 - Dungeon awareness (2026-09-05): Entrance HUD floor, Hypixel -200 room-core
   grid, Magical Map wither/blood/entrance world boxes (Depth Check still hides
-  through walls), hashed-room secret cache this run, Extra Stats requeue from
-  chat or GUI without matching `the catacombs -`. Starred ESP remains nearby.
+  through walls), hashed-room secret cache this run,   Extra Stats requeue from the Extra Stats header only (not party chat,
+  not live `Team Score:`), after a started run and join grace. Compact reprint
+  waits for the dump to finish. Starred ESP remains nearby.
   No party secret websocket.
 - Dungeon map HUD (2026-09-06): 128 Magical Map paper (floor start corners,
   Hypixel room/door palette, unopened gray, split names, yaw heads). Scan every
@@ -286,13 +287,14 @@ For a class-by-class briefing of the shipped JAR (what to open first, Policy vs 
 
 Use this order for the next checkpoint:
 
-1. Playtest the Serveri dungeon checklist (close and relaunch Prism): 128
-   Magical Map paper (layout, names, no lag); Entrance HUD Floor Entrance; Door
-   Highlight world boxes with Depth Check off vs on; hashed-room secrets after
-   leaving a room; Mimic/Prince/Bat and blood/Watcher alerts; F7 P3 other
-   players’ terminal chat plus Melody 3 / Numbers 10; Extra Stats requeue
-   without a dungeon-start false fire. Do not mark DUNG-001 / DUNG-009 runtime
-   Complete.
+1. Playtest the Serveri dungeon checklist (close and relaunch Prism): Extra
+   Stats requeue after a real run (header only, not party chat); Simon order;
+   Spirit Leap 1-4; 128 Magical Map paper (layout, names, no lag); Entrance HUD
+   Floor Entrance; Door Highlight world boxes with Depth Check off vs on;
+   hashed-room secrets after leaving a room; Mimic/Prince/Bat and blood/Watcher
+   alerts; F7 P3 other players’ terminal chat plus Melody 3 / Numbers 10. Also
+   click the red GitHub and Discord header icons on the dashboard. Do
+   not mark DUNG-001 / DUNG-009 / UI-003 runtime Complete.
 2. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
    and the expanded Slayer foundation are automated-tested, including
    Cocoon/Dagger/Laser behavior, Attunement, Auto Soulcry, Vengeance, sound

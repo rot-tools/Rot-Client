@@ -363,7 +363,7 @@ public final class QolUtilityCatalog {
                 setting("qol.custom_scoreboard.arrow_mode", "Arrow Display", "Remaining count or percent of quiver.", SettingType.ENUM, CustomScoreboardPolicy.arrowOptions()),
                 setting("qol.custom_scoreboard.color_arrows", "Color By Percent", "Tint the arrow line green/yellow/red from remaining percent.", SettingType.TOGGLE),
                 section("qol.custom_scoreboard.section_stats", "Chunked Stats"),
-                setting("qol.custom_scoreboard.chunked_stats", "Chunked Stats", "One stat per line: Health, Defense, Mana, Overflow, Speed, Vitality.", SettingType.TEXT),
+                setting("qol.custom_scoreboard.chunked_stats", "Chunked Stats", "Compact currency row. One name per line: Purse, Motes, Bank, Bits, Copper, Sowdust, Gems, Heat, Cold, North Stars.", SettingType.TEXT),
                 setting("qol.custom_scoreboard.max_stats_per_line", "Max Stats Per Line", "How many chunked stats share one row.", SettingType.NUMBER),
                 section("qol.custom_scoreboard.section_events", "Events"),
                 setting("qol.custom_scoreboard.event_priority", "Event Priority", "One event name per line. First match wins unless Show All Active is on.", SettingType.TEXT),

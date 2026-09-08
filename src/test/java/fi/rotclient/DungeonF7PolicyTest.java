@@ -19,6 +19,9 @@ final class DungeonF7PolicyTest {
         assertEquals(1_700L, DungeonF7Policy.CRYSTAL_RESPAWN_MILLIS);
         assertTrue(DungeonF7Policy.holdingEnergyCrystal("Energy Crystal"));
         assertTrue(DungeonF7Policy.melodyTerminalTitle("Click the button on time!"));
+        assertTrue(DungeonF7Policy.melodyAlertChat("Party > Bob: melody"));
+        assertTrue(DungeonF7Policy.melodyAlertChat("Henri is at the melody terminal"));
+        assertFalse(DungeonF7Policy.melodyAlertChat("The melody of the wither"));
         assertEquals(DungeonF7Policy.WitherBoss.MAXOR, DungeonF7Policy.witherBoss("Maxor 300M❤"));
         assertEquals(DungeonF7Policy.WitherBoss.NECRON, DungeonF7Policy.witherBoss("Necron"));
     }
@@ -42,6 +45,30 @@ final class DungeonF7PolicyTest {
         assertFalse(DungeonF7Policy.isSimonSequenceLit("minecraft:obsidian"));
         assertEquals(0xFF22C55E, DungeonF7Policy.simonColor(0, 0xFF22C55E, 0xFFFACC15, 0xFF38BDF8));
         assertEquals(0xFFFACC15, DungeonF7Policy.simonColor(1, 0xFF22C55E, 0xFFFACC15, 0xFF38BDF8));
+    }
+
+    @Test
+    void simonRecordsEachRoundInOrderIncludingRepeats() {
+        EmberDungeonPolicy.IntVec a = new EmberDungeonPolicy.IntVec(110, 121, 93);
+        EmberDungeonPolicy.IntVec b = new EmberDungeonPolicy.IntVec(110, 122, 94);
+        DungeonF7Policy.SimonState state = DungeonF7Policy.SimonState.idle();
+        state = DungeonF7Policy.observeSimon(state, List.of(a));
+        state = DungeonF7Policy.observeSimon(state, List.of(a));
+        state = DungeonF7Policy.observeSimon(state, List.of());
+        assertEquals(List.of(a), state.order());
+        assertEquals(a, state.nextButton());
+        state = DungeonF7Policy.consumeNext(state);
+        assertTrue(state.remaining().isEmpty());
+        state = DungeonF7Policy.observeSimon(state, List.of(a));
+        state = DungeonF7Policy.observeSimon(state, List.of(b));
+        state = DungeonF7Policy.observeSimon(state, List.of());
+        assertEquals(List.of(a, b), state.order());
+        assertEquals(a, state.nextButton());
+        state = DungeonF7Policy.consumeNext(state);
+        assertEquals(b, state.nextButton());
+        assertEquals(List.of(a, b), DungeonF7Policy.consumeNext(
+                DungeonF7Policy.observeSimon(DungeonF7Policy.SimonState.idle(), List.of(a, b)))
+                .order());
     }
 
     @Test

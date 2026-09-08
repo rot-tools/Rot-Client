@@ -1,6 +1,7 @@
 package fi.rotclient;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -44,7 +45,6 @@ public final class DungeonF7Policy {
             "^(\\w{3,16}) picked up an Energy Crystal!$");
     private static final Pattern CRYSTAL_SPAWN = Pattern.compile(
             "^\\[BOSS] Maxor: (?:THAT BEAM! IT HURTS! IT HURTS!!|YOU TRICKED ME!)$");
-    private static final Pattern MELODY_CHAT = Pattern.compile("(?i)melody");
     private static final Pattern DRAGON_SPRAY = Pattern.compile("(?i)ice spray");
     private static final Pattern DRAGON_ARROWS = Pattern.compile("(?i)arrows? hit");
     private static final Pattern MELODY_PARTY = Pattern.compile(
@@ -72,7 +72,10 @@ public final class DungeonF7Policy {
 
     public static boolean melodyAlertChat(String chat) {
         String text = DungeonPolicy.normalize(chat).toLowerCase(Locale.ROOT);
-        return text.contains("melody") && (text.contains("terminal") || MELODY_CHAT.matcher(text).find());
+        if (!text.contains("melody")) {
+            return false;
+        }
+        return text.contains("terminal") || text.startsWith("party >");
     }
 
     public static WitherBoss witherBoss(String name) {
@@ -169,6 +172,26 @@ public final class DungeonF7Policy {
         return List.copyOf(buttons);
     }
 
+    public record SimonState(
+            List<EmberDungeonPolicy.IntVec> order,
+            List<EmberDungeonPolicy.IntVec> remaining,
+            Set<EmberDungeonPolicy.IntVec> prevLit,
+            boolean showing) {
+        public SimonState {
+            order = order == null ? List.of() : List.copyOf(order);
+            remaining = remaining == null ? List.of() : List.copyOf(remaining);
+            prevLit = prevLit == null ? Set.of() : Set.copyOf(prevLit);
+        }
+
+        public static SimonState idle() {
+            return new SimonState(List.of(), List.of(), Set.of(), false);
+        }
+
+        public EmberDungeonPolicy.IntVec nextButton() {
+            return remaining.isEmpty() || showing ? null : remaining.getFirst();
+        }
+    }
+
     /**
      * Sea-lantern sequence lights the obsidian wall one block east of the
      * clickable buttons (x=111), not the stone buttons at x=110.
@@ -205,6 +228,57 @@ public final class DungeonF7Policy {
 
     public static EmberDungeonPolicy.IntVec simonStart() {
         return new EmberDungeonPolicy.IntVec(110, 121, 91);
+    }
+
+    /**
+     * Record the ordered sea-lantern pattern. Each round replays the full
+     * sequence; rising edges append, and lights going out copies the round
+     * into remaining for playback.
+     */
+    public static SimonState observeSimon(
+            SimonState current, List<EmberDungeonPolicy.IntVec> litNow) {
+        SimonState state = current == null ? SimonState.idle() : current;
+        List<EmberDungeonPolicy.IntVec> uniqueLit = new ArrayList<>();
+        Set<EmberDungeonPolicy.IntVec> nowLit = new HashSet<>();
+        if (litNow != null) {
+            for (EmberDungeonPolicy.IntVec button : litNow) {
+                if (button != null && nowLit.add(button)) {
+                    uniqueLit.add(button);
+                }
+            }
+        }
+        boolean showing = !uniqueLit.isEmpty();
+        List<EmberDungeonPolicy.IntVec> order = new ArrayList<>();
+        if (showing && !state.showing()) {
+            order.clear();
+        } else {
+            order.addAll(state.order());
+        }
+        if (showing) {
+            for (EmberDungeonPolicy.IntVec button : uniqueLit) {
+                if (!state.prevLit().contains(button)) {
+                    order.add(button);
+                }
+            }
+        }
+        List<EmberDungeonPolicy.IntVec> remaining;
+        if (showing || state.showing()) {
+            remaining = List.copyOf(order);
+        } else {
+            remaining = List.copyOf(state.remaining());
+        }
+        return new SimonState(order, remaining, nowLit, showing);
+    }
+
+    public static SimonState consumeNext(SimonState current) {
+        SimonState state = current == null ? SimonState.idle() : current;
+        EmberDungeonPolicy.IntVec next = state.nextButton();
+        if (next == null) {
+            return state;
+        }
+        List<EmberDungeonPolicy.IntVec> remaining = new ArrayList<>(state.remaining());
+        remaining.removeFirst();
+        return new SimonState(state.order(), remaining, state.prevLit(), state.showing());
     }
 
     public static int simonColor(int remainingIndex, int first, int second, int other) {

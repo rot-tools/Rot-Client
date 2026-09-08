@@ -206,6 +206,26 @@ public final class DungeonBladePolicy {
         return TIME_ELAPSED.matcher(DungeonPolicy.normalize(line)).find();
     }
 
+    public static boolean timeElapsedPositive(String line) {
+        if (!timeElapsedTab(line)) {
+            return false;
+        }
+        String value = DungeonPolicy.normalize(line)
+                .replaceFirst("(?i)^Time Elapsed:\\s*", "")
+                .trim()
+                .toLowerCase(Locale.ROOT);
+        if (value.isBlank()) {
+            return false;
+        }
+        return !value.equals("0s")
+                && !value.equals("0")
+                && !value.equals("0m")
+                && !value.equals("0m 0s")
+                && !value.equals("0:00")
+                && !value.equals("00:00")
+                && !value.equals("0m 00s");
+    }
+
     public static String secretSpawnHudLine(int ticks) {
         if (ticks <= 0) {
             return "";

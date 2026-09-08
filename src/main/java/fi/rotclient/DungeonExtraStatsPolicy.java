@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * Minecraft-free for unit tests.
  */
 public final class DungeonExtraStatsPolicy {
+    public static final int DUMP_QUIET_TICKS = 40;
     private static final Pattern DEFEATED = Pattern.compile(
             "^☠ Defeated (.+) in ([\\dhms0-9 ]+?)\\s*(\\(NEW RECORD!\\))?$");
     private static final Pattern TEAM_SCORE = Pattern.compile(
@@ -66,6 +67,10 @@ public final class DungeonExtraStatsPolicy {
             return score > 0 || !defeated.isBlank();
         }
 
+        public boolean dumpFinished() {
+            return !collecting && ready();
+        }
+
         public List<String> compactLines() {
             List<String> lines = new ArrayList<>();
             if (!defeated.isBlank()) {
@@ -97,8 +102,7 @@ public final class DungeonExtraStatsPolicy {
     }
 
     public static boolean extraStatsHeader(String chat) {
-        String text = DungeonPolicy.normalize(chat).toLowerCase(Locale.ROOT);
-        return text.contains("extra stats") || text.contains("> extra stats <");
+        return DungeonPolicy.isExtraStatsChat(chat);
     }
 
     public static boolean extraStatsLine(String chat) {
@@ -232,6 +236,22 @@ public final class DungeonExtraStatsPolicy {
                     state.xp(), true, false);
         }
         return state;
+    }
+
+    public static boolean shouldPrint(Snapshot state) {
+        return state != null && state.dumpFinished() && !state.printed();
+    }
+
+    public static Snapshot closeDump(Snapshot current) {
+        if (current == null || current.printed() || !current.ready()) {
+            return current == null ? Snapshot.idle() : current;
+        }
+        return new Snapshot(
+                current.defeated(), current.time(), current.timePb(),
+                current.score(), current.letter(), current.scorePb(),
+                current.bits(), current.secrets(), current.deaths(),
+                current.damage(), current.kills(), current.heal(),
+                current.xp(), false, current.printed());
     }
 
     public static Snapshot markPrinted(Snapshot current) {

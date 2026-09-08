@@ -121,6 +121,12 @@ final class DungeonLeftoverPolicyTest {
         assertEquals("", living.statusLabel());
         assertFalse(living.dead());
         assertTrue(DungeonLeftoverPolicy.cellAt(cells, cells.get(0).x() + 4, cells.get(0).y() + 4).isPresent());
+        List<DungeonLeftoverPolicy.LeapEntry> chestOrder = List.of(
+                new DungeonLeftoverPolicy.LeapEntry(11, "Healer", DungeonPolicy.DungeonClass.HEALER),
+                new DungeonLeftoverPolicy.LeapEntry(12, "Arch", DungeonPolicy.DungeonClass.ARCHER));
+        assertEquals("Arch", DungeonLeftoverPolicy.leapDigitTarget(chestOrder, 1, true).orElseThrow().name());
+        assertEquals("Healer", DungeonLeftoverPolicy.leapDigitTarget(chestOrder, 1, false).orElseThrow().name());
+        assertTrue(DungeonLeftoverPolicy.leapDigitTarget(chestOrder, 3, false).isEmpty());
     }
 
     @Test
@@ -144,6 +150,15 @@ final class DungeonLeftoverPolicyTest {
         assertFalse(DungeonLeftoverPolicy.recordSplitPersonalBest(pbs, "BLOOD_RUSH", 50_000L));
         String hud = String.join("\n", boss.hudLines(t0 + 90_000L, pbs));
         assertTrue(hud.contains("PB"));
+        assertEquals(
+                DungeonLeftoverPolicy.SplitEvent.RUN_END,
+                DungeonLeftoverPolicy.splitEvent("                     Extra Stats                     "));
+        assertEquals(
+                DungeonLeftoverPolicy.SplitEvent.NONE,
+                DungeonLeftoverPolicy.splitEvent("Team Score: 305"));
+        assertEquals(
+                DungeonLeftoverPolicy.SplitEvent.NONE,
+                DungeonLeftoverPolicy.splitEvent("Party > Henri: extra stats later"));
     }
 
     @Test

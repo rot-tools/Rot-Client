@@ -58,6 +58,9 @@ final class DungeonBladePolicyTest {
                 "☠ You were killed by a Super Tank Zombie and became a ghost.").orElseThrow());
         assertEquals("Henri died", DungeonBladePolicy.deathPartyMessage("{player} died", "Henri"));
         assertTrue(DungeonBladePolicy.timeElapsedTab("Time Elapsed: 1m 12s"));
+        assertTrue(DungeonBladePolicy.timeElapsedPositive("Time Elapsed: 1m 12s"));
+        assertFalse(DungeonBladePolicy.timeElapsedPositive("Time Elapsed: 0s"));
+        assertFalse(DungeonBladePolicy.timeElapsedPositive("Time Elapsed: 0m 0s"));
         assertEquals("Secrets 20", DungeonBladePolicy.secretSpawnHudLine(20));
         assertEquals(80, DungeonBladePolicy.stormLbRemaining(600));
         assertEquals("Last Breath 4.0s", DungeonBladePolicy.stormLbHudLine(80));

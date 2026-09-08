@@ -7,6 +7,13 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### Dungeons
+
+* Auto Requeue no longer treats live Catacombs `Team Score:` scoreboard/chat
+  as Extra Stats. It waits until a run has actually started, ignores Extra
+  Stats dumps in the first seconds after a world join, and no longer reprints
+  a chat line that would fire `/instancerequeue` again.
+
 ### Settings profiles
 
 * Visuals → **Profiles** saves named client setups (modules, QoL, HUD layout,

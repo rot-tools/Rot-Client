@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Method;
 import java.net.URI;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,5 +32,15 @@ final class RotClientLinkOpenerTest {
                 URI.create("file:///C:/Windows/System32")));
         assertFalse((boolean) method.invoke(null,
                 URI.create("javascript:alert(1)")));
+    }
+
+    @Test
+    void dashboardLinksUseCanonicalGithubAndDiscordUrls() {
+        assertEquals(
+                RotClientHeaderLinksPolicy.GITHUB_URL,
+                RotClientLinks.HOMEPAGE);
+        assertEquals(
+                RotClientHeaderLinksPolicy.DISCORD_URL,
+                RotClientLinks.DISCORD);
     }
 }

@@ -13,10 +13,8 @@ import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Set;
@@ -76,7 +74,7 @@ final class CustomScoreboardRuntime {
         int border = Math.max(0, board.bgBorder);
         int maxW = 20;
         for (CustomScoreboardPolicy.Row row : rows) {
-            maxW = Math.max(maxW, RotClientFonts.vanillaWidth(font, row.text()));
+            maxW = Math.max(maxW, RotClientFonts.legacyWidth(font, row.text()));
         }
         int panelW = maxW + border * 2 + 8;
         int panelH = Math.max(lineH, rows.size() * lineH) + border * 2 + 6;
@@ -100,7 +98,7 @@ final class CustomScoreboardRuntime {
         int textY = border + 3;
         for (CustomScoreboardPolicy.Row row : rows) {
             int textX = textX(font, row, panelW, border);
-            RotClientUiDraw.vanillaText(graphics, font, row.text(), textX, textY, 0xFFFFFFFF, true);
+            RotClientUiDraw.legacyText(graphics, font, row.text(), textX, textY, 0xFFFFFFFF, true);
             textY += lineH;
         }
         graphics.pose().popMatrix();
@@ -156,7 +154,7 @@ final class CustomScoreboardRuntime {
                 profileType(capture.lines),
                 quiverCurrent(),
                 quiverMax(),
-                liveStats(),
+                bingoProfile(capture.lines),
                 now);
         CustomScoreboardPolicy.ComposeResult result =
                 CustomScoreboardPolicy.compose(view, options, DELTAS);
@@ -219,7 +217,7 @@ final class CustomScoreboardRuntime {
     }
 
     private static int textX(Font font, CustomScoreboardPolicy.Row row, int panelW, int border) {
-        int width = RotClientFonts.vanillaWidth(font, row.text());
+        int width = RotClientFonts.legacyWidth(font, row.text());
         return switch (row.align()) {
             case CENTER -> Math.max(border, (panelW - width) / 2);
             case RIGHT -> Math.max(border, panelW - border - 4 - width);
@@ -281,6 +279,7 @@ final class CustomScoreboardRuntime {
                 alpha = true;
             }
         }
+        java.util.Collections.reverse(lines);
         return new SidebarCapture(title, lines, alpha);
     }
 
@@ -304,10 +303,7 @@ final class CustomScoreboardRuntime {
         StringBuilder out = new StringBuilder("§r");
         TextColor color = style.getColor();
         if (color != null) {
-            char code = rgbCode(color.getValue());
-            if (code != 0) {
-                out.append('§').append(code);
-            }
+            out.append(LegacyMcText.encodeColor(color.getValue()));
         }
         if (style.isBold()) {
             out.append("§l");
@@ -325,29 +321,6 @@ final class CustomScoreboardRuntime {
             out.append("§k");
         }
         return out.toString();
-    }
-
-    private static char rgbCode(int rgb) {
-        int value = rgb & 0xFFFFFF;
-        return switch (value) {
-            case 0x000000 -> '0';
-            case 0x0000AA -> '1';
-            case 0x00AA00 -> '2';
-            case 0x00AAAA -> '3';
-            case 0xAA0000 -> '4';
-            case 0xAA00AA -> '5';
-            case 0xFFAA00 -> '6';
-            case 0xAAAAAA -> '7';
-            case 0x555555 -> '8';
-            case 0x5555FF -> '9';
-            case 0x55FF55 -> 'a';
-            case 0x55FFFF -> 'b';
-            case 0xFF5555 -> 'c';
-            case 0xFF55FF -> 'd';
-            case 0xFFFF55 -> 'e';
-            case 0xFFFFFF -> 'f';
-            default -> 0;
-        };
     }
 
     private static String islandName() {
@@ -389,30 +362,16 @@ final class CustomScoreboardRuntime {
     }
 
     private static OptionalLong quiverMax() {
-        return OptionalLong.empty();
+        return OptionalLong.of(2_880L);
     }
 
-    private static Map<CustomScoreboardPolicy.ChunkStat, String> liveStats() {
-        Map<CustomScoreboardPolicy.ChunkStat, String> out = new EnumMap<>(CustomScoreboardPolicy.ChunkStat.class);
-        SkyBlockStatBarParser.Stats stats = RotClientClient.qolHud() == null
-                ? SkyBlockStatBarParser.Stats.empty()
-                : RotClientClient.qolHud().statsTracker().stats();
-        putStat(out, CustomScoreboardPolicy.ChunkStat.HEALTH, stats.health());
-        putStat(out, CustomScoreboardPolicy.ChunkStat.DEFENSE, stats.defense());
-        putStat(out, CustomScoreboardPolicy.ChunkStat.MANA, stats.mana());
-        putStat(out, CustomScoreboardPolicy.ChunkStat.OVERFLOW, stats.overflowMana());
-        putStat(out, CustomScoreboardPolicy.ChunkStat.SPEED, stats.speed());
-        putStat(out, CustomScoreboardPolicy.ChunkStat.VITALITY, stats.vitality());
-        return out;
-    }
-
-    private static void putStat(
-            Map<CustomScoreboardPolicy.ChunkStat, String> out,
-            CustomScoreboardPolicy.ChunkStat stat,
-            java.util.OptionalDouble value) {
-        if (value != null && value.isPresent()) {
-            out.put(stat, String.valueOf(Math.round(value.getAsDouble())));
+    private static boolean bingoProfile(List<String> lines) {
+        for (String line : lines) {
+            if (CustomScoreboardPolicy.strip(line).toLowerCase().contains("bingo")) {
+                return true;
+            }
         }
+        return false;
     }
 
     private record SidebarCapture(String title, List<String> lines, boolean alpha) {

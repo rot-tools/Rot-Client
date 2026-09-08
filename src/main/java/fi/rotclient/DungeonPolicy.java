@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -127,6 +128,8 @@ public final class DungeonPolicy {
     public static final int MASK_OVERLAY_COLOR = 0xBB6E6E66;
     public static final long TERRACOTTA_MILLIS = 15_000L;
     public static final int DEFAULT_REQUEUE_DELAY_TICKS = 40;
+    /** Ignore Extra Stats dumps that arrive in the first seconds after a world join. */
+    public static final int REQUEUE_JOIN_GRACE_TICKS = 80;
     public static final String REQUEUE_COMMAND = "/instancerequeue";
     /** Loaded-entity scan only; never requests chunks or invents distant entities. */
     public static final double ESP_SCAN_RANGE = 128.0D;
@@ -374,11 +377,11 @@ public final class DungeonPolicy {
      * offline teammates are marked on the skull lore, not {@code isDeadOrDying}.
      */
     public static boolean leapHeadDead(List<String> lore) {
-        return loreContainsToken(lore, "dead");
+        return loreMatches(lore, text -> text.contains("dead") && !text.contains("undead"));
     }
 
     public static boolean leapHeadOffline(List<String> lore) {
-        return loreContainsToken(lore, "offline");
+        return loreMatches(lore, text -> text.contains("offline") || text.contains("not online"));
     }
 
     public static boolean leapHeadUnavailable(List<String> lore) {
@@ -395,14 +398,13 @@ public final class DungeonPolicy {
         return "";
     }
 
-    private static boolean loreContainsToken(List<String> lore, String token) {
-        if (lore == null || token == null || token.isBlank()) {
+    private static boolean loreMatches(List<String> lore, Predicate<String> matcher) {
+        if (lore == null || matcher == null) {
             return false;
         }
-        String needle = token.toLowerCase(Locale.ROOT);
         for (String line : lore) {
             String text = normalize(line).toLowerCase(Locale.ROOT);
-            if (text.contains(needle)) {
+            if (matcher.test(text)) {
                 return true;
             }
         }
@@ -656,14 +658,40 @@ public final class DungeonPolicy {
         return text.contains("[boss] sadan") && text.contains("enough");
     }
 
+    /**
+     * Extra Stats header in chat or the Extra Stats GUI title. Live Catacombs
+     * scoreboard {@code Team Score:} and party lines that merely mention the
+     * words are not a run-end cue.
+     */
+    public static boolean isExtraStatsChat(String line) {
+        String text = normalize(line).toLowerCase(Locale.ROOT);
+        if (text.isBlank()) {
+            return false;
+        }
+        String stripped = text.replace('<', ' ').replace('>', ' ').replace('|', ' ');
+        stripped = stripped.replaceAll("\\s+", " ").trim();
+        return stripped.equals("extra stats");
+    }
+
     public static boolean isDungeonEnd(String line) {
         String text = normalize(line).toLowerCase(Locale.ROOT);
         if (text.isBlank()) {
             return false;
         }
-        return text.contains("extra stats")
-                || text.contains("dungeon reward")
-                || text.contains("team score:");
+        return isExtraStatsChat(line) || text.contains("dungeon reward");
+    }
+
+    public static boolean shouldArmRequeue(
+            boolean enabled,
+            boolean runStarted,
+            boolean extraStatsSeen,
+            int ticksSinceWorldJoin,
+            String chat) {
+        return enabled
+                && runStarted
+                && !extraStatsSeen
+                && ticksSinceWorldJoin >= REQUEUE_JOIN_GRACE_TICKS
+                && isExtraStatsChat(chat);
     }
 
     public static boolean isBloodCampReady(String line) {

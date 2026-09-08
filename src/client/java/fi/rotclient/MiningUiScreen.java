@@ -6133,6 +6133,15 @@ private void drawTrackerDropdown(
             return true;
         }
 
+        RotClientHeaderLinksPolicy.Kind headerHit =
+                RotClientHeaderLinksPolicy.hit(
+                        mx, my, RotClientHeaderLinksPolicy.layout(panelX, panelY));
+        if (headerHit != RotClientHeaderLinksPolicy.Kind.NONE) {
+            RotClientLinkOpener.openConfirmed(
+                    this, RotClientHeaderLinksPolicy.url(headerHit));
+            return true;
+        }
+
         int[] box = omniboxBounds(panelX, panelY);
         if (inside(logicalMouseX, logicalMouseY, box[0], box[1], box[2], box[3])) {
             settingsSearchFocused = true;
@@ -6258,6 +6267,23 @@ private void drawTrackerDropdown(
                 RotClientTheme.TEXT, false);
         RotClientUiDraw.text(graphics, font, "by OgRudolf", brandX, brandY + 10,
                 RotClientTheme.TEXT_MUTED, false);
+        RotClientHeaderLinksPolicy.Layout headerLinks =
+                RotClientHeaderLinksPolicy.layout(panelX, panelY);
+        RotClientHeaderLinksPolicy.Kind headerHover =
+                RotClientHeaderLinksPolicy.hit(mouseX, mouseY, headerLinks);
+        if (headerHover != RotClientHeaderLinksPolicy.Kind.NONE) {
+            chromeHoverTip = RotClientHeaderLinksPolicy.tip(headerHover);
+        }
+        RotClientUiDraw.drawHeaderCommunityLink(
+                graphics,
+                headerLinks.github(),
+                RotClientHeaderLinksPolicy.githubGlyph(),
+                headerHover == RotClientHeaderLinksPolicy.Kind.GITHUB);
+        RotClientUiDraw.drawHeaderCommunityLink(
+                graphics,
+                headerLinks.discord(),
+                RotClientHeaderLinksPolicy.discordGlyph(),
+                headerHover == RotClientHeaderLinksPolicy.Kind.DISCORD);
         drawSettingsSearchField(graphics, mouseX, mouseY, box[0], box[1], box[2]);
     }
 

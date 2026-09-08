@@ -102,29 +102,26 @@ public final class DungeonLeapOverlayRuntime {
     }
 
     public static boolean clickDigit(AbstractContainerScreen<?> screen, int digit) {
-        if (!active(screen) && (screen == null || !DungeonPolicy.isLeapMenu(
-                screen.getTitle() == null ? "" : screen.getTitle().getString()))) {
+        if (screen == null || !DungeonPolicy.isLeapMenu(
+                screen.getTitle() == null ? "" : screen.getTitle().getString())) {
+            return false;
+        }
+        QolSkyblockExtras extras = extras();
+        if (!extras.dungeonLeapEnabled || !extras.dungeonLeapKeys) {
             return false;
         }
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.gameMode == null || client.player == null) {
             return false;
         }
-        int width = client.getWindow().getGuiScaledWidth();
-        int height = client.getWindow().getGuiScaledHeight();
-        List<DungeonLeftoverPolicy.LeapCell> layout =
-                DungeonLeftoverPolicy.leapOverlay(width, height, players(screen));
-        int index = digit - 1;
-        if (index < 0 || index >= layout.size()) {
-            return false;
-        }
-        DungeonLeftoverPolicy.LeapEntry entry = layout.get(index).entry();
-        if (entry == null || entry.dead()) {
-            return true;
+        var target = DungeonLeftoverPolicy.leapDigitTarget(
+                players(screen), digit, extras.dungeonLeapCustomGui);
+        if (target.isEmpty() || target.get().dead()) {
+            return extras.dungeonLeapCustomGui;
         }
         client.gameMode.handleContainerInput(
                 screen.getMenu().containerId,
-                entry.slot(),
+                target.get().slot(),
                 0,
                 ContainerInput.PICKUP,
                 client.player);

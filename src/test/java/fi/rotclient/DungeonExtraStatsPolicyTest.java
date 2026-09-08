@@ -2,7 +2,10 @@ package fi.rotclient;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class DungeonExtraStatsPolicyTest {
@@ -27,5 +30,28 @@ final class DungeonExtraStatsPolicyTest {
         assertEquals("1", stats.deaths());
         assertTrue(stats.compactLines().getFirst().contains("Storm"));
         assertTrue(stats.compactLines().get(1).contains("305"));
+        assertTrue(stats.collecting());
+        assertFalse(DungeonExtraStatsPolicy.shouldPrint(stats));
+        stats = DungeonExtraStatsPolicy.apply(stats, "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+        assertFalse(stats.collecting());
+        assertTrue(DungeonExtraStatsPolicy.shouldPrint(stats));
+        List<String> printed = stats.compactLines();
+        assertTrue(printed.get(1).contains("305"));
+        assertTrue(printed.get(2).contains("55"));
+        stats = DungeonExtraStatsPolicy.markPrinted(stats);
+        assertFalse(DungeonExtraStatsPolicy.shouldPrint(stats));
+    }
+
+    @Test
+    void compactReprintDoesNotPrintOnTheFirstReadyLine() {
+        DungeonExtraStatsPolicy.Snapshot stats = DungeonExtraStatsPolicy.Snapshot.idle();
+        stats = DungeonExtraStatsPolicy.apply(stats, "                     Extra Stats                     ");
+        stats = DungeonExtraStatsPolicy.apply(stats, "  ☠ Defeated Storm in 0m 12s");
+        assertTrue(stats.ready());
+        assertTrue(stats.collecting());
+        assertFalse(DungeonExtraStatsPolicy.shouldPrint(stats));
+        stats = DungeonExtraStatsPolicy.closeDump(stats);
+        assertTrue(DungeonExtraStatsPolicy.shouldPrint(stats));
+        assertTrue(stats.compactLines().getFirst().contains("Storm"));
     }
 }

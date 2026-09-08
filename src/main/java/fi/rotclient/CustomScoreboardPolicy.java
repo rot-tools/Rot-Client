@@ -23,11 +23,8 @@ public final class CustomScoreboardPolicy {
     static final long DELTA_MS = 5_000L;
 
     private static final Pattern NUMBER = Pattern.compile("([+-]?[\\d,]+(?:\\.\\d+)?)");
-    private static final Pattern POWDER = Pattern.compile(
-            "(?i)(mithril|gemstone|glacite)(?:\\s*powder)?\\s*:?\\s*([\\d,.kmb]+)");
     private static final Pattern TAB_LABEL = Pattern.compile(
             "(?i)^\\s*(?<key>[a-z][a-z /]+)\\s*:\\s*(?<value>.+)$");
-    private static final Pattern COLOR = Pattern.compile("(?i)§[0-9a-fk-or]");
 
     private CustomScoreboardPolicy() {
     }
@@ -159,22 +156,16 @@ public final class CustomScoreboardPolicy {
     }
 
     public enum ChunkStat {
-        HEALTH("Health"),
-        DEFENSE("Defense"),
-        MANA("Mana"),
-        OVERFLOW("Overflow"),
-        SPEED("Speed"),
-        VITALITY("Vitality"),
-        STRENGTH("Strength"),
-        CRIT_CHANCE("Crit Chance"),
-        CRIT_DAMAGE("Crit Damage"),
-        INTELLIGENCE("Intelligence"),
-        MINING_SPEED("Mining Speed"),
-        MINING_FORTUNE("Mining Fortune"),
-        FARMING_FORTUNE("Farming Fortune"),
-        FORAGING_FORTUNE("Foraging Fortune"),
-        MAGIC_FIND("Magic Find"),
-        FEROCITY("Ferocity");
+        PURSE("Purse"),
+        MOTES("Motes"),
+        BANK("Bank"),
+        BITS("Bits"),
+        COPPER("Copper"),
+        SOWDUST("Sowdust"),
+        GEMS("Gems"),
+        HEAT("Heat"),
+        COLD("Cold"),
+        NORTH_STARS("North Stars");
 
         private final String label;
 
@@ -290,7 +281,7 @@ public final class CustomScoreboardPolicy {
             String profileType,
             OptionalLong quiverCurrent,
             OptionalLong quiverMax,
-            Map<ChunkStat, String> liveStats,
+            boolean bingo,
             long nowMillis) {
         public BoardView {
             title = title == null ? "" : title;
@@ -302,7 +293,6 @@ public final class CustomScoreboardPolicy {
             profileType = profileType == null ? "" : profileType;
             quiverCurrent = quiverCurrent == null ? OptionalLong.empty() : quiverCurrent;
             quiverMax = quiverMax == null ? OptionalLong.empty() : quiverMax;
-            liveStats = liveStats == null ? Map.of() : Map.copyOf(liveStats);
         }
     }
 
@@ -333,7 +323,7 @@ public final class CustomScoreboardPolicy {
                 long delta = amount - last;
                 String formatted = formatNumber(Math.abs(delta), style);
                 String sign = delta > 0L ? "+" : "-";
-                note.put(key, " §7(" + color + sign + formatted + "§7)");
+                note.put(key, " §7(" + color + sign + formatted + "§7)" + color);
                 until.put(key, now + DELTA_MS);
             }
             previous.put(key, amount);
@@ -394,11 +384,7 @@ public final class CustomScoreboardPolicy {
     }
 
     public static List<ChunkStat> defaultChunkedStats() {
-        return List.of(
-                ChunkStat.HEALTH,
-                ChunkStat.DEFENSE,
-                ChunkStat.MANA,
-                ChunkStat.SPEED);
+        return List.of(ChunkStat.values());
     }
 
     public static String defaultAppearanceText() {
@@ -689,10 +675,7 @@ public final class CustomScoreboardPolicy {
     }
 
     public static String strip(String text) {
-        if (text == null || text.isEmpty()) {
-            return "";
-        }
-        return COLOR.matcher(text).replaceAll("").replace('\u00a0', ' ').trim();
+        return LegacyMcText.strip(text);
     }
 
     public static String decodeMarkup(String raw) {
@@ -817,8 +800,8 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "purse",
                     view.nowMillis(),
-                    hideEmpty && parsed.purse.isEmpty(),
-                    hideWrong && place.inRift());
+                    hideEmpty,
+                    place.inRift());
             case MOTES -> moneyLine(
                     "Motes",
                     parsed.motes,
@@ -827,13 +810,13 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "motes",
                     view.nowMillis(),
-                    hideEmpty && parsed.motes.isEmpty(),
-                    hideWrong && !place.inRift());
+                    hideEmpty,
+                    !place.inRift());
             case BANK -> singleton(
                     bankLine(parsed, options),
                     options.textAlign(),
-                    hideEmpty && parsed.bank.isEmpty() && parsed.personalBank.isEmpty());
-            case BITS -> bitsLine(parsed, options, deltas, view.nowMillis(), hideEmpty);
+                    hideEmpty && isZero(parsed.bank) && isZero(parsed.personalBank));
+            case BITS -> bitsLine(view, parsed, options, deltas, place, hideEmpty, hideWrong);
             case COPPER -> moneyLine(
                     "Copper",
                     parsed.copper,
@@ -842,18 +825,18 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "copper",
                     view.nowMillis(),
-                    hideEmpty && parsed.copper.isEmpty(),
-                    hideWrong && !place.inGarden());
+                    hideEmpty,
+                    !place.inGarden());
             case SOWDUST -> moneyLine(
                     "Sowdust",
                     parsed.sowdust,
-                    "§e",
+                    "§2",
                     options,
                     deltas,
                     "sowdust",
                     view.nowMillis(),
-                    hideEmpty && parsed.sowdust.isEmpty(),
-                    hideWrong && !place.inGarden());
+                    hideEmpty,
+                    !place.inGarden());
             case GEMS -> moneyLine(
                     "Gems",
                     parsed.gems,
@@ -862,16 +845,10 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "gems",
                     view.nowMillis(),
-                    hideEmpty && parsed.gems.isEmpty(),
+                    hideEmpty,
                     false);
-            case HEAT -> singleton(
-                    parsed.heat,
-                    options.textAlign(),
-                    hideEmpty && parsed.heat.isBlank() || hideWrong && !place.inCrimson());
-            case COLD -> singleton(
-                    parsed.cold,
-                    options.textAlign(),
-                    hideEmpty && parsed.cold.isBlank() || hideWrong && !place.inGlacite());
+            case HEAT -> heatLine(parsed, options, hideEmpty, !place.inHollows());
+            case COLD -> coldLine(parsed, options, hideEmpty, !place.inGlacite());
             case NORTH_STARS -> moneyLine(
                     "North Stars",
                     parsed.northStars,
@@ -880,9 +857,9 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "north",
                     view.nowMillis(),
-                    hideEmpty && parsed.northStars.isEmpty(),
-                    hideWrong && !place.inWinter());
-            case CHUNKED_STATS -> chunkedRows(view, options, parsed, hideEmpty);
+                    hideEmpty,
+                    !place.inWinter());
+            case CHUNKED_STATS -> chunkedRows(options, parsed, place, hideEmpty);
             case SOULFLOW -> moneyLine(
                     "Soulflow",
                     parsed.soulflow,
@@ -891,7 +868,7 @@ public final class CustomScoreboardPolicy {
                     deltas,
                     "soulflow",
                     view.nowMillis(),
-                    hideEmpty && parsed.soulflow.isEmpty(),
+                    hideEmpty,
                     false);
             case ISLAND -> singleton(
                     firstNonBlank(parsed.island, view.island()),
@@ -917,11 +894,11 @@ public final class CustomScoreboardPolicy {
             case COOKIE -> singleton(parsed.cookie, options.textAlign(), hideEmpty);
             case OBJECTIVE -> copyLines(parsed.objective, options.textAlign(), hideEmpty);
             case SLAYER -> copyLines(parsed.slayer, options.textAlign(), hideEmpty);
-            case QUIVER -> quiverLine(view, parsed, options, hideEmpty);
-            case POWDER -> powderRows(parsed, options, hideEmpty, hideWrong && !place.inMining());
+            case QUIVER -> quiverLine(view, parsed, options, hideEmpty, hideWrong, place.inRift());
+            case POWDER -> powderRows(parsed, options, hideEmpty, !place.inMining());
             case SKYBLOCK_XP -> singleton(parsed.skyblockXp, options.textAlign(), hideEmpty);
             case EVENTS -> eventRows(parsed, options, hideEmpty);
-            case MAYOR -> mayorRows(parsed, options, hideEmpty);
+            case MAYOR -> mayorRows(parsed, options, hideEmpty, place.inRift());
             case PARTY -> partyRows(parsed, options, place, hideEmpty, hideWrong);
             case FOOTER -> footerRows(view, options);
             case EXTRA -> copyLines(parsed.unknown, options.textAlign(), hideEmpty);
@@ -964,28 +941,42 @@ public final class CustomScoreboardPolicy {
             long now,
             boolean skipEmpty,
             boolean skipWrong) {
-        if (skipWrong || skipEmpty || amount.isEmpty()) {
+        if (skipWrong) {
             return List.of();
         }
-        String note = deltas.suffix(key, amount.getAsLong(), options.showDiff(), options.numberStyle(), color, now);
-        String number = color + formatNumber(amount.getAsLong(), options.numberStyle()) + note;
+        long value = amount.isPresent() ? amount.getAsLong() : 0L;
+        if (skipEmpty && value == 0L) {
+            return List.of();
+        }
+        String note = deltas.suffix(key, value, options.showDiff(), options.numberStyle(), color, now);
+        String number = color + formatNumber(value, options.numberStyle()) + note;
         return List.of(new Row(layout(label, number, color, options.numberLayout()), options.textAlign(), false));
     }
 
     private static List<Row> bitsLine(
+            BoardView view,
             ParsedBoard parsed,
             Options options,
             DeltaBook deltas,
-            long now,
-            boolean hideEmpty) {
-        if (parsed.bits.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            Place place,
+            boolean hideEmpty,
+            boolean hideWrong) {
+        if (place.inDungeon() || place.inKuudra()) {
+            return List.of();
+        }
+        if (hideWrong && view.bingo()) {
+            return List.of();
+        }
+        long bits = parsed.bits.orElse(0L);
+        long available = parsed.bitsAvailable.orElse(0L);
+        if (hideEmpty && bits == 0L && available == 0L) {
+            return List.of();
         }
         String note = deltas.suffix(
-                "bits", parsed.bits.getAsLong(), options.showDiff(), options.numberStyle(), "§b", now);
-        String number = "§b" + formatNumber(parsed.bits.getAsLong(), options.numberStyle());
+                "bits", bits, options.showDiff(), options.numberStyle(), "§b", view.nowMillis());
+        String number = "§b" + formatNumber(bits, options.numberStyle());
         if (options.showUnclaimedBits() && parsed.bitsAvailable.isPresent()) {
-            number += "§7/§b" + formatNumber(parsed.bitsAvailable.getAsLong(), options.numberStyle());
+            number += "§7/§b" + formatNumber(available, options.numberStyle());
         }
         number += note;
         return List.of(new Row(layout("Bits", number, "§b", options.numberLayout()), options.textAlign(), false));
@@ -1016,12 +1007,23 @@ public final class CustomScoreboardPolicy {
     }
 
     private static List<Row> quiverLine(
-            BoardView view, ParsedBoard parsed, Options options, boolean hideEmpty) {
+            BoardView view,
+            ParsedBoard parsed,
+            Options options,
+            boolean hideEmpty,
+            boolean hideWrong,
+            boolean inRift) {
+        if (inRift) {
+            return List.of();
+        }
         long current = view.quiverCurrent().orElse(parsed.arrows.orElse(-1L));
         if (current < 0L) {
-            return hideEmpty ? List.of() : List.of();
+            if (hideWrong || hideEmpty) {
+                return List.of();
+            }
+            return List.of(new Row("No arrows selected", options.textAlign(), false));
         }
-        long max = view.quiverMax().orElse(parsed.arrowMax.orElse(0L));
+        long max = view.quiverMax().orElse(parsed.arrowMax.orElse(2_880L));
         String color = "§f";
         if (options.colorArrows() && max > 0L) {
             double ratio = current / (double) max;
@@ -1041,48 +1043,124 @@ public final class CustomScoreboardPolicy {
         if (skipWrong) {
             return List.of();
         }
+        if (parsed.powder.isEmpty()) {
+            return hideEmpty ? List.of() : List.of();
+        }
+        boolean allZero = true;
+        for (PowderPair pair : parsed.powder.values()) {
+            if (pair.total > 0L || pair.available > 0L) {
+                allZero = false;
+                break;
+            }
+        }
+        if (hideEmpty && allZero) {
+            return List.of();
+        }
         List<Row> rows = new ArrayList<>();
+        rows.add(new Row("§9§lPowder", options.textAlign(), false));
         parsed.powder.forEach((type, pair) -> {
             long shown = switch (options.powderMode()) {
                 case TOTAL -> pair.total;
                 case BOTH -> pair.available;
                 case AVAILABLE -> pair.available;
             };
-            String number = "§b" + formatNumber(shown, options.numberStyle());
+            String color = CustomScoreboardLines.powderColor(type);
+            String number = color + formatNumber(shown, options.numberStyle());
             if (options.powderMode() == PowderMode.BOTH) {
-                number += "§7 / §b" + formatNumber(pair.total, options.numberStyle());
+                number += "§7/" + color + formatNumber(pair.total, options.numberStyle());
             }
-            rows.add(new Row(layout(type + " Powder", number, "§b", options.numberLayout()), options.textAlign(), false));
+            String inner = layout(type, number, color, options.numberLayout());
+            rows.add(new Row(" §7- " + inner, options.textAlign(), false));
         });
-        if (rows.isEmpty() && hideEmpty) {
-            return List.of();
-        }
         return rows;
     }
 
     private static List<Row> chunkedRows(
-            BoardView view, Options options, ParsedBoard parsed, boolean hideEmpty) {
+            Options options, ParsedBoard parsed, Place place, boolean hideEmpty) {
         List<String> tokens = new ArrayList<>();
         for (ChunkStat stat : options.chunkedStats()) {
-            String value = view.liveStats().get(stat);
-            if (value == null || value.isBlank()) {
-                value = parsed.chunked.get(stat);
-            }
-            if (value == null || value.isBlank()) {
+            if (!chunkIsland(stat, place)) {
                 continue;
             }
-            tokens.add(chunkIcon(stat) + value);
+            String token = chunkToken(stat, parsed, options, hideEmpty);
+            if (token != null && !token.isBlank()) {
+                tokens.add(token);
+            }
         }
         if (tokens.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         List<Row> rows = new ArrayList<>();
         int per = Math.max(1, options.maxStatsPerLine());
         for (int i = 0; i < tokens.size(); i += per) {
             int end = Math.min(tokens.size(), i + per);
-            rows.add(new Row(String.join("  ", tokens.subList(i, end)), options.textAlign(), false));
+            rows.add(new Row(String.join(" §f| ", tokens.subList(i, end)), options.textAlign(), false));
         }
         return rows;
+    }
+
+    private static boolean chunkIsland(ChunkStat stat, Place place) {
+        return switch (stat) {
+            case PURSE -> !place.inRift();
+            case MOTES -> place.inRift();
+            case COPPER, SOWDUST -> place.inGarden();
+            case HEAT -> place.inHollows();
+            case COLD -> place.inGlacite();
+            case NORTH_STARS -> place.inWinter();
+            case BITS -> !place.inDungeon() && !place.inKuudra();
+            default -> true;
+        };
+    }
+
+    private static String chunkToken(
+            ChunkStat stat, ParsedBoard parsed, Options options, boolean hideEmpty) {
+        return switch (stat) {
+            case PURSE -> chunkAmount("§6", parsed.purse, hideEmpty, options);
+            case MOTES -> chunkAmount("§d", parsed.motes, hideEmpty, options);
+            case BANK -> {
+                if (hideEmpty && isZero(parsed.bank) && isZero(parsed.personalBank)) {
+                    yield null;
+                }
+                yield "§6" + (parsed.bank.isPresent()
+                        ? formatNumber(parsed.bank.getAsLong(), options.numberStyle())
+                        : "0");
+            }
+            case BITS -> {
+                if (hideEmpty && isZero(parsed.bits) && isZero(parsed.bitsAvailable)) {
+                    yield null;
+                }
+                String text = "§b" + formatNumber(parsed.bits.orElse(0L), options.numberStyle());
+                if (options.showUnclaimedBits() && parsed.bitsAvailable.isPresent()) {
+                    text += "§7/§b" + formatNumber(parsed.bitsAvailable.getAsLong(), options.numberStyle());
+                }
+                yield text;
+            }
+            case COPPER -> chunkAmount("§c", parsed.copper, hideEmpty, options);
+            case SOWDUST -> chunkAmount("§2", parsed.sowdust, hideEmpty, options);
+            case GEMS -> chunkAmount("§a", parsed.gems, hideEmpty, options);
+            case HEAT -> {
+                if (hideEmpty && (parsed.heat.isBlank() || strip(parsed.heat).endsWith("0"))) {
+                    yield null;
+                }
+                yield parsed.heat.isBlank() ? "§c♨ 0" : parsed.heat;
+            }
+            case COLD -> {
+                if (hideEmpty && parsed.cold.isBlank()) {
+                    yield null;
+                }
+                yield parsed.cold.isBlank() ? "§b0❄" : parsed.cold;
+            }
+            case NORTH_STARS -> chunkAmount("§d", parsed.northStars, hideEmpty, options);
+        };
+    }
+
+    private static String chunkAmount(
+            String color, OptionalLong amount, boolean hideEmpty, Options options) {
+        long value = amount.orElse(0L);
+        if (hideEmpty && value == 0L) {
+            return null;
+        }
+        return color + formatNumber(value, options.numberStyle());
     }
 
     private static List<Row> tuningRows(ParsedBoard parsed, Options options, boolean hideEmpty) {
@@ -1111,25 +1189,26 @@ public final class CustomScoreboardPolicy {
         return rows;
     }
 
-    private static List<Row> mayorRows(ParsedBoard parsed, Options options, boolean hideEmpty) {
-        if (parsed.mayor.isBlank()) {
+    private static List<Row> mayorRows(ParsedBoard parsed, Options options, boolean hideEmpty, boolean inRift) {
+        if (inRift || parsed.mayor.isBlank()) {
             return hideEmpty ? List.of() : List.of();
         }
         List<Row> rows = new ArrayList<>();
-        rows.add(new Row("§aMayor: §f" + parsed.mayor, options.textAlign(), false));
+        String mayor = parsed.mayor;
+        if (options.showMayorTime() && !parsed.mayorTime.isBlank()) {
+            mayor += " §7(§e" + parsed.mayorTime + "§7)";
+        }
+        rows.add(new Row(mayor, options.textAlign(), false));
         if (options.showMayorPerks()) {
             for (String perk : parsed.mayorPerks) {
-                rows.add(new Row("§7- §f" + perk, options.textAlign(), false));
+                rows.add(new Row(" §7- §e" + strip(perk), options.textAlign(), false));
             }
         }
         if (options.showExtraMayor() && !parsed.minister.isBlank()) {
-            rows.add(new Row("§aMinister: §f" + parsed.minister, options.textAlign(), false));
+            rows.add(new Row(parsed.minister, options.textAlign(), false));
             if (!parsed.ministerPerk.isBlank()) {
-                rows.add(new Row("§7- §f" + parsed.ministerPerk, options.textAlign(), false));
+                rows.add(new Row(" §7- §e" + strip(parsed.ministerPerk), options.textAlign(), false));
             }
-        }
-        if (options.showMayorTime() && !parsed.mayorTime.isBlank()) {
-            rows.add(new Row("§e" + parsed.mayorTime, options.textAlign(), false));
         }
         return rows;
     }
@@ -1206,12 +1285,13 @@ public final class CustomScoreboardPolicy {
     }
 
     private static String formatTime(String raw, Options options) {
-        if (raw.isBlank() || !options.time24h() && !options.timeExact()) {
+        if (raw.isBlank()) {
             return raw;
         }
+        String symbol = CustomScoreboardLines.timeSymbol(raw);
         Matcher matcher = Pattern.compile("(\\d{1,2}):(\\d{2})\\s*(am|pm)?", Pattern.CASE_INSENSITIVE)
                 .matcher(strip(raw));
-        if (!matcher.find()) {
+        if (!matcher.find() || !options.time24h() && !options.timeExact()) {
             return raw;
         }
         int hour = Integer.parseInt(matcher.group(1));
@@ -1230,8 +1310,13 @@ public final class CustomScoreboardPolicy {
         }
         String clock = options.time24h()
                 ? String.format(Locale.ROOT, "%02d:%02d", hour, minute)
-                : matcher.group(0);
-        return raw.replace(matcher.group(0), clock);
+                : String.format(Locale.ROOT, "%d:%02d%s", hour == 0 ? 12 : hour > 12 ? hour - 12 : hour, minute,
+                        ampm == null ? "" : ampm.toLowerCase(Locale.ROOT));
+        String out = "§7" + clock;
+        if (!symbol.isBlank()) {
+            out += " " + symbol;
+        }
+        return out;
     }
 
     private static String layout(String label, String number, String color, NumberLayout mode) {
@@ -1250,25 +1335,36 @@ public final class CustomScoreboardPolicy {
         return number;
     }
 
-    private static String chunkIcon(ChunkStat stat) {
-        return switch (stat) {
-            case HEALTH -> "§c❤ ";
-            case DEFENSE -> "§a❈ ";
-            case MANA -> "§b✎ ";
-            case OVERFLOW -> "§3ʬ ";
-            case SPEED -> "§f✦ ";
-            case VITALITY -> "§4♨ ";
-            case STRENGTH -> "§c❁ ";
-            case CRIT_CHANCE -> "§9☣ ";
-            case CRIT_DAMAGE -> "§9☠ ";
-            case INTELLIGENCE -> "§b✎ ";
-            case MINING_SPEED -> "§6⸕ ";
-            case MINING_FORTUNE -> "§6☘ ";
-            case FARMING_FORTUNE -> "§6☘ ";
-            case FORAGING_FORTUNE -> "§6☘ ";
-            case MAGIC_FIND -> "§b✯ ";
-            case FEROCITY -> "§c⫽ ";
-        };
+    private static List<Row> heatLine(ParsedBoard parsed, Options options, boolean hideEmpty, boolean skipWrong) {
+        if (skipWrong) {
+            return List.of();
+        }
+        String raw = parsed.heat;
+        if (raw.isBlank()) {
+            return hideEmpty ? List.of() : List.of(new Row(layout("Heat", "§c♨ 0", "§c", options.numberLayout()), options.textAlign(), false));
+        }
+        if (hideEmpty && (strip(raw).endsWith("0") || strip(raw).equals("Heat: 0"))) {
+            return List.of();
+        }
+        return List.of(new Row(raw.contains("Heat") ? raw : layout("Heat", raw, "§c", options.numberLayout()), options.textAlign(), false));
+    }
+
+    private static List<Row> coldLine(ParsedBoard parsed, Options options, boolean hideEmpty, boolean skipWrong) {
+        if (skipWrong) {
+            return List.of();
+        }
+        String raw = parsed.cold;
+        if (raw.isBlank()) {
+            return hideEmpty ? List.of() : List.of(new Row(layout("Cold", "0❄", "§b", options.numberLayout()), options.textAlign(), false));
+        }
+        if (hideEmpty && (strip(raw).endsWith("0") || strip(raw).contains("Cold: 0"))) {
+            return List.of();
+        }
+        return List.of(new Row(raw.contains("Cold") ? raw : layout("Cold", raw, "§b", options.numberLayout()), options.textAlign(), false));
+    }
+
+    private static boolean isZero(OptionalLong amount) {
+        return amount.isEmpty() || amount.getAsLong() == 0L;
     }
 
     private static String profileSymbol(String type) {
@@ -1389,8 +1485,28 @@ public final class CustomScoreboardPolicy {
         parsed.island = view.island();
         parsed.location = view.locationHint();
         parsed.profileType = view.profileType();
-        for (String raw : view.sidebar()) {
-            consumeSidebar(raw, parsed);
+        List<String> sidebar = view.sidebar();
+        boolean[] taken = new boolean[sidebar.size()];
+        for (int i = 0; i < sidebar.size(); i++) {
+            if (taken[i]) {
+                continue;
+            }
+            String raw = sidebar.get(i);
+            CustomScoreboardLines.Hit hit = CustomScoreboardLines.classify(raw);
+            applyHit(parsed, raw, hit);
+            int extra = hit.extraLines();
+            for (int n = 1; n <= extra && i + n < sidebar.size(); n++) {
+                String follow = sidebar.get(i + n);
+                CustomScoreboardLines.Hit followHit = CustomScoreboardLines.classify(follow);
+                if (followHit.kind() != CustomScoreboardLines.Kind.UNKNOWN
+                        && followHit.kind() != CustomScoreboardLines.Kind.SKIP
+                        && followHit.kind() != hit.kind()
+                        && followHit.event() != hit.event()) {
+                    break;
+                }
+                taken[i + n] = true;
+                appendFollow(parsed, hit, follow);
+            }
         }
         for (String raw : view.tab()) {
             consumeTab(raw, parsed);
@@ -1398,90 +1514,65 @@ public final class CustomScoreboardPolicy {
         return parsed;
     }
 
-    private static void consumeSidebar(String raw, ParsedBoard parsed) {
-        String plain = strip(raw);
-        String lower = plain.toLowerCase(Locale.ROOT);
-        if (plain.isBlank()) {
-            return;
-        }
-        if (lower.contains("www.hypixel.net") || lower.contains("alpha.hypixel.net")) {
-            return;
-        }
-        if (assignMoney(lower, "purse", raw, v -> parsed.purse = v)
-                || assignMoney(lower, "piggy", raw, v -> parsed.purse = v)
-                || assignMoney(lower, "motes", raw, v -> parsed.motes = v)
-                || assignMoney(lower, "bits", raw, v -> parsed.bits = v)
-                || assignMoney(lower, "copper", raw, v -> parsed.copper = v)
-                || assignMoney(lower, "sowdust", raw, v -> parsed.sowdust = v)
-                || assignMoney(lower, "gems", raw, v -> parsed.gems = v)
-                || assignMoney(lower, "north star", raw, v -> parsed.northStars = v)
-                || assignMoney(lower, "soulflow", raw, v -> parsed.soulflow = v)
-                || assignMoney(lower, "bank", raw, v -> parsed.bank = v)) {
-            return;
-        }
-        if (lower.startsWith("heat") || lower.contains("heat:")) {
-            parsed.heat = raw;
-            return;
-        }
-        if (lower.startsWith("cold") || lower.contains("cold:")) {
-            parsed.cold = raw;
-            return;
-        }
-        if (plain.contains("⏣") || lower.startsWith(" ⏣") || lower.contains("location")) {
-            parsed.location = raw;
-            return;
-        }
-        if (looksLikeDate(plain)) {
-            parsed.date = raw;
-            return;
-        }
-        if (looksLikeTime(plain)) {
-            parsed.time = raw;
-            return;
-        }
-        if (looksLikeLobby(plain)) {
-            parsed.lobbyCode = extractLobby(plain);
-            return;
-        }
-        if (lower.contains("visiting") || plain.contains("✌")) {
-            parsed.visiting = raw;
-            return;
-        }
-        if (lower.contains("slayer quest") || (!parsed.slayer.isEmpty() && looksSlayerFollow(lower))) {
-            parsed.slayer.add(raw);
-            return;
-        }
-        if (lower.startsWith("objective") || lower.startsWith("quest")
-                || (!parsed.objective.isEmpty() && (lower.startsWith(" ") || lower.startsWith("-")))) {
-            parsed.objective.add(raw);
-            return;
-        }
-        if (lower.contains("arrow")) {
-            parsed.arrows = parseLong(plain);
-            Matcher max = Pattern.compile("/\\s*([\\d,]+)").matcher(plain);
-            if (max.find()) {
-                parsed.arrowMax = parseLong(max.group(1));
+    private static void applyHit(ParsedBoard parsed, String raw, CustomScoreboardLines.Hit hit) {
+        switch (hit.kind()) {
+            case PURSE -> parsed.purse = CustomScoreboardLines.parseAmount(hit.capture());
+            case MOTES -> parsed.motes = CustomScoreboardLines.parseAmount(hit.capture());
+            case BANK -> parsed.bank = CustomScoreboardLines.parseAmount(hit.capture());
+            case BITS -> parsed.bits = CustomScoreboardLines.parseAmount(hit.capture());
+            case COPPER -> parsed.copper = CustomScoreboardLines.parseAmount(hit.capture());
+            case SOWDUST -> parsed.sowdust = CustomScoreboardLines.parseAmount(hit.capture());
+            case GEMS -> parsed.gems = CustomScoreboardLines.parseAmount(hit.capture());
+            case NORTH_STARS -> parsed.northStars = CustomScoreboardLines.parseAmount(hit.capture());
+            case SOULFLOW -> parsed.soulflow = CustomScoreboardLines.parseAmount(hit.capture());
+            case HEAT -> parsed.heat = raw;
+            case COLD -> parsed.cold = raw;
+            case LOCATION -> parsed.location = raw;
+            case DATE -> parsed.date = raw;
+            case TIME -> parsed.time = raw;
+            case LOBBY -> parsed.lobbyCode = hit.capture().isBlank() ? extractLobby(strip(raw)) : hit.capture();
+            case VISITING -> parsed.visiting = raw;
+            case PROFILE -> parsed.profileType = strip(raw);
+            case POWDER -> {
+                String[] parts = hit.capture().split("\\|", 2);
+                String type = capitalize(parts[0]);
+                PowderPair pair = parsed.powder.computeIfAbsent(type, ignored -> new PowderPair());
+                long amount = parts.length > 1 ? CustomScoreboardLines.parseAmount(parts[1]).orElse(0L) : 0L;
+                pair.available = amount;
+                pair.total = Math.max(pair.total, amount);
             }
-            return;
+            case ARROWS -> {
+                parsed.arrows = parseLong(strip(raw));
+                Matcher max = Pattern.compile("/\\s*([\\d,]+)").matcher(strip(raw));
+                if (max.find()) {
+                    parsed.arrowMax = parseLong(max.group(1));
+                }
+            }
+            case OBJECTIVE -> parsed.objective.add(raw);
+            case SLAYER -> parsed.slayer.add(raw);
+            case EVENT -> {
+                if (hit.event() != null) {
+                    parsed.events.computeIfAbsent(hit.event(), ignored -> new ArrayList<>()).add(raw);
+                }
+            }
+            case UNKNOWN -> parsed.unknown.add(raw);
+            case FOOTER, SKIP -> {
+            }
         }
-        Matcher powder = POWDER.matcher(plain);
-        if (powder.find()) {
-            String type = capitalize(powder.group(1));
-            PowderPair pair = parsed.powder.computeIfAbsent(type, ignored -> new PowderPair());
-            pair.available = parseCompact(powder.group(2));
-            pair.total = Math.max(pair.total, pair.available);
-            return;
+    }
+
+    private static void appendFollow(ParsedBoard parsed, CustomScoreboardLines.Hit hit, String follow) {
+        switch (hit.kind()) {
+            case OBJECTIVE -> parsed.objective.add(follow);
+            case SLAYER -> parsed.slayer.add(follow);
+            case EVENT -> {
+                if (hit.event() != null) {
+                    parsed.events.computeIfAbsent(hit.event(), ignored -> new ArrayList<>()).add(follow);
+                }
+            }
+            default -> {
+            }
         }
-        if (lower.contains("ironman") || lower.contains("stranded") || lower.contains("bingo")) {
-            parsed.profileType = plain;
-            return;
-        }
-        EventKind event = classifyEvent(lower);
-        if (event != null) {
-            parsed.events.computeIfAbsent(event, ignored -> new ArrayList<>()).add(raw);
-            return;
-        }
-        parsed.unknown.add(raw);
     }
 
     private static void consumeTab(String raw, ParsedBoard parsed) {
@@ -1539,153 +1630,12 @@ public final class CustomScoreboardPolicy {
         }
     }
 
-    private static boolean assignMoney(
-            String lower,
-            String label,
-            String raw,
-            java.util.function.Consumer<OptionalLong> sink) {
-        if (!lower.contains(label)) {
-            return false;
-        }
-        sink.accept(parseLong(raw));
-        return true;
-    }
-
-    private static boolean looksLikeDate(String plain) {
-        return Pattern.compile("(?i)(early |late )?(spring|summer|autumn|fall|winter)\\s+\\d+")
-                .matcher(plain)
-                .find();
-    }
-
-    private static boolean looksLikeTime(String plain) {
-        return Pattern.compile("\\d{1,2}:\\d{2}\\s*(am|pm)", Pattern.CASE_INSENSITIVE).matcher(plain).find();
-    }
-
-    private static boolean looksLikeLobby(String plain) {
-        return Pattern.compile("(?i)\\b(m|mini|mega)[0-9A-Z]+\\b").matcher(plain).find()
-                || Pattern.compile("\\d{2}/\\d{2}/\\d{2}").matcher(plain).find();
-    }
-
     private static String extractLobby(String plain) {
         Matcher matcher = Pattern.compile("(?i)\\b((?:m|mini|mega)[0-9A-Z]+)\\b").matcher(plain);
         if (matcher.find()) {
             return matcher.group(1);
         }
         return plain;
-    }
-
-    private static boolean looksSlayerFollow(String lower) {
-        return lower.contains("combat xp")
-                || lower.contains("boss")
-                || lower.contains("spawned")
-                || lower.contains("slain")
-                || lower.contains("/");
-    }
-
-    private static EventKind classifyEvent(String lower) {
-        if (lower.contains("year") && lower.contains("vote") || lower.contains("waiting for") && lower.contains("vote")) {
-            return EventKind.VOTING;
-        }
-        if (lower.contains("instance shutdown") || lower.contains("server clos")) {
-            return EventKind.SERVER_CLOSE;
-        }
-        if (lower.contains("cleared:") || lower.contains("keys:") || lower.contains("alive dragon")) {
-            return EventKind.DUNGEONS;
-        }
-        if (lower.contains("wave:") || lower.contains("tokens:") || lower.contains("submerges")) {
-            return EventKind.KUUDRA;
-        }
-        if (lower.contains("challenge:") && lower.contains("dojo") || lower.startsWith("challenge:")) {
-            return EventKind.DOJO;
-        }
-        if (lower.contains("dark auction")) {
-            return EventKind.DARK_AUCTION;
-        }
-        if (lower.contains("jacob")) {
-            return lower.contains("medal") ? EventKind.JACOB_MEDALS : EventKind.JACOB_CONTEST;
-        }
-        if (lower.contains("pelt") || lower.contains("tracker mob")) {
-            return EventKind.TRAPPER;
-        }
-        if (lower.contains("cleanup") || lower.contains("pasting") || lower.contains("plot -")) {
-            return EventKind.GARDEN;
-        }
-        if (lower.contains("flight duration")) {
-            return EventKind.FLIGHT_DURATION;
-        }
-        if (lower.contains("winter") && (lower.contains("event") || lower.contains("gift"))) {
-            return EventKind.WINTER;
-        }
-        if (lower.contains("new year")) {
-            return EventKind.NEW_YEAR;
-        }
-        if (lower.contains("spooky")) {
-            return EventKind.SPOOKY;
-        }
-        if (lower.contains("broodmother")) {
-            return EventKind.BROODMOTHER;
-        }
-        if (lower.contains("event:") || lower.contains("zone:") || lower.contains("raffle")
-                || lower.contains("goblin") || lower.contains("tasty mithril")) {
-            return EventKind.MINING;
-        }
-        if (lower.contains("galatea") || lower.contains("moonglade")) {
-            return EventKind.GALATEA;
-        }
-        if (lower.contains("safari")) {
-            return EventKind.SAFARI;
-        }
-        if (lower.contains("your damage") || lower.contains("boss hp") || lower.contains("dragon hp")) {
-            return EventKind.DAMAGE;
-        }
-        if (lower.contains("magma") || lower.contains("damage soaked")) {
-            return EventKind.MAGMA_BOSS;
-        }
-        if (lower.contains("carnival")) {
-            return EventKind.CARNIVAL;
-        }
-        if (lower.contains("rift") || lower.contains("timecharm") || lower.contains("enigma")) {
-            return EventKind.RIFT;
-        }
-        if (lower.contains("essence:")) {
-            return EventKind.ESSENCE;
-        }
-        if (lower.contains("queue") || lower.contains("position:")) {
-            return EventKind.QUEUE;
-        }
-        if (lower.contains("anniversary") || lower.contains("skyblock anniversary")) {
-            return EventKind.ANNIVERSARY;
-        }
-        if (lower.contains("starting soon") || lower.contains("starts in")) {
-            return EventKind.STARTING_SOON;
-        }
-        if (lower.contains("redstone:")) {
-            return EventKind.REDSTONE;
-        }
-        if (lower.contains("active event")) {
-            return EventKind.ACTIVE_TABLIST;
-        }
-        return null;
-    }
-
-    private static long parseCompact(String raw) {
-        String token = raw.toLowerCase(Locale.ROOT).replace(",", "").trim();
-        double mul = 1.0D;
-        if (token.endsWith("k")) {
-            mul = 1_000.0D;
-            token = token.substring(0, token.length() - 1);
-        } else if (token.endsWith("m")) {
-            mul = 1_000_000.0D;
-            token = token.substring(0, token.length() - 1);
-        } else if (token.endsWith("b")) {
-            mul = 1_000_000_000.0D;
-            token = token.substring(0, token.length() - 1);
-        }
-        try {
-            return (long) (Double.parseDouble(token) * mul);
-        } catch (NumberFormatException ignored) {
-            return 0L;
-        }
     }
 
     private static String capitalize(String raw) {
@@ -1751,8 +1701,10 @@ public final class CustomScoreboardPolicy {
             boolean inGarden,
             boolean inMining,
             boolean inGlacite,
-            boolean inCrimson,
+            boolean inHollows,
             boolean inWinter,
+            boolean inDungeon,
+            boolean inKuudra,
             boolean partyIsland) {
         static Place from(BoardView view, ParsedBoard parsed) {
             String blob = (view.island() + " " + view.locationHint() + " "
@@ -1760,21 +1712,20 @@ public final class CustomScoreboardPolicy {
             boolean rift = blob.contains("rift");
             boolean garden = blob.contains("garden");
             boolean glacite = blob.contains("glacite");
+            boolean hollows = blob.contains("hollows") || blob.contains("nucleus");
             boolean mining = glacite
+                    || hollows
                     || blob.contains("dwarven")
-                    || blob.contains("hollows")
                     || blob.contains("caverns")
-                    || blob.contains("mineshaft");
-            boolean crimson = blob.contains("crimson")
-                    || blob.contains("nether")
-                    || blob.contains("magma");
+                    || blob.contains("mineshaft")
+                    || blob.contains("base camp");
             boolean winter = blob.contains("jerry")
                     || blob.contains("winter")
                     || blob.contains("glacier");
-            boolean party = blob.contains("dungeon")
-                    || blob.contains("kuudra")
-                    || crimson;
-            return new Place(rift, garden, mining, glacite, crimson, winter, party);
+            boolean dungeon = blob.contains("dungeon") || blob.contains("catacomb");
+            boolean kuudra = blob.contains("kuudra");
+            boolean party = dungeon || kuudra || blob.contains("crimson");
+            return new Place(rift, garden, mining, glacite, hollows, winter, dungeon, kuudra, party);
         }
     }
 }

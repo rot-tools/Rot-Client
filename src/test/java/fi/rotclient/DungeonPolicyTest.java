@@ -178,9 +178,25 @@ class DungeonPolicyTest {
         assertEquals(30_000L, DungeonPolicy.cooldownMillis(DungeonPolicy.Invincibility.SPIRIT));
         assertEquals(60_000L, DungeonPolicy.cooldownMillis(DungeonPolicy.Invincibility.PHOENIX));
         assertTrue(DungeonPolicy.isDungeonEnd("                     Extra Stats                     "));
-        assertTrue(DungeonPolicy.isDungeonEnd("Team Score: 305"));
+        assertTrue(DungeonPolicy.isExtraStatsChat("> EXTRA STATS <"));
+        assertTrue(DungeonPolicy.isDungeonEnd("Dungeon Reward"));
+        assertFalse(DungeonPolicy.isDungeonEnd("Team Score: 305"));
+        assertFalse(DungeonPolicy.isDungeonEnd("Team Score: 0"));
+        assertFalse(DungeonPolicy.isExtraStatsChat("Team Score: 305 (S)"));
+        assertFalse(DungeonPolicy.isExtraStatsChat("Party > Henri: check extra stats"));
+        assertFalse(DungeonPolicy.isExtraStatsChat("Click Extra Stats for more"));
         assertFalse(DungeonPolicy.isDungeonEnd("The Catacombs - Floor 7"));
         assertFalse(DungeonPolicy.isDungeonEnd("The Catacombs (F7)"));
+        assertFalse(DungeonPolicy.shouldArmRequeue(
+                true, false, false, 200, "                     Extra Stats                     "));
+        assertFalse(DungeonPolicy.shouldArmRequeue(
+                true, true, false, 10, "                     Extra Stats                     "));
+        assertFalse(DungeonPolicy.shouldArmRequeue(
+                true, true, false, 200, "Team Score: 305"));
+        assertFalse(DungeonPolicy.shouldArmRequeue(
+                true, true, false, 200, "Party > Henri: extra stats later"));
+        assertTrue(DungeonPolicy.shouldArmRequeue(
+                true, true, false, 200, "                     Extra Stats                     "));
         assertEquals("Mimic Killed!", DungeonPolicy.partyAnnounce("Mimic Dead!").orElseThrow());
         assertTrue(DungeonPolicy.isBloodCampReady("[BOSS] The Watcher: You have proven yourself. That will be enough."));
         assertEquals("Terminal 3/7", DungeonPolicy.f7Title("henri activated a terminal! (3/7)").orElseThrow());
@@ -210,6 +226,8 @@ class DungeonPolicyTest {
         assertFalse(DungeonPolicy.leapHeadUnavailable(List.of("Class: Archer")));
         assertEquals("DEAD", DungeonPolicy.leapHeadLabel(List.of("Currently dead")));
         assertEquals("OFFLINE", DungeonPolicy.leapHeadLabel(List.of("offline")));
+        assertEquals("OFFLINE", DungeonPolicy.leapHeadLabel(List.of("Currently not online")));
         assertEquals("", DungeonPolicy.leapHeadLabel(List.of("Class: Tank")));
+        assertEquals("", DungeonPolicy.leapHeadLabel(List.of("Undead sword")));
     }
 }

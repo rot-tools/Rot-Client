@@ -127,6 +127,7 @@ public final class DungeonRuntime {
     private static int unclaimedChests = -1;
     private static DungeonExtraStatsPolicy.Snapshot extraStats =
             DungeonExtraStatsPolicy.Snapshot.idle();
+    private static int extraStatsQuietTicks;
     private static String lastMelodyProgress = "";
     private static String lastP3Objective = "";
     private static int lastP3Completed;
@@ -150,6 +151,8 @@ public final class DungeonRuntime {
     private static boolean mimicKilled;
     private static boolean puzzleFailed;
     private static boolean extraStatsSeen;
+    private static boolean dungeonRunStarted;
+    private static int dungeonWorldTicks;
     private static String lastRelic = "";
     private static long leapHideAtMs;
     private static String melodyOtherName = "";
@@ -189,8 +192,7 @@ public final class DungeonRuntime {
     private static String lastCrystalHud = "";
     private static long relicSpawnUntil;
     private static long relicPickupAt;
-    private static final List<EmberDungeonPolicy.IntVec> simonOrder = new ArrayList<>();
-    private static final List<EmberDungeonPolicy.IntVec> simonRemaining = new ArrayList<>();
+    private static DungeonF7Policy.SimonState simon = DungeonF7Policy.SimonState.idle();
     private static String lastDragonHud = "";
     private static boolean melodyWasOpen;
     private static int lastTerminalSlot = 22;
@@ -267,6 +269,7 @@ public final class DungeonRuntime {
         }
         QolSkyblockExtras extras = extras();
         autoClickedThisTick = false;
+        dungeonWorldTicks++;
         List<String> lines = sidebarLines();
         sidebar = DungeonPolicy.parseSidebar(lines);
         if (extras.dungeonAnnounceEnabled && extras.dungeonAnnounceScoreTitle
@@ -276,6 +279,8 @@ public final class DungeonRuntime {
                     sidebar.score(), extras.dungeonAnnounceScoreThreshold));
         }
         lastScore = sidebar.score();
+        noteDungeonRunProgress(client);
+        maybeFinishExtraStats(client);
         if (extras.dungeonAnnounceEnabled && extras.dungeonAnnounceSecretChime
                 && SkyBlockDungeonDetector.confidentlyInDungeon()
                 && DungeonPolicy.secretCountIncreased(lastSecretsFound, sidebar.secretsFound())
@@ -405,13 +410,13 @@ public final class DungeonRuntime {
         }
         scanSecretWaypoints(client, extras);
         scanDungeonMap(client, extras);
+        if (extras.dungeonF7Enabled && extras.dungeonF7Simon) {
+            scanSimon(client);
+        }
         if (puzzleScanTicks++ % 8 == 0) {
             scanPuzzles(client, extras);
             if (extras.dungeonF7Enabled && extras.dungeonF7ArrowAlign) {
                 scanArrowAlign(client);
-            }
-            if (extras.dungeonF7Enabled && extras.dungeonF7Simon) {
-                scanSimon(client);
             }
         }
         if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsAuto) {
@@ -500,16 +505,10 @@ public final class DungeonRuntime {
         });
         if (extras.dungeonHudEnabled && extras.dungeonHudExtraStats) {
             extraStats = DungeonExtraStatsPolicy.apply(extraStats, raw);
-            if (extraStats.ready() && !extraStats.printed()) {
-                List<String> summary = extraStats.compactLines();
-                extraStats = DungeonExtraStatsPolicy.markPrinted(extraStats);
-                if (client != null && client.player != null && !summary.isEmpty()) {
-                    client.player.sendSystemMessage(Component.literal("§eExtra Stats"));
-                    for (String line : summary) {
-                        client.player.sendSystemMessage(Component.literal("§7" + line));
-                    }
-                }
+            if (DungeonExtraStatsPolicy.extraStatsLine(raw)) {
+                extraStatsQuietTicks = 0;
             }
+            maybePrintExtraStats(client);
         }
         DungeonAssistPolicy.F7Timer phaseTimer = DungeonAssistPolicy.f7TimerFromChat(raw);
         if (phaseTimer == DungeonAssistPolicy.F7Timer.MAXOR_START
@@ -599,7 +598,13 @@ public final class DungeonRuntime {
             TempleDungeonPolicy.doorKeyTitle(TempleDungeonPolicy.doorKeyEvent(raw))
                     .ifPresent(title -> showTitle(client, true, "§e" + title));
         }
-        if (extras.dungeonRequeueEnabled && !extraStatsSeen && DungeonPolicy.isDungeonEnd(raw)) {
+        noteDungeonRunStart(raw);
+        if (DungeonPolicy.shouldArmRequeue(
+                extras.dungeonRequeueEnabled,
+                dungeonRunStarted,
+                extraStatsSeen,
+                dungeonWorldTicks,
+                raw)) {
             extraStatsSeen = true;
             requeueTicks = Math.max(0, extras.dungeonRequeueDelay);
         }
@@ -980,6 +985,7 @@ public final class DungeonRuntime {
         explosiveShotLine = "";
         explosiveShotUntil = 0L;
         extraStats = DungeonExtraStatsPolicy.Snapshot.idle();
+        extraStatsQuietTicks = 0;
         lastMelodyProgress = "";
         lastP3Objective = "";
         lastP3Completed = 0;
@@ -999,6 +1005,8 @@ public final class DungeonRuntime {
         mimicKilled = false;
         puzzleFailed = false;
         extraStatsSeen = false;
+        dungeonRunStarted = false;
+        dungeonWorldTicks = 0;
         HateDoorsRuntime.clear();
         lastRelic = "";
         leapHideAtMs = 0L;
@@ -1019,8 +1027,7 @@ public final class DungeonRuntime {
         i4LookStart = 0L;
         i4LookFrom = null;
         i4LookTarget = null;
-        simonOrder.clear();
-        simonRemaining.clear();
+        simon = DungeonF7Policy.SimonState.idle();
         lastDragonHud = "";
         melodyWasOpen = false;
         lastTerminalSlot = 22;
@@ -1066,8 +1073,7 @@ public final class DungeonRuntime {
         lastTermTimeLine = "";
         lastTermTotalLine = "";
         chestProfitHud = List.of();
-        lastMapBoard = new DungeonMapPolicy.Board(
-                DungeonMapPolicy.Calibration.none(), List.of(), List.of(), List.of(), "");
+        lastMapBoard = emptyMapBoard();
         AutoDojoRuntime.onWorldChanged();
         blessings.clear();
         tpLinks.clear();
@@ -1325,8 +1331,9 @@ public final class DungeonRuntime {
         if (extras.dungeonF7Enabled && extras.dungeonF7RelicSpawn) {
             addTimer(lines, "Relic spawn", relicSpawnUntil, now);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SimonProgress && !simonRemaining.isEmpty()) {
-            lines.add("Simon " + simonRemaining.size());
+        if (extras.dungeonF7Enabled && extras.dungeonF7SimonProgress
+                && !simon.remaining().isEmpty()) {
+            lines.add("Simon " + simon.remaining().size());
         }
         if (extras.dungeonF7Enabled && extras.dungeonF7Dragons && extras.dungeonF7DragonPriority
                 && (dragonSpawnUntil > now || !dragonsDown.isEmpty() || !lastDragonHud.isEmpty())) {
@@ -1755,6 +1762,8 @@ public final class DungeonRuntime {
         if (live.isEmpty()) {
             maybePlayTerminalComplete(client, extras);
             clearPredictedClicks();
+            termQueue.clear();
+            melodySkipQueue.clear();
             return;
         }
         terminalHadClicks = true;
@@ -1899,6 +1908,7 @@ public final class DungeonRuntime {
         if (!DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
+        simon = DungeonF7Policy.SimonState.idle();
         client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
         simonCooldown = 3;
     }
@@ -3171,6 +3181,7 @@ public final class DungeonRuntime {
         }
         MapItemSavedData data = findDungeonMapData(client);
         if (data == null) {
+            lastMapBoard = emptyMapBoard();
             if (needPreview) {
                 mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
             }
@@ -3274,7 +3285,7 @@ public final class DungeonRuntime {
         }
         box(blockBox(start), extras.dungeonEspSimonColor, extras, eye);
         List<EmberDungeonPolicy.IntVec> remaining =
-                simonRemaining.isEmpty() ? simonOrder : simonRemaining;
+                simon.remaining().isEmpty() ? simon.order() : simon.remaining();
         for (int i = 0; i < remaining.size(); i++) {
             EmberDungeonPolicy.IntVec vec = remaining.get(i);
             box(blockBox(new BlockPos(vec.x(), vec.y(), vec.z())),
@@ -3440,50 +3451,29 @@ public final class DungeonRuntime {
                 EmberDungeonPolicy.IntVec button = DungeonF7Policy.simonButtonForLantern(
                         lantern.x(), lantern.y(), lantern.z());
                 if (button != null) {
-                    noteSimonLit(lit, button);
+                    lit.add(button);
                 }
             }
         }
-        for (EmberDungeonPolicy.IntVec vec : DungeonF7Policy.simonButtons()) {
-            if (DungeonF7Policy.isSimonSequenceLit(blockId(
-                    client, new BlockPos(vec.x(), vec.y(), vec.z())))) {
-                noteSimonLit(lit, vec);
-            }
-        }
-        if (!lit.isEmpty()) {
-            simonRemaining.clear();
-            simonRemaining.addAll(simonOrder);
-        }
-        if (lit.isEmpty() && simonOrder.size() >= DungeonF7Policy.simonButtons().size()) {
-            simonOrder.clear();
-        }
-    }
-
-    private static void noteSimonLit(
-            List<EmberDungeonPolicy.IntVec> lit, EmberDungeonPolicy.IntVec button) {
-        lit.add(button);
-        if (simonOrder.stream().noneMatch(existing ->
-                existing.x() == button.x() && existing.y() == button.y() && existing.z() == button.z())) {
-            simonOrder.add(button);
-        }
+        simon = DungeonF7Policy.observeSimon(simon, lit);
     }
 
     private static void autoSimonNext(Minecraft client) {
+        EmberDungeonPolicy.IntVec next = simon.nextButton();
         if (simonCooldown > 0
                 || client.gameMode == null
                 || client.player == null
-                || simonRemaining.isEmpty()
+                || next == null
                 || !(client.hitResult instanceof BlockHitResult hit)
                 || hit.getType() != HitResult.Type.BLOCK) {
             return;
         }
-        EmberDungeonPolicy.IntVec next = simonRemaining.getFirst();
         BlockPos pos = hit.getBlockPos();
         if (pos.getX() != next.x() || pos.getY() != next.y() || pos.getZ() != next.z()) {
             return;
         }
         client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
-        simonRemaining.removeFirst();
+        simon = DungeonF7Policy.consumeNext(simon);
         simonCooldown = 3;
     }
 
@@ -3550,7 +3540,7 @@ public final class DungeonRuntime {
                 arrowClicks)) {
             return true;
         }
-        EmberDungeonPolicy.IntVec next = simonRemaining.isEmpty() ? null : simonRemaining.getFirst();
+        EmberDungeonPolicy.IntVec next = simon.nextButton();
         if (DungeonF7Policy.blockWrongSimon(
                 pos.getX(), pos.getY(), pos.getZ(),
                 extras.dungeonF7Simon && extras.dungeonF7SimonBlockWrong,
@@ -3593,6 +3583,9 @@ public final class DungeonRuntime {
         }
         if (DungeonF7Policy.isSimonButton(pos.getX(), pos.getY(), pos.getZ())
                 || DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
+            if (DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
+                simon = DungeonF7Policy.SimonState.idle();
+            }
             playSimonSound(Minecraft.getInstance());
         }
         DungeonRoomDataPolicy.matchingSecret(
@@ -4522,6 +4515,9 @@ public final class DungeonRuntime {
         if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
             lastTermTitle = "";
             terminalOpenedAt = 0L;
+            termQueue.clear();
+            melodySkipQueue.clear();
+            termQueueUpdatedAt = 0L;
             clearPredictedClicks();
             return;
         }
@@ -4529,6 +4525,9 @@ public final class DungeonRuntime {
             lastTermTitle = title;
             terminalOpenedAt = System.currentTimeMillis();
             terminalHadClicks = false;
+            termQueue.clear();
+            melodySkipQueue.clear();
+            termQueueUpdatedAt = 0L;
             clearPredictedClicks();
         }
     }
@@ -4547,14 +4546,79 @@ public final class DungeonRuntime {
         return -1;
     }
 
+    private static void noteDungeonRunStart(String raw) {
+        if (dungeonRunStarted || raw == null) {
+            return;
+        }
+        DungeonLeftoverPolicy.SplitEvent event = DungeonLeftoverPolicy.splitEvent(raw);
+        if (event == DungeonLeftoverPolicy.SplitEvent.START
+                || event == DungeonLeftoverPolicy.SplitEvent.BLOOD_DOOR
+                || event == DungeonLeftoverPolicy.SplitEvent.BLOOD_CLEAR
+                || event == DungeonLeftoverPolicy.SplitEvent.BOSS_ENTER
+                || DungeonBladePolicy.dungeonEnterChat(raw)) {
+            dungeonRunStarted = true;
+        }
+    }
+
+    private static void noteDungeonRunProgress(Minecraft client) {
+        if (dungeonRunStarted || client == null) {
+            return;
+        }
+        if (sidebar.secretsFound() > 0) {
+            dungeonRunStarted = true;
+            return;
+        }
+        for (String line : CommissionDisplayRuntime.tabLines(client)) {
+            if (DungeonBladePolicy.timeElapsedPositive(line)) {
+                dungeonRunStarted = true;
+                return;
+            }
+        }
+    }
+
+    private static void maybeFinishExtraStats(Minecraft client) {
+        QolSkyblockExtras extras = extras();
+        if (!extras.dungeonHudEnabled || !extras.dungeonHudExtraStats) {
+            return;
+        }
+        if (extraStats.collecting() && extraStats.ready()) {
+            extraStatsQuietTicks++;
+            if (extraStatsQuietTicks >= DungeonExtraStatsPolicy.DUMP_QUIET_TICKS) {
+                extraStats = DungeonExtraStatsPolicy.closeDump(extraStats);
+            }
+        }
+        maybePrintExtraStats(client);
+    }
+
+    private static void maybePrintExtraStats(Minecraft client) {
+        if (!DungeonExtraStatsPolicy.shouldPrint(extraStats)) {
+            return;
+        }
+        List<String> summary = extraStats.compactLines();
+        extraStats = DungeonExtraStatsPolicy.markPrinted(extraStats);
+        if (client == null || client.player == null || summary.isEmpty()) {
+            return;
+        }
+        for (String line : summary) {
+            client.player.sendSystemMessage(Component.literal("§7" + line));
+        }
+    }
+
+    private static DungeonMapPolicy.Board emptyMapBoard() {
+        return new DungeonMapPolicy.Board(
+                DungeonMapPolicy.Calibration.none(), List.of(), List.of(), List.of(), "");
+    }
+
     private static void armRequeueFromScreen(Minecraft client, QolSkyblockExtras extras) {
-        if (!extras.dungeonRequeueEnabled || extraStatsSeen || client == null) {
+        if (client == null || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
-        if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            return;
-        }
-        if (!DungeonPolicy.isDungeonEnd(titleOf(screen))) {
+        if (!DungeonPolicy.shouldArmRequeue(
+                extras.dungeonRequeueEnabled,
+                dungeonRunStarted,
+                extraStatsSeen,
+                dungeonWorldTicks,
+                titleOf(screen))) {
             return;
         }
         extraStatsSeen = true;
