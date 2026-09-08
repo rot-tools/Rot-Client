@@ -36,7 +36,7 @@ final class RotClientLoadout {
      * current container slot because Wardrobe pages reuse container slots 36-44.
      */
     int wardrobeSlotNumber;
-
+    int equipmentSetNumber;
     /**
      * Required for Gson.
      */
@@ -85,6 +85,9 @@ final class RotClientLoadout {
         duplicate.wardrobeSlotNumber =
                 wardrobeSlotNumber;
 
+        duplicate.equipmentSetNumber =
+                equipmentSetNumber;
+
         duplicate.petUuid =
                 petUuid == null
                         ? ""
@@ -109,6 +112,10 @@ final class RotClientLoadout {
 
         if (wardrobeSlotNumber < 0) {
             wardrobeSlotNumber = 0;
+        }
+
+        if (equipmentSetNumber < 0) {
+            equipmentSetNumber = 0;
         }
 
         name = normalizeName(name);

@@ -42,13 +42,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Observed stacks are stored locally like Storage Overlay page contents so
  * they still appear after a restart.
  */
-public final class InventoryChromeRuntime {
+public final class  InventoryChromeRuntime {
     private static final ItemStack[] EQUIPMENT = new ItemStack[] {
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY};
     private static ItemStack equippedPet = ItemStack.EMPTY;
     private static PetHudPolicy.Snapshot petHud = null;
     private static boolean petKnownEmpty;
     private static boolean petCachedFromGui;
+    private static final long PET_GUI_AUTHORITY_MS =
+            2_000L;
+
+    private static long petGuiAuthoritativeUntilMs;
     private static int tickCounter;
     private static boolean draggingPet;
     private static boolean consumeNextRelease;
@@ -101,6 +105,7 @@ public final class InventoryChromeRuntime {
         petGrabY = 0;
         colorEditorOpen = false;
         draggingColorChannel = -1;
+        petGuiAuthoritativeUntilMs = 0L;
     }
 
     public static void flushForShutdown() {
@@ -123,6 +128,46 @@ public final class InventoryChromeRuntime {
 
     public static ItemStack equippedPet() {
         return equippedPet;
+    }
+
+    static void noteEquippedPet(
+            ItemStack pet) {
+
+        if (pet == null
+                || pet.isEmpty()) {
+
+            return;
+        }
+
+        equippedPet =
+                pet.copy();
+
+        petHud =
+                PetHudPolicy
+                        .parse(
+                                pet.getHoverName()
+                                        .getString(),
+                                loreLines(pet))
+                        .orElse(
+                                new PetHudPolicy.Snapshot(
+                                        -1,
+                                        MenuKeybindPolicy
+                                                .stripGuiText(
+                                                        pet.getHoverName()
+                                                                .getString()),
+                                        ""));
+
+        petKnownEmpty = false;
+        petCachedFromGui = true;
+        /*
+         * Tab-list pet information can remain stale briefly after switching.
+         * During this period the Pets-menu result is the authoritative source.
+         */
+        petGuiAuthoritativeUntilMs =
+                System.currentTimeMillis()
+                        + PET_GUI_AUTHORITY_MS;
+
+        persistObserved();
     }
 
     public static PetHudPolicy.Snapshot petHudSnapshot() {
@@ -754,8 +799,20 @@ public final class InventoryChromeRuntime {
         }
     }
 
-    private static void applyTabPet(Optional<PetHudPolicy.Snapshot> tabPet) {
+    private static void applyTabPet(
+            Optional<PetHudPolicy.Snapshot> tabPet) {
+
         if (tabPet.isEmpty()) {
+            return;
+        }
+
+        /*
+         * A freshly-confirmed Pets-menu selection is more reliable than the
+         * tab list, which can still report the previous pet for a short time.
+         */
+        if (System.currentTimeMillis()
+                < petGuiAuthoritativeUntilMs) {
+
             return;
         }
         PetHudPolicy.Snapshot snapshot = tabPet.get();
