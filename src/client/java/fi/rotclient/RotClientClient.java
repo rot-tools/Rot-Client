@@ -382,6 +382,8 @@ public final class RotClientClient implements ClientModInitializer {
         // ephemeral diagnostics engine so OTHER/chest collection continues without
         // a manual Session Analytics Start.
         ensureCurrentSessionCollection(System.currentTimeMillis());
+        MarketWatchRuntime.start();
+
         new BazaarPriceService().start(prices -> Minecraft.getInstance().execute(() ->
                 ClientBoundaryGuard.run("BAZAAR_PRICE_APPLY", () -> {
                     long observedAtMillis = System.currentTimeMillis();

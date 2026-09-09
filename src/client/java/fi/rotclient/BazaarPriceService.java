@@ -184,10 +184,16 @@ final class BazaarPriceService {
                     MarketWatchBazaarParser.parse(root);
 
             if (!marketWatchSnapshot.products().isEmpty()) {
+                long marketWatchObservedAtMillis =
+                        System.currentTimeMillis();
+
                 MarketWatchDataService.publishBazaar(
                         marketWatchSnapshot,
-                        System.currentTimeMillis());
+                        marketWatchObservedAtMillis);
 
+                MarketWatchRuntime.publishBazaarSnapshot(
+                        marketWatchSnapshot,
+                        marketWatchObservedAtMillis);
             }
 
             if (!marketPrices.byMaterial().isEmpty()

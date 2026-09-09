@@ -113,9 +113,16 @@ final class MarketWatchAuctionHouseService {
             return false;
         }
 
+        long observedAtMillis =
+                System.currentTimeMillis();
+
         MarketWatchDataService.publishAuctions(
                 snapshot,
-                System.currentTimeMillis());
+                observedAtMillis);
+
+        MarketWatchRuntime.publishAuctionSnapshot(
+                snapshot,
+                observedAtMillis);
 
 
         return true;
