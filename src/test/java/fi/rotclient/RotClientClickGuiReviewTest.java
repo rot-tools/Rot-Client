@@ -11,10 +11,31 @@ import org.junit.jupiter.api.Test;
 
 final class RotClientClickGuiReviewTest {
     @Test
-    void clickGuiOpenResetsToDefaultOverview() throws IOException {
+    void clickGuiOpenRestoresLastWorkspaceView() throws IOException {
         String client = read("src/client/java/fi/rotclient/RotClientClient.java");
-        assertTrue(client.contains("WORKSPACE.resetToDefaultOpenState()"));
+        String screen = read("src/client/java/fi/rotclient/MiningUiScreen.java");
+        String dashboard = read("src/client/java/fi/rotclient/QolUtilityDashboard.java");
+        String openClick = section(client, "static void openClickGui()", "static void closeClickGuiIfOpen");
+        String openMining = section(
+                client,
+                "private static int openMiningUi(",
+                "static void openClientUiNavigating");
+        String openNavigating = section(
+                client,
+                "static void openClientUiNavigating",
+                "static void openHudEditor(Screen parent)");
         assertTrue(client.contains("void openClickGui()"));
+        assertFalse(openClick.contains("resetToDefaultOpenState"));
+        assertFalse(openMining.contains("resetToDefaultOpenState"));
+        assertFalse(openNavigating.contains("resetToDefaultOpenState"));
+        assertTrue(openNavigating.contains("QolWorkspaceView.shouldNavigateTo"));
+        assertTrue(screen.contains("QolWorkspaceView.shouldNavigateTo(initialModule)"));
+        assertTrue(screen.contains("qolDashboard.restoreFromWorkspace"));
+        assertTrue(dashboard.contains("QolWorkspaceView.fromTab"));
+        assertTrue(dashboard.contains("view.hudDrawer()"));
+        assertTrue(dashboard.contains("openHudSettings(view.moduleId())"));
+        assertTrue(screen.contains("frame.hudDrawer()"));
+        assertTrue(screen.contains("openHudSettings(frame.focusId())"));
     }
 
     @Test

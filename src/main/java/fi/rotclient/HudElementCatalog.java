@@ -46,8 +46,9 @@ public final class HudElementCatalog {
         if (id.contains("wardrobe")) {
             return "wardrobe";
         }
-        if (id.contains("auto_clicker")) {
-            return "auto_clicker";
+        String flavored = QolFlavorSupport.extension().hudFocusId(id);
+        if (!flavored.isEmpty()) {
+            return flavored;
         }
         if (id.contains("fishing")) {
             return "fishing";
@@ -187,8 +188,6 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.player_display.speed_hud", "Speed HUD"),
                     new InspectorToggle("qol.player_display.show_icons", "Icons"),
                     new InspectorToggle("qol.player_display.show_labels", "Name text"));
-            case "auto_clicker" -> List.of(
-                    new InspectorToggle("qol.auto_clicker.cps_hud", "CPS HUD"));
             case "fishing" -> List.of(
                     new InspectorToggle("qol.fishing_helper.hook_timer_hud", "Hook timer"),
                     new InspectorToggle("qol.fishing_creatures.hud", "Creature HUD"),
@@ -240,7 +239,7 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.custom_scoreboard.hide_vanilla", "Hide vanilla"),
                     new InspectorToggle("qol.custom_scoreboard.bg_enabled", "Background"),
                     new InspectorToggle("qol.custom_scoreboard.outline", "Outline"));
-            default -> List.of();
+            default -> QolFlavorSupport.extension().inspectorToggles(id);
         };
     }
 

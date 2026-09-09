@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,28 +39,29 @@ public final class HudLayerCatalog {
     }
 
     public static List<Layer> rotOverlays() {
-        return List.of(
-                rotModule("qol.performance_hud", "Performance HUD"),
-                rotSetting("qol.player_display.health_hud", "Health HUD"),
-                rotSetting("qol.player_display.mana_hud", "Mana HUD"),
-                rotSetting("qol.player_display.overflow_mana_hud", "Overflow HUD"),
-                rotSetting("qol.player_display.defense_hud", "Defense HUD"),
-                rotSetting("qol.player_display.vitality_hud", "Vitality HUD"),
-                rotSetting("qol.player_display.ehp_hud", "EHP HUD"),
-                rotSetting("qol.player_display.speed_hud", "Speed HUD"),
-                rotModule("qol.pet_hud", "Pet HUD"),
-                rotModule("qol.commission_display", "Commission Display"),
-                rotSetting("qol.auto_clicker.cps_hud", "Auto Clicker CPS"),
-                rotSetting("qol.fishing_helper.hook_timer_hud", "Fishing HUD"),
-                rotModule("qol.dungeon_hud", "Dungeon HUD"),
-                rotModule("qol.slayer_display", "Slayer Display"),
-                rotModule("qol.slayer_progress", "Slayer Progress"),
-                rotSetting("qol.slayer_drops.rng_hud", "RNG Meter"),
-                rotSetting("qol.slayer_drops.profit_hud", "Slayer Item Profit"),
-                rotModule("qol.slayer_stats", "Slayer Stats"),
-                rotSetting("qol.mining_helpers.ability_hud", "Mining HUD"),
-                rotModule("qol.diana_burrows", "Diana HUD"),
-                rotSetting("qol.foraging_trees.progress_hud", "Foraging HUD"));
+        List<Layer> layers = new ArrayList<>();
+        layers.add(rotModule("qol.performance_hud", "Performance HUD"));
+        layers.add(rotSetting("qol.player_display.health_hud", "Health HUD"));
+        layers.add(rotSetting("qol.player_display.mana_hud", "Mana HUD"));
+        layers.add(rotSetting("qol.player_display.overflow_mana_hud", "Overflow HUD"));
+        layers.add(rotSetting("qol.player_display.defense_hud", "Defense HUD"));
+        layers.add(rotSetting("qol.player_display.vitality_hud", "Vitality HUD"));
+        layers.add(rotSetting("qol.player_display.ehp_hud", "EHP HUD"));
+        layers.add(rotSetting("qol.player_display.speed_hud", "Speed HUD"));
+        layers.add(rotModule("qol.pet_hud", "Pet HUD"));
+        layers.add(rotModule("qol.commission_display", "Commission Display"));
+        layers.addAll(QolFlavorSupport.extension().extraHudLayers());
+        layers.add(rotSetting("qol.fishing_helper.hook_timer_hud", "Fishing HUD"));
+        layers.add(rotModule("qol.dungeon_hud", "Dungeon HUD"));
+        layers.add(rotModule("qol.slayer_display", "Slayer Display"));
+        layers.add(rotModule("qol.slayer_progress", "Slayer Progress"));
+        layers.add(rotSetting("qol.slayer_drops.rng_hud", "RNG Meter"));
+        layers.add(rotSetting("qol.slayer_drops.profit_hud", "Slayer Item Profit"));
+        layers.add(rotModule("qol.slayer_stats", "Slayer Stats"));
+        layers.add(rotSetting("qol.mining_helpers.ability_hud", "Mining HUD"));
+        layers.add(rotModule("qol.diana_burrows", "Diana HUD"));
+        layers.add(rotSetting("qol.foraging_trees.progress_hud", "Foraging HUD"));
+        return List.copyOf(layers);
     }
 
     public static String settingId(String layerId) {

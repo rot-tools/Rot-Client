@@ -1,6 +1,5 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.AutoExperimentsRuntime;
 import fi.rotclient.ClientBoundaryGuard;
 import fi.rotclient.CustomTooltipRuntime;
 import fi.rotclient.DungeonLeapOverlayRuntime;
@@ -11,11 +10,11 @@ import fi.rotclient.DungeonTerminalClickRuntime;
 import fi.rotclient.ExperimentSolverRuntime;
 import fi.rotclient.InventoryChromeRuntime;
 import fi.rotclient.InventoryButtonsRuntime;
-import fi.rotclient.InventoryWalkRuntime;
 import fi.rotclient.ItemRarityRuntime;
 import fi.rotclient.IotaKuudraRuntime;
 import fi.rotclient.MenuKeybindRuntime;
 import fi.rotclient.MissingEnchantsRuntime;
+import fi.rotclient.QolClientFlavorSupport;
 import fi.rotclient.QolVisualRuntime;
 import fi.rotclient.RotClientUiDraw;
 import fi.rotclient.SkyBlockMenuHighlightRuntime;
@@ -271,7 +270,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             MissingEnchantsRuntime.noteCtrlClick(
                     hoveredSlot.getItem(), event.hasControlDown(), event.button());
         }
-        if (AutoExperimentsRuntime.shouldBlockMouse()) {
+        if (QolClientFlavorSupport.hooks().autoExperimentsBlockMouse()) {
             cir.setReturnValue(true);
             return;
         }
@@ -378,7 +377,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
     private void rotclient$releaseInventoryPet(
             MouseButtonEvent event,
             CallbackInfoReturnable<Boolean> cir) {
-        if (AutoExperimentsRuntime.shouldBlockMouse()) {
+        if (QolClientFlavorSupport.hooks().autoExperimentsBlockMouse()) {
             cir.setReturnValue(true);
             return;
         }
@@ -451,7 +450,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ci.cancel();
             return;
         }
-        if (InventoryWalkRuntime.shouldBlockContainerClick()) {
+        if (QolClientFlavorSupport.hooks().inventoryWalkBlocksClick()) {
             ci.cancel();
             return;
         }
@@ -474,7 +473,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                                 ? ""
                                 : screen.getTitle().getString())
                         != DungeonPolicy.Terminal.NONE) {
-            if (DungeonRuntime.shouldCancelTerminalSlot(screen, slot.index)) {
+            if (QolClientFlavorSupport.hooks().shouldCancelTerminalSlot(screen, slot.index)) {
                 ci.cancel();
                 return;
             }

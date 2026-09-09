@@ -204,7 +204,7 @@ public final class RotClientClient implements ClientModInitializer {
         /*
          * Keep camera changes visually immediate.
          */
-        enforceCameraPerspective();
+        QolClientFlavorSupport.hooks().enforceCameraPerspective();
     }
 
     public static NoCursorResetController noCursorReset() {
@@ -452,9 +452,7 @@ public final class RotClientClient implements ClientModInitializer {
         });
         SkyBlockMarketQuoteService.start();
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            ClientBoundaryGuard.run(
-                    "AUTO_CLICKER",
-                    () -> AutoClickerRuntime.tick(client));
+            QolClientFlavorSupport.hooks().tickStart(client);
             ClientBoundaryGuard.run(
                     "IOTA",
                     () -> IotaRuntime.tick(client));
@@ -462,23 +460,8 @@ public final class RotClientClient implements ClientModInitializer {
                     "STALL_MARKET",
                     () -> StallMarketRuntime.tick(client));
             ClientBoundaryGuard.run(
-                    "AUTO_EXPERIMENTS",
-                    () -> AutoExperimentsRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "AUTO_HARP",
-                    () -> AutoHarpRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "AUTO_GFS",
-                    () -> AutoGfsRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "AUTO_SELL",
-                    () -> AutoSellRuntime.tick(client));
-            ClientBoundaryGuard.run(
                     "QOL_MODULE_KEYBINDS",
                     () -> QolModuleKeybindRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "ETHERWARP_HELPER",
-                    () -> EtherwarpHelperRuntime.tick(client));
         });
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             ClientBoundaryGuard.run(
@@ -503,21 +486,13 @@ public final class RotClientClient implements ClientModInitializer {
             ClientBoundaryGuard.run(
                     "MOD_COMPATIBILITY",
                     () -> CompatibilityWarningRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "CAMERA_ENFORCE",
-                    RotClientClient::enforceCameraPerspective);
-            ClientBoundaryGuard.run(
-                    "FREECAM",
-                    () -> FreecamRuntime.tick(client));
+            QolClientFlavorSupport.hooks().tickEnd(client);
             ClientBoundaryGuard.run(
                     "CLICK_GUI_KEY",
                     () -> tickClickGuiKey(client));
             ClientBoundaryGuard.run(
                     "NO_CURSOR_RESET",
                     () -> restoreStorageCursor(client));
-            ClientBoundaryGuard.run(
-                    "INVENTORY_WALK",
-                    () -> InventoryWalkRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "INVENTORY_CHROME",
                     () -> InventoryChromeRuntime.tick(client));
@@ -543,7 +518,6 @@ public final class RotClientClient implements ClientModInitializer {
                     "WARDROBE_KEYBINDS",
                     () -> {
                         MenuKeybindRuntime.tick(client);
-                        WardrobeAutoEquipRuntime.tick(client);
                         RotClientPetAutoEquipRuntime.tick(client);
                         RotClientEquipmentAutoEquipRuntime.tick(client);
                         LOADOUT_ACTIVATION.tick();
@@ -551,9 +525,6 @@ public final class RotClientClient implements ClientModInitializer {
             ClientBoundaryGuard.run(
                     "WORLD_SCANNER",
                     () -> WorldScannerRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "AUTO_CONVERSATION",
-                    () -> AutoConversationRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "FISHING_HELPER",
                     () -> FishingHelperRuntime.tick(client));
@@ -579,14 +550,8 @@ public final class RotClientClient implements ClientModInitializer {
                     "SLAYER_RUNTIME",
                     () -> SlayerRuntime.tick(client));
             ClientBoundaryGuard.run(
-                    "FARM_KEYS",
-                    () -> FarmKeysRuntime.tick(client));
-            ClientBoundaryGuard.run(
                     "DUNGEON_RUNTIME",
                     () -> DungeonRuntime.tick(client));
-            ClientBoundaryGuard.run(
-                    "AUTO_DOJO",
-                    () -> AutoDojoRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "TRAJECTORIES",
                     () -> TrajectoryRuntime.tick(client));
@@ -743,7 +708,8 @@ public final class RotClientClient implements ClientModInitializer {
             }
             showPendingCurrentSessionPersistenceWarning(client);
             showPendingStartNewRecoveryNotice(client);
-            enforceCameraPerspective();
+            QolClientFlavorSupport.hooks().enforceCameraPerspective();
+            QolClientFlavorSupport.hooks().onWorldChanged();
             WaypointRuntime.clear();
             ChatCommandsRuntime.clear();
             IotaRuntime.clear();
@@ -777,7 +743,7 @@ public final class RotClientClient implements ClientModInitializer {
             SlotBindsRuntime.clearPending();
             InventoryChromeRuntime.flushForShutdown();
             InventoryChromeRuntime.clear();
-            enforceCameraPerspective();
+            QolClientFlavorSupport.hooks().enforceCameraPerspective();
         });
         ClientChunkEvents.CHUNK_LOAD.register((world, chunk) ->
                 ClientBoundaryGuard.run(
@@ -835,7 +801,7 @@ public final class RotClientClient implements ClientModInitializer {
                                 WaypointRuntime.onGameMessage(message);
                                 RingKeybindsRuntime.rememberChat(message);
                                 EscrowFixRuntime.onChat(message);
-                                AutoGfsRuntime.onChat(message);
+                                QolClientFlavorSupport.hooks().onChat(message);
                                 FishingSuiteRuntime.onChat(message);
                                 MiningLeftoverRuntime.onChat(message, overlay);
                                 DianaRuntime.onChat(message);
@@ -887,14 +853,10 @@ public final class RotClientClient implements ClientModInitializer {
                     width,
                     height,
                     System.currentTimeMillis()));
-            WardrobeAutoEquipRuntime.onScreenOpened(screen);
+            QolClientFlavorSupport.hooks().onScreenOpened(screen);
         });
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) ->
                 StallMarketRuntime.onScreenOpened(screen));
-        ScreenEvents.AFTER_INIT.register((client, screen, width, height) ->
-                AutoExperimentsRuntime.onScreenOpened(screen));
-        ScreenEvents.AFTER_INIT.register((client, screen, width, height) ->
-                AutoHarpRuntime.onScreenOpened(screen));
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) ->
                 registerTooltipAndStorageScroll(screen));
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
@@ -1093,28 +1055,37 @@ public final class RotClientClient implements ClientModInitializer {
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                source -> autoClickerAdd(source, true))))
+                                                source -> QolClientFlavorSupport.hooks().autoClickerAdd(
+                                                        true,
+                                                        text -> source.sendFeedback(Component.literal(text))))))
                                 .then(literal("right")
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                source -> autoClickerAdd(source, false)))))
+                                                source -> QolClientFlavorSupport.hooks().autoClickerAdd(
+                                                        false,
+                                                        text -> source.sendFeedback(Component.literal(text)))))))
                         .then(literal("remove")
                                 .then(literal("left")
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                source -> autoClickerRemove(source, true))))
+                                                source -> QolClientFlavorSupport.hooks().autoClickerRemove(
+                                                        true,
+                                                        text -> source.sendFeedback(Component.literal(text))))))
                                 .then(literal("right")
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                source -> autoClickerRemove(source, false)))))
+                                                source -> QolClientFlavorSupport.hooks().autoClickerRemove(
+                                                        false,
+                                                        text -> source.sendFeedback(Component.literal(text)))))))
                         .then(literal("list")
                                 .executes(context -> runCommand(
                                         context.getSource(),
                                         legacyAlias,
-                                        RotClientClient::autoClickerList))))
+                                        source -> QolClientFlavorSupport.hooks().autoClickerList(
+                                                text -> source.sendFeedback(Component.literal(text)))))))
                 .then(literal("bazaarsearch")
                         .executes(context -> runCommand(
                                 context.getSource(),
@@ -2131,7 +2102,7 @@ public final class RotClientClient implements ClientModInitializer {
             TrackingRuntimeTrace.callbackAlive("SystemChat");
             GEMSTONE_DIAGNOSTIC_OBSERVER.inspectMessage(message);
 
-            AutoConversationRuntime.onChat(message);
+            QolClientFlavorSupport.hooks().onChat(message);
 
             if (CONFIG.enabled && isMaterialSelection()) {
                 for (TrackedMaterial material : selectedMaterials()) {
@@ -2613,7 +2584,6 @@ public final class RotClientClient implements ClientModInitializer {
     private static int openMiningUi(FabricClientCommandSource source) {
         Minecraft.getInstance().schedule(() -> {
             WORKSPACE.flushIfDirty();
-            WORKSPACE.resetToDefaultOpenState();
             Minecraft.getInstance().gui.setScreen(
                     new MiningUiScreen(CONFIG, HUD, null, null, true));
         });
@@ -2622,8 +2592,7 @@ public final class RotClientClient implements ClientModInitializer {
 
     static void openClientUiNavigating(DashboardModule module, Screen parent) {
         WORKSPACE.flushIfDirty();
-        WORKSPACE.resetToDefaultOpenState();
-        if (module != null && module != DashboardModule.NONE) {
+        if (QolWorkspaceView.shouldNavigateTo(module)) {
             WORKSPACE.navigateActive(
                     RotClientWorkspaceRoute.fromDashboardModule(module));
         }
@@ -2643,7 +2612,6 @@ public final class RotClientClient implements ClientModInitializer {
     /** Opens the existing Rot Client home / mining UI (Click GUI target). */
     static void openClickGui() {
         WORKSPACE.flushIfDirty();
-        WORKSPACE.resetToDefaultOpenState();
         Minecraft client = Minecraft.getInstance();
         if (client == null) {
             return;
@@ -3736,92 +3704,6 @@ private static int toggle(FabricClientCommandSource source) {
         return qolConfig().autoClickerEnabled;
     }
 
-    private static int autoClickerAdd(FabricClientCommandSource source, boolean left) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null) {
-            source.sendFeedback(Component.literal("Auto Clicker: no local player."));
-            return 0;
-        }
-        QolUtilityConfig qol = qolConfig();
-        String identity = AutoClickerItemIdentity.identify(
-                client.player.getMainHandItem());
-        if (identity.isBlank()) {
-            source.sendFeedback(Component.literal(
-                    "Auto Clicker: hold an item to whitelist first."));
-            return 0;
-        }
-        List<String> list = left
-                ? AutoClickerWhitelist.ensureMutable(qol.autoClickerLeftWhitelist)
-                : AutoClickerWhitelist.ensureMutable(qol.autoClickerRightWhitelist);
-        if (left) {
-            qol.autoClickerLeftWhitelist = list;
-        } else {
-            qol.autoClickerRightWhitelist = list;
-        }
-        if (!AutoClickerWhitelist.add(list, identity)) {
-            source.sendFeedback(Component.literal(
-                    "Auto Clicker: already whitelisted on "
-                            + (left ? "left" : "right")
-                            + ": "
-                            + identity));
-            return 1;
-        }
-        TrackerStore.save(CONFIG);
-        source.sendFeedback(Component.literal(
-                "Auto Clicker: added to "
-                        + (left ? "left" : "right")
-                        + " whitelist: "
-                        + identity));
-        return 1;
-    }
-
-    private static int autoClickerRemove(FabricClientCommandSource source, boolean left) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null) {
-            source.sendFeedback(Component.literal("Auto Clicker: no local player."));
-            return 0;
-        }
-        QolUtilityConfig qol = qolConfig();
-        String identity = AutoClickerItemIdentity.identify(
-                client.player.getMainHandItem());
-        List<String> list = left
-                ? qol.autoClickerLeftWhitelist
-                : qol.autoClickerRightWhitelist;
-        if (!AutoClickerWhitelist.remove(list, identity)) {
-            source.sendFeedback(Component.literal(
-                    "Auto Clicker: not on "
-                            + (left ? "left" : "right")
-                            + " whitelist: "
-                            + identity));
-            return 0;
-        }
-        TrackerStore.save(CONFIG);
-        source.sendFeedback(Component.literal(
-                "Auto Clicker: removed from "
-                        + (left ? "left" : "right")
-                        + " whitelist: "
-                        + identity));
-        return 1;
-    }
-
-    private static int autoClickerList(FabricClientCommandSource source) {
-        QolUtilityConfig qol = qolConfig();
-        source.sendFeedback(Component.literal(
-                "Auto Clicker left: "
-                        + formatAutoClickerWhitelist(qol.autoClickerLeftWhitelist)));
-        source.sendFeedback(Component.literal(
-                "Auto Clicker right: "
-                        + formatAutoClickerWhitelist(qol.autoClickerRightWhitelist)));
-        return 1;
-    }
-
-    private static String formatAutoClickerWhitelist(List<String> entries) {
-        if (entries == null || entries.isEmpty()) {
-            return "(empty)";
-        }
-        return String.join(", ", entries);
-    }
-
     public static boolean isCameraEnabled() {
         return CONFIG.cameraEnabled;
     }
@@ -3830,7 +3712,7 @@ private static int toggle(FabricClientCommandSource source) {
         if (CONFIG.cameraEnabled == enabled) return;
         CONFIG.cameraEnabled = enabled;
         TrackerStore.save(CONFIG);
-        enforceCameraPerspective();
+        QolClientFlavorSupport.hooks().enforceCameraPerspective();
     }
 
     /**
@@ -3847,20 +3729,6 @@ private static int toggle(FabricClientCommandSource source) {
             return false;
         }
         return HypixelServerPolicy.isHypixelAddress(server.ip);
-    }
-
-    /** Removes only front-facing third person (tick / enable / join). */
-    static void enforceCameraPerspective() {
-        if (!CONFIG.cameraEnabled) {
-            return;
-        }
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.options == null) {
-            return;
-        }
-        if (client.options.getCameraType() == CameraType.THIRD_PERSON_FRONT) {
-            client.options.setCameraType(CameraType.FIRST_PERSON);
-        }
     }
 
     private static int setFortune(

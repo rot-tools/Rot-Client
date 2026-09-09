@@ -85,7 +85,7 @@ public final class FishingCreaturesPolicy {
         if (text == null) {
             return "";
         }
-        return AutoConversationPolicy.stripFormatting(text).replace('\u00A0', ' ').trim();
+        return ChatTextPolicy.stripFormatting(text).replace('\u00A0', ' ').trim();
     }
 
     public static String normalizeSpawn(String stripped) {

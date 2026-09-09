@@ -37,43 +37,57 @@ jobs:
           cache-provider: basic
 
       - name: Test
-        run: ./gradlew test --rerun-tasks --console=plain
+        run: ./gradlew test testPlus --rerun-tasks --console=plain
 
-      - name: Compile client
-        run: ./gradlew compileClientJava --console=plain
+      - name: Compile client editions
+        run: ./gradlew compileClientJava compilePlusJava compilePlusClientJava --console=plain
 
       - name: Build release candidate
         run: ./gradlew clean build --console=plain
 
-      - name: Locate exactly one playable JAR
+      - name: Locate playable JARs
         id: playable_jar
         shell: bash
         run: |
           shopt -s nullglob
 
-          candidates=(build/libs/*.jar)
-          playable=()
+          filter_playable() {
+            local -n src=$1
+            local -n out=$2
+            out=()
+            for jar in "${src[@]}"; do
+              case "$jar" in
+                *-sources.jar|*-javadoc.jar|*-dev.jar|*-dev-unsigned.jar)
+                  ;;
+                *)
+                  out+=("$jar")
+                  ;;
+              esac
+            done
+          }
 
-          for jar in "${candidates[@]}"; do
-            case "$jar" in
-              *-sources.jar|*-javadoc.jar|*-dev.jar)
-                ;;
-              *)
-                playable+=("$jar")
-                ;;
-            esac
-          done
+          legit_src=(build/libs/RotClient-*.jar)
+          plus_src=(build/libs/RotClientPlus-*.jar)
+          filter_playable legit_src legit_playable
+          filter_playable plus_src plus_playable
 
-          if (( ${#playable[@]} != 1 )); then
-            echo "Expected exactly one playable JAR, found ${#playable[@]}."
-            printf 'Candidate: %s\n' "${playable[@]}"
+          if (( ${#legit_playable[@]} != 1 || ${#plus_playable[@]} != 1 )); then
+            echo "Expected exactly one RotClient and one RotClientPlus playable JAR."
+            printf 'RotClient candidates: %s\n' "${legit_playable[@]}"
+            printf 'RotClientPlus candidates: %s\n' "${plus_playable[@]}"
+            ls -la build/libs || true
             exit 1
           fi
 
           mkdir -p build/release
-          sha256sum "${playable[0]}" | sed 's#  build/libs/#  #' > build/release/SHA256SUMS.txt
-          echo "path=${playable[0]}" >> "$GITHUB_OUTPUT"
-          echo "filename=$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
+          {
+            sha256sum "${legit_playable[0]}" | sed 's#  build/libs/#  #'
+            sha256sum "${plus_playable[0]}" | sed 's#  build/libs/#  #'
+          } > build/release/SHA256SUMS.txt
+          echo "legit_path=${legit_playable[0]}" >> "$GITHUB_OUTPUT"
+          echo "plus_path=${plus_playable[0]}" >> "$GITHUB_OUTPUT"
+          echo "legit=$(basename "${legit_playable[0]}")" >> "$GITHUB_OUTPUT"
+          echo "plus=$(basename "${plus_playable[0]}")" >> "$GITHUB_OUTPUT"
 
       - name: Reject an existing playable JAR asset
         shell: bash
@@ -86,7 +100,7 @@ jobs:
             case "$asset" in
               *.jar)
                 case "$asset" in
-                  *-sources.jar|*-javadoc.jar|*-dev.jar)
+                  *-sources.jar|*-javadoc.jar|*-dev.jar|*-dev-unsigned.jar)
                     ;;
                   *)
                     existing_playable=$((existing_playable + 1))
@@ -101,26 +115,30 @@ jobs:
             exit 1
           fi
 
-      - name: Attach playable JAR and checksum
+      - name: Attach playable JARs and checksum
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          PLAYABLE_JAR: ${{ steps.playable_jar.outputs.path }}
+          LEGIT_JAR: ${{ steps.playable_jar.outputs.legit_path }}
+          PLUS_JAR: ${{ steps.playable_jar.outputs.plus_path }}
         run: |
-          gh release upload "$RELEASE_TAG" "$PLAYABLE_JAR" build/release/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
+          gh release upload "$RELEASE_TAG" "$LEGIT_JAR" "$PLUS_JAR" build/release/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
 
       - name: Publish release summary
         shell: bash
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          PLAYABLE_NAME: ${{ steps.playable_jar.outputs.filename }}
+          LEGIT_NAME: ${{ steps.playable_jar.outputs.legit }}
+          PLUS_NAME: ${{ steps.playable_jar.outputs.plus }}
         run: |
           {
-            echo "## Rot Client release asset"
+            echo "## Rot Client release assets"
             echo
             echo "- Tag: \`$RELEASE_TAG\`"
-            echo "- Playable JAR: \`$PLAYABLE_NAME\`"
+            echo "- Rot Client: \`$LEGIT_NAME\`"
+            echo "- Rot Client+: \`$PLUS_NAME\`"
             echo "- Checksum file: \`SHA256SUMS.txt\`"
             echo "- Sources, Javadoc, and development JARs were not uploaded."
+            echo "- Enable only one JAR in the launcher."
           } >> "$GITHUB_STEP_SUMMARY"

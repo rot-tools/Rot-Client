@@ -272,7 +272,6 @@ public final class HudLayoutLandingPolicy {
             case "speed" -> new Disable("qol.player_display.speed_hud", false);
             case "pet" -> new Disable("qol.pet_hud", true);
             case "commission" -> new Disable("qol.commission_display", true);
-            case "auto_clicker" -> new Disable("qol.auto_clicker.cps_hud", false);
             case "fishing" -> new Disable("qol.fishing_helper.hook_timer_hud", false);
             case "mining" -> new Disable("qol.mining_helpers.ability_hud", false);
             case "dungeon" -> new Disable("qol.dungeon_hud", true);
@@ -296,7 +295,13 @@ public final class HudLayoutLandingPolicy {
             case "custom_scoreboard" -> new Disable("qol.custom_scoreboard", true);
             case "mining_tracker" -> new Disable(MiningTrackerCatalogPolicy.TRACKER, true);
             case "powder_chest" -> new Disable(MiningTrackerCatalogPolicy.POWDER_HUD, false);
-            default -> null;
+            default -> {
+                String setting = QolFlavorSupport.extension().disableSettingId(id);
+                if (setting == null || setting.isBlank()) {
+                    yield null;
+                }
+                yield new Disable(setting, false);
+            }
         };
     }
 

@@ -34,25 +34,34 @@ Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
 > **`2.0.1+mc26.2`** is a public checkpoint, not a finished 2.0 release.
-> Automation (clickers, scanners, dungeon helpers, Free Camera, Terminal
-> Simulator) is **opt-in and off by default**.
+> Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
+> Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
+> **opt-in and off by default**. Do not use those features on Hypixel.
 
 ## Install
 
 **Requires** Minecraft `26.2`, Java `25`, [Fabric Loader](https://fabricmc.net/use/) `0.19.3` or newer, and [Fabric API](https://modrinth.com/mod/fabric-api) `0.155.2+26.2`. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 
+Pick **one** edition. Both files can sit in `mods/`; enable only one. They
+`breaks` each other if both load. Skip `-sources.jar`. Remove any legacy
+MiningTracker JAR.
+
+| File | What it is |
+| --- | --- |
+| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL. No automation bytecode. |
+| `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
+
 ### Playtest JAR
 
 Testers do not need to build. Each green push to `development` replaces
 the [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
-pre-release:
+pre-release with **both** JARs and `SHA256SUMS.txt`:
 
 1. Open [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest).
-2. Download `RotClient-2.0.1+mc26.2.jar` only. Skip `-sources.jar`.
-3. Put that file in the instance `mods/` folder. Keep exactly one Rot Tools JAR.
-   Remove any legacy MiningTracker JAR.
+2. Download the edition you want. Skip `-sources.jar`.
+3. Put that file in the instance `mods/` folder. Enable only one Rot Tools JAR.
 
-The same JAR is also attached as artifact `RotClient-playable` on the matching
+The same pair is attached as artifact `RotClient-playable` on the matching
 green [Build](https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml)
 run if you need a specific commit.
 
@@ -60,7 +69,8 @@ run if you need a specific commit.
 
 1. Install Fabric Loader and Fabric API for Minecraft 26.2.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy only `RotClient-2.0.1+mc26.2.jar` from `build/libs/` into `mods/`.
+3. Copy `RotClient-2.0.1+mc26.2.jar` and/or `RotClientPlus-2.0.1+mc26.2.jar`
+   from `build/libs/` into `mods/`. Enable only one.
 
 Rot Tools includes bounded migration for supported legacy MiningTracker
 configuration data. Back up the instance before upgrading. Never copy runtime
@@ -82,25 +92,31 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**131** quality-of-life modules ship in one catalog, grouped by task. Wired means a catalog entry, saved settings, a runtime bridge, and automated contracts. The module-by-module table lives in [QoL Utilities](docs/QOL_UTILITIES.md).
+**Rot Client** ships **110** quality-of-life parents. **Rot Client+** ships
+**131** (the previous full catalog). Wired means a catalog entry, saved
+settings, a runtime bridge, and automated contracts. Which file to download
+is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
+[QoL Utilities](docs/QOL_UTILITIES.md).
 
 | Area | What you get |
 | --- | --- |
 | **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global |
 | **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
-| **Utilities** | Hotkey macros, wardrobe swapper, chat commands, auto sprint, inventory walk, market guard |
+| **Utilities** | Menu keybinds, wardrobe/pet keybinds, chat commands, auto sprint, market guard. Inventory Walk and custom macros are Rot Client+ |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
-| **Render** | Fullbright, viewmodel, player size, camera, Free Camera, legacy textures |
-| **Combat** | Auto clicker, trajectories, etherwarp helper, mob highlight |
+| **Render** | Fullbright, viewmodel, player size, eye-height fix, legacy textures. Free Camera and clip camera are Rot Client+ |
+| **Combat** | Trajectories, etherwarp helper, mob highlight. Auto clicker / Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
-| **Dungeons** | HUD and map, ESP, secret hitboxes, terminals, puzzles, F7 helpers, carry tracker, reward reels |
+| **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Secret hitboxes, auto terms, and hover-terms are Rot Client+ |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | World scanner, commissions, Scatha, Glacite, HOTM helpers |
-| **Fishing, foraging & garden** | Bite helpers, sea creatures, trophy, tree HUD, farm keys |
+| **Fishing, foraging & garden** | Bite HUD, sea creatures, trophy, tree HUD. Farm Keys and foraging cheats are Rot Client+ |
 
-Dungeon cheat-tagged options (auto terminals, auto Simon, auto I4, and similar) stay off even after you enable the parent module, until you opt in separately.
+On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
+I4, and similar) stay off even after you enable the parent module, until you
+opt in separately. Those options are not present in the legit JAR.
 
 ### Mining tracker and sessions
 
@@ -124,9 +140,9 @@ The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/Min
 | `/rot history ...` | List, open, copy, or delete history records |
 | `/rot slayer ...` | Slayer status, stats, and carry list |
 | `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history |
-| `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (look at a block) |
+| `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (Rot Client+) |
 | `/rot termsim [ping]` | Local terminal simulator hub |
-| `/rot autoclicker ...` | Auto Clicker item whitelist |
+| `/rot autoclicker ...` | Auto Clicker item whitelist (Rot Client+) |
 | `/rot fortune auto\|<mining> [material]` | Material Fortune input |
 
 Gemstones are selected from the searchable UI.
@@ -144,8 +160,8 @@ Read [Privacy](PRIVACY.md) before sharing diagnostics or launcher logs.
 Java 25 and the included Gradle wrapper:
 
 ```powershell
-.\gradlew.bat test --rerun-tasks --console=plain
-.\gradlew.bat compileClientJava --console=plain
+.\gradlew.bat test testPlus --rerun-tasks --console=plain
+.\gradlew.bat compileClientJava compilePlusJava compilePlusClientJava --console=plain
 git diff --check
 .\gradlew.bat clean build --console=plain
 ```
@@ -163,7 +179,8 @@ A green build proves packaging. It does not prove in-game correctness. See [Cont
 - [Branding](docs/BRANDING.md)
 - [Issues](https://github.com/rot-tools/Rot-Client/issues)
 - [Discussions](https://github.com/rot-tools/Rot-Client/discussions) — category welcome posts
-- [Wiki](https://github.com/rot-tools/Rot-Client/wiki) — player guide
+- [Which JAR](docs/WHICH_JAR.md) — Rot Client vs Rot Client+
+- [Wiki](https://github.com/rot-tools/Rot-Client/wiki) — player guide ([Which JAR](docs/WHICH_JAR.md) is the edition picker until that wiki page is copied)
 
 ## Credits
 

@@ -16,7 +16,7 @@ final class QolUtilityCatalogTest {
     void catalogContainsRequiredGroupsAndSkipsBannedModules() {
         assertFalse(QolUtilityCatalog.modules().isEmpty());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_sprint"));
-        assertNotNull(QolUtilityCatalog.findById("qol.camera"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.camera"));
         assertNotNull(QolUtilityCatalog.findById("qol.render_optimizer"));
         assertNotNull(QolUtilityCatalog.findById("qol.waypoints"));
         assertFalse(QolUtilityCatalog.findById("qol.waypoints").wip());
@@ -51,10 +51,7 @@ final class QolUtilityCatalogTest {
                 "qol.wardrobe_keybinds",
                 "qol.loadout_keybinds",
                 "qol.pet_keybinds",
-                "qol.auto_clicker",
-                "qol.inventory_walk",
                 "qol.trajectories",
-                "qol.secret_hitboxes",
                 "qol.world_scanner",
                 "qol.inventory_overlay",
                 "qol.skill_levels",
@@ -63,7 +60,6 @@ final class QolUtilityCatalogTest {
                 "qol.chat_commands",
                 "qol.slot_binds",
                 "qol.waypoints",
-                "qol.auto_conversation",
                 "qol.fishing_helper",
                 "qol.fishing_creatures",
                 "qol.fishing_hotspots",
@@ -85,11 +81,9 @@ final class QolUtilityCatalogTest {
                 "qol.diana_burrows",
                 "qol.diana_mobs",
                 "qol.diana_profit",
-                "qol.diana_share",
                 "qol.foraging_trees",
                 "qol.foraging_audio",
                 "qol.foraging_helpers",
-                "qol.foraging_cheats",
                 "qol.item_rarity",
                 "qol.mob_highlight",
                 "qol.viewmodel",
@@ -104,12 +98,7 @@ final class QolUtilityCatalogTest {
                 "qol.anvil_helper",
                 "qol.calendar_date",
                 "qol.experiment_solver",
-                "qol.auto_experiments",
-                "qol.cheater_wardrobe",
                 "qol.escrow_fix",
-                "qol.auto_harp",
-                "qol.auto_gfs",
-                "qol.auto_sell",
                 "qol.ghosts",
                 "qol.slayer_display",
                 "qol.slayer_time_messages",
@@ -120,10 +109,8 @@ final class QolUtilityCatalogTest {
                 "qol.slayer_drops",
                 "qol.slayer_carry",
                 "qol.slayer_cocoon_alert",
-                "qol.slayer_dagger_swap",
                 "qol.slayer_laser_hider",
                 "qol.slayer_attunement_display",
-                "qol.slayer_auto_soulcry",
                 "qol.slayer_sounds",
                 "qol.slayer_vengeance",
                 "qol.slayer_vengeance_damage",
@@ -135,26 +122,19 @@ final class QolUtilityCatalogTest {
                 "qol.slayer_vampire_markers",
                 "qol.slayer_inferno",
                 "qol.slayer_quest_warning",
-                "qol.slayer_auto_start",
                 "qol.dungeon_hud",
                 "qol.dungeon_esp",
                 "qol.dungeon_announce",
                 "qol.dungeon_leap",
                 "qol.dungeon_terminals",
                 "qol.dungeon_termsim",
-                "qol.dungeon_requeue",
                 "qol.dungeon_puzzles",
                 "qol.dungeon_f7",
                 "qol.dungeon_menus",
                 "qol.dungeon_carry",
-                "qol.dungeon_hover_terms",
                 "qol.dungeon_party_join",
-                "qol.dungeon_soulsand",
                 "qol.dungeon_term_click",
                 "qol.dungeon_watcher",
-                "qol.farm_keys",
-                "qol.auto_dojo",
-                "qol.freecam",
                 "qol.hud_layout",
                 "qol.custom_cursor",
                 "qol.legacy_textures",
@@ -207,12 +187,12 @@ final class QolUtilityCatalogTest {
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.reward_claim")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.slot_binds")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.no_cursor_reset")));
-        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.auto_experiments")));
-        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.auto_harp")));
+        assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.auto_experiments")));
+        assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.auto_harp")));
         assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.hud_layout")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.GARDEN)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.farm_keys")));
+                .noneMatch(m -> m.id().equals("qol.farm_keys")));
         assertTrue(utilities.stream().anyMatch(m -> m.id().equals("qol.stall_market")));
         List<QolUtilityCatalog.ModuleDef> gui =
                 QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.GUI);
@@ -221,17 +201,17 @@ final class QolUtilityCatalogTest {
         assertEquals("Board", gui.get(0).section());
         assertEquals("GUI", QolUtilityCatalog.Group.GUI.title());
         assertTrue(utilities.stream().noneMatch(m -> m.id().equals("qol.skill_levels")));
-        assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.camera")));
-        assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.freecam")));
+        assertTrue(render.stream().noneMatch(m -> m.id().equals("qol.camera")));
+        assertTrue(render.stream().noneMatch(m -> m.id().equals("qol.freecam")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.click_gui")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.legacy_textures")));
         assertTrue(render.stream().anyMatch(m -> m.id().equals("qol.custom_resource_pack")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.auto_clicker")));
+                .noneMatch(m -> m.id().equals("qol.auto_clicker")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.auto_dojo")));
+                .noneMatch(m -> m.id().equals("qol.auto_dojo")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.EVENTS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.diana_burrows")));
@@ -249,13 +229,13 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.FORAGING)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.foraging_trees")));
-        assertEquals(4, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.FORAGING).size());
+        assertEquals(3, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.FORAGING).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.secret_hitboxes")));
+                .noneMatch(m -> m.id().equals("qol.secret_hitboxes")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.auto_gfs")));
+                .noneMatch(m -> m.id().equals("qol.auto_gfs")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_hud")));
@@ -269,19 +249,19 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(19, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertEquals(13, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_hover_terms")));
+                .noneMatch(m -> m.id().equals("qol.dungeon_hover_terms")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_party_join")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_soulsand")));
+                .noneMatch(m -> m.id().equals("qol.dungeon_soulsand")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_term_click")));
@@ -317,13 +297,13 @@ final class QolUtilityCatalogTest {
         assertEquals("Blaze", QolUtilityCatalog.findById("qol.slayer_vengeance").section());
         assertEquals("Voidgloom", QolUtilityCatalog.findById("qol.slayer_voidgloom").section());
         assertEquals("Voidgloom", QolUtilityCatalog.findById("qol.slayer_laser_hider").section());
-        assertEquals("Voidgloom", QolUtilityCatalog.findById("qol.slayer_auto_soulcry").section());
+        assertEquals(null, QolUtilityCatalog.findById("qol.slayer_auto_soulcry"));
         assertEquals("Sven", QolUtilityCatalog.findById("qol.slayer_sven").section());
         assertEquals("Revenant", QolUtilityCatalog.findById("qol.slayer_revenant").section());
         assertEquals("Tarantula", QolUtilityCatalog.findById("qol.slayer_tarantula").section());
         assertEquals("Vampire", QolUtilityCatalog.findById("qol.slayer_vampire_markers").section());
         assertEquals("Blaze", QolUtilityCatalog.findById("qol.slayer_inferno").section());
-        assertEquals("Automation", QolUtilityCatalog.findById("qol.slayer_auto_start").section());
+        assertEquals(null, QolUtilityCatalog.findById("qol.slayer_auto_start"));
         assertEquals("Blaze", QolUtilityCatalog.findById("qol.slayer_vengeance_damage").section());
         assertEquals("Fight view", QolUtilityCatalog.findById("qol.slayer_active_boss_transparency").section());
         assertEquals("Fight view", QolUtilityCatalog.findById("qol.slayer_irrelevant_mobs").section());
@@ -341,37 +321,36 @@ final class QolUtilityCatalogTest {
                         QolUtilityCatalog.Group.MINING,
                         QolUtilityCatalog.Group.FISHING,
                         QolUtilityCatalog.Group.FORAGING,
-                        QolUtilityCatalog.Group.GARDEN,
                         QolUtilityCatalog.Group.GUI,
                         QolUtilityCatalog.Group.HUD_DISPLAY,
                         QolUtilityCatalog.Group.RENDER,
                         QolUtilityCatalog.Group.INTERFACE,
                         QolUtilityCatalog.Group.UTILITIES),
                 QolUtilityCatalog.sidebarPages());
-        assertEquals("Clicker", QolUtilityCatalog.findById("qol.auto_clicker").section());
         assertEquals("ESP", QolUtilityCatalog.findById("qol.hide_players").section());
         assertEquals("Catch", QolUtilityCatalog.findById("qol.fishing_helper").section());
         assertEquals("Trees", QolUtilityCatalog.findById("qol.foraging_trees").section());
-        assertEquals("Cheats", QolUtilityCatalog.findById("qol.foraging_cheats").section());
         assertEquals("Scanner", QolUtilityCatalog.findById("qol.world_scanner").section());
         assertEquals("Skills", QolUtilityCatalog.findById("qol.skill_levels").section());
-        assertEquals("Garden", QolUtilityCatalog.findById("qol.farm_keys").section());
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_clicker"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.foraging_cheats"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.farm_keys"));
         assertEquals("Blaze", QolUtilityCatalog.findById("qol.slayer_attunement_display").section());
         assertEquals("Dashboard", QolUtilityCatalog.findById("qol.click_gui").section());
         assertEquals("Layout", QolUtilityCatalog.findById("qol.hud_layout").section());
         assertEquals("HUD Elements Editor", QolUtilityCatalog.findById("qol.hud_layout").name());
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.foraging_cheats")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.diana_share")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_clicker")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_dojo")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_conversation")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_experiments")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_harp")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.fishing_helper")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.inventory_walk")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.freecam")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.experiment_solver")));
-        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.secret_hitboxes")));
+        assertEquals(null, QolUtilityCatalog.findById("qol.foraging_cheats"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.diana_share"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_clicker"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_dojo"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_conversation"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_experiments"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.auto_harp"));
+        assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.fishing_helper")));
+        assertEquals(null, QolUtilityCatalog.findById("qol.inventory_walk"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.freecam"));
+        assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.experiment_solver")));
+        assertEquals(null, QolUtilityCatalog.findById("qol.secret_hitboxes"));
         assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_sprint")));
         assertFalse(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.performance_hud")));
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
@@ -423,14 +402,7 @@ final class QolUtilityCatalogTest {
     void wardrobeSwapperExposesStationaryGateAndNineExplicitSlotBinds() {
         QolUtilityCatalog.ModuleDef module =
                 QolUtilityCatalog.findById("qol.cheater_wardrobe");
-        assertNotNull(module);
-        assertEquals("Wardrobe Swapper", module.name());
-        assertTrue(module.settings().stream().anyMatch(setting ->
-                setting.id().equals("qol.cheater_wardrobe.stationary_only")
-                        && setting.type() == QolUtilityCatalog.SettingType.TOGGLE));
-        assertEquals(9L, module.settings().stream().filter(setting ->
-                setting.id().matches("qol\\.cheater_wardrobe\\.slot_[1-9]")
-                        && setting.type() == QolUtilityCatalog.SettingType.KEYBIND).count());
+        assertEquals(null, module);
     }
 
     @Test
@@ -451,6 +423,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(131, moduleIds.size());
+        assertEquals(110, moduleIds.size());
     }
 }

@@ -220,7 +220,7 @@ final class AutoClickerRuntime {
         }
         KeyMapping.set(bound, true);
         KeyMapping.click(bound);
-        KeyMapping.set(bound, AutoClickerPolicy.mappingHeldAfterDiscretePulse());
+        KeyMapping.set(bound, false);
     }
 
     private static void holdAttackForBlockBreaking(Minecraft client) {

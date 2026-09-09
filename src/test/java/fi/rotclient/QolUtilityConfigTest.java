@@ -124,8 +124,6 @@ final class QolUtilityConfigTest {
         QolUtilityConfig config = new QolUtilityConfig();
         assertTrue(config.writeKeybind("qol.command_keybinds.pets", "P"));
         assertEquals("P", config.readKeybind("qol.command_keybinds.pets"));
-        assertTrue(config.writeKeybind("qol.auto_clicker.left_keybind", "LMB"));
-        assertEquals("LMB", config.readKeybind("qol.auto_clicker.left_keybind"));
         assertTrue(config.writeKeybind("qol.wardrobe_keybinds.next", "RIGHT"));
         assertEquals("RIGHT", config.displayKeybind("qol.wardrobe_keybinds.next"));
         assertFalse(config.writeKeybind("qol.unknown.keybind", "X"));

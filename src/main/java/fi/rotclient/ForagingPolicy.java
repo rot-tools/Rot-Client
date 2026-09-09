@@ -210,7 +210,7 @@ public final class ForagingPolicy {
     }
 
     public static String strip(String raw) {
-        return AutoConversationPolicy.stripFormatting(raw).trim();
+        return ChatTextPolicy.stripFormatting(raw).trim();
     }
 
     public static final int MOONGLADE_BEACON_X = -688;

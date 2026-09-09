@@ -16,7 +16,8 @@ public final class DashboardNavStack {
             String qolGroup,
             String focusId,
             boolean appearanceLanding,
-            boolean hudLayoutLanding) {
+            boolean hudLayoutLanding,
+            boolean hudDrawer) {
         public Frame {
             moduleId = moduleId == null || moduleId.isBlank() ? "none" : moduleId;
             qolGroup = qolGroup == null ? "" : qolGroup;
@@ -24,7 +25,7 @@ public final class DashboardNavStack {
         }
 
         public static Frame overview() {
-            return new Frame("none", "", "", false, false);
+            return new Frame("none", "", "", false, false, false);
         }
 
         public boolean isOverviewHome() {

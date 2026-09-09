@@ -57,7 +57,10 @@ final class AutoSprintWiringTest {
                 "src/client/resources/rotclient.client.mixins.json"),
                 StandardCharsets.UTF_8);
         assertTrue(json.contains("LocalPlayerMixin"));
-        assertTrue(json.contains("OptionsCameraMixin"));
+        String plusJson = Files.readString(Path.of(
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
+                StandardCharsets.UTF_8);
+        assertTrue(plusJson.contains("OptionsCameraMixin"));
     }
 
     @Test
@@ -74,14 +77,17 @@ final class AutoSprintWiringTest {
                 "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("Auto Sprint"));
-        assertTrue(catalog.contains("Camera"));
         assertTrue(catalog.contains("qol.auto_sprint"));
+        String plusCatalog = Files.readString(Path.of(
+                "src/plus/java/fi/rotclient/QolPlusCatalog.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(plusCatalog.contains("Camera"));
     }
 
     @Test
     void optionsCameraMixinSkipsFrontPerspective() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/OptionsCameraMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/OptionsCameraMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("setCameraType"));
         assertTrue(source.contains("CameraPolicy.resolve"));

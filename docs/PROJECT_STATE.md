@@ -12,23 +12,25 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | 131 wired QoL modules. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Extra Stats requeue is the Hypixel header only (not party chat, not live `Team Score:`); compact reprint waits until the dump finishes. Simon Says records the ordered sea-lantern sequence each round. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** in accent red on the by-line, with red GitHub and Discord logos in the omnibox header. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (110 HUD/QoL parents, no automation bytecode) and **Rot Client+** (131 parents, previous full client). Closing the dashboard now keeps the last page and any open module Settings or HUD drawer (`rotclient-workspace.json`); Right Shift / inventory R reopen that view instead of Overview. Custom Scoreboard now reads tab widgets (Gems, unclaimed bits, Magical Power/tunings, mayor/minister/election, events), uses a computed SkyBlock clock for Exact Minutes, caches sidebar capture ~120ms, applies background opacity to the panel fill, and opens a list editor for Appearance / Event Priority / Chunked Stats (Reset opens that editor). Party still needs a separate playtest. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Extra Stats requeue is the Hypixel header only (not party chat, not live `Team Score:`); compact reprint waits until the dump finishes. Simon Says records the ordered sea-lantern sequence each round. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** / **Rot Client+** in accent red on the by-line, with red GitHub and Discord logos in the omnibox header. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
-| Display name | Rot Client (by-line, accent red). Author/owner: Rot Tools |
+| Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
 | Package | `fi.rotclient` |
-| Playable JAR | `RotClient-2.0.1+mc26.2.jar` |
+| Playable JARs | `RotClient-2.0.1+mc26.2.jar` (`rotclient`) and `RotClientPlus-2.0.1+mc26.2.jar` (`rotclientplus`) |
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,202 tests**, 324 suites, 0 failures, 0 errors, 0 skipped; client compilation and build passed. Playable JAR SHA-256 `DF9C3B8950CAD47F2D85E683E9F183AB22004B0D139EFABD6DFE09C6601BA573`. |
-| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dashboard is 14 groups and **131** catalog parents. Settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
+| Automated baseline | Current working tree: **2,144** shared tests (311 suites) plus **100** Plus tests (18 suites); 0 failures, 0 errors, 0 skipped. Client compilation and dual JAR build passed. `verifyLegitJar` passed. Playable SHA-256 Rot Client `18F891A5E13B2BCFE9FBC1ED29DBDBBC939B345271A30BD8706ECDEB01FBAAF3`, Rot Client+ `0634A5D97371EBAEE4F97F7FBC9777E44885FD29BCC02767763DCAC7E73E8617`. |
+| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dual catalog: legit **110** / Plus **131** parents across 14 groups (Garden empty on legit). Click GUI last-page restore, settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
 The current client source is compile-tested with Java 25. Gradle's Java 25 toolchain provisions the compiler and test runtime even when `JAVA_HOME` points elsewhere. `MiningSessionEngine` remains transient classification, correlation, dedupe, parity, and diagnostic state; accepted `OTHER_MINED` quantities persist in the separate `RotClientCurrentSession` ledger and feed read-only HUD and Analytics projections. Live material and gemstone target ledgers remain authoritative.
 
-Persistence uses `rotclient.json`, `rotclient-profiles.json`,
+Persistence uses `rotclient.json`, `rotclient-plus.json` (Plus-only settings),
+`rotclient-workspace.json`,
+`rotclient-profiles.json`, `rotclient-loadouts.json`,
 `rotclient-current-session.json`, `rotclient-session-history.json`,
 `rotclient-storage-cache.json`, and `rotclient-inventory-chrome-cache.json`.
 Legacy `miningtracker.json` and
@@ -106,7 +108,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The 131-parent catalog lock, evidence-state guards, status-badge layout, and
+- The catalog lock (110 parents on legit, 131 on Plus), evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -174,7 +176,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 131 modules across GUI, Utilities, Render, HUD & Display,
+- QoL catalog wiring for 110 legit / 131 Plus modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -263,7 +265,7 @@ These constraints are part of the current safety model:
   tick; hashing stays throttled. Map Mode is Explored or Reveal Hidden.
   DUNG-001 / DUNG-009 stay Ready for Runtime Test. Automated tests are not
   runtime Complete.
-- Dungeon leftover helpers (2026-09-06) on existing 131 parents: named ground-drop
+- Dungeon leftover helpers (2026-09-06) on existing catalog parents: named ground-drop
   highlight, 7s clicked-secret boxes, Wither/Blood key-drop HUD, Pre-4 device
   complete, hide other Goldor progress titles, mute those titles at SS/Pre-4,
   hide teammates at Simon Says and for 3s after leap, teammate Melody HUD from
@@ -275,12 +277,12 @@ For a class-by-class briefing of the shipped JAR (what to open first, Policy vs 
 ## Local development workflow
 
 1. Use Java 25 for the Gradle process. Gradle's `toolchain { languageVersion = 25 }` block provisions JDK 25 for compile and test tasks.
-2. Run `./gradlew test --rerun-tasks`.
-3. Run `./gradlew compileClientJava`.
+2. Run `./gradlew test testPlus --rerun-tasks`.
+3. Run `./gradlew compileClientJava compilePlusJava compilePlusClientJava`.
 4. Run `git diff --check`.
 5. Run `./gradlew clean build`.
-6. Select `RotClient-2.0.1+mc26.2.jar` from `build/libs/`; never select the sources JAR.
-7. Back up the installed JAR and install the playable JAR into a Serveri instance's `.minecraft/mods/` directory. Remove any MiningTracker JAR first.
+6. Select `RotClient-2.0.1+mc26.2.jar` and `RotClientPlus-2.0.1+mc26.2.jar` from `build/libs/`; never select the sources JAR.
+7. Back up the installed JARs and copy both playable files into a Serveri instance's `minecraft/mods/` directory. Remove any MiningTracker JAR first. Enable only one in Prism.
 8. Verify the deployed artifact and runtime-test the feature before claiming completion.
 
 ## Next planned feature phase
@@ -346,7 +348,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: 131 wired modules across fourteen task-oriented groups, with
-  automation-style development features disabled by default and scoped to the
-  local Serveri. No separate server-detection
-  branch is planned.
+- QoL dashboard: **110** wired parents in Rot Client and **131** in Rot Client+
+  across fourteen task-oriented groups, with automation-style development
+  features disabled by default and scoped to the local Serveri / Plus JAR. No
+  separate server-detection branch is planned.

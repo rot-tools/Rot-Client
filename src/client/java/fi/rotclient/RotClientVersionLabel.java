@@ -34,7 +34,7 @@ final class RotClientVersionLabel {
     }
 
     static String brandLabel(String version) {
-        return "Rot Client v" + sanitizeVersion(version);
+        return QolFlavorSupport.productName() + " v" + sanitizeVersion(version);
     }
 
     /** Example: {@code v1.10.0+mc26.2} */
@@ -56,6 +56,15 @@ final class RotClientVersionLabel {
 
     static Optional<String> readFabricVersion() {
         try {
+            Optional<String> version = FabricLoader.getInstance()
+                    .getModContainer(QolFlavorSupport.modId())
+                    .map(container -> container.getMetadata()
+                            .getVersion()
+                            .getFriendlyString())
+                    .map(RotClientVersionLabel::trimToNull);
+            if (version.isPresent()) {
+                return version;
+            }
             return FabricLoader.getInstance()
                     .getModContainer(MOD_ID)
                     .map(container -> container.getMetadata()

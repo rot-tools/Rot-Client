@@ -199,7 +199,7 @@ public final class SlayerRuntime {
         if (!settings.slayerProgressEnabled) {
             resetProgress();
         }
-        if (settings.slayerDaggerSwapEnabled) {
+        if (QolFlavorSupport.isPlus() && settings.slayerDaggerSwapEnabled) {
             tickDaggerSwap(client);
         } else {
             resetDaggerSwap();
@@ -392,10 +392,12 @@ public final class SlayerRuntime {
         Minecraft client = Minecraft.getInstance();
         rememberAttackedCarryBoss(client, entity, settings);
         warnWrongQuest(client, entity, settings);
-        if (settings.slayerAutoSoulcryEnabled && settings.slayerAutoSoulcryAttackBased) {
+        if (QolFlavorSupport.isPlus()
+                && settings.slayerAutoSoulcryEnabled
+                && settings.slayerAutoSoulcryAttackBased) {
             tryAttackSoulcry(client, entity, settings);
         }
-        if (!settings.slayerDaggerSwapEnabled || entity == null
+        if (!QolFlavorSupport.isPlus() || !settings.slayerDaggerSwapEnabled || entity == null
                 || client == null || client.level == null) {
             return;
         }
@@ -2035,7 +2037,7 @@ public final class SlayerRuntime {
                 return;
             }
             if (daggerUseCooldown <= 0) {
-                AutoClickerRuntime.pulseUse(client);
+                ClickPulseHelper.pulseUse(client);
                 daggerUseCooldown = 2;
             }
             return;
@@ -2126,7 +2128,7 @@ public final class SlayerRuntime {
 
     private static void tickSoulcry(Minecraft client, QolSkyblockExtras settings) {
         SOULCRY_ABILITY.tick();
-        if (!settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
+        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
                 || client == null || client.player == null || client.level == null
                 || (client.gui != null && client.gui.screen() != null)) {
             SOULCRY.reset();
@@ -2235,7 +2237,7 @@ public final class SlayerRuntime {
     }
 
     private static void useHeldItem(Minecraft client) {
-        AutoClickerRuntime.pulseUse(client);
+        ClickPulseHelper.pulseUse(client);
     }
 
     private static boolean isVengeanceDagger(ItemStack stack) {
@@ -3743,7 +3745,7 @@ public final class SlayerRuntime {
     }
 
     private static void scheduleAutoStart(QolSkyblockExtras settings) {
-        if (!settings.slayerAutoStartEnabled) {
+        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoStartEnabled) {
             return;
         }
         Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(
@@ -3756,7 +3758,7 @@ public final class SlayerRuntime {
     }
 
     private static void tickAutoStart(Minecraft client, QolSkyblockExtras settings) {
-        if (!settings.slayerAutoStartEnabled || autoStartTicks < 0) {
+        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoStartEnabled || autoStartTicks < 0) {
             autoStartTicks = -1;
             return;
         }

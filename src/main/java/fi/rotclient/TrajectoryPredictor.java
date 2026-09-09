@@ -140,7 +140,7 @@ public final class TrajectoryPredictor {
     }
 
     public static boolean isTerminatorId(String skyBlockId) {
-        return AutoClickerPolicy.TERMINATOR_ID.equals(skyBlockId);
+        return AutoClickerItemIdentity.TERMINATOR_ID.equals(skyBlockId);
     }
 
     /**

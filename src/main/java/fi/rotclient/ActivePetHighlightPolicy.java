@@ -16,7 +16,7 @@ public final class ActivePetHighlightPolicy {
         if (strippedTitle == null) {
             return false;
         }
-        String text = AutoConversationPolicy.stripFormatting(strippedTitle).trim();
+        String text = ChatTextPolicy.stripFormatting(strippedTitle).trim();
         return TITLE.matcher(text).matches() || text.equalsIgnoreCase("Pets");
     }
 
@@ -28,7 +28,7 @@ public final class ActivePetHighlightPolicy {
             return false;
         }
         for (String line : lore) {
-            String plain = AutoConversationPolicy.stripFormatting(line).trim();
+            String plain = ChatTextPolicy.stripFormatting(line).trim();
             if (plain.equalsIgnoreCase("Click to despawn!")) {
                 return true;
             }

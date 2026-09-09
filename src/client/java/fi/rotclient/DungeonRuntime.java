@@ -3,6 +3,7 @@ package fi.rotclient;
 import fi.rotclient.mixin.AbstractContainerScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -60,169 +61,169 @@ import java.util.Set;
  * salvage/party-finder/chest menus and Extra Stats requeue.
  */
 public final class DungeonRuntime {
-    private static DungeonPolicy.Sidebar sidebar =
+    static DungeonPolicy.Sidebar sidebar =
             DungeonPolicy.parseSidebar(List.of());
-    private static long bonzoUntil;
-    private static long spiritUntil;
-    private static long phoenixUntil;
-    private static long bonzoCdUntil;
-    private static long spiritCdUntil;
-    private static long phoenixCdUntil;
-    private static long terracottaUntil;
-    private static DungeonAssistPolicy.F7Timer f7Timer = DungeonAssistPolicy.F7Timer.NONE;
-    private static long f7TimerUntil;
-    private static int requeueTicks = -1;
-    private static int terminalCooldown;
-    private static int simonCooldown;
-    private static int puzzleScanTicks;
-    private static String lastAnnounce = "";
-    private static String lastF7Title = "";
-    private static String lastQuiz = "";
-    private static List<String> lastQuizAnswers = List.of();
-    private static int lastQuizOption = -1;
-    private static String lastRagnarock = "";
-    private static String lastMelody = "";
-    private static String lastWeirdoNpc = "";
-    private static int lastBreakerCharges = -1;
-    private static final Map<String, String> blessings = new LinkedHashMap<>();
-    private static final Map<String, String> tpLinks = new LinkedHashMap<>();
-    private static final List<Mark> puzzleMarks = new ArrayList<>();
-    private static DungeonPuzzlePolicy.MapPreview mapPreview =
+    static long bonzoUntil;
+    static long spiritUntil;
+    static long phoenixUntil;
+    static long bonzoCdUntil;
+    static long spiritCdUntil;
+    static long phoenixCdUntil;
+    static long terracottaUntil;
+    static DungeonAssistPolicy.F7Timer f7Timer = DungeonAssistPolicy.F7Timer.NONE;
+    static long f7TimerUntil;
+    static int requeueTicks = -1;
+    static int terminalCooldown;
+    static int simonCooldown;
+    static int puzzleScanTicks;
+    static String lastAnnounce = "";
+    static String lastF7Title = "";
+    static String lastQuiz = "";
+    static List<String> lastQuizAnswers = List.of();
+    static int lastQuizOption = -1;
+    static String lastRagnarock = "";
+    static String lastMelody = "";
+    static String lastWeirdoNpc = "";
+    static int lastBreakerCharges = -1;
+    static final Map<String, String> blessings = new LinkedHashMap<>();
+    static final Map<String, String> tpLinks = new LinkedHashMap<>();
+    static final List<Mark> puzzleMarks = new ArrayList<>();
+    static DungeonPuzzlePolicy.MapPreview mapPreview =
             new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
-    private static DungeonPuzzlePolicy.WorldCell lastPad;
-    private static Vec3 lastPlayerPos;
-    private static int lastScore = -1;
-    private static int lastSecretsFound = -1;
-    private static String lastDuplicateTitle = "";
-    private static String lastPlayerCountTitle = "";
-    private static String locationHud = "";
-    private static int locationTicks;
-    private static long predevBossEnter;
-    private static boolean predevAtThird;
-    private static boolean predevTracking;
-    private static long predevDoneMs;
-    private static int runChests;
-    private static boolean chestRunCounted;
-    private static boolean chestWarned;
-    private static String lastLivid = "";
-    private static long lividUntil;
-    private static boolean bloodCampActive;
-    private static String lastLeapRegion = "";
-    private static final Set<Integer> leapedIds = new HashSet<>();
-    private static EmberDungeonPolicy.DebuffPhase debuffPhase = EmberDungeonPolicy.DebuffPhase.NONE;
-    private static long debuffUntil;
-    private static boolean debuffFired;
-    private static long puzzleStarted;
-    private static long warpCooldownUntil;
-    private static int quizTicks;
-    private static int quizStage;
-    private static int maxorStunTicks;
-    private static int stormCrushTicks;
-    private static int secretSpawnTicks;
-    private static int stormLbTicks;
-    private static boolean stormLbActive;
-    private static int termStartTicks;
-    private static String explosiveShotLine = "";
-    private static long explosiveShotUntil;
-    private static int unclaimedChests = -1;
-    private static DungeonExtraStatsPolicy.Snapshot extraStats =
+    static DungeonPuzzlePolicy.WorldCell lastPad;
+    static Vec3 lastPlayerPos;
+    static int lastScore = -1;
+    static int lastSecretsFound = -1;
+    static String lastDuplicateTitle = "";
+    static String lastPlayerCountTitle = "";
+    static String locationHud = "";
+    static int locationTicks;
+    static long predevBossEnter;
+    static boolean predevAtThird;
+    static boolean predevTracking;
+    static long predevDoneMs;
+    static int runChests;
+    static boolean chestRunCounted;
+    static boolean chestWarned;
+    static String lastLivid = "";
+    static long lividUntil;
+    static boolean bloodCampActive;
+    static String lastLeapRegion = "";
+    static final Set<Integer> leapedIds = new HashSet<>();
+    static EmberDungeonPolicy.DebuffPhase debuffPhase = EmberDungeonPolicy.DebuffPhase.NONE;
+    static long debuffUntil;
+    static boolean debuffFired;
+    static long puzzleStarted;
+    static long warpCooldownUntil;
+    static int quizTicks;
+    static int quizStage;
+    static int maxorStunTicks;
+    static int stormCrushTicks;
+    static int secretSpawnTicks;
+    static int stormLbTicks;
+    static boolean stormLbActive;
+    static int termStartTicks;
+    static String explosiveShotLine = "";
+    static long explosiveShotUntil;
+    static int unclaimedChests = -1;
+    static DungeonExtraStatsPolicy.Snapshot extraStats =
             DungeonExtraStatsPolicy.Snapshot.idle();
-    private static int extraStatsQuietTicks;
-    private static String lastMelodyProgress = "";
-    private static String lastP3Objective = "";
-    private static int lastP3Completed;
-    private static int lastP3Total = 7;
-    private static final List<DungeonRoomDataPolicy.PlacedWaypoint> secretWaypoints = new ArrayList<>();
-    private static final Map<Long, List<DungeonRoomDataPolicy.PlacedWaypoint>> hashedRoomSecrets =
+    static int extraStatsQuietTicks;
+    static String lastMelodyProgress = "";
+    static String lastP3Objective = "";
+    static int lastP3Completed;
+    static int lastP3Total = 7;
+    static final List<DungeonRoomDataPolicy.PlacedWaypoint> secretWaypoints = new ArrayList<>();
+    static final Map<Long, List<DungeonRoomDataPolicy.PlacedWaypoint>> hashedRoomSecrets =
             new LinkedHashMap<>();
-    private static final Map<Long, DungeonRoomDataPolicy.Rotation> hashedRoomRotation =
+    static final Map<Long, DungeonRoomDataPolicy.Rotation> hashedRoomRotation =
             new LinkedHashMap<>();
-    private static final Set<Long> hashedRoomTried = new HashSet<>();
-    private static final Map<String, DungeonMapPolicy.RoomIdentity> hashedTileIdentity =
+    static final Set<Long> hashedRoomTried = new HashSet<>();
+    static final Map<String, DungeonMapPolicy.RoomIdentity> hashedTileIdentity =
             new LinkedHashMap<>();
-    private static final Map<String, DungeonRoomDataPolicy.RoomMeta> hashedTileRoom =
+    static final Map<String, DungeonRoomDataPolicy.RoomMeta> hashedTileRoom =
             new LinkedHashMap<>();
-    private static final Map<String, Integer> secretsFoundByRoom = new LinkedHashMap<>();
-    private static final Set<String> collectedSecrets = new HashSet<>();
-    private static final Set<String> seenSecretEntities = new HashSet<>();
-    private static final List<ClickedSecret> clickedSecrets = new ArrayList<>();
-    private static final Set<Integer> seenKeyStands = new HashSet<>();
-    private static TempleDungeonPolicy.KeySkull droppedKey = TempleDungeonPolicy.KeySkull.NONE;
-    private static boolean mimicKilled;
-    private static boolean puzzleFailed;
-    private static boolean extraStatsSeen;
-    private static boolean dungeonRunStarted;
-    private static int dungeonWorldTicks;
-    private static String lastRelic = "";
-    private static long leapHideAtMs;
-    private static String melodyOtherName = "";
-    private static int melodyOtherPercent;
-    private static boolean melodyOtherOwn;
-    private static final Set<String> melodyOtherNames = new HashSet<>();
-    private static final List<EmberDungeonPolicy.ArrowClicks> arrowClicks = new ArrayList<>();
-    private static int i4Cooldown;
-    private static int i4Timer = -1;
-    private static boolean i4RodUsed;
-    private static boolean i4MaskUsed;
-    private static boolean i4LeapUsed;
-    private static int i4LeapWait;
-    private static String melodyLeapName = "";
-    private static long relicLookStart;
-    private static DungeonF7Policy.LookAim relicLookFrom;
-    private static DungeonF7Policy.LookAim relicLookTo;
-    private static long i4LookStart;
-    private static DungeonF7Policy.LookAim i4LookFrom;
-    private static BlockPos i4LookTarget;
-    private static final List<DungeonPolicy.TerminalClick> melodySkipQueue = new ArrayList<>();
-    private static DungeonMapPolicy.Board lastMapBoard =
+    static final Map<String, Integer> secretsFoundByRoom = new LinkedHashMap<>();
+    static final Set<String> collectedSecrets = new HashSet<>();
+    static final Set<String> seenSecretEntities = new HashSet<>();
+    static final List<ClickedSecret> clickedSecrets = new ArrayList<>();
+    static final Set<Integer> seenKeyStands = new HashSet<>();
+    static TempleDungeonPolicy.KeySkull droppedKey = TempleDungeonPolicy.KeySkull.NONE;
+    static boolean mimicKilled;
+    static boolean puzzleFailed;
+    static boolean extraStatsSeen;
+    static boolean dungeonRunStarted;
+    static int dungeonWorldTicks;
+    static String lastRelic = "";
+    static long leapHideAtMs;
+    static String melodyOtherName = "";
+    static int melodyOtherPercent;
+    static boolean melodyOtherOwn;
+    static final Set<String> melodyOtherNames = new HashSet<>();
+    static final List<EmberDungeonPolicy.ArrowClicks> arrowClicks = new ArrayList<>();
+    static int i4Cooldown;
+    static int i4Timer = -1;
+    static boolean i4RodUsed;
+    static boolean i4MaskUsed;
+    static boolean i4LeapUsed;
+    static int i4LeapWait;
+    static String melodyLeapName = "";
+    static long relicLookStart;
+    static DungeonF7Policy.LookAim relicLookFrom;
+    static DungeonF7Policy.LookAim relicLookTo;
+    static long i4LookStart;
+    static DungeonF7Policy.LookAim i4LookFrom;
+    static BlockPos i4LookTarget;
+    static final List<DungeonPolicy.TerminalClick> melodySkipQueue = new ArrayList<>();
+    static DungeonMapPolicy.Board lastMapBoard =
             new DungeonMapPolicy.Board(DungeonMapPolicy.Calibration.none(), List.of(), List.of(), List.of(), "");
-    private static final java.util.Queue<DungeonLeftoverPolicy.QueuedClick> termQueue =
+    static final java.util.Queue<DungeonLeftoverPolicy.QueuedClick> termQueue =
             DungeonLeftoverPolicy.newQueue();
-    private static DungeonLeftoverPolicy.SplitSnapshot splits =
+    static DungeonLeftoverPolicy.SplitSnapshot splits =
             new DungeonLeftoverPolicy.SplitSnapshot(0L, 0L, 0L, 0L, false, false, false);
-    private static KuudraSplitPolicy.Snapshot kuudra = KuudraSplitPolicy.Snapshot.idle();
-    private static List<String> chestProfitHud = List.of();
-    private static int superboomCooldown;
-    private static int superboomOriginalSlot = -1;
-    private static int superboomSwapBackTicks = -1;
-    private static long triggerLastMs;
-    private static int ghostCooldown;
-    private static long crystalSpawnUntil;
-    private static long crystalPickupAt;
-    private static String lastCrystalHud = "";
-    private static long relicSpawnUntil;
-    private static long relicPickupAt;
-    private static DungeonF7Policy.SimonState simon = DungeonF7Policy.SimonState.idle();
-    private static String lastDragonHud = "";
-    private static boolean melodyWasOpen;
-    private static int lastTerminalSlot = 22;
-    private static String lastTermTitle = "";
-    private static long terminalOpenedAt;
-    private static final List<Integer> terminalPredictedSlots = new ArrayList<>();
-    private static long terminalPredictedAt;
-    private static boolean closeChestArmed;
-    private static int p3Terminals;
-    private static int p3Devices;
-    private static int p3Levers;
-    private static long dragonSpawnUntil;
-    private static final Set<String> dragonsDown = new HashSet<>();
-    private static boolean terminalHadClicks;
-    private static int goldorFrenzyTicks;
-    private static int purplePadTicks;
-    private static boolean autoClickedThisTick;
-    private static boolean superboomAttackHeld;
-    private static int closeChestWait = -1;
-    private static long termQueueUpdatedAt;
-    private static long terminalClickUntil;
-    private static String closeChestTitle = "";
-    private static DungeonGoldorPolicy.ShooterState sharpShooter =
+    static KuudraSplitPolicy.Snapshot kuudra = KuudraSplitPolicy.Snapshot.idle();
+    static List<String> chestProfitHud = List.of();
+    static int superboomCooldown;
+    static int superboomOriginalSlot = -1;
+    static int superboomSwapBackTicks = -1;
+    static long triggerLastMs;
+    static int ghostCooldown;
+    static long crystalSpawnUntil;
+    static long crystalPickupAt;
+    static String lastCrystalHud = "";
+    static long relicSpawnUntil;
+    static long relicPickupAt;
+    static DungeonF7Policy.SimonState simon = DungeonF7Policy.SimonState.idle();
+    static String lastDragonHud = "";
+    static boolean melodyWasOpen;
+    static int lastTerminalSlot = 22;
+    static String lastTermTitle = "";
+    static long terminalOpenedAt;
+    static final List<Integer> terminalPredictedSlots = new ArrayList<>();
+    static long terminalPredictedAt;
+    static boolean closeChestArmed;
+    static int p3Terminals;
+    static int p3Devices;
+    static int p3Levers;
+    static long dragonSpawnUntil;
+    static final Set<String> dragonsDown = new HashSet<>();
+    static boolean terminalHadClicks;
+    static int goldorFrenzyTicks;
+    static int purplePadTicks;
+    static boolean autoClickedThisTick;
+    static boolean superboomAttackHeld;
+    static int closeChestWait = -1;
+    static long termQueueUpdatedAt;
+    static long terminalClickUntil;
+    static String closeChestTitle = "";
+    static DungeonGoldorPolicy.ShooterState sharpShooter =
             DungeonGoldorPolicy.ShooterState.idle();
-    private static DungeonGoldorPolicy.TermTimesState termTimes =
+    static DungeonGoldorPolicy.TermTimesState termTimes =
             DungeonGoldorPolicy.TermTimesState.idle();
-    private static final DungeonGoldorPolicy.PositionTracker positionCallouts =
+    static final DungeonGoldorPolicy.PositionTracker positionCallouts =
             new DungeonGoldorPolicy.PositionTracker();
-    private static String lastTermTimeLine = "";
-    private static String lastTermTotalLine = "";
+    static String lastTermTimeLine = "";
+    static String lastTermTotalLine = "";
 
     private DungeonRuntime() {
     }
@@ -365,8 +366,6 @@ public final class DungeonRuntime {
         }
         lastBreakerCharges = DungeonPolicy.breakerCharges(
                 InventoryChromeRuntime.loreLines(client.player.getMainHandItem())).orElse(-1);
-        maybeCloseChest(client, extras);
-        armRequeueFromScreen(client, extras);
         observeTerminalOpen(client, extras);
         if (goldorFrenzyTicks > 0) {
             goldorFrenzyTicks--;
@@ -402,13 +401,6 @@ public final class DungeonRuntime {
         scanKeyDrops(client, extras);
         refreshChestProfitHud(client, extras);
         HateDoorsRuntime.scan(client, extras);
-        if (extras.dungeonF7Enabled && extras.dungeonF7DebuffAuto && !debuffFired
-                && debuffPhase != EmberDungeonPolicy.DebuffPhase.NONE) {
-            if (useDebuffItem(client, extras)) {
-                debuffFired = true;
-            }
-        }
-        scanSecretWaypoints(client, extras);
         scanDungeonMap(client, extras);
         if (extras.dungeonF7Enabled && extras.dungeonF7Simon) {
             scanSimon(client);
@@ -419,48 +411,18 @@ public final class DungeonRuntime {
                 scanArrowAlign(client);
             }
         }
-        if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsAuto) {
-            autoClickTerminal(client);
-        }
-        DungeonHoverTermsRuntime.tick(client);
-        DungeonSoulsandRuntime.tick(client);
         DungeonWatcherRuntime.tick(client);
         DungeonPartyJoinRuntime.tick(client);
         DungeonCarryRuntime.tick(client);
-        if (extras.dungeonF7Enabled && extras.dungeonF7SimonAuto) {
-            autoSimon(client);
-        }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SimonTrigger) {
-            autoSimonNext(client);
-        }
-        if (extras.dungeonF7Enabled && extras.dungeonF7AutoI4) {
-            tickAutoI4(client, extras);
-            autoI4(client);
-        }
-        if (extras.dungeonF7Enabled && extras.dungeonF7RelicLook) {
-            relicLook(client, extras, now);
-        }
         updateDragonHud(client, extras);
-        if (extras.dungeonF7Enabled && extras.dungeonF7AutoSuperboom) {
-            autoSuperboom(client, extras);
-        }
-        if (extras.dungeonEspEnabled && extras.dungeonEspGhostBlock) {
-            ghostBlocks(client, extras);
-        }
-        if (extras.dungeonEspEnabled && extras.dungeonEspTriggerBot) {
-            triggerBot(client, extras);
-        }
-        if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsQueue) {
-            flushTermQueue(client, extras);
-        } else if (!termQueue.isEmpty()) {
-            termQueue.clear();
-            melodySkipQueue.clear();
-        }
         observeTeleport(client.player);
         observeLeaps(client, extras);
         updateCrystalHud(client, extras, now);
         tickGoldorHelpers(client, extras, now);
     }
+
+
+
 
     static void onChat(Component message) {
         if (message == null) {
@@ -802,12 +764,6 @@ public final class DungeonRuntime {
                 persistKuudraPbs(previous, kuudra, extras);
             }
         }
-        AutoDojoRuntime.onChat(raw);
-        if (extras.dungeonAnnounceEnabled && extras.dungeonAnnounceAutoUlt
-                && EmberDungeonPolicy.shouldFireUltimate(raw, sidebar.floor(), sidebar.dungeonClass())) {
-            dropClassUltimate(client);
-            showTitle(client, true, "§dUsed Ultimate!");
-        }
         if (extras.dungeonF7Enabled && extras.dungeonF7Timers) {
             DungeonAssistPolicy.F7Timer timer = DungeonAssistPolicy.f7TimerFromChat(raw);
             if (timer != DungeonAssistPolicy.F7Timer.NONE
@@ -1074,7 +1030,6 @@ public final class DungeonRuntime {
         lastTermTotalLine = "";
         chestProfitHud = List.of();
         lastMapBoard = emptyMapBoard();
-        AutoDojoRuntime.onWorldChanged();
         blessings.clear();
         tpLinks.clear();
         puzzleMarks.clear();
@@ -1729,75 +1684,8 @@ public final class DungeonRuntime {
                 true);
     }
 
-    private static void autoClickTerminal(Minecraft client) {
-        if (terminalCooldown > 0
-                || client.gameMode == null
-                || client.player == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            lastMelody = "";
-            melodySkipQueue.clear();
-            return;
-        }
-        String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
-        QolSkyblockExtras extras = extras();
-        if (terminal == DungeonPolicy.Terminal.NONE
-                || !DungeonPolicy.shouldAutoSolve(
-                terminal,
-                extras.dungeonTerminalsAutoMelody,
-                extras.dungeonTerminalsAutoNumbers,
-                extras.dungeonTerminalsAutoColors,
-                extras.dungeonTerminalsAutoRubix,
-                extras.dungeonTerminalsAutoPanes,
-                extras.dungeonTerminalsAutoStarts)) {
-            return;
-        }
-        List<DungeonPolicy.TerminalItem> items = snapshot(screen);
-        if (!melodySkipQueue.isEmpty()) {
-            sendTerminalClick(client, screen, extras, melodySkipQueue.removeFirst());
-            return;
-        }
-        List<DungeonPolicy.TerminalClick> live =
-                DungeonPolicy.solveTerminalClicks(terminal, title, items);
-        if (live.isEmpty()) {
-            maybePlayTerminalComplete(client, extras);
-            clearPredictedClicks();
-            termQueue.clear();
-            melodySkipQueue.clear();
-            return;
-        }
-        terminalHadClicks = true;
-        DungeonAthenSettings athen = extras.athen();
-        if (DungeonAthenPortPolicy.firstClickPending(
-                terminalOpenedAt, System.currentTimeMillis(), athen.termFirstClickDelay)) {
-            return;
-        }
-        if (terminalClickUntil > System.currentTimeMillis()) {
-            return;
-        }
-        List<DungeonPolicy.TerminalClick> clicks = pinglessRemaining(terminal, live);
-        if (clicks.isEmpty()) {
-            return;
-        }
-        clicks = DungeonAthenPortPolicy.orderClicks(
-                clicks, lastTerminalSlot, athen.termOrder, extras.dungeonTerminalsHumanOrder);
-        DungeonPolicy.TerminalClick click = clicks.getFirst();
-        if (terminal == DungeonPolicy.Terminal.RUBIX && athen.termRubixLeftOnly) {
-            click = new DungeonPolicy.TerminalClick(click.slot(), 0);
-        }
-        if (terminal == DungeonPolicy.Terminal.MELODY) {
-            DungeonPolicy.MelodyState melody = DungeonPolicy.parseMelody(items);
-            melodySkipQueue.addAll(DungeonPolicy.melodySkipClicks(
-                    melody,
-                    extras.dungeonTerminalsMelodySkip,
-                    extras.dungeonTerminalsMelodySkipFirstRow,
-                    extras.dungeonTerminalsMelodySkipMode,
-                    DungeonPolicy.melodyPlayRows(items)));
-        }
-        sendTerminalClick(client, screen, extras, click);
-    }
 
-    private static void sendTerminalClick(
+    static void sendTerminalClick(
             Minecraft client,
             AbstractContainerScreen<?> screen,
             QolSkyblockExtras extras,
@@ -1853,7 +1741,7 @@ public final class DungeonRuntime {
                 screen.getTitle() == null ? "" : screen.getTitle().getString()), click.slot());
     }
 
-    private static void armTerminalCooldown(QolSkyblockExtras extras) {
+    static void armTerminalCooldown(QolSkyblockExtras extras) {
         DungeonAthenSettings athen = extras.athen();
         int minMs = DungeonAthenPortPolicy.clampTermDelayMs(athen.termMinDelayMs);
         int maxMs = DungeonAthenPortPolicy.clampTermDelayMs(athen.termMaxDelayMs);
@@ -1867,14 +1755,14 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void playTerminalClickSound(Minecraft client, QolSkyblockExtras extras) {
+    static void playTerminalClickSound(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonTerminalsSounds) {
             return;
         }
         playConfiguredClickSound(client, extras);
     }
 
-    private static void playConfiguredClickSound(Minecraft client, QolSkyblockExtras extras) {
+    static void playConfiguredClickSound(Minecraft client, QolSkyblockExtras extras) {
         if (client == null || client.player == null) {
             return;
         }
@@ -1896,131 +1784,11 @@ public final class DungeonRuntime {
                 false);
     }
 
-    private static void autoSimon(Minecraft client) {
-        if (simonCooldown > 0
-                || client.gameMode == null
-                || client.player == null
-                || !(client.hitResult instanceof BlockHitResult hit)
-                || hit.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
-        BlockPos pos = hit.getBlockPos();
-        if (!DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
-            return;
-        }
-        simon = DungeonF7Policy.SimonState.idle();
-        client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
-        simonCooldown = 3;
-    }
 
-    private static void autoI4(Minecraft client) {
-        if (i4Cooldown > 0 || client.gameMode == null || client.player == null || client.level == null) {
-            return;
-        }
-        if (!EmberDungeonPolicy.isOnI4Device(
-                client.player.getX(), client.player.getY(), client.player.getZ())) {
-            return;
-        }
-        List<EmberDungeonPolicy.IntVec> remaining = new ArrayList<>();
-        for (EmberDungeonPolicy.IntVec vec : EmberDungeonPolicy.i4Blocks()) {
-            BlockPos pos = new BlockPos(vec.x(), vec.y(), vec.z());
-            if (EmberDungeonPolicy.isI4Lit(blockId(client, pos))) {
-                remaining.add(vec);
-            }
-        }
-        Optional<EmberDungeonPolicy.IntVec> next = DungeonF7Policy.nextLitI4(remaining);
-        if (next.isEmpty()) {
-            i4LookStart = 0L;
-            i4LookTarget = null;
-            return;
-        }
-        BlockPos pos = new BlockPos(next.get().x(), next.get().y(), next.get().z());
-        long now = System.currentTimeMillis();
-        QolSkyblockExtras extras = extras();
-        if (i4LookTarget == null || !i4LookTarget.equals(pos)) {
-            i4LookTarget = pos;
-            i4LookFrom = new DungeonF7Policy.LookAim(client.player.getYRot(), client.player.getXRot());
-            i4LookStart = now;
-        }
-        DungeonF7Policy.LookAim to = DungeonF7Policy.aimAt(
-                client.player.getX(),
-                client.player.getY() + client.player.getEyeHeight(),
-                client.player.getZ(),
-                pos.getX() + 0.5D,
-                pos.getY() + 0.5D,
-                pos.getZ() + 0.5D);
-        int duration = DungeonF7Policy.clampI4RotationMs(extras.dungeonF7AutoI4Rotation);
-        double progress = duration <= 0 ? 1.0D : (now - i4LookStart) / (double) duration;
-        DungeonF7Policy.LookAim from = i4LookFrom == null
-                ? new DungeonF7Policy.LookAim(client.player.getYRot(), client.player.getXRot())
-                : i4LookFrom;
-        DungeonF7Policy.LookAim aim = DungeonF7Policy.lerpLook(from, to, progress);
-        client.player.setYRot(aim.yaw());
-        client.player.setXRot(aim.pitch());
-        client.player.yRotO = aim.yaw();
-        client.player.xRotO = aim.pitch();
-        if (progress < 1.0D) {
-            return;
-        }
-        Vec3 center = Vec3.atCenterOf(pos);
-        BlockHitResult hit = new BlockHitResult(center, Direction.WEST, pos, false);
-        client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
-        i4Cooldown = 4;
-        i4LookStart = 0L;
-        i4LookTarget = null;
-    }
 
-    private static void tickAutoI4(Minecraft client, QolSkyblockExtras extras) {
-        if (client.player == null || client.gameMode == null || i4Timer < 0) {
-            return;
-        }
-        if (!EmberDungeonPolicy.isOnI4Device(
-                client.player.getX(), client.player.getY(), client.player.getZ())) {
-            return;
-        }
-        int tick = ++i4Timer;
-        if (!i4RodUsed && extras.dungeonF7AutoI4Rod && DungeonF7Policy.i4Action(tick, DungeonF7Policy.I4_ROD_TICK)) {
-            i4RodUsed = useNamedItem(client, "fishing_rod", "fishing rod");
-        }
-        if (!i4MaskUsed && extras.dungeonF7AutoI4Mask && DungeonF7Policy.i4Action(tick, DungeonF7Policy.I4_MASK_TICK)) {
-            i4MaskUsed = useNamedItem(client, "bonzo", "spirit mask");
-        }
-        if (!i4LeapUsed && extras.dungeonF7AutoI4Leap && DungeonF7Policy.i4Action(tick, DungeonF7Policy.I4_LEAP_TICK)) {
-            i4LeapUsed = useNamedItem(client, "spirit leap", "leap");
-            i4LeapWait = 8;
-        }
-        if (i4LeapWait > 0) {
-            i4LeapWait--;
-            clickLeapMenu(client, extras);
-        }
-        if (tick > DungeonF7Policy.I4_LEAP_TICK + 40) {
-            i4Timer = -1;
-        }
-    }
 
-    private static void relicLook(Minecraft client, QolSkyblockExtras extras, long now) {
-        if (client.player == null || relicLookFrom == null || relicLookTo == null || relicLookStart <= 0L) {
-            return;
-        }
-        ItemStack held = client.player.getMainHandItem();
-        String name = held == null || held.isEmpty() ? "" : held.getHoverName().getString();
-        if (!DungeonF7Policy.holdingRelic(name, lastRelic.replace(" Relic", ""))) {
-            relicLookStart = 0L;
-            return;
-        }
-        int duration = DungeonF7Policy.clampRelicLookMs(extras.dungeonF7RelicLookTime);
-        double progress = (now - relicLookStart) / (double) duration;
-        DungeonF7Policy.LookAim aim = DungeonF7Policy.lerpLook(relicLookFrom, relicLookTo, progress);
-        client.player.setYRot(aim.yaw());
-        client.player.setXRot(aim.pitch());
-        client.player.yRotO = aim.yaw();
-        client.player.xRotO = aim.pitch();
-        if (progress >= 1.0D) {
-            relicLookStart = 0L;
-        }
-    }
 
-    private static void updateDragonHud(Minecraft client, QolSkyblockExtras extras) {
+    static void updateDragonHud(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonF7Enabled || !extras.dungeonF7Dragons || !extras.dungeonF7DragonHealth
                 || client.player == null || client.level == null) {
             return;
@@ -2041,83 +1809,9 @@ public final class DungeonRuntime {
         }
     }
 
-    private static boolean useNamedItem(Minecraft client, String... needles) {
-        if (client.player == null || client.gameMode == null || needles == null) {
-            return false;
-        }
-        LocalPlayer player = client.player;
-        for (int slot = 0; slot < 9; slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            if (stack == null || stack.isEmpty()) {
-                continue;
-            }
-            String blob = (itemId(stack) + " " + stack.getHoverName().getString()).toLowerCase(Locale.ROOT);
-            boolean match = false;
-            for (String needle : needles) {
-                if (needle != null && blob.contains(needle.toLowerCase(Locale.ROOT))) {
-                    match = true;
-                    break;
-                }
-            }
-            if (!match) {
-                continue;
-            }
-            int selected = player.getInventory().getSelectedSlot();
-            player.getInventory().setSelectedSlot(slot);
-            client.gameMode.useItem(player, InteractionHand.MAIN_HAND);
-            player.getInventory().setSelectedSlot(selected);
-            return true;
-        }
-        return false;
-    }
 
-    private static void clickLeapMenu(Minecraft client, QolSkyblockExtras extras) {
-        if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen) || client.gameMode == null) {
-            return;
-        }
-        String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (!DungeonPolicy.isLeapMenu(title)) {
-            return;
-        }
-        DungeonPolicy.DungeonClass preferred = DungeonF7Policy.leapClass(extras.dungeonF7AutoI4LeapClass);
-        int melodySlot = -1;
-        int classSlot = -1;
-        int anySlot = -1;
-        for (Slot slot : screen.getMenu().slots) {
-            if (slot == null || slot.getItem().isEmpty() || slot.index >= 54) {
-                continue;
-            }
-            String name = slot.getItem().getHoverName().getString();
-            List<String> lore = InventoryChromeRuntime.loreLines(slot.getItem());
-            if (DungeonPolicy.leapHeadUnavailable(lore)) {
-                continue;
-            }
-            DungeonPolicy.DungeonClass dungeonClass = DungeonPolicy.classFromLore(lore);
-            if (anySlot < 0) {
-                anySlot = slot.index;
-            }
-            if (extras.dungeonF7AutoI4LeapMelody && !melodyLeapName.isBlank()
-                    && name.equalsIgnoreCase(melodyLeapName)) {
-                melodySlot = slot.index;
-            }
-            if (classSlot < 0 && dungeonClass == preferred) {
-                classSlot = slot.index;
-            }
-        }
-        int chosen = melodySlot >= 0 ? melodySlot : (classSlot >= 0 ? classSlot : anySlot);
-        if (chosen < 0) {
-            return;
-        }
-        client.gameMode.handleContainerInput(
-                screen.getMenu().containerId,
-                chosen,
-                0,
-                ContainerInput.PICKUP,
-                client.player);
-        i4LeapWait = 0;
-    }
 
-    private static String itemId(ItemStack stack) {
+    static String itemId(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return "";
         }
@@ -2125,7 +1819,7 @@ public final class DungeonRuntime {
         return key == null ? "" : key.getPath();
     }
 
-    private static void scanArrowAlign(Minecraft client) {
+    static void scanArrowAlign(Minecraft client) {
         arrowClicks.clear();
         if (client.player == null || client.level == null) {
             return;
@@ -2152,7 +1846,7 @@ public final class DungeonRuntime {
                 arrowClicks.addAll(EmberDungeonPolicy.remainingArrowClicks(rotations, solution)));
     }
 
-    private static void observeLeaps(Minecraft client, QolSkyblockExtras extras) {
+    static void observeLeaps(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonLeapEnabled || !extras.dungeonLeapCounter || client.player == null) {
             return;
         }
@@ -2208,73 +1902,8 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanSecretWaypoints(Minecraft client, QolSkyblockExtras extras) {
-        secretWaypoints.clear();
-        if (client.player == null || client.level == null || extras == null) {
-            return;
-        }
-        boolean mapHud = extras.dungeonHudEnabled && extras.dungeonHudMap;
-        boolean secretEsp = extras.dungeonEspEnabled && extras.dungeonEspSecretWaypoints;
-        if (!mapHud && !secretEsp) {
-            return;
-        }
-        boolean reveal = extras.dungeonMapRevealHidden();
-        boolean fullGrid = mapHud || reveal;
-        List<int[]> centers = new ArrayList<>();
-        int playerCx = DungeonRoomDataPolicy.roomCenter(client.player.blockPosition().getX());
-        int playerCz = DungeonRoomDataPolicy.roomCenter(client.player.blockPosition().getZ());
-        centers.add(new int[]{playerCx, playerCz});
-        if (fullGrid) {
-            for (int tileZ = 0; tileZ < DungeonMapPolicy.GRID; tileZ++) {
-                for (int tileX = 0; tileX < DungeonMapPolicy.GRID; tileX++) {
-                    centers.add(new int[]{
-                            DungeonMapPolicy.roomWorldCenter(tileX),
-                            DungeonMapPolicy.roomWorldCenter(tileZ)
-                    });
-                }
-            }
-        } else if (lastMapBoard.calibration().ok()) {
-            for (DungeonMapPolicy.RoomTile tile : lastMapBoard.rooms()) {
-                if (tile.type() == DungeonMapPolicy.RoomType.EMPTY
-                        || tile.type() == DungeonMapPolicy.RoomType.UNDISCOVERED) {
-                    continue;
-                }
-                centers.add(new int[]{
-                        DungeonMapPolicy.roomWorldCenter(tile.tileX()),
-                        DungeonMapPolicy.roomWorldCenter(tile.tileZ())
-                });
-            }
-        }
-        int budget = reveal ? DungeonMapPolicy.GRID * DungeonMapPolicy.GRID : 8;
-        int newHashes = 0;
-        for (int[] center : centers) {
-            int cx = center[0];
-            int cz = center[1];
-            long key = pack(
-                    DungeonRoomDataPolicy.roomOrigin(cx),
-                    DungeonRoomDataPolicy.roomOrigin(cz));
-            if (hashedRoomSecrets.containsKey(key) || hashedRoomTried.contains(key)) {
-                continue;
-            }
-            boolean playerRoom = cx == playerCx && cz == playerCz;
-            if (!playerRoom && newHashes >= budget) {
-                continue;
-            }
-            BlockPos sample = new BlockPos(cx, 69, cz);
-            if (!client.level.hasChunkAt(sample)) {
-                continue;
-            }
-            if (hashAndCacheRoom(client, cx, cz, key)) {
-                newHashes++;
-            }
-        }
-        placePendingSecrets(client);
-        for (List<DungeonRoomDataPolicy.PlacedWaypoint> placed : hashedRoomSecrets.values()) {
-            secretWaypoints.addAll(placed);
-        }
-    }
 
-    private static boolean hashAndCacheRoom(Minecraft client, int cx, int cz, long key) {
+    static boolean hashAndCacheRoom(Minecraft client, int cx, int cz, long key) {
         List<String> column = new ArrayList<>();
         for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
             column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
@@ -2332,7 +1961,7 @@ public final class DungeonRuntime {
         return true;
     }
 
-    private static boolean secretsPlacedFor(String name) {
+    static boolean secretsPlacedFor(String name) {
         if (name == null || name.isBlank()) {
             return false;
         }
@@ -2347,7 +1976,7 @@ public final class DungeonRuntime {
         return false;
     }
 
-    private static void placePendingSecrets(Minecraft client) {
+    static void placePendingSecrets(Minecraft client) {
         if (client == null || client.level == null || hashedTileRoom.isEmpty()) {
             return;
         }
@@ -2415,7 +2044,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void rememberHashedIdentity(
+    static void rememberHashedIdentity(
             int cx, int cz, DungeonRoomDataPolicy.RoomMeta room) {
         int tileX = DungeonMapPolicy.tileFromWorld(DungeonRoomDataPolicy.roomOrigin(cx));
         int tileZ = DungeonMapPolicy.tileFromWorld(DungeonRoomDataPolicy.roomOrigin(cz));
@@ -2437,7 +2066,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void creditRoomSecrets(Minecraft client, int delta) {
+    static void creditRoomSecrets(Minecraft client, int delta) {
         if (delta <= 0 || client == null || client.player == null) {
             return;
         }
@@ -2468,61 +2097,9 @@ public final class DungeonRuntime {
         secretsFoundByRoom.put(identity.name(), next);
     }
 
-    private static void dropClassUltimate(Minecraft client) {
-        if (client == null || client.player == null) {
-            return;
-        }
-        LocalPlayer player = client.player;
-        if (player.connection != null) {
-            player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerActionPacket(
-                    net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.DROP_ITEM,
-                    BlockPos.ZERO,
-                    net.minecraft.core.Direction.DOWN));
-        }
-        for (int slot = 0; slot < 9; slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            if (stack == null || stack.isEmpty()) {
-                continue;
-            }
-            if (EmberDungeonPolicy.isClassUltimateItem(
-                    stack.getHoverName().getString(),
-                    InventoryChromeRuntime.loreLines(stack))) {
-                int selected = player.getInventory().getSelectedSlot();
-                player.getInventory().setSelectedSlot(slot);
-                player.drop(false);
-                player.getInventory().setSelectedSlot(selected);
-                return;
-            }
-        }
-    }
 
-    private static boolean useDebuffItem(Minecraft client, QolSkyblockExtras extras) {
-        if (client == null || client.player == null || client.gameMode == null) {
-            return false;
-        }
-        LocalPlayer player = client.player;
-        for (int slot = 0; slot < 9; slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            if (stack == null || stack.isEmpty()) {
-                continue;
-            }
-            String name = stack.getHoverName().getString();
-            List<String> lore = InventoryChromeRuntime.loreLines(stack);
-            boolean ice = extras.dungeonF7DebuffIce && EmberDungeonPolicy.isIceSprayItem(name, lore);
-            boolean gravity = extras.dungeonF7DebuffGravity && EmberDungeonPolicy.isGravityWandItem(name, lore);
-            if (!ice && !gravity) {
-                continue;
-            }
-            int selected = player.getInventory().getSelectedSlot();
-            player.getInventory().setSelectedSlot(slot);
-            client.gameMode.useItem(player, InteractionHand.MAIN_HAND);
-            player.getInventory().setSelectedSlot(selected);
-            return true;
-        }
-        return false;
-    }
 
-    private static void highlightEmberWorld(
+    static void highlightEmberWorld(
             Minecraft client,
             LocalPlayer player,
             QolSkyblockExtras extras,
@@ -2740,7 +2317,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void renderTerminalWaypoints(
+    static void renderTerminalWaypoints(
             Minecraft client,
             QolSkyblockExtras extras,
             DungeonAthenSettings athen,
@@ -2778,7 +2355,7 @@ public final class DungeonRuntime {
         return lastMapBoard.players();
     }
 
-    private static boolean melodyOverlay(DungeonPolicy.MelodyState melody, int slot) {
+    static boolean melodyOverlay(DungeonPolicy.MelodyState melody, int slot) {
         if (melody.readyToClick() && slot == melody.clickSlot()) {
             return true;
         }
@@ -2791,7 +2368,7 @@ public final class DungeonRuntime {
         return false;
     }
 
-    private static int salvageColor(AbstractContainerScreen<?> screen, int slotIndex, QolSkyblockExtras extras) {
+    static int salvageColor(AbstractContainerScreen<?> screen, int slotIndex, QolSkyblockExtras extras) {
         if (slotIndex >= screen.getMenu().slots.size()) {
             return 0;
         }
@@ -2810,7 +2387,7 @@ public final class DungeonRuntime {
                 boost, extras.dungeonMenusSalvage50Color, extras.dungeonMenusSalvageLowColor);
     }
 
-    private static int partyFinderColor(
+    static int partyFinderColor(
             AbstractContainerScreen<?> screen, int slotIndex, QolSkyblockExtras extras) {
         if (slotIndex >= screen.getMenu().slots.size()) {
             return 0;
@@ -2839,7 +2416,7 @@ public final class DungeonRuntime {
                 : 0;
     }
 
-    private static int chestColor(AbstractContainerScreen<?> screen, int slotIndex, QolSkyblockExtras extras) {
+    static int chestColor(AbstractContainerScreen<?> screen, int slotIndex, QolSkyblockExtras extras) {
         if (slotIndex >= screen.getMenu().slots.size()) {
             return 0;
         }
@@ -2860,7 +2437,7 @@ public final class DungeonRuntime {
                 .orElse(0);
     }
 
-    private static List<DungeonPolicy.TerminalItem> snapshot(AbstractContainerScreen<?> screen) {
+    static List<DungeonPolicy.TerminalItem> snapshot(AbstractContainerScreen<?> screen) {
         List<DungeonPolicy.TerminalItem> items = new ArrayList<>();
         List<Slot> slots = screen.getMenu().slots;
         int limit = Math.min(54, slots.size());
@@ -2880,7 +2457,7 @@ public final class DungeonRuntime {
         return items;
     }
 
-    private static void scanPuzzles(Minecraft client, QolSkyblockExtras extras) {
+    static void scanPuzzles(Minecraft client, QolSkyblockExtras extras) {
         puzzleMarks.clear();
         if (!extras.dungeonPuzzlesEnabled || !SkyBlockDungeonDetector.confidentlyInDungeon()) {
             return;
@@ -2916,7 +2493,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanIceFill(Minecraft client, BlockPos origin) {
+    static void scanIceFill(Minecraft client, BlockPos origin) {
         if (scanIceFillBoard(client) || skipPuzzleFallback(client, "Ice Fill")) {
             return;
         }
@@ -2977,7 +2554,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanWaterBoard(Minecraft client, BlockPos origin) {
+    static void scanWaterBoard(Minecraft client, BlockPos origin) {
         if (scanWaterBoardLayout(client) || skipPuzzleFallback(client, "Water Board")) {
             return;
         }
@@ -3044,7 +2621,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanBoulder(Minecraft client, BlockPos origin) {
+    static void scanBoulder(Minecraft client, BlockPos origin) {
         if (scanBoulderBoard(client) || skipPuzzleFallback(client, "Boulder")) {
             return;
         }
@@ -3087,7 +2664,7 @@ public final class DungeonRuntime {
                 next.push() ? 0xFFF97316 : 0xFF22C55E));
     }
 
-    private static void scanTpMaze(Minecraft client, BlockPos origin) {
+    static void scanTpMaze(Minecraft client, BlockPos origin) {
         List<DungeonPuzzlePolicy.WorldCell> pads = new ArrayList<>();
         DungeonPuzzlePolicy.WorldCell chest = null;
         DungeonRoomDataPolicy.Rotation rotation = currentHashedRotation(client).orElse(null);
@@ -3137,7 +2714,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanWeirdoChest(Minecraft client, LocalPlayer player, BlockPos origin) {
+    static void scanWeirdoChest(Minecraft client, LocalPlayer player, BlockPos origin) {
         AABB search = player.getBoundingBox().inflate(16.0D);
         List<DungeonPuzzlePolicy.NamedPos> npcs = new ArrayList<>();
         for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
@@ -3163,7 +2740,7 @@ public final class DungeonRuntime {
                 puzzleMarks.add(new Mark(blockBox(chest.x(), chest.y(), chest.z()), 0xFF22C55E)));
     }
 
-    private static void scanDungeonMap(Minecraft client, QolSkyblockExtras extras) {
+    static void scanDungeonMap(Minecraft client, QolSkyblockExtras extras) {
         boolean hideBoss = extras.dungeonHudMapHideBoss && sidebar.boss();
         boolean needPreview = extras.dungeonHudEnabled && extras.dungeonHudMap && !hideBoss;
         boolean needBoard = extras.dungeonEspEnabled;
@@ -3219,7 +2796,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static MapItemSavedData findDungeonMapData(Minecraft client) {
+    static MapItemSavedData findDungeonMapData(Minecraft client) {
         if (client.player == null || client.level == null) {
             return null;
         }
@@ -3240,7 +2817,7 @@ public final class DungeonRuntime {
         return null;
     }
 
-    private static MapItemSavedData mapDataIfDungeon(Minecraft client, ItemStack stack) {
+    static MapItemSavedData mapDataIfDungeon(Minecraft client, ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.is(Items.FILLED_MAP) || client.level == null) {
             return null;
         }
@@ -3258,7 +2835,7 @@ public final class DungeonRuntime {
         return data;
     }
 
-    private static void observeTeleport(LocalPlayer player) {
+    static void observeTeleport(LocalPlayer player) {
         Vec3 now = player.position();
         if (lastPlayerPos != null && now.distanceTo(lastPlayerPos) > 8.0D) {
             DungeonPuzzlePolicy.WorldCell from = lastPad;
@@ -3277,7 +2854,7 @@ public final class DungeonRuntime {
         lastPlayerPos = now;
     }
 
-    private static void highlightSimon(
+    static void highlightSimon(
             Minecraft client, LocalPlayer player, QolSkyblockExtras extras, Vec3 eye) {
         BlockPos start = new BlockPos(110, 121, 91);
         if (!player.blockPosition().closerThan(start, 48.0D)) {
@@ -3299,7 +2876,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void markDiorite(
+    static void markDiorite(
             Minecraft client, LocalPlayer player, QolSkyblockExtras extras, Vec3 eye) {
         BlockPos origin = player.blockPosition();
         if (!DungeonPolicy.inF7PillarBox(origin.getX(), origin.getY(), origin.getZ())) {
@@ -3320,11 +2897,11 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void box(AABB box, int color, QolSkyblockExtras extras, Vec3 eye) {
+    static void box(AABB box, int color, QolSkyblockExtras extras, Vec3 eye) {
         box(box, color, extras, eye, extras != null && !extras.dungeonEspDepth);
     }
 
-    private static void box(
+    static void box(
             AABB box, int color, QolSkyblockExtras extras, Vec3 eye, boolean throughWalls) {
         int fill = extras.dungeonEspFill
                 ? withAlpha(color, (int) Math.round(DungeonAssistPolicy.clampOpacity(extras.dungeonEspOpacity) * 2.55D))
@@ -3338,11 +2915,11 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void tracer(Vec3 from, Vec3 to, int color, QolSkyblockExtras extras) {
+    static void tracer(Vec3 from, Vec3 to, int color, QolSkyblockExtras extras) {
         tracer(from, to, color, extras, extras != null && !extras.dungeonEspDepth);
     }
 
-    private static void tracer(
+    static void tracer(
             Vec3 from, Vec3 to, int color, QolSkyblockExtras extras, boolean throughWalls) {
         var line = Gizmos.line(from, to, color);
         if (throughWalls) {
@@ -3350,7 +2927,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static boolean needsNamedDungeonEsp(QolSkyblockExtras extras) {
+    static boolean needsNamedDungeonEsp(QolSkyblockExtras extras) {
         return extras.dungeonEspSecrets
                 || extras.dungeonEspStarred
                 || extras.dungeonEspFels
@@ -3366,7 +2943,7 @@ public final class DungeonRuntime {
                 || (extras.dungeonF7Enabled && extras.dungeonF7WitherEsp);
     }
 
-    private static void considerNamedEsp(
+    static void considerNamedEsp(
             Entity entity,
             QolSkyblockExtras extras,
             Vec3 eye) {
@@ -3399,7 +2976,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static int colorFor(DungeonPolicy.EspKind kind, QolSkyblockExtras extras, String name) {
+    static int colorFor(DungeonPolicy.EspKind kind, QolSkyblockExtras extras, String name) {
         return switch (kind) {
             case STARRED -> extras.dungeonEspStarred ? extras.dungeonEspStarredColor : 0;
             case BAT -> extras.dungeonEspBats ? extras.dungeonEspBatColor : 0;
@@ -3429,7 +3006,7 @@ public final class DungeonRuntime {
         };
     }
 
-    private static int leapColor(DungeonPolicy.DungeonClass dungeonClass) {
+    static int leapColor(DungeonPolicy.DungeonClass dungeonClass) {
         return switch (dungeonClass) {
             case ARCHER -> 0x80FFAA00;
             case MAGE -> 0x8055FFFF;
@@ -3440,7 +3017,7 @@ public final class DungeonRuntime {
         };
     }
 
-    private static void scanSimon(Minecraft client) {
+    static void scanSimon(Minecraft client) {
         if (client.player == null || client.level == null) {
             return;
         }
@@ -3458,26 +3035,8 @@ public final class DungeonRuntime {
         simon = DungeonF7Policy.observeSimon(simon, lit);
     }
 
-    private static void autoSimonNext(Minecraft client) {
-        EmberDungeonPolicy.IntVec next = simon.nextButton();
-        if (simonCooldown > 0
-                || client.gameMode == null
-                || client.player == null
-                || next == null
-                || !(client.hitResult instanceof BlockHitResult hit)
-                || hit.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
-        BlockPos pos = hit.getBlockPos();
-        if (pos.getX() != next.x() || pos.getY() != next.y() || pos.getZ() != next.z()) {
-            return;
-        }
-        client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
-        simon = DungeonF7Policy.consumeNext(simon);
-        simonCooldown = 3;
-    }
 
-    private static void updateCrystalHud(Minecraft client, QolSkyblockExtras extras, long now) {
+    static void updateCrystalHud(Minecraft client, QolSkyblockExtras extras, long now) {
         lastCrystalHud = "";
         if (!extras.dungeonF7Enabled || !extras.dungeonF7Crystals || client.player == null) {
             return;
@@ -3676,7 +3235,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void addTimer(List<String> lines, String label, long until, long now) {
+    static void addTimer(List<String> lines, String label, long until, long now) {
         if (label == null || label.isBlank() || until <= now) {
             return;
         }
@@ -3689,7 +3248,7 @@ public final class DungeonRuntime {
                 extras.dungeonF7TimerPrefix));
     }
 
-    private static void observeTabHud(Minecraft client, QolSkyblockExtras extras) {
+    static void observeTabHud(Minecraft client, QolSkyblockExtras extras) {
         if (client == null) {
             return;
         }
@@ -3718,7 +3277,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void sendParty(Minecraft client, String text) {
+    static void sendParty(Minecraft client, String text) {
         if (text == null || text.isBlank() || client == null || client.player == null
                 || client.player.connection == null) {
             return;
@@ -3730,14 +3289,14 @@ public final class DungeonRuntime {
         client.player.connection.sendCommand("pc " + text);
     }
 
-    private static void showTitle(Minecraft client, boolean enabled, String text) {
+    static void showTitle(Minecraft client, boolean enabled, String text) {
         if (!enabled || client == null || client.gui == null || text == null || text.isBlank()) {
             return;
         }
         client.gui.hud.setTitle(Component.literal(text));
     }
 
-    private static List<String> sidebarLines() {
+    static List<String> sidebarLines() {
         String text = SkyBlockSidebar.text();
         if (text == null || text.isBlank()) {
             return List.of();
@@ -3745,7 +3304,7 @@ public final class DungeonRuntime {
         return List.of(text.split("\\R"));
     }
 
-    private static String entityName(Entity entity) {
+    static String entityName(Entity entity) {
         if (entity == null) {
             return "";
         }
@@ -3756,11 +3315,11 @@ public final class DungeonRuntime {
         return entity.getName().getString();
     }
 
-    private static String blockId(Minecraft client, BlockPos pos) {
+    static String blockId(Minecraft client, BlockPos pos) {
         return blockId(client.level.getBlockState(pos));
     }
 
-    private static String blockId(BlockState state) {
+    static String blockId(BlockState state) {
         if (state == null) {
             return "";
         }
@@ -3768,13 +3327,13 @@ public final class DungeonRuntime {
         return key == null ? "" : key.getPath();
     }
 
-    private static String fullBlockId(Minecraft client, BlockPos pos) {
+    static String fullBlockId(Minecraft client, BlockPos pos) {
         BlockState state = client.level.getBlockState(pos);
         var key = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         return key == null ? "minecraft:air" : key.toString();
     }
 
-    private static String nearbyColor(Minecraft client, BlockPos pos, List<String> palette) {
+    static String nearbyColor(Minecraft client, BlockPos pos, List<String> palette) {
         for (BlockPos around : List.of(pos.above(), pos.below(), pos.north(), pos.south(), pos.east(), pos.west())) {
             int idx = DungeonPuzzlePolicy.leverColorIndex(blockId(client, around), palette);
             if (idx >= 0) {
@@ -3784,31 +3343,31 @@ public final class DungeonRuntime {
         return "";
     }
 
-    private static AABB blockBox(BlockPos pos) {
+    static AABB blockBox(BlockPos pos) {
         return blockBox(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    private static AABB blockBox(int x, int y, int z) {
+    static AABB blockBox(int x, int y, int z) {
         return new AABB(x, y, z, x + 1, y + 1, z + 1);
     }
 
-    private static long pack(int x, int z) {
+    static long pack(int x, int z) {
         return ((long) x << 32) ^ (z & 0xFFFFFFFFL);
     }
 
-    private static int unpackX(long packed) {
+    static int unpackX(long packed) {
         return (int) (packed >> 32);
     }
 
-    private static int unpackZ(long packed) {
+    static int unpackZ(long packed) {
         return (int) packed;
     }
 
-    private static int withAlpha(int argb, int alpha) {
+    static int withAlpha(int argb, int alpha) {
         return (argb & 0x00FFFFFF) | (alpha << 24);
     }
 
-    private static List<DungeonMapPolicy.PlayerIcon> mapIcons(
+    static List<DungeonMapPolicy.PlayerIcon> mapIcons(
             MapItemSavedData data, QolSkyblockExtras extras, String selfName) {
         if (!extras.dungeonHudMapPlayers || data == null) {
             return List.of();
@@ -3855,11 +3414,11 @@ public final class DungeonRuntime {
                 vanilla);
     }
 
-    private static boolean isDropKey(int glfwKey) {
+    static boolean isDropKey(int glfwKey) {
         return glfwKey == GLFW.GLFW_KEY_Q;
     }
 
-    private static int melodyDigitFromKey(int glfwKey, DungeonAthenSettings athen) {
+    static int melodyDigitFromKey(int glfwKey, DungeonAthenSettings athen) {
         if (QolKeybindNames.resolveGlfwKey(athen.termMelodyKey1, "1") == glfwKey) {
             return 1;
         }
@@ -3875,7 +3434,7 @@ public final class DungeonRuntime {
         return digitFromKey(glfwKey);
     }
 
-    private static boolean clickHoveredSolver(AbstractContainerScreen<?> screen, int button) {
+    static boolean clickHoveredSolver(AbstractContainerScreen<?> screen, int button) {
         if (!(screen instanceof AbstractContainerScreenAccessor accessor)) {
             return false;
         }
@@ -4037,7 +3596,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void tickGoldorHelpers(Minecraft client, QolSkyblockExtras extras, long now) {
+    static void tickGoldorHelpers(Minecraft client, QolSkyblockExtras extras, long now) {
         if (client.player == null || client.level == null) {
             return;
         }
@@ -4067,7 +3626,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void observeGoldorChat(
+    static void observeGoldorChat(
             Minecraft client,
             QolSkyblockExtras extras,
             String raw,
@@ -4149,7 +3708,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void completeSharpShooter(Minecraft client, QolSkyblockExtras extras, String method) {
+    static void completeSharpShooter(Minecraft client, QolSkyblockExtras extras, String method) {
         if (sharpShooter.complete()) {
             return;
         }
@@ -4161,7 +3720,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void renderSharpShooter(QolSkyblockExtras extras, Vec3 eye) {
+    static void renderSharpShooter(QolSkyblockExtras extras, Vec3 eye) {
         for (EmberDungeonPolicy.IntVec pos : sharpShooter.marked()) {
             box(blockBox(pos.x(), pos.y(), pos.z()), extras.dungeonF7SharpMarkedColor, extras, eye);
         }
@@ -4185,7 +3744,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void persistSectionPbs(
+    static void persistSectionPbs(
             DungeonGoldorPolicy.TermTimesState previous,
             DungeonGoldorPolicy.TermTimesState next,
             QolSkyblockExtras extras) {
@@ -4197,7 +3756,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void persistTerminalTypePb(QolSkyblockExtras extras, long now) {
+    static void persistTerminalTypePb(QolSkyblockExtras extras, long now) {
         Map<String, Long> pbs = DungeonLeftoverPolicy.parseSplitTimes(extras.dungeonF7TermPbTimes);
         DungeonPolicy.Terminal type = DungeonPolicy.detectTerminal(lastTermTitle);
         if (DungeonGoldorPolicy.recordTerminalTypePb(pbs, type, terminalOpenedAt, now)) {
@@ -4206,7 +3765,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static String localName(Minecraft client) {
+    static String localName(Minecraft client) {
         if (client == null || client.player == null) {
             return "";
         }
@@ -4258,7 +3817,7 @@ public final class DungeonRuntime {
                 DungeonBladePolicy.atSimonSays(player.getX(), player.getY(), player.getZ()));
     }
 
-    private static boolean shouldSuppressProgressTitle(
+    static boolean shouldSuppressProgressTitle(
             Minecraft client,
             QolSkyblockExtras extras,
             String raw,
@@ -4291,7 +3850,7 @@ public final class DungeonRuntime {
         return DungeonAssistPolicy.otherProgressTitle(raw, localName(client));
     }
 
-    private static void noteMelodyParty(String raw, QolSkyblockExtras extras, Minecraft client) {
+    static void noteMelodyParty(String raw, QolSkyblockExtras extras, Minecraft client) {
         if (!extras.dungeonHudMelodyOther || !termTimes.inP3()) {
             return;
         }
@@ -4306,14 +3865,14 @@ public final class DungeonRuntime {
         });
     }
 
-    private static void resetMelodyOther() {
+    static void resetMelodyOther() {
         melodyOtherNames.clear();
         melodyOtherName = "";
         melodyOtherPercent = 0;
         melodyOtherOwn = false;
     }
 
-    private static String melodyOtherHudName() {
+    static String melodyOtherHudName() {
         Map<String, DungeonPolicy.DungeonClass> classes =
                 EmberDungeonPolicy.teammateClasses(sidebarLines());
         DungeonPolicy.DungeonClass found = classes.getOrDefault(
@@ -4325,7 +3884,7 @@ public final class DungeonRuntime {
         return name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT);
     }
 
-    private static void persistSplitPbs(
+    static void persistSplitPbs(
             DungeonLeftoverPolicy.SplitSnapshot previous,
             DungeonLeftoverPolicy.SplitSnapshot next,
             QolSkyblockExtras extras) {
@@ -4356,7 +3915,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void persistKuudraPbs(
+    static void persistKuudraPbs(
             KuudraSplitPolicy.Snapshot previous,
             KuudraSplitPolicy.Snapshot next,
             QolSkyblockExtras extras) {
@@ -4378,7 +3937,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void refreshChestProfitHud(Minecraft client, QolSkyblockExtras extras) {
+    static void refreshChestProfitHud(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonMenusEnabled
                 || !extras.dungeonMenusChestProfit
                 || client.gui == null
@@ -4495,7 +4054,7 @@ public final class DungeonRuntime {
         return true;
     }
 
-    private static boolean protectingTerminal() {
+    static boolean protectingTerminal() {
         QolSkyblockExtras extras = extras();
         return extras.dungeonTerminalsEnabled
                 && extras.dungeonTerminalsProtect
@@ -4505,7 +4064,7 @@ public final class DungeonRuntime {
                         extras.dungeonTerminalsProtectMs);
     }
 
-    private static void observeTerminalOpen(Minecraft client, QolSkyblockExtras extras) {
+    static void observeTerminalOpen(Minecraft client, QolSkyblockExtras extras) {
         if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
             // Pingless terminals keep the same chest open. A 1-frame empty screen
             // must not re-arm first-click delay between Auto Terms clicks.
@@ -4532,11 +4091,11 @@ public final class DungeonRuntime {
         }
     }
 
-    private static boolean isCloseKey(int glfwKey) {
+    static boolean isCloseKey(int glfwKey) {
         return glfwKey == GLFW.GLFW_KEY_ESCAPE || glfwKey == GLFW.GLFW_KEY_E;
     }
 
-    private static int digitFromKey(int glfwKey) {
+    static int digitFromKey(int glfwKey) {
         if (glfwKey >= GLFW.GLFW_KEY_1 && glfwKey <= GLFW.GLFW_KEY_4) {
             return glfwKey - GLFW.GLFW_KEY_0;
         }
@@ -4546,7 +4105,7 @@ public final class DungeonRuntime {
         return -1;
     }
 
-    private static void noteDungeonRunStart(String raw) {
+    static void noteDungeonRunStart(String raw) {
         if (dungeonRunStarted || raw == null) {
             return;
         }
@@ -4560,7 +4119,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void noteDungeonRunProgress(Minecraft client) {
+    static void noteDungeonRunProgress(Minecraft client) {
         if (dungeonRunStarted || client == null) {
             return;
         }
@@ -4576,7 +4135,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void maybeFinishExtraStats(Minecraft client) {
+    static void maybeFinishExtraStats(Minecraft client) {
         QolSkyblockExtras extras = extras();
         if (!extras.dungeonHudEnabled || !extras.dungeonHudExtraStats) {
             return;
@@ -4590,7 +4149,7 @@ public final class DungeonRuntime {
         maybePrintExtraStats(client);
     }
 
-    private static void maybePrintExtraStats(Minecraft client) {
+    static void maybePrintExtraStats(Minecraft client) {
         if (!DungeonExtraStatsPolicy.shouldPrint(extraStats)) {
             return;
         }
@@ -4604,32 +4163,17 @@ public final class DungeonRuntime {
         }
     }
 
-    private static DungeonMapPolicy.Board emptyMapBoard() {
+    static DungeonMapPolicy.Board emptyMapBoard() {
         return new DungeonMapPolicy.Board(
                 DungeonMapPolicy.Calibration.none(), List.of(), List.of(), List.of(), "");
     }
 
-    private static void armRequeueFromScreen(Minecraft client, QolSkyblockExtras extras) {
-        if (client == null || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            return;
-        }
-        if (!DungeonPolicy.shouldArmRequeue(
-                extras.dungeonRequeueEnabled,
-                dungeonRunStarted,
-                extraStatsSeen,
-                dungeonWorldTicks,
-                titleOf(screen))) {
-            return;
-        }
-        extraStatsSeen = true;
-        requeueTicks = Math.max(0, extras.dungeonRequeueDelay);
-    }
 
-    private static String titleOf(AbstractContainerScreen<?> screen) {
+    static String titleOf(AbstractContainerScreen<?> screen) {
         return screen.getTitle() == null ? "" : screen.getTitle().getString();
     }
 
-    private static void clickContainerSlot(AbstractContainerScreen<?> screen, int slot) {
+    static void clickContainerSlot(AbstractContainerScreen<?> screen, int slot) {
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.gameMode == null || client.player == null) {
             return;
@@ -4643,223 +4187,17 @@ public final class DungeonRuntime {
         lastTerminalSlot = slot;
     }
 
-    private static void maybeCloseChest(Minecraft client, QolSkyblockExtras extras) {
-        if (!extras.dungeonMenusEnabled
-                || !extras.dungeonMenusCloseChest
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            closeChestArmed = false;
-            return;
-        }
-        if (!TempleDungeonPolicy.shouldAutoCloseChest(true, screen.getTitle().getString())) {
-            closeChestArmed = false;
-            closeChestWait = -1;
-            closeChestTitle = "";
-            return;
-        }
-        if ("Any Key".equals(DungeonF7Policy.normalizeCloseChestMode(extras.dungeonMenusCloseChestMode))) {
-            closeChestArmed = true;
-            closeChestWait = -1;
-            return;
-        }
-        closeChestArmed = false;
-        String title = screen.getTitle().getString();
-        if (!title.equals(closeChestTitle) || closeChestWait < 0) {
-            closeChestTitle = title;
-            closeChestWait = DungeonAthenPortPolicy.chestCloseDelayTicks(
-                    extras.athen().closeChestMinDelay, extras.athen().closeChestMaxDelay);
-        }
-        if (closeChestWait > 0) {
-            closeChestWait--;
-            return;
-        }
-        closeChestWait = -1;
-        closeChestTitle = "";
-        client.player.closeContainer();
-    }
 
-    private static void flushTermQueue(Minecraft client, QolSkyblockExtras extras) {
-        if (terminalCooldown > 0 || client.gameMode == null || client.player == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            if (!(client.gui.screen() instanceof AbstractContainerScreen<?>)) {
-                termQueue.clear();
-                melodySkipQueue.clear();
-                termQueueUpdatedAt = 0L;
-                clearPredictedClicks();
-            }
-            return;
-        }
-        String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
-            termQueue.clear();
-            melodySkipQueue.clear();
-            termQueueUpdatedAt = 0L;
-            clearPredictedClicks();
-            return;
-        }
-        if (DungeonAthenPortPolicy.queueNeedsResync(
-                termQueueUpdatedAt, System.currentTimeMillis(), extras.athen().termResyncTimeout)) {
-            termQueue.clear();
-            melodySkipQueue.clear();
-            termQueueUpdatedAt = 0L;
-            clearPredictedClicks();
-            return;
-        }
-        if (terminalFirstClickPending()) {
-            return;
-        }
-        var next = DungeonLeftoverPolicy.dequeueIfReady(termQueue, 0);
-        if (next.isEmpty()) {
-            return;
-        }
-        DungeonLeftoverPolicy.QueuedClick click = next.get();
-        int packetButton = extras.dungeonTerminalsClone ? 2 : click.button();
-        ContainerInput input = extras.dungeonTerminalsClone ? ContainerInput.CLONE : ContainerInput.PICKUP;
-        client.gameMode.handleContainerInput(
-                screen.getMenu().containerId, click.slot(), packetButton, input, client.player);
-        armTerminalCooldown(extras);
-        lastTerminalSlot = click.slot();
-    }
 
-    private static void autoSuperboom(Minecraft client, QolSkyblockExtras extras) {
-        boolean attackDown = client.options != null && client.options.keyAttack.isDown();
-        if (!attackDown) {
-            superboomAttackHeld = false;
-            return;
-        }
-        if (superboomAttackHeld || superboomCooldown > 0 || client.gameMode == null || client.player == null
-                || !(client.hitResult instanceof BlockHitResult hit)
-                || hit.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
-        superboomAttackHeld = true;
-        String id = blockId(client, hit.getBlockPos());
-        if (!DungeonAthenPortPolicy.isSuperboomWall(id, extras.athen().superboomExtraBlocks)) {
-            return;
-        }
-        LocalPlayer player = client.player;
-        Integer slot = findSuperboom(player);
-        if (slot == null) {
-            return;
-        }
-        if (!DungeonLeftoverPolicy.shouldAutoSuperboom(true, true, true, true)) {
-            return;
-        }
-        int selected = player.getInventory().getSelectedSlot();
-        if (extras.dungeonF7SuperboomSwapBack && superboomOriginalSlot < 0) {
-            superboomOriginalSlot = selected;
-        }
-        player.getInventory().setSelectedSlot(slot);
-        client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
-        player.swing(InteractionHand.MAIN_HAND);
-        int delay = DungeonAthenPortPolicy.randomBetween(
-                extras.athen().superboomMinDelay, extras.athen().superboomMaxDelay);
-        superboomCooldown = Math.max(1, delay);
-        if (extras.dungeonF7SuperboomSwapBack) {
-            superboomSwapBackTicks = DungeonAthenPortPolicy.randomBetween(
-                    extras.athen().superboomSwapBackMin, extras.athen().superboomSwapBackMax);
-            int target = DungeonAthenPortPolicy.superboomTargetSlot(
-                    extras.athen().superboomSwapTo, selected, extras.athen().superboomCustomSlot);
-            superboomOriginalSlot = target;
-        } else {
-            player.getInventory().setSelectedSlot(selected);
-        }
-    }
 
-    private static Integer findSuperboom(LocalPlayer player) {
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (TempleDungeonPolicy.isSuperboomItem(
-                    stack.getHoverName().getString(),
-                    AutoClickerItemIdentity.skyBlockId(stack))) {
-                return i;
-            }
-        }
-        return null;
-    }
 
-    private static void ghostBlocks(Minecraft client, QolSkyblockExtras extras) {
-        if (ghostCooldown > 0 || client.player == null || client.level == null
-                || !(client.hitResult instanceof BlockHitResult hit)
-                || hit.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
-        long window = client.getWindow() == null ? 0L : client.getWindow().handle();
-        boolean key = QolKeybindNames.isBoundDown(window, extras.dungeonEspGhostKeybind);
-        boolean stonk = extras.dungeonEspGhostStonk
-                && client.options != null
-                && client.options.keyUse.isDown()
-                && DungeonLeftoverPolicy.isPickaxe(
-                        BuiltInRegistries.ITEM.getKey(client.player.getMainHandItem().getItem()).getPath(),
-                        client.player.getMainHandItem().getHoverName().getString());
-        if (!key && !stonk) {
-            return;
-        }
-        BlockPos pos = hit.getBlockPos();
-        String id = fullBlockId(client, pos);
-        if (!DungeonLeftoverPolicy.canGhostBlock(true, true, extras.dungeonEspGhostUayor, id)) {
-            return;
-        }
-        client.level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
-        ghostCooldown = 1;
-    }
 
-    private static void triggerBot(Minecraft client, QolSkyblockExtras extras) {
-        long now = System.currentTimeMillis();
-        if (now - triggerLastMs < extras.dungeonEspTriggerDelay
-                || client.gameMode == null || client.player == null) {
-            return;
-        }
-        String blockId = "";
-        BlockHitResult blockHit = null;
-        if (client.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
-            blockHit = hit;
-            blockId = blockId(client, hit.getBlockPos());
-        }
-        String hologram = "";
-        Entity entity = null;
-        if (client.hitResult instanceof net.minecraft.world.phys.EntityHitResult entityHit) {
-            entity = entityHit.getEntity();
-            hologram = entityName(entity);
-        }
-        boolean lookingCrystal = DungeonLeftoverPolicy.isEnergyCrystalName(hologram)
-                || (entity != null && entity.getType() == EntityTypes.END_CRYSTAL);
-        DungeonLeftoverPolicy.TriggerKind kind = DungeonLeftoverPolicy.triggerKind(
-                extras.dungeonEspTriggerCrystal,
-                extras.dungeonEspTriggerSecret,
-                lookingCrystal,
-                blockId,
-                hologram);
-        if (kind == DungeonLeftoverPolicy.TriggerKind.NONE) {
-            return;
-        }
-        if (kind == DungeonLeftoverPolicy.TriggerKind.SECRET && blockHit != null) {
-            client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, blockHit);
-            client.player.swing(InteractionHand.MAIN_HAND);
-            triggerLastMs = now;
-            return;
-        }
-        if (kind == DungeonLeftoverPolicy.TriggerKind.CRYSTAL) {
-            boolean holdingCrystal = DungeonLeftoverPolicy.isEnergyCrystalName(
-                    client.player.getMainHandItem().getHoverName().getString());
-            if (lookingCrystal && extras.dungeonEspTriggerTake && entity != null) {
-                client.gameMode.interact(
-                        client.player,
-                        entity,
-                        (net.minecraft.world.phys.EntityHitResult) client.hitResult,
-                        InteractionHand.MAIN_HAND);
-                triggerLastMs = now;
-            } else if (holdingCrystal && extras.dungeonEspTriggerPlace && blockHit != null) {
-                client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, blockHit);
-                triggerLastMs = now;
-            }
-        }
-    }
 
-    private static QolSkyblockExtras extras() {
+    static QolSkyblockExtras extras() {
         return RotClientClient.qolConfigPublic().extras();
     }
 
-    private static boolean terminalOverlayActive(AbstractContainerScreen<?> screen) {
+    static boolean terminalOverlayActive(AbstractContainerScreen<?> screen) {
         if (screen == null || !extras().dungeonTerminalsEnabled || !extras().dungeonTerminalsOverlay) {
             return false;
         }
@@ -4878,7 +4216,7 @@ public final class DungeonRuntime {
                 extras.dungeonTerminalsStarts);
     }
 
-    private static boolean terminalFirstClickPending() {
+    static boolean terminalFirstClickPending() {
         QolSkyblockExtras extras = extras();
         return DungeonAthenPortPolicy.firstClickPending(
                 terminalOpenedAt,
@@ -4886,7 +4224,7 @@ public final class DungeonRuntime {
                 extras.athen().termFirstClickDelay);
     }
 
-    private static void maybePlayTerminalComplete(Minecraft client, QolSkyblockExtras extras) {
+    static void maybePlayTerminalComplete(Minecraft client, QolSkyblockExtras extras) {
         if (!terminalHadClicks || !extras.dungeonTerminalsCompleteSounds) {
             terminalHadClicks = false;
             return;
@@ -4902,7 +4240,7 @@ public final class DungeonRuntime {
                 (float) Math.max(0.5D, athen.termClickPitch));
     }
 
-    private static void playSimonSound(Minecraft client) {
+    static void playSimonSound(Minecraft client) {
         QolSkyblockExtras extras = extras();
         if (client == null || client.player == null
                 || !extras.dungeonF7Enabled
@@ -4912,14 +4250,14 @@ public final class DungeonRuntime {
         playConfiguredClickSound(client, extras);
     }
 
-    private static List<DungeonPolicy.TerminalClick> remainingTerminalClicks(
+    static List<DungeonPolicy.TerminalClick> remainingTerminalClicks(
             DungeonPolicy.Terminal terminal,
             String title,
             List<DungeonPolicy.TerminalItem> items) {
         return pinglessRemaining(terminal, DungeonPolicy.solveTerminalClicks(terminal, title, items));
     }
 
-    private static List<DungeonPolicy.TerminalClick> pinglessRemaining(
+    static List<DungeonPolicy.TerminalClick> pinglessRemaining(
             DungeonPolicy.Terminal terminal,
             List<DungeonPolicy.TerminalClick> live) {
         if (!DungeonAthenPortPolicy.usesPinglessPredict(terminal)) {
@@ -4938,7 +4276,7 @@ public final class DungeonRuntime {
         return DungeonAthenPortPolicy.withoutPredictedSlots(live, terminalPredictedSlots);
     }
 
-    private static void rememberPredictedClick(DungeonPolicy.Terminal terminal, int slot) {
+    static void rememberPredictedClick(DungeonPolicy.Terminal terminal, int slot) {
         if (!DungeonAthenPortPolicy.usesPinglessPredict(terminal) || slot < 0) {
             return;
         }
@@ -4948,7 +4286,7 @@ public final class DungeonRuntime {
         terminalPredictedAt = System.currentTimeMillis();
     }
 
-    private static void clearPredictedClicks() {
+    static void clearPredictedClicks() {
         terminalPredictedSlots.clear();
         terminalPredictedAt = 0L;
     }
@@ -4956,7 +4294,7 @@ public final class DungeonRuntime {
     private record BlazeMark(AABB box, int health, double y) {
     }
 
-    private static void highlightBlazeOrder(
+    static void highlightBlazeOrder(
             Minecraft client,
             LocalPlayer player,
             QolSkyblockExtras extras,
@@ -5005,7 +4343,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void observeCollectedSecrets(Minecraft client, QolSkyblockExtras extras) {
+    static void observeCollectedSecrets(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonEspHideCollected || client == null || client.level == null) {
             return;
         }
@@ -5040,7 +4378,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static boolean shouldHideCollectedSecret(
+    static boolean shouldHideCollectedSecret(
             Minecraft client,
             QolSkyblockExtras extras,
             DungeonRoomDataPolicy.PlacedWaypoint waypoint) {
@@ -5061,7 +4399,7 @@ public final class DungeonRuntime {
         return !DungeonRoomDataPolicy.secretBlockStillPresent(waypoint.kind(), fullBlockId(client, pos));
     }
 
-    private static String currentHashedRoomName(Minecraft client) {
+    static String currentHashedRoomName(Minecraft client) {
         if (client == null || client.player == null) {
             return "";
         }
@@ -5072,16 +4410,16 @@ public final class DungeonRuntime {
         return identity == null ? "" : identity.name();
     }
 
-    private static boolean hashedRoomIs(Minecraft client, String name) {
+    static boolean hashedRoomIs(Minecraft client, String name) {
         return name != null && name.equalsIgnoreCase(currentHashedRoomName(client));
     }
 
-    private static boolean skipPuzzleFallback(Minecraft client, String roomName) {
+    static boolean skipPuzzleFallback(Minecraft client, String roomName) {
         String hashed = currentHashedRoomName(client);
         return !hashed.isBlank() && !roomName.equalsIgnoreCase(hashed);
     }
 
-    private static Optional<DungeonRoomDataPolicy.Rotation> currentHashedRotation(Minecraft client) {
+    static Optional<DungeonRoomDataPolicy.Rotation> currentHashedRotation(Minecraft client) {
         if (client == null || client.player == null) {
             return Optional.empty();
         }
@@ -5091,7 +4429,7 @@ public final class DungeonRuntime {
         return Optional.ofNullable(hashedRoomRotation.get(key));
     }
 
-    private static DungeonPuzzleBoardPolicy.BlockProbe relativeBlockProbe(
+    static DungeonPuzzleBoardPolicy.BlockProbe relativeBlockProbe(
             Minecraft client,
             DungeonRoomDataPolicy.Rotation rotation) {
         return (x, y, z) -> {
@@ -5101,7 +4439,7 @@ public final class DungeonRuntime {
         };
     }
 
-    private static boolean scanIceFillBoard(Minecraft client) {
+    static boolean scanIceFillBoard(Minecraft client) {
         if (!hashedRoomIs(client, "Ice Fill")) {
             return false;
         }
@@ -5125,7 +4463,7 @@ public final class DungeonRuntime {
         return true;
     }
 
-    private static boolean scanWaterBoardLayout(Minecraft client) {
+    static boolean scanWaterBoardLayout(Minecraft client) {
         if (!hashedRoomIs(client, "Water Board")) {
             return false;
         }
@@ -5158,7 +4496,7 @@ public final class DungeonRuntime {
         return true;
     }
 
-    private static boolean scanBoulderBoard(Minecraft client) {
+    static boolean scanBoulderBoard(Minecraft client) {
         if (!hashedRoomIs(client, "Boulder")) {
             return false;
         }
@@ -5184,7 +4522,7 @@ public final class DungeonRuntime {
         return true;
     }
 
-    private static void scanCreeperBeams(Minecraft client) {
+    static void scanCreeperBeams(Minecraft client) {
         if (!hashedRoomIs(client, "Creeper Beams")) {
             return;
         }
@@ -5213,7 +4551,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanQuizOptionBoxes(Minecraft client) {
+    static void scanQuizOptionBoxes(Minecraft client) {
         if (!hashedRoomIs(client, "Quiz") || lastQuizOption < 0 || lastQuizOption > 2) {
             return;
         }
@@ -5227,7 +4565,7 @@ public final class DungeonRuntime {
         puzzleMarks.add(new Mark(blockBox(world.x(), world.y(), world.z()), 0xFF22C55E));
     }
 
-    private static void scanTicTacToe(Minecraft client) {
+    static void scanTicTacToe(Minecraft client) {
         if (!hashedRoomIs(client, "Tic Tac Toe") || client.level == null || client.player == null) {
             return;
         }
@@ -5295,7 +4633,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanIcePath(Minecraft client) {
+    static void scanIcePath(Minecraft client) {
         if (!hashedRoomIs(client, "Ice Path") || client.level == null || client.player == null) {
             return;
         }
@@ -5347,7 +4685,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static boolean blazeMaterialNear(Minecraft client, BlockPos origin, boolean ice) {
+    static boolean blazeMaterialNear(Minecraft client, BlockPos origin, boolean ice) {
         if (client.level == null || origin == null) {
             return false;
         }
@@ -5367,12 +4705,12 @@ public final class DungeonRuntime {
         return false;
     }
 
-    private static void pruneClickedSecrets() {
+    static void pruneClickedSecrets() {
         long now = System.currentTimeMillis();
         clickedSecrets.removeIf(secret -> now >= secret.untilMs());
     }
 
-    private static void noteClickedSecret(BlockPos pos) {
+    static void noteClickedSecret(BlockPos pos) {
         QolSkyblockExtras extras = extras();
         Minecraft client = Minecraft.getInstance();
         if (pos == null || client == null || client.level == null) {
@@ -5396,7 +4734,7 @@ public final class DungeonRuntime {
         clickedSecrets.add(new ClickedSecret(pos.getX(), pos.getY(), pos.getZ(), until, false));
     }
 
-    private static void renderClickedSecrets(QolSkyblockExtras extras, Vec3 eye) {
+    static void renderClickedSecrets(QolSkyblockExtras extras, Vec3 eye) {
         if (!extras.dungeonEspEnabled || !extras.dungeonEspSecretClicked) {
             return;
         }
@@ -5409,7 +4747,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void highlightDungeonDrops(
+    static void highlightDungeonDrops(
             Minecraft client,
             LocalPlayer player,
             QolSkyblockExtras extras,
@@ -5437,7 +4775,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static void scanKeyDrops(Minecraft client, QolSkyblockExtras extras) {
+    static void scanKeyDrops(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonAnnounceEnabled
                 || !extras.dungeonAnnounceKeyDrop
                 || !SkyBlockDungeonDetector.confidentlyInDungeon()
@@ -5474,7 +4812,7 @@ public final class DungeonRuntime {
         }
     }
 
-    private static String helmetUuid(ArmorStand stand) {
+    static String helmetUuid(ArmorStand stand) {
         ItemStack head = stand.getItemBySlot(EquipmentSlot.HEAD);
         if (head == null || head.isEmpty()) {
             return "";

@@ -19,10 +19,6 @@ final class QolNumberSettingsTest {
         assertTrue(QolNumberSettings.usesSlider("qol.player_size.x"));
         assertTrue(QolNumberSettings.usesSlider("qol.item_rarity.fill_alpha"));
         assertTrue(QolNumberSettings.usesSlider("qol.item_rarity.outline_alpha"));
-        QolNumberSettings.Spec serum = QolNumberSettings.spec("qol.auto_experiments.serum_count");
-        assertEquals(0.0D, serum.fromFraction(0.0D), 0.0001D);
-        assertEquals(3.0D, serum.fromFraction(1.0D), 0.0001D);
-        assertEquals(1.0D, serum.fraction(3.0D), 0.0001D);
         QolNumberSettings.Spec spec = QolNumberSettings.spec("qol.player_size.x");
         assertEquals(0.1D, spec.fromFraction(0.0D), 0.0001D);
         assertEquals(2.0D, spec.fromFraction(1.0D), 0.0001D);

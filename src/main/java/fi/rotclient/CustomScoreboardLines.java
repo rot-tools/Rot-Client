@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 final class CustomScoreboardLines {
 
     private static final Pattern PURSE = Pattern.compile(
-            "(?:§.)*(?:Piggy|Purse): (?:§.)*(?<amount>[\\d,.]+)");
+            "(?:§.)*(?:Piggy|Purse)\\s*:?\\s*(?:§.)*(?<amount>[\\d,.]+)");
     private static final Pattern MOTES = Pattern.compile(
             "(?:§.)*Motes: (?:§.)*(?<amount>[\\d,]+)");
     private static final Pattern COPPER = Pattern.compile(
@@ -36,7 +36,9 @@ final class CustomScoreboardLines {
             "(?i)(mithril|gemstone|glacite)(?:\\s*powder)?\\s*:?\\s*(?<amount>[\\d,.kmb]+)");
     private static final Pattern HEAT = Pattern.compile("(?i)(?:§.)*Heat(?:§.)*:\\s*(?:§.)*.+");
     private static final Pattern COLD = Pattern.compile("(?i)(?:§.)*Cold(?:§.)*:\\s*(?:§.)*.+");
-    private static final Pattern LOCATION = Pattern.compile(".*⏣.*");
+    private static final Pattern LOCATION = Pattern.compile(".*[⏣📍📌].*");
+    private static final Pattern LOCATION_NAME = Pattern.compile(
+            "(?i)(?:^|\\s)(your island|private island|guest island|the hub|dungeon hub)\\b");
     private static final Pattern PLOT = Pattern.compile("\\s*(?:§.)*Plot (?:§.)*-.*");
     private static final Pattern DATE = Pattern.compile(
             "(?i)\\s*(?:(?:Late|Early) )?(?:Spring|Summer|Autumn|Fall|Winter) \\d+(?:st|nd|rd|th)?.*");
@@ -114,10 +116,12 @@ final class CustomScoreboardLines {
         }
         String trimmed = raw.replace('\u00a0', ' ');
         String plain = LegacyMcText.strip(trimmed);
+        String cleaned = SkyBlockStatBarParser.stripHudIconTokens(
+                SkyBlockStatBarParser.stripFormatting(plain));
         if (plain.isBlank() || plain.length() <= 1) {
             return Hit.of(Kind.SKIP);
         }
-        if (FOOTER.matcher(trimmed).find() || FOOTER.matcher(plain).find()) {
+        if (looksFooter(trimmed, cleaned)) {
             return Hit.of(Kind.SKIP);
         }
         Matcher purse = PURSE.matcher(trimmed);
@@ -182,7 +186,9 @@ final class CustomScoreboardLines {
         if (LOBBY.matcher(trimmed).find() || LOBBY_CODE.matcher(plain).find()) {
             return new Hit(Kind.LOBBY, null, lobbyCode(plain), 0);
         }
-        if (LOCATION.matcher(trimmed).find() || PLOT.matcher(trimmed).find()) {
+        if (LOCATION.matcher(trimmed).find()
+                || PLOT.matcher(trimmed).find()
+                || looksLocation(cleaned)) {
             return Hit.of(Kind.LOCATION);
         }
         if (VISITING.matcher(trimmed).find() || plain.contains("Visiting") || plain.contains("✌")) {
@@ -259,6 +265,22 @@ final class CustomScoreboardLines {
         return "";
     }
 
+    private static boolean looksFooter(String raw, String cleaned) {
+        if (FOOTER.matcher(raw).find() || FOOTER.matcher(cleaned).find()) {
+            return true;
+        }
+        String lower = cleaned.toLowerCase(Locale.ROOT).replace(" ", "");
+        return lower.contains("hypixel.net") || lower.contains("hypixelnet");
+    }
+
+    private static boolean looksLocation(String cleaned) {
+        if (cleaned == null || cleaned.isBlank()) {
+            return false;
+        }
+        String text = cleaned.replaceFirst("^[\\p{So}\\p{Cn}?•·]+\\s*", "").trim();
+        return LOCATION_NAME.matcher(text).find();
+    }
+
     private static String lobbyCode(String plain) {
         Matcher matcher = LOBBY_CODE.matcher(plain);
         if (matcher.find()) {
@@ -290,7 +312,7 @@ final class CustomScoreboardLines {
         return 0;
     }
 
-    private static CustomScoreboardPolicy.EventKind eventKind(String raw, String plain) {
+    static CustomScoreboardPolicy.EventKind eventKind(String raw, String plain) {
         String lower = plain.toLowerCase(Locale.ROOT);
         if (contains(lower, "year") && contains(lower, "vote")
                 || contains(lower, "waiting for") && contains(lower, "vote")

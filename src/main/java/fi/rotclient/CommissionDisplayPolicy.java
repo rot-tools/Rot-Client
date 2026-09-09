@@ -76,7 +76,7 @@ public final class CommissionDisplayPolicy {
         }
         boolean inSection = false;
         for (String raw : strippedLines) {
-            String line = AutoConversationPolicy.stripFormatting(raw).trim();
+            String line = ChatTextPolicy.stripFormatting(raw).trim();
             if (line.isEmpty()) {
                 continue;
             }

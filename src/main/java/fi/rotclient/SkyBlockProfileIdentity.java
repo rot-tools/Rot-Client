@@ -17,6 +17,11 @@ public final class SkyBlockProfileIdentity {
     }
 
     public static Optional<String> detect(List<String> lines) {
+        return detectRaw(lines).map(SkyBlockProfileIdentity::canonicalize)
+                .filter(canonical -> !UNKNOWN.equals(canonical));
+    }
+
+    public static Optional<String> detectRaw(List<String> lines) {
         if (lines == null) {
             return Optional.empty();
         }
@@ -26,9 +31,9 @@ public final class SkyBlockProfileIdentity {
                     .strip();
             Matcher matcher = PROFILE.matcher(plain);
             if (matcher.find()) {
-                String canonical = canonicalize(matcher.group(1));
-                if (!UNKNOWN.equals(canonical)) {
-                    return Optional.of(canonical);
+                String name = matcher.group(1).strip();
+                if (!name.isBlank() && !UNKNOWN.equalsIgnoreCase(name)) {
+                    return Optional.of(name);
                 }
             }
         }

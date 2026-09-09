@@ -102,7 +102,7 @@ final class HudDrawerPolicyTest {
         assertTrue(hud.stream().anyMatch(
                 setting -> "qol.dungeon_hud.secrets".equals(setting.id())));
         assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map".equals(setting.id())));
-        assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map_mode".equals(setting.id())));
+        assertFalse(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map_mode".equals(setting.id())));
         assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.room_names".equals(setting.id())));
         assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.map_scale".equals(setting.id())));
         assertTrue(hud.stream().anyMatch(setting -> "qol.dungeon_hud.section_map".equals(setting.id())));
@@ -114,7 +114,7 @@ final class HudDrawerPolicyTest {
                 setting -> "qol.dungeon_hud.cheater_darken_factor".equals(setting.id())));
         assertTrue(settings.stream().anyMatch(
                 setting -> "qol.dungeon_hud.reset_split_pbs".equals(setting.id())));
-        assertTrue(settings.stream().anyMatch(
+        assertFalse(settings.stream().anyMatch(
                 setting -> "qol.dungeon_hud.cheater_darken_factor".equals(setting.id())));
         assertEquals("dungeon", HudDrawerPolicy.uniqueStyleFocus(module));
         assertFalse(HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module));

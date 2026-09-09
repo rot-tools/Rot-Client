@@ -199,6 +199,9 @@ public final class QolUtilityUiMath {
         int x = headerX + 12;
         List<FilterChip> chips = new ArrayList<>();
         for (PageFilter filter : PageFilter.values()) {
+            if (filter == PageFilter.CHEAT && !QolFlavorSupport.isPlus()) {
+                continue;
+            }
             String label = switch (filter) {
                 case ALL -> "All";
                 case ENABLED -> "On";
@@ -448,7 +451,8 @@ public final class QolUtilityUiMath {
             case ENUM -> 118;
             case NUMBER -> NUMBER_CONTROL_WIDTH + 12;
             case ACTION -> 72;
-            case KEYBIND, TEXT, SECTION -> DRAWER_CONTROL_RESERVE;
+            case TEXT -> 200;
+            case KEYBIND, SECTION -> DRAWER_CONTROL_RESERVE;
         };
         return Math.max(40, rowWidth - 16 - reserve);
     }

@@ -1,6 +1,6 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.WardrobeAutoEquipRuntime;
+import fi.rotclient.QolClientFlavorSupport;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ abstract class KeyboardHandlerWardrobeMixin {
             int action,
             KeyEvent event,
             CallbackInfo ci) {
-        if (WardrobeAutoEquipRuntime.onKeyPress(event, action)) {
+        if (QolClientFlavorSupport.hooks().wardrobeAutoEquipKey(event, action)) {
             ci.cancel();
         }
     }

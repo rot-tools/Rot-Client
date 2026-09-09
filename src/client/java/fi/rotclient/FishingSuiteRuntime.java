@@ -650,7 +650,7 @@ public final class FishingSuiteRuntime {
                 looking,
                 screen != null && !screen.isPauseScreen())
                 && autoDelay <= 0) {
-            AutoClickerRuntime.pulseAttack(client);
+            ClickPulseHelper.pulseAttack(client);
             autoDelay = FishingCreaturesPolicy.clampAutoDelay(extras.fishingCreaturesAutoDelay);
         }
     }

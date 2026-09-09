@@ -13,7 +13,7 @@ public final class MobHighlightPolicy {
         if (raw == null) {
             return "";
         }
-        return AutoConversationPolicy.stripFormatting(raw)
+        return ChatTextPolicy.stripFormatting(raw)
                 .replaceAll("\\s+", " ")
                 .trim()
                 .toLowerCase(Locale.ROOT);

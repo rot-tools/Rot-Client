@@ -11,11 +11,10 @@ import org.junit.jupiter.api.Test;
 final class DeferredFeaturesWiringTest {
     @Test
     void deferredFeaturesStayOnExistingParents() {
-        assertEquals(131, QolUtilityCatalog.modules().size());
+        assertEquals(110, QolUtilityCatalog.modules().size());
         for (String settingId : List.of(
                 "qol.render_optimizer.full_text_shadow",
                 "qol.custom_resource_pack.gameplay_font",
-                "qol.command_keybinds.open_sequence_editor",
                 "qol.storage_overlay.open_item_search",
                 "qol.storage_overlay.craft_helper",
                 "qol.storage_overlay.museum_armor",

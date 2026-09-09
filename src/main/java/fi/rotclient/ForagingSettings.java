@@ -76,7 +76,8 @@ public final class ForagingSettings {
         boolean trees = qol.isModuleEnabled("qol.foraging_trees");
         boolean audio = qol.isModuleEnabled("qol.foraging_audio");
         boolean helpers = qol.isModuleEnabled("qol.foraging_helpers");
-        boolean cheats = qol.isModuleEnabled("qol.foraging_cheats");
+        boolean cheats = QolFlavorSupport.isPlus()
+                && qol.isModuleEnabled("qol.foraging_cheats");
         return new ForagingSettings(
                 trees,
                 flag(qol, "qol.foraging_trees.progress_hud", true),

@@ -31,7 +31,7 @@ final class DungeonF7ImproveExistingWiringTest {
                 "src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(mixin.contains("DungeonRuntime.shouldHideTerminalTooltip"));
-        assertTrue(mixin.contains("DungeonRuntime.shouldCancelTerminalSlot"));
+        assertTrue(mixin.contains("QolClientFlavorSupport.hooks().shouldCancelTerminalSlot"));
         int detect = mixin.indexOf("DungeonPolicy.detectTerminal(");
         int enqueue = mixin.indexOf("DungeonRuntime.enqueueTerminalClick(");
         assertTrue(detect >= 0);
@@ -40,7 +40,11 @@ final class DungeonF7ImproveExistingWiringTest {
         String gameMode = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/MultiPlayerGameModeMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(gameMode.contains("shouldCancelEntityUse"));
         assertTrue(gameMode.contains("onBlockUsed"));
+        String plusGameMode = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/mixin/MultiPlayerGameModePlusMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(plusGameMode.contains("shouldCancelEntityUse"));
+        assertTrue(plusGameMode.contains("shouldCancelBlockUse"));
     }
 }

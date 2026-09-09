@@ -114,10 +114,10 @@ class SlayerQolCatalogTest {
         assertTrue(ids.contains("qol.slayer_drops"));
         assertTrue(ids.contains("qol.slayer_carry"));
         assertTrue(ids.contains("qol.slayer_cocoon_alert"));
-        assertTrue(ids.contains("qol.slayer_dagger_swap"));
+        assertFalse(ids.contains("qol.slayer_dagger_swap"));
         assertTrue(ids.contains("qol.slayer_laser_hider"));
         assertTrue(ids.contains("qol.slayer_attunement_display"));
-        assertTrue(ids.contains("qol.slayer_auto_soulcry"));
+        assertFalse(ids.contains("qol.slayer_auto_soulcry"));
         assertTrue(ids.contains("qol.slayer_sounds"));
         assertTrue(ids.contains("qol.slayer_vengeance"));
         assertTrue(ids.contains("qol.slayer_vengeance_damage"));
@@ -129,7 +129,7 @@ class SlayerQolCatalogTest {
         assertTrue(ids.contains("qol.slayer_vampire_markers"));
         assertTrue(ids.contains("qol.slayer_inferno"));
         assertTrue(ids.contains("qol.slayer_quest_warning"));
-        assertTrue(ids.contains("qol.slayer_auto_start"));
+        assertFalse(ids.contains("qol.slayer_auto_start"));
         for (String id : ids) {
             assertNotNull(QolUtilityCatalog.findById(id));
         }
@@ -273,10 +273,6 @@ class SlayerQolCatalogTest {
         assertNotNull(QolNumberSettings.spec("qol.slayer_cocoon_alert.volume"));
         assertNotNull(QolNumberSettings.spec("qol.slayer_progress.warning_percent"));
         assertNotNull(QolNumberSettings.spec("qol.slayer_drops.profit_items_shown"));
-        assertNotNull(QolNumberSettings.spec("qol.slayer_dagger_swap.delay"));
-        assertNotNull(QolNumberSettings.spec("qol.slayer_dagger_swap.variance"));
-        assertNotNull(QolNumberSettings.spec("qol.slayer_auto_soulcry.min_delay"));
-        assertNotNull(QolNumberSettings.spec("qol.slayer_auto_soulcry.max_delay"));
         assertNotNull(QolNumberSettings.spec("qol.slayer_big_drops.scale"));
         assertNotNull(QolNumberSettings.spec("qol.slayer_big_drops.range"));
         assertNotNull(QolNumberSettings.spec("qol.slayer_big_drops.unscale_seconds"));

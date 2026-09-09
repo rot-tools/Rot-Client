@@ -12,6 +12,9 @@ import java.util.Optional;
  * {@code uuid} then {@code id}, then falls back to the item hover name.
  */
 public final class AutoClickerItemIdentity {
+    public static final String TERMINATOR_ID = "TERMINATOR";
+    public static final String DUNGEON_BREAKER_ID = "DUNGEONBREAKER";
+
     private AutoClickerItemIdentity() {
     }
 

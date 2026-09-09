@@ -85,11 +85,11 @@ final class RotClientSettingsIndexTest {
     }
 
     @Test
-    void cameraIsSearchable() {
+    void fullbrightIsSearchable() {
         List<RotClientSettingsIndex.Entry> results =
-                RotClientSettingsIndex.search("third person");
+                RotClientSettingsIndex.search("always night");
         assertFalse(results.isEmpty());
-        assertEquals("qol.camera", results.get(0).id());
+        assertTrue(results.get(0).id().startsWith("qol.fullbright"));
         assertEquals(
                 RotClientSettingsIndex.Destination.QOL_SETTINGS,
                 results.get(0).destination());
@@ -114,9 +114,9 @@ final class RotClientSettingsIndexTest {
                 QolUtilityCatalog.findById(
                         RotClientSettingsIndex.search("show fps").get(0).id()).id());
         assertEquals(
-                "qol.camera",
+                "qol.fullbright",
                 QolUtilityCatalog.findById(
-                        RotClientSettingsIndex.search("third person").get(0).id()).id());
+                        RotClientSettingsIndex.search("always night").get(0).id()).id());
     }
 
     @Test

@@ -58,7 +58,7 @@ public final class ItemRarityPolicy {
             return null;
         }
         Matcher matcher = RARITY.matcher(
-                AutoConversationPolicy.stripFormatting(raw).toUpperCase(Locale.ROOT));
+                ChatTextPolicy.stripFormatting(raw).toUpperCase(Locale.ROOT));
         if (!matcher.find()) {
             return null;
         }

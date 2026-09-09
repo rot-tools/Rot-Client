@@ -623,7 +623,7 @@ public final class ForagingRuntime {
                 clusterWood,
                 minCluster,
                 true)) {
-            AutoClickerRuntime.pulseUse(client);
+            ClickPulseHelper.pulseUse(client);
             cheatDelay = cheatDelay(extras);
             return;
         }
@@ -633,7 +633,7 @@ public final class ForagingRuntime {
                 island,
                 holdingAxe,
                 lookingLog)) {
-            AutoClickerRuntime.pulseAttack(client);
+            ClickPulseHelper.pulseAttack(client);
             cheatDelay = cheatDelay(extras);
         }
     }
@@ -837,7 +837,7 @@ public final class ForagingRuntime {
     }
 
     private static boolean cheats(QolSkyblockExtras extras) {
-        return qol().isModuleEnabled("qol.foraging_cheats");
+        return QolFlavorSupport.isPlus() && qol().isModuleEnabled("qol.foraging_cheats");
     }
 
     private static boolean toggle(QolSkyblockExtras extras, String module, String setting, boolean fallback) {

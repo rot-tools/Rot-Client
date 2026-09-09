@@ -93,7 +93,7 @@ public final class AutoConversationPolicy {
         if (raw == null) {
             return "";
         }
-        return raw.replaceAll("§.", "").replaceAll("&[0-9a-fk-or]", "");
+        return ChatTextPolicy.stripFormatting(raw);
     }
 
     public static boolean looksLikeNpcLine(String strippedLower) {

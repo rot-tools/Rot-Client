@@ -6,11 +6,21 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-	// Loom supplies the Minecraft and Fabric repositories.
 	maven {
 		name = "Terraformers"
 		url = "https://maven.terraformersmc.com/"
 	}
+}
+
+sourceSets {
+	plus
+	plusClient
+	testPlus
+}
+
+sourceSets.named('plus').configure {
+	compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+	runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
 }
 
 loom {
@@ -21,7 +31,22 @@ loom {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
+		"rotclientplus" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+			sourceSet sourceSets.plus
+			sourceSet sourceSets.plusClient
+		}
 	}
+}
+
+sourceSets.named('plusClient').configure {
+	compileClasspath += sourceSets.client.compileClasspath + sourceSets.client.output + sourceSets.plus.output + sourceSets.plus.compileClasspath
+	runtimeClasspath += sourceSets.client.runtimeClasspath + sourceSets.client.output + sourceSets.plus.output + sourceSets.plus.runtimeClasspath
+}
+sourceSets.named('testPlus').configure {
+	compileClasspath += sourceSets.test.compileClasspath + sourceSets.test.output + sourceSets.plus.output + sourceSets.plusClient.output
+	runtimeClasspath += sourceSets.test.runtimeClasspath + sourceSets.test.output + sourceSets.plus.output + sourceSets.plusClient.output
 }
 
 dependencies {
@@ -30,9 +55,6 @@ dependencies {
 
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// Optional Mod Menu config screen — compile-only, not required at runtime.
-	// Loom 1.17 in this project does not expose modCompileOnly(); compileOnly
-	// is sufficient for the remapping-free Mod Menu API interfaces.
 	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
@@ -42,6 +64,17 @@ dependencies {
 test {
 	useJUnitPlatform()
 }
+
+tasks.register('testPlus', Test) {
+	group = 'verification'
+	description = 'Run Plus-edition tests (cheat/automation contracts).'
+	testClassesDirs = sourceSets.testPlus.output.classesDirs
+	classpath = sourceSets.testPlus.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter test
+}
+
+check.dependsOn testPlus
 
 tasks.register('refreshSkyBlockData', JavaExec) {
 	group = 'rotclient'
@@ -68,8 +101,107 @@ processResources {
 	}
 }
 
+processPlusResources {
+	inputs.property "version", project.version
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.register('plusJar', Jar) {
+	group = 'rotclient'
+	description = 'Playable Rot Client+ Fabric jar (Minecraft 26.2 is unobfuscated).'
+	dependsOn classes, clientClasses, compilePlusJava, compilePlusClientJava, processPlusResources, processPlusClientResources
+	archiveBaseName = 'RotClientPlus'
+	archiveVersion = project.version
+	archiveClassifier = ''
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(sourceSets.main.output) {
+		exclude 'fabric.mod.json'
+	}
+	from sourceSets.client.output
+	from sourceSets.plus.output
+	from sourceSets.plusClient.output
+	from("LICENSE") {
+		rename { "${it}_RotClientPlus" }
+	}
+	from("NOTICE")
+	from("THIRD_PARTY.md")
+}
+
+assemble.dependsOn plusJar
+check.dependsOn plusJar
+
+tasks.register('verifyLegitJar') {
+	group = 'verification'
+	description = 'Fail if the legit Rot Client JAR still contains Plus-only classes or ids.'
+	dependsOn jar
+	doLast {
+		def jarFile = tasks.named('jar').get().archiveFile.get().asFile
+		def forbiddenNames = [
+				'AutoClickerRuntime.class',
+				'FreecamRuntime.class',
+				'CameraFreecamMixin.class',
+				'rotclient.plus.mixins.json'
+		]
+		def forbiddenText = [
+				'qol.auto_clicker',
+				'AutoClickerRuntime',
+				'FreecamRuntime',
+				'CameraFreecamMixin',
+				'rotclient.plus.mixins.json'
+		]
+		def found = []
+		def zip = new java.util.zip.ZipFile(jarFile)
+		try {
+			zip.entries().each { entry ->
+				String name = entry.name
+				forbiddenNames.each { token ->
+					if (name.endsWith(token) || name.contains('/' + token) || name == token) {
+						found << "${token} in ${name}"
+					}
+				}
+				if (!entry.directory) {
+					String text = new String(zip.getInputStream(entry).bytes, 'ISO-8859-1')
+					forbiddenText.each { token ->
+						if (text.contains(token)) {
+							found << "${token} in ${name}"
+						}
+					}
+				}
+			}
+		} finally {
+			zip.close()
+		}
+		if (!found.isEmpty()) {
+			throw new GradleException("Legit JAR ${jarFile.name} still contains Plus-only tokens:\n" + found.unique().join('\n'))
+		}
+	}
+}
+
+check.dependsOn verifyLegitJar
+testPlus.dependsOn processPlusResources, processPlusClientResources
+
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 25
+}
+
+afterEvaluate {
+	tasks.named('compilePlusJava', JavaCompile).configure { task ->
+		task.dependsOn 'compileJava'
+		task.classpath += sourceSets.main.output
+	}
+	tasks.named('compilePlusClientJava', JavaCompile).configure { task ->
+		task.dependsOn 'compileClientJava', 'compilePlusJava'
+		task.classpath += sourceSets.client.output
+		task.classpath += sourceSets.plus.output
+	}
+	tasks.named('compileTestPlusJava', JavaCompile).configure { task ->
+		task.dependsOn 'compileTestJava', 'compilePlusJava', 'compilePlusClientJava'
+		task.classpath += sourceSets.plus.output
+		task.classpath += sourceSets.plusClient.output
+		task.classpath += sourceSets.client.output
+	}
 }
 
 java {

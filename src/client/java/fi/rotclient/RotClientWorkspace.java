@@ -75,8 +75,8 @@ final class RotClientWorkspace {
     }
 
     /**
-     * Fresh Click GUI open: Overview, default sidebar accordion, no
-     * remembered QoL drawer. Does not move the dashboard window.
+     * Dedicated wipe of the active tab view. Click GUI open restores the
+     * last page instead of calling this.
      */
     void resetToDefaultOpenState() {
         config.resetViewToDefault();
@@ -98,16 +98,17 @@ final class RotClientWorkspace {
     }
 
     void setQolView(String groupId, String moduleId) {
+        setQolView(QolWorkspaceView.parse(groupId, moduleId, "", ""));
+    }
+
+    void setQolView(QolWorkspaceView view) {
         config.normalize();
+        QolWorkspaceView next = view == null ? QolWorkspaceView.empty() : view;
         RotClientWorkspaceTab tab = activeTab();
-        String group = groupId == null ? "" : groupId.trim();
-        String module = moduleId == null ? "" : moduleId.trim();
-        if (group.equals(tab.qolGroup == null ? "" : tab.qolGroup)
-                && module.equals(tab.qolModuleId == null ? "" : tab.qolModuleId)) {
+        if (next.sameAs(tab)) {
             return;
         }
-        tab.qolGroup = group;
-        tab.qolModuleId = module;
+        next.applyTo(tab);
         markDirtyAndSave();
     }
 

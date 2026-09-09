@@ -25,7 +25,7 @@ public final class FishingHelperPolicy {
         if (strippedName == null) {
             return false;
         }
-        String text = AutoConversationPolicy.stripFormatting(strippedName).trim();
+        String text = ChatTextPolicy.stripFormatting(strippedName).trim();
         return text.equals("!!!");
     }
 
@@ -40,7 +40,7 @@ public final class FishingHelperPolicy {
         if (strippedName == null) {
             return null;
         }
-        String text = AutoConversationPolicy.stripFormatting(strippedName).trim();
+        String text = ChatTextPolicy.stripFormatting(strippedName).trim();
         if (text.equals("!!!")) {
             return 0.0F;
         }

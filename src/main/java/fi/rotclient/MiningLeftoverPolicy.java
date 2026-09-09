@@ -602,6 +602,6 @@ public final class MiningLeftoverPolicy {
         if (raw == null) {
             return "";
         }
-        return AutoConversationPolicy.stripFormatting(raw).trim();
+        return ChatTextPolicy.stripFormatting(raw).trim();
     }
 }

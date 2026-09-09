@@ -1,6 +1,6 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.EtherwarpHelperRuntime;
+import fi.rotclient.EtherwarpPlusRuntime;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ abstract class MouseHandlerEtherwarpMixin {
             int action,
             CallbackInfo ci) {
         int button = buttonInfo == null ? -1 : buttonInfo.button();
-        if (EtherwarpHelperRuntime.onMousePress(button, action)) {
+        if (EtherwarpPlusRuntime.onMousePress(button, action)) {
             ci.cancel();
         }
     }

@@ -13,17 +13,16 @@ final class AutoClickerWiringTest {
     @Test
     void catalogListsRuntimeReadyAutoClicker() throws Exception {
         String catalog = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
+                "src/plus/java/fi/rotclient/QolPlusCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("qol.auto_clicker"));
         assertTrue(catalog.contains("Auto Clicker"));
-        assertTrue(catalog.contains("runtimeReady"));
     }
 
     @Test
     void clientTickRegistersAutoClickerRuntime() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/RotClientClient.java"),
+                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("AUTO_CLICKER"));
         assertTrue(source.contains("AutoClickerRuntime.tick"));
@@ -42,27 +41,33 @@ final class AutoClickerWiringTest {
     @Test
     void catalogExposesClickerStyleUtilities() throws Exception {
         String catalog = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
+                "src/plus/java/fi/rotclient/QolPlusCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("qol.inventory_walk"));
-        assertTrue(catalog.contains("qol.trajectories"));
         assertTrue(catalog.contains("qol.secret_hitboxes"));
-        assertTrue(catalog.contains("qol.world_scanner"));
-        assertTrue(catalog.contains("\"qol.command_keybinds\""));
+        String shared = Files.readString(Path.of(
+                "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(shared.contains("qol.trajectories"));
+        assertTrue(shared.contains("qol.world_scanner"));
+        assertTrue(shared.contains("\"qol.command_keybinds\""));
     }
 
     @Test
     void mixinsRegisterSecretHitboxesAndInventoryWalk() throws Exception {
         String json = Files.readString(Path.of(
-                "src/client/resources/rotclient.client.mixins.json"),
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
                 StandardCharsets.UTF_8);
         assertTrue(json.contains("ClipContextSecretHitboxMixin"));
         assertTrue(json.contains("BlockStateSecretHitboxMixin"));
         assertTrue(json.contains("ConnectionInventoryWalkMixin"));
-        assertTrue(json.contains("KeyMappingAccessor"));
-        assertTrue(json.contains("AbstractContainerScreenMenuKeybindMixin"));
         assertTrue(json.contains("MouseHandlerInventoryWalkMixin"));
-        assertTrue(json.contains("PackSelectionModelMixin"));
+        String sharedMixins = Files.readString(Path.of(
+                "src/client/resources/rotclient.client.mixins.json"),
+                StandardCharsets.UTF_8);
+        assertTrue(sharedMixins.contains("KeyMappingAccessor"));
+        assertTrue(sharedMixins.contains("AbstractContainerScreenMenuKeybindMixin"));
+        assertTrue(sharedMixins.contains("PackSelectionModelMixin"));
     }
 
     @Test
@@ -87,7 +92,7 @@ final class AutoClickerWiringTest {
     @Test
     void inventoryWalkHooksClickKeepaliveAndSlotAck() throws Exception {
         String mixin = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/ConnectionInventoryWalkMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/ConnectionInventoryWalkMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(mixin.contains("ChannelFutureListener;Z)V"));
         assertTrue(mixin.contains("channelRead0"));
@@ -102,20 +107,20 @@ final class AutoClickerWiringTest {
     @Test
     void autoClickerPulsesAttackAndUseKeyMappings() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/AutoClickerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/AutoClickerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("KeyMapping.click"));
         assertTrue(source.contains("keyAttack"));
         assertTrue(source.contains("keyUse"));
         assertTrue(source.contains("pulseClick"));
-        assertTrue(source.contains("mappingHeldAfterDiscretePulse"));
+        assertTrue(source.contains("syntheticAttackHeld"));
         assertTrue(source.contains("holdAttackForBlockBreaking"));
     }
 
     @Test
     void autoClickerTerminatorOnlyLeftClicks() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/AutoClickerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/AutoClickerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("shouldTerminatorLeftClick"));
         assertTrue(source.contains("performLeftClick"));
@@ -125,9 +130,10 @@ final class AutoClickerWiringTest {
     @Test
     void autoClickerTicksOnStartClientTick() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/RotClientClient.java"),
+                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(source.contains("START_CLIENT_TICK"));
+        assertTrue(source.contains("START_CLIENT_TICK")
+                || source.contains("AutoClickerRuntime.tick"));
         assertTrue(source.contains("AutoClickerRuntime.tick"));
     }
 

@@ -4,21 +4,26 @@ This document defines the Rot Client product identity and the canonical UI palet
 
 ## Product identity
 
-| Item | Value |
-| --- | --- |
-| Display name | Rot Client |
-| Original author identity | OgRudolf |
-| Mod ID | `rotclient` |
-| Java package | `fi.rotclient` |
-| Playable artifact | `RotClient-2.0.1+mc26.2.jar` |
-| Canonical command | `/rot` |
-| Product dashboard header | `ROT CLIENT` |
-| Functional mining module label | `MINING TRACKER` (feature module, not product name) |
-| Icon path | `src/main/resources/assets/rotclient/icon.png` |
-| Homepage / sources | https://github.com/rot-tools/Rot-Client |
-| Issues | https://github.com/rot-tools/Rot-Client/issues |
+| Item | Rot Client | Rot Client+ |
+| --- | --- | --- |
+| Display name | Rot Client | Rot Client+ |
+| Original author identity | OgRudolf | OgRudolf |
+| Mod ID | `rotclient` | `rotclientplus` |
+| Java package | `fi.rotclient` | `fi.rotclient` |
+| Playable artifact | `RotClient-2.0.1+mc26.2.jar` | `RotClientPlus-2.0.1+mc26.2.jar` |
+| Canonical command | `/rot` | `/rot` |
+| Product dashboard header | `ROT CLIENT` | `ROT CLIENT+` |
+| Functional mining module label | `MINING TRACKER` (feature module, not product name) | same |
+| Icon path | `src/main/resources/assets/rotclient/icon.png` | same |
+| Homepage / sources | https://github.com/rot-tools/Rot-Client | same |
+| Issues | https://github.com/rot-tools/Rot-Client/issues | same |
 
-User-facing strings, documentation, and repository metadata use **Rot Client**. Code artifacts use `rotclient`, `fi.rotclient`, and `RotClient` per Java and Fabric conventions.
+Each `breaks` the other Fabric id so both files may sit in `mods/` but only
+one may be enabled. See [Which JAR](WHICH_JAR.md).
+
+User-facing strings, documentation, and repository metadata use **Rot Client**
+or **Rot Client+**. Code artifacts use `rotclient`, `fi.rotclient`, and
+`RotClient` / `RotClientPlus` per Java and Fabric conventions.
 
 ## Canonical palette (ARGB)
 

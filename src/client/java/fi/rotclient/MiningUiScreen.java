@@ -185,7 +185,7 @@ final class MiningUiScreen extends Screen {
             Screen parent,
             DashboardModule initialModule,
             boolean useWorkspace) {
-        super(Component.literal(PRODUCT_HEADER));
+        super(Component.literal(QolFlavorSupport.productHeader()));
         this.config = config;
         this.hud = hud;
         this.parent = parent;
@@ -271,7 +271,7 @@ final class MiningUiScreen extends Screen {
         cameraAnimation = config.cameraEnabled ? 1.0F : 0.0F;
         RotClientWorkspace workspace = RotClientClient.workspace();
         if (useWorkspace) {
-            if (initialModule != null) {
+            if (QolWorkspaceView.shouldNavigateTo(initialModule)) {
                 workspace.navigateActive(
                         RotClientWorkspaceRoute.fromDashboardModule(initialModule));
             }
@@ -9175,7 +9175,8 @@ if (trackerDropdownOpen) {
                         ? qolDashboard.openModuleId()
                         : "",
                 qolDashboard.appearanceLanding(),
-                qolDashboard.hudLayoutLanding());
+                qolDashboard.hudLayoutLanding(),
+                qolDashboard.hudDrawerOpen());
     }
 
     private void pushThen(Runnable navigation) {
@@ -9207,10 +9208,15 @@ if (trackerDropdownOpen) {
                     qolDashboard.openHudLayoutLanding();
                 } else if (frame.appearanceLanding()) {
                     qolDashboard.openAppearanceLanding();
-                } else if (!frame.focusId().isBlank()) {
-                    qolDashboard.openModule(frame.focusId());
                 } else {
                     qolDashboard.closeLandings();
+                }
+                if (!frame.focusId().isBlank()) {
+                    if (frame.hudDrawer()) {
+                        qolDashboard.openHudSettings(frame.focusId());
+                    } else {
+                        qolDashboard.openModule(frame.focusId());
+                    }
                 }
             } else {
                 qolDashboard.closeLandings();

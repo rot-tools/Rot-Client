@@ -141,38 +141,31 @@ final class QolUtilityUiMathTest {
     }
 
     @Test
-    void pageFilterKeepsEnabledAndCheatModules() {
-        QolUtilityCatalog.ModuleDef clicker = QolUtilityCatalog.findById("qol.auto_clicker");
-        QolUtilityCatalog.ModuleDef share = QolUtilityCatalog.findById("qol.diana_share");
-        List<QolUtilityCatalog.ModuleDef> modules = List.of(clicker, share);
+    void pageFilterKeepsEnabledModulesWithoutCheatChipOnLegit() {
+        QolUtilityCatalog.ModuleDef sprint = QolUtilityCatalog.findById("qol.auto_sprint");
+        QolUtilityCatalog.ModuleDef fishing = QolUtilityCatalog.findById("qol.fishing_helper");
+        List<QolUtilityCatalog.ModuleDef> modules = List.of(sprint, fishing);
         assertEquals(
                 2,
                 QolUtilityUiMath.filterPageModules(
                         modules, QolUtilityUiMath.PageFilter.ALL, ignored -> true).size());
         assertEquals(
-                "qol.auto_clicker",
+                "qol.auto_sprint",
                 QolUtilityUiMath.filterPageModules(
                                 modules,
                                 QolUtilityUiMath.PageFilter.ENABLED,
-                                module -> module.id().equals("qol.auto_clicker"))
+                                module -> module.id().equals("qol.auto_sprint"))
                         .get(0)
                         .id());
-        assertEquals(
-                List.of(clicker, share),
+        assertTrue(
                 QolUtilityUiMath.filterPageModules(
-                        modules, QolUtilityUiMath.PageFilter.CHEAT, ignored -> false));
+                        modules, QolUtilityUiMath.PageFilter.CHEAT, ignored -> false).isEmpty());
         assertEquals(
                 QolUtilityUiMath.PageFilter.ALL,
                 QolUtilityUiMath.hitPageFilter(20, 55, 8, 4));
-        assertEquals(
-                QolUtilityUiMath.PageFilter.CHEAT,
-                QolUtilityUiMath.hitPageFilter(170, 55, 8, 4));
+        assertEquals(2, QolUtilityUiMath.pageFilterChips(8, 4).size());
         assertEquals("Cheats", QolUtilityUiMath.cheatFilterLabel(0));
         assertEquals("Cheats [8]", QolUtilityUiMath.cheatFilterLabel(8));
-        assertEquals("Cheats", QolUtilityUiMath.pageFilterChips(8, 4).get(2).label());
-        assertEquals(
-                QolUtilityUiMath.CHEAT_FILTER_CHIP_WIDTH,
-                QolUtilityUiMath.pageFilterChips(8, 4).get(2).width());
         assertEquals(QolUtilityUiMath.PAGE_HEADER_HEIGHT, 80);
     }
 }

@@ -12,8 +12,15 @@ final class RotClientWorkspaceTab {
     String selectedHistorySessionId = "";
     /** Last QoL dashboard group (HUD, Combat, …) on this tab. */
     String qolGroup = "";
-    /** Open settings drawer module id, or blank. */
+    /**
+     * Open settings/HUD drawer module id, Appearance/HUD-layout catalog id
+     * when that landing is showing with no drawer, or blank.
+     */
     String qolModuleId = "";
+    /** {@code module}, {@code hud}, or blank when no drawer is open. */
+    String qolDrawerKind = "";
+    /** {@code appearance}, {@code hud_layout}, or blank. */
+    String qolLanding = "";
 
     RotClientWorkspaceTab() {
     }
@@ -42,6 +49,8 @@ final class RotClientWorkspaceTab {
                 : selectedHistorySessionId;
         copy.qolGroup = qolGroup == null ? "" : qolGroup;
         copy.qolModuleId = qolModuleId == null ? "" : qolModuleId;
+        copy.qolDrawerKind = qolDrawerKind == null ? "" : qolDrawerKind;
+        copy.qolLanding = qolLanding == null ? "" : qolLanding;
         return copy;
     }
 
@@ -60,6 +69,12 @@ final class RotClientWorkspaceTab {
         }
         if (qolModuleId == null) {
             qolModuleId = "";
+        }
+        if (qolDrawerKind == null) {
+            qolDrawerKind = "";
+        }
+        if (qolLanding == null) {
+            qolLanding = "";
         }
     }
 

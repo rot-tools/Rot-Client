@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "priority": 1100,
+  "package": "fi.rotclient.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "plugin": "fi.rotclient.mixin.RotClientMixinPlugin",
+  "client": [
+    "BlockStateSecretHitboxMixin",
+    "CameraClipMixin",
+    "CameraFreecamMixin",
+    "ClipContextSecretHitboxMixin",
+    "ConnectionFreecamMixin",
+    "ConnectionInventoryWalkMixin",
+    "KeyboardInputEtherwarpMixin",
+    "KeyboardInputFreecamMixin",
+    "MouseHandlerEtherwarpMixin",
+    "MouseHandlerFarmKeysMixin",
+    "MouseHandlerFreecamMixin",
+    "MouseHandlerInventoryWalkMixin",
+    "MultiPlayerGameModePlusMixin",
+    "OptionsCameraMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

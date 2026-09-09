@@ -8,24 +8,26 @@ Rot Client is **not** a pile of independent mods glued together. It is one
 client-only Fabric mod. Almost every class lives in the same Java package:
 `fi.rotclient`. Mixins that hook Minecraft live in `fi.rotclient.mixin`.
 
-Current checkpoint: **`2.0.1+mc26.2`**, Minecraft **26.2**, Java **25**,
-**131** QoL parent modules. This is a public engineering checkpoint, not a
-finished 2.0 release. Rot Client is not affiliated with Hypixel.
+Current checkpoint: **`2.0.1+mc26.2`**, Minecraft **26.2**, Java **25**, two
+JARs: **Rot Client** (**110** QoL parents) and **Rot Client+** (**131**). This
+is a public engineering checkpoint, not a finished 2.0 release. Rot Client is
+not affiliated with Hypixel.
 
-Automation (clickers, scanners, dungeon helpers, Free Camera, Terminal
-Simulator) is **opt-in and off by default**. Those paths exist for a private
-test server. They are not claimed as official-network features.
+Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
+**opt-in and off by default**. Those paths exist for a private test server and
+are not present in the legit JAR. They are not claimed as official-network
+features. See [Which JAR](WHICH_JAR.md).
 
 ---
 
 ## 1. One-minute pitch
 
-Rot Client does four jobs in one JAR:
+Rot Client does four jobs in two edition JARs:
 
 | Job | What the player sees | Where it lives in code |
 | --- | --- | --- |
 | **Dashboard** | Right Shift / `/rot` Click GUI | `RotClientHomeScreen`, `QolUtilityDashboard` |
-| **QoL catalog** | 131 modules in 14 groups | `QolUtilityCatalog` + `*Policy` + `*Runtime` |
+| **QoL catalog** | 110 parents (legit) / 131 (Plus) in 14 groups | `QolUtilityCatalog` + `QolPlusCatalog` + `*Policy` + `*Runtime` |
 | **Mining tracker** | Material / gemstone HUD and ledgers | `TrackerConfig`, detectors, `RotClientHud` |
 | **Current Session** | Pause / resume / start new, History | `RotClientCurrentSession`, History store |
 
@@ -37,11 +39,12 @@ dashboard. They do **not** share one ledger.
 
 ## 2. How to open the JAR so the code is readable
 
-A Gradle build produces two artifacts in `build/libs/`:
+A Gradle build produces playable and sources artifacts in `build/libs/`:
 
 | File | Use it for |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | Playing. This is compiled `.class` files plus resources. |
+| `RotClient-2.0.1+mc26.2.jar` | Playing Rot Client (HUD/QoL). Compiled `.class` files plus resources. |
+| `RotClientPlus-2.0.1+mc26.2.jar` | Playing Rot Client+ (includes automation). |
 | `RotClient-2.0.1+mc26.2-sources.jar` | **Reading.** Same Java that was compiled, with comments. |
 
 **Prefer the sources JAR for reading.** VS Code and IntelliJ open it as a zip
@@ -152,18 +155,20 @@ Related UI classes they will hit next:
 | Class | Role |
 | --- | --- |
 | `RotClientHomeScreen` | Overview: Modules / Look & HUD / Mining / Events |
-| `QolUtilityDashboard` | Searchable 131-module catalog + settings drawer |
+| `QolUtilityDashboard` | Searchable 110/131-module catalog + settings drawer |
 | `MiningUiScreen` | Mining tracker selector, enable, reset, HUD edit |
 | `RotClientTheme` | Blue-slate palette. Do not hardcode random colors. |
 | `RotClientModMenuIntegration` | Optional Mod Menu config button |
 
 ---
 
-## 5. How the 131 modules actually exist
+## 5. How the catalog modules actually exist
 
-There is **one catalog**, not 131 independent mods.
+There is **one shared catalog** plus a Plus SPI, not 131 independent mods.
 
-`QolUtilityCatalog` is a static list of `ModuleDef` records. Each module has:
+`QolUtilityCatalog` is a static list of `ModuleDef` records. Rot Client+
+merges extra parents and cheat child settings through `QolFlavorExtension`.
+Each module has:
 
 - a stable id (`qol.auto_clicker`, `qol.iota`, `qol.world_scanner`, …)
 - a human name and description
@@ -187,7 +192,8 @@ the player opts into that child setting.
 
 ### Mixin list
 
-`rotclient.client.mixins.json` is the inventory of vanilla hooks. Names are
+`rotclient.client.mixins.json` is the inventory of vanilla hooks for the
+**legit** JAR. Plus-only mixins live in `rotclient.plus.mixins.json`. Names are
 usually `WhatItTouchesWhatItDoesMixin` (`HudActionBarFilterMixin`,
 `MouseHandlerInventoryWalkMixin`, `BlockStateSecretHitboxMixin`).
 
@@ -282,16 +288,17 @@ git diff --check
 
 - `test` — Policy / ledger / catalog contracts (~2,000 tests today).
 - `compileClientJava` — Minecraft-facing sources actually compile.
-- `clean build` — packages the playable JAR **and** the sources JAR.
+- `clean build` — packages both playable JARs **and** the sources JAR.
 
 A green build proves **packaging**. It does not prove the HUD looked right in
 game.
 
 ### Install for play
 
-Only `RotClient-2.0.1+mc26.2.jar` goes into the instance `mods/` folder. Keep
-exactly one Rot Client JAR. Remove any leftover MiningTracker JAR. If the game
-has the JAR open, wait until it is closed; do not kill Minecraft to copy.
+`RotClient-2.0.1+mc26.2.jar` and `RotClientPlus-2.0.1+mc26.2.jar` go into the
+instance `mods/` folder. Enable only one. Remove any leftover MiningTracker
+JAR. If the game has a JAR open, wait until it is closed; do not kill
+Minecraft to copy.
 
 ### In game
 
@@ -309,19 +316,19 @@ is the HUD layout editor. `/rot help` lists commands.
 | **Paused** | Intentionally not the current product track |
 
 When someone reads the dashboard and sees **Needs testing**, that is
-intentional. Most of the 131 modules are wired and automated-tested. The
+intentional. Most catalog parents are wired and automated-tested. The
 group-wide Minecraft matrix is still pending.
 
 ### Adding or changing a QoL module (the usual PR shape)
 
-1. Add or edit the `ModuleDef` in `QolUtilityCatalog`.
-2. Add fields on `QolUtilityConfig` / `QolSkyblockExtras`.
-3. Put decisions in a `*Policy` class in the main source set.
-4. Put Minecraft I/O in a `*Runtime` class in the client source set.
-5. Add a mixin **only** if Fabric events are not enough.
-6. Wire a tick/chat/render callback from `RotClientClient` if needed.
-7. Add focused tests (catalog lock, numeric ranges, policy cases).
-8. Build, install the playable JAR, then runtime-test before calling it done.
+1. Add or edit the `ModuleDef` in `QolUtilityCatalog` (or `QolPlusCatalog` for Plus-only).
+2. Add fields on `QolUtilityConfig` / `QolSkyblockExtras` (or Plus extras).
+3. Put decisions in a `*Policy` class in `src/main` or `src/plus`.
+4. Put Minecraft I/O in a `*Runtime` class in `src/client` or `src/plusClient`.
+5. Add a mixin **only** if Fabric events are not enough (plus mixins go in `rotclient.plus.mixins.json`).
+6. Wire a tick/chat/render callback from `RotClientClient` or `RotClientPlusHooks` if needed.
+7. Add focused tests (`src/test` for legit, `src/testPlus` for Plus).
+8. Build, install both playable JARs, then runtime-test before calling it done.
 
 Numeric sliders must have an explicit `QolNumberSettings.spec`. Do not rely on
 a generic fallback range.
@@ -343,7 +350,7 @@ a generic fallback range.
 
 | File | Why |
 | --- | --- |
-| `QolUtilityCatalog` | The 131 modules and their settings |
+| `QolUtilityCatalog` | The 110 shared modules and their settings |
 | `QolUtilityConfig` | Persisted toggles |
 | `QolSkyblockExtras` | Extra option blob |
 | `QolModuleEvidence` | Ready vs needs-testing vs upcoming |

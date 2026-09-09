@@ -16,8 +16,8 @@ Testing is layered. Each level answers a different question, and no lower-cost c
 Use Java 25 and the included Gradle wrapper.
 
 ```sh
-./gradlew test --rerun-tasks
-./gradlew compileClientJava
+./gradlew test testPlus --rerun-tasks
+./gradlew compileClientJava compilePlusJava compilePlusClientJava
 git diff --check
 ./gradlew clean build
 ```
@@ -27,8 +27,8 @@ git diff --check
 Configure the current PowerShell process to use an installed Java 25 distribution, then run:
 
 ```powershell
-.\gradlew.bat test --rerun-tasks --console=plain
-.\gradlew.bat compileClientJava --console=plain
+.\gradlew.bat test testPlus --rerun-tasks --console=plain
+.\gradlew.bat compileClientJava compilePlusJava compilePlusClientJava --console=plain
 git diff --check
 .\gradlew.bat clean build --console=plain
 ```
@@ -44,20 +44,28 @@ Before attaching Minecraft, Prism, or launcher logs to issues or reviews, redact
 
 ## Playable JAR validation
 
-`build/libs/` may contain both a normal playable JAR (`RotClient-2.0.1+mc26.2.jar`) and a `-sources.jar`. Only the normal playable JAR belongs in `.minecraft/mods/`.
+`build/libs/` contains two playable JARs (`RotClient-2.0.1+mc26.2.jar` and
+`RotClientPlus-2.0.1+mc26.2.jar`) plus `-sources.jar` extras. Only the two
+playable files belong in `.minecraft/mods/`. Enable **one** in the launcher
+(`rotclient` and `rotclientplus` break each other). See
+[Which JAR](WHICH_JAR.md).
+
+`verifyLegitJar` fails the legit ZIP if Plus-only tokens such as
+`AutoClickerRuntime`, `FreecamRuntime`, `qol.auto_clicker`,
+`CameraFreecamMixin`, or `rotclient.plus.mixins.json` are present.
 
 Before replacement:
 
-1. Confirm Minecraft is closed and the installed JAR is not locked. Do not terminate processes automatically.
-2. List all installed filenames matching Rot Client or MiningTracker case-insensitively. Stop if more than the one expected prior JAR exists, or if both a MiningTracker and Rot Client JAR are present.
-3. Back up the prior installed JAR outside the repository and verify its SHA-256.
-4. Record the built playable JAR's SHA-256 and size.
-5. Remove only the verified prior Rot Client or MiningTracker JAR.
-6. Copy the normal playable JAR; never copy the sources JAR.
-7. Verify exactly one Rot Client JAR is installed and its SHA-256 matches the built JAR.
+1. Confirm Minecraft is closed and the installed JARs are not locked. Do not terminate processes automatically.
+2. List all installed filenames matching Rot Client or MiningTracker case-insensitively. Stop if a MiningTracker JAR is present, or if unexpected extra Rot Client versioned JARs remain besides the two current playable files.
+3. Back up the prior installed Rot Client JARs outside the repository and verify SHA-256.
+4. Record each built playable JAR's SHA-256 and size.
+5. Remove only the verified prior Rot Client or MiningTracker JARs.
+6. Copy both normal playable JARs; never copy the sources JAR.
+7. Verify installed SHA-256 matches each built JAR.
 8. Confirm no unrelated mod or repository file changed.
 
-Do not launch Minecraft automatically as part of deployment. If replacement fails after removal, restore the verified prior JAR.
+Do not launch Minecraft automatically as part of deployment. If replacement fails after removal, restore the verified prior JARs.
 
 ## Twelve-mod comparison checkpoint (2026-08-25)
 
@@ -79,6 +87,9 @@ The following remain **Ready for Runtime Test**, not runtime-verified:
 
 - [ ] Start with Rot Client alone; confirm startup, config migration/backup,
   dashboard navigation, profile detection, and location changes.
+- [ ] Leave the dashboard on a non-Overview page with a module Settings or HUD
+  drawer open, close it, then press Right Shift; confirm the same page and
+  drawer return. Closing the drawer first should reopen the page without it.
 - [ ] Install Hypixel Mod API and confirm location events prefer the official
   packet when recognized while scoreboard fallback still works.
 - [ ] Open a terminal, queue clicks, close it, then open an ordinary chest;
@@ -368,9 +379,9 @@ The current gemstone pipeline emits these core markers:
 
 ### QoL checkpoint validation
 
-The current catalog contains 131 wired modules. Before claiming a module runtime
-verified, test its switch, settings drawer, reset behavior, persistence across
-restart, and the exact visual/input effect. Start with UI move/resize/snap,
+The legit catalog contains **110** wired parents. Rot Client+ contains **131**.
+Before claiming a module runtime verified, test its switch, settings drawer,
+reset behavior, persistence across restart, and the exact visual/input effect. Start with UI move/resize/snap,
 Inventory Overlay, Price/Info Tooltips, Viewmodel, Item Scale, Experiments,
 Wardrobe, Harp, GFS, Sell, Ghosts, and Camera.
 

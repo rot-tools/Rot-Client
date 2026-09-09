@@ -116,7 +116,7 @@ public final class MissingEnchantsRuntime {
                     "([A-Za-z][A-Za-z' -]{1,}?)\\s+(I|II|III|IV|V|VI|VII|VIII|IX|X|\\d{1,2})\\b");
             for (String line : lore) {
                 java.util.regex.Matcher matcher = pattern.matcher(
-                        AutoConversationPolicy.stripFormatting(line));
+                        ChatTextPolicy.stripFormatting(line));
                 while (matcher.find()) {
                     levels.putIfAbsent(
                             MissingEnchantsPolicy.normalizeEnchant(matcher.group(1)),
@@ -144,7 +144,7 @@ public final class MissingEnchantsRuntime {
 
     private static int rarityLineIndex(List<Component> lines) {
         for (int i = lines.size() - 1; i >= 0; i--) {
-            String text = AutoConversationPolicy.stripFormatting(lines.get(i).getString())
+            String text = ChatTextPolicy.stripFormatting(lines.get(i).getString())
                     .toUpperCase(java.util.Locale.ROOT);
             if (text.matches(".*\\b(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL)\\b.*")) {
                 return i;

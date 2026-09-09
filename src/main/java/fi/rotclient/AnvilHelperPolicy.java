@@ -11,12 +11,12 @@ public final class AnvilHelperPolicy {
         if (stripped == null) {
             return false;
         }
-        String text = AutoConversationPolicy.stripFormatting(stripped).trim();
+        String text = ChatTextPolicy.stripFormatting(stripped).trim();
         return text.equalsIgnoreCase("Anvil");
     }
 
     public static boolean isAnvilMarker(String hoverName, boolean barrier) {
-        return barrier && AutoConversationPolicy.stripFormatting(hoverName).equalsIgnoreCase("Anvil");
+        return barrier && ChatTextPolicy.stripFormatting(hoverName).equalsIgnoreCase("Anvil");
     }
 
     public static boolean highlightBook(String targetEnchantId, String slotId, boolean enchantedBook) {

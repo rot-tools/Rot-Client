@@ -34,6 +34,7 @@ Rot Client (`fi.rotclient`) is a client-only Fabric mod. The runtime is organize
 | `RotClientHud` | Family-specific HUD rendering, graph samples, movement, scaling, and clamping. |
 | `PowderChestHud` | Independent movable HUD for Powder Chest Tracker Current Session projection. |
 | `QolUtilityCatalog` / `QolUtilityConfig` | Minecraft-free QoL module catalog and persisted toggles/settings. |
+| `QolFlavorExtension` | Optional Plus SPI: extra modules, cheat child settings, `rotclient-plus.json`. |
 | `QolUtilityDashboard` / `QolOverlayHud` | Client UI QoL pages and overlay HUD editor wiring. |
 | `MiningUiScreen` | Module UI, searchable selection, settings, reset, edit, and enable/disable controls. |
 | `HudLayoutMath` | Minecraft-independent layout heights and scale-aware clamping math. |
@@ -249,14 +250,16 @@ Gemstone targets are selected through the searchable UI; there are no gemstone t
 
 ## QoL architecture
 
-QoL modules are defined in `QolUtilityCatalog` (Minecraft-free labels, groups, and setting types) and persisted through `QolUtilityConfig` inside `rotclient.json`. Client runtimes and mixins live under `src/client/java`. Policy classes that can be unit-tested stay in `src/main/java`.
+QoL modules are defined in `QolUtilityCatalog` (Minecraft-free labels, groups, and setting types) and persisted through `QolUtilityConfig` inside `rotclient.json`. Plus-only modules and cheat child settings load through `QolFlavorExtension` (`src/plus`) and persist in `rotclient-plus.json`. Shared client runtimes and mixins live under `src/client/java`. Plus runtimes and mixins live under `src/plusClient/java`. Policy classes that can be unit-tested stay in `src/main/java` or `src/plus/java`.
 
-The dashboard currently exposes 131 modules across Combat, Slayer, Events,
+The dashboard exposes **110** parents in Rot Client and **131** in Rot Client+
+across Combat, Slayer, Events,
 Dungeons, Kuudra, Mining, Fishing, Foraging, Garden, GUI, HUD & Display, Render,
-Interface, and Utilities.
+Interface, and Utilities. Garden is empty on the legit catalog.
 `QolUtilityCatalog` owns Minecraft-free metadata; `QolUtilityConfig` and
-`QolSkyblockExtras` own persisted values; pure `*Policy` classes stay in the
-main source set; `*Runtime` bridges and mixins stay in the client source set.
+`QolSkyblockExtras` own persisted shared values; Plus extras go through the
+flavor SPI. Pure `*Policy` classes stay in the matching main/plus source set;
+`*Runtime` bridges and mixins stay in the matching client/plusClient source set.
 Every numeric control requires an explicit `QolNumberSettings.spec`.
 
 Wardrobe Swapper follows the same separation. `WardrobeKeybindPolicy` owns pure

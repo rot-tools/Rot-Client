@@ -105,7 +105,8 @@ final class TempleSkyblockAutomationPolicyTest {
         assertEquals("Middle", config.readEnum("qol.auto_sell.click_type"));
         assertTrue(config.writeText("qol.auto_sell.list", "enchanted ice, mimic fragment"));
         assertTrue(config.readText("qol.auto_sell.list").contains("enchanted ice"));
-        assertTrue(config.extras().addAutoSellDefaults());
+        config.extras().autoSellItems = new java.util.ArrayList<>(
+                AutoSellPolicy.withDefaults(config.extras().autoSellItems));
         assertTrue(config.readText("qol.auto_sell.list").contains("superboom tnt"));
         assertTrue(config.writeKeybind("qol.ghosts.keybind", "G"));
         assertEquals("G", config.readKeybind("qol.ghosts.keybind"));

@@ -1,6 +1,6 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.EtherwarpHelperRuntime;
+import fi.rotclient.EtherwarpPlusRuntime;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.world.entity.player.Input;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 abstract class KeyboardInputEtherwarpMixin {
     @Inject(method = "tick", at = @At("RETURN"))
     private void rotclient$forceEtherwarpSneak(CallbackInfo ci) {
-        if (!EtherwarpHelperRuntime.forceSneak()) {
+        if (!EtherwarpPlusRuntime.forceSneak()) {
             return;
         }
         ClientInput input = (ClientInput) (Object) this;

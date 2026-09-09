@@ -18,13 +18,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * party/limbo, mutes, and arrow tracker.
  */
 public final class IotaRuntime {
-    private static boolean leftLatched;
-    private static boolean rightLatched;
-    private static boolean leftToggleWasDown;
-    private static boolean rightToggleWasDown;
-    private static boolean consumedPartyCommand;
-    private static double leftAccumulator;
-    private static double rightAccumulator;
+    static boolean leftLatched;
+    static boolean rightLatched;
+    static boolean leftToggleWasDown;
+    static boolean rightToggleWasDown;
+    static boolean consumedPartyCommand;
+    static double leftAccumulator;
+    static double rightAccumulator;
     private static IotaPolicy.ArrowSnapshot arrows = IotaPolicy.ArrowSnapshot.empty();
     private static boolean waitingForQuiverRefresh;
     private static String lockedArrowType = "Unknown";
@@ -126,12 +126,6 @@ public final class IotaRuntime {
         if (extras.iotaArrowTracker) {
             IotaPolicy.arrowChatNotice(raw).ifPresent(notice -> applyArrowNotice(extras, notice));
         }
-        if (extras.iotaAutoRequeue && IotaPolicy.isKuudraDefeatChat(raw)) {
-            String instance = extras.iotaLastKuudraInstance;
-            if (instance != null && !instance.isBlank()) {
-                sendCommand("joininstance " + instance);
-            }
-        }
         IotaKuudraRuntime.onGameMessage(message);
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
@@ -172,15 +166,7 @@ public final class IotaRuntime {
             return;
         }
 
-        tickToggles(
-                client,
-                extras);
-
         tickArrowTracker(
-                client,
-                extras);
-
-        tickStandaloneClicker(
                 client,
                 extras);
 
@@ -214,64 +200,6 @@ public final class IotaRuntime {
 
     static String overlayTitle() {
         return overlayTitle == null ? "" : overlayTitle;
-    }
-
-    private static void tickToggles(Minecraft client, QolSkyblockExtras extras) {
-        if (client.getWindow() == null) {
-            return;
-        }
-        long window = client.getWindow().handle();
-        boolean leftDown = QolKeybindNames.isBoundDown(window, extras.iotaToggleLeftKeybind);
-        if (leftDown && !leftToggleWasDown) {
-            leftLatched = !leftLatched;
-            notify("Iota Toggle Left Click", leftLatched);
-        }
-        leftToggleWasDown = leftDown;
-        boolean rightDown = QolKeybindNames.isBoundDown(window, extras.iotaToggleRightKeybind);
-        if (rightDown && !rightToggleWasDown) {
-            rightLatched = !rightLatched;
-            notify("Iota Toggle Right Click", rightLatched);
-        }
-        rightToggleWasDown = rightDown;
-    }
-
-    private static void tickStandaloneClicker(Minecraft client, QolSkyblockExtras extras) {
-        if (RotClientClient.qolConfigPublic().autoClickerEnabled) {
-            leftAccumulator = 0.0D;
-            rightAccumulator = 0.0D;
-            return;
-        }
-        if (client.gui != null && client.gui.screen() != null && !client.gui.screen().isPauseScreen()) {
-            leftAccumulator = 0.0D;
-            rightAccumulator = 0.0D;
-            return;
-        }
-        if (leftLatched) {
-            leftAccumulator = AutoClickerPolicy.tickAccumulation(
-                    leftAccumulator,
-                    IotaPolicy.TOGGLE_CLICK_CPS,
-                    ThreadLocalRandom.current().nextDouble());
-            int clicks = AutoClickerPolicy.consumeClicks(leftAccumulator);
-            leftAccumulator = AutoClickerPolicy.remainderAfterClicks(leftAccumulator, clicks);
-            for (int i = 0; i < clicks; i++) {
-                AutoClickerRuntime.pulseAttack(client);
-            }
-        } else {
-            leftAccumulator = 0.0D;
-        }
-        if (rightLatched) {
-            rightAccumulator = AutoClickerPolicy.tickAccumulation(
-                    rightAccumulator,
-                    IotaPolicy.TOGGLE_CLICK_CPS,
-                    ThreadLocalRandom.current().nextDouble());
-            int clicks = AutoClickerPolicy.consumeClicks(rightAccumulator);
-            rightAccumulator = AutoClickerPolicy.remainderAfterClicks(rightAccumulator, clicks);
-            for (int i = 0; i < clicks; i++) {
-                AutoClickerRuntime.pulseUse(client);
-            }
-        } else {
-            rightAccumulator = 0.0D;
-        }
     }
 
     private static void tickArrowTracker(Minecraft client, QolSkyblockExtras extras) {
@@ -373,7 +301,7 @@ public final class IotaRuntime {
         return info == null ? 0 : Math.max(0, info.getLatency());
     }
 
-    private static void sendCommand(String command) {
+    static void sendCommand(String command) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
         if (player == null || player.connection == null || command == null || command.isBlank()) {
@@ -425,11 +353,11 @@ public final class IotaRuntime {
                 1.2F);
     }
 
-    private static void notify(String label, boolean enabled) {
+    static void notify(String label, boolean enabled) {
         RotClientClient.notifyQolModuleToggled(label, enabled);
     }
 
-    private static QolSkyblockExtras extras() {
+    static QolSkyblockExtras extras() {
         return RotClientClient.qolConfigPublic().extras();
     }
 }

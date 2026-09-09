@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 final class HudLayoutLandingPolicyTest {
     @Test
     void groupsVanillaAndRotOverlaysAndKeepsCatalogAt130() {
-        assertEquals(131, QolUtilityCatalog.modules().size());
+        assertEquals(110, QolUtilityCatalog.modules().size());
         assertFalse(HudLayoutLandingPolicy.sections().isEmpty());
         assertTrue(HudLayoutLandingPolicy.sections().stream()
                 .anyMatch(section -> "Vanilla / Hypixel".equals(section.title())));
@@ -96,7 +96,7 @@ final class HudLayoutLandingPolicyTest {
                 HudLayoutLandingPolicy.disableForPose("kuudra_alerts").settingId());
         for (String poseId : new String[] {
                 "performance", "health", "mana", "overflow", "defense", "vitality", "ehp",
-                "speed", "pet", "commission", "wardrobe", "auto_clicker", "fishing", "mining",
+                "speed", "pet", "commission", "wardrobe", "fishing", "mining",
                 "diana", "foraging", "iota_arrows", "kuudra_alerts", "stall_bin", "slayer",
                 "slayer_progress", "slayer_rng", "slayer_profit", "slayer_stats", "slayer_carry",
                 "slayer_cocoon", "slayer_attunement", "slayer_vengeance", "dungeon",

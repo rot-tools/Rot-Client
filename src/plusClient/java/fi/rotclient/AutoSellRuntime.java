@@ -64,7 +64,10 @@ public final class AutoSellRuntime {
     }
 
     static boolean addDefaults() {
-        return extras().addAutoSellDefaults();
+        QolSkyblockExtras extras = extras();
+        extras.autoSellItems = new java.util.ArrayList<>(
+                AutoSellPolicy.withDefaults(extras.autoSellItems));
+        return true;
     }
 
     private static ContainerInput containerInput(String clickType) {

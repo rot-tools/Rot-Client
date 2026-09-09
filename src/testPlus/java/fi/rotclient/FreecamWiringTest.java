@@ -13,7 +13,7 @@ final class FreecamWiringTest {
     @Test
     void catalogListsRuntimeReadyFreecam() throws Exception {
         String catalog = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
+                "src/plus/java/fi/rotclient/QolPlusCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("qol.freecam"));
         assertTrue(catalog.contains("Free Camera"));
@@ -29,7 +29,7 @@ final class FreecamWiringTest {
     @Test
     void clientTickRegistersFreecamRuntime() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/RotClientClient.java"),
+                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("FREECAM"));
         assertTrue(source.contains("FreecamRuntime.tick"));
@@ -38,25 +38,25 @@ final class FreecamWiringTest {
     @Test
     void mixinsRegisterFreecamHooks() throws Exception {
         String json = Files.readString(Path.of(
-                "src/client/resources/rotclient.client.mixins.json"),
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
                 StandardCharsets.UTF_8);
         assertTrue(json.contains("CameraFreecamMixin"));
         assertTrue(json.contains("KeyboardInputFreecamMixin"));
         assertTrue(json.contains("MouseHandlerFreecamMixin"));
         assertTrue(json.contains("ConnectionFreecamMixin"));
         String camera = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/CameraFreecamMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/CameraFreecamMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(camera.contains("method = \"alignWithEntity\""));
         assertTrue(camera.contains("setPosition"));
         assertTrue(camera.contains("detached = true"));
         String packets = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/ConnectionFreecamMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/ConnectionFreecamMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(packets.contains("ChannelFutureListener;Z)V"));
         assertTrue(packets.contains("shouldBlockOutbound"));
         String input = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/KeyboardInputFreecamMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/KeyboardInputFreecamMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(input.contains("moveVector"));
         assertTrue(input.contains("extends ClientInput"));

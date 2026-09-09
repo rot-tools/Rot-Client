@@ -210,15 +210,38 @@ final class RotClientWorkspacePersistenceTest {
         tab.route = RotClientWorkspaceRoute.QOL_SETTINGS.id();
         tab.qolGroup = "DUNGEONS";
         tab.qolModuleId = "qol.terminal";
+        tab.qolDrawerKind = QolWorkspaceView.DRAWER_HUD;
+        tab.qolLanding = QolWorkspaceView.LANDING_HUD_LAYOUT;
         tab.scrollPixels = 80;
         config.expandedSidebarSections = List.of();
         config.resetViewToDefault();
         assertEquals(RotClientWorkspaceRoute.OVERVIEW.id(), tab.route);
         assertEquals("", tab.qolGroup);
         assertEquals("", tab.qolModuleId);
+        assertEquals("", tab.qolDrawerKind);
+        assertEquals("", tab.qolLanding);
         assertEquals(0, tab.scrollPixels);
         assertEquals(
                 RotClientSidebarNav.defaultExpandedSections(),
                 config.expandedSidebarSections);
+    }
+
+    @Test
+    void saveLoadRoundTripPreservesQolPageAndHudDrawer() {
+        RotClientWorkspaceConfig config = RotClientWorkspaceConfig.defaults();
+        RotClientWorkspaceTab tab = config.activeTab();
+        tab.route = RotClientWorkspaceRoute.QOL_SETTINGS.id();
+        QolWorkspaceView.capture(
+                "DUNGEONS", false, false, true, true, "qol.terminal")
+                .applyTo(tab);
+        String json = RotClientWorkspaceStore.toJson(config);
+        RotClientWorkspaceConfig loaded = RotClientWorkspaceStore.parseJson(json);
+        QolWorkspaceView view = QolWorkspaceView.fromTab(loaded.activeTab());
+        assertEquals(RotClientWorkspaceRoute.QOL_SETTINGS.id(), loaded.activeTab().route);
+        assertEquals("DUNGEONS", view.groupId());
+        assertEquals("qol.terminal", view.moduleId());
+        assertTrue(view.hudDrawer());
+        assertTrue(json.contains("\"qolDrawerKind\""));
+        assertTrue(json.contains("\"qolLanding\""));
     }
 }

@@ -25,6 +25,8 @@ final class CustomScoreboardRuntime {
             new CustomScoreboardPolicy.DeltaBook();
     private static List<CustomScoreboardPolicy.Row> cachedRows = List.of();
     private static long cacheUntilMillis;
+    private static SidebarCapture lastCapture = new SidebarCapture("", List.of(), false);
+    private static long lastCaptureAt;
     private static long lastUnknownWarnAt;
     private static final Set<String> warnedUnknown = new HashSet<>();
     private static int lastX;
@@ -125,6 +127,8 @@ final class CustomScoreboardRuntime {
     static void clearCache() {
         cachedRows = List.of();
         cacheUntilMillis = 0L;
+        lastCapture = new SidebarCapture("", List.of(), false);
+        lastCaptureAt = 0L;
         warnedUnknown.clear();
         lastVisible = false;
     }
@@ -141,21 +145,26 @@ final class CustomScoreboardRuntime {
         if (options.cacheOnSwitch() && now < cacheUntilMillis && !cachedRows.isEmpty()) {
             return cachedRows;
         }
-        SidebarCapture capture = capture(client);
+        SidebarCapture capture = captureCached(client, now);
+        List<String> tab = SkyBlockTabSnapshotRuntime.lines(client, now);
+        SkyBlockStatBarParser.Stats combat = RotClientClient.qolHud() == null
+                ? SkyBlockStatBarParser.Stats.empty()
+                : RotClientClient.qolHud().statsTracker().stats();
         CustomScoreboardPolicy.BoardView view = new CustomScoreboardPolicy.BoardView(
                 SkyBlockAreaDetector.isInSkyblock(),
                 capture.alpha,
                 capture.title,
                 capture.lines,
-                SkyBlockTabSnapshotRuntime.lines(client, now),
-                islandName(),
+                tab,
+                islandName(tab),
                 locationHint(capture.lines),
-                profileName(),
-                profileType(capture.lines),
+                profileName(tab),
+                profileType(capture.lines, tab),
                 quiverCurrent(),
                 quiverMax(),
                 bingoProfile(capture.lines),
-                now);
+                now,
+                combat);
         CustomScoreboardPolicy.ComposeResult result =
                 CustomScoreboardPolicy.compose(view, options, DELTAS);
         cachedRows = result.rows();
@@ -164,6 +173,8 @@ final class CustomScoreboardRuntime {
     }
 
     static void onWorldChange() {
+        lastCaptureAt = 0L;
+        lastCapture = new SidebarCapture("", List.of(), false);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (qol != null && qol.extras().board().cacheOnSwitch) {
             cacheUntilMillis = System.currentTimeMillis() + 7_000L;
@@ -196,18 +207,18 @@ final class CustomScoreboardRuntime {
             return;
         }
         int fill = board.bgColor;
-        if (board.customBgImage) {
-            int opacity = Math.max(0, Math.min(100, board.customBgOpacity));
-            fill = RotClientUiDraw.withAlpha(fill, (int) Math.round(opacity * 2.55D));
-        }
+        int opacity = Math.max(0, Math.min(100, board.customBgOpacity));
+        int baseA = (fill >>> 24) & 0xFF;
+        int a = (int) Math.round(baseA * (opacity / 100.0D));
+        fill = RotClientUiDraw.withAlpha(fill, a);
         RotClientUiDraw.roundedFill(graphics, x, y, x + w, y + h, fill, Math.max(0, board.bgRound));
         if (board.outline) {
             int thickness = Math.max(1, board.outlineThickness);
             for (int i = 0; i < thickness; i++) {
                 float t = h <= 1 ? 0.0F : i / (float) Math.max(1, h);
                 int color = lerpColor(board.outlineTop, board.outlineBottom, t);
-                int a = Math.max(40, Math.min(255, (int) Math.round(255.0D * (1.0D - board.outlineBlur * 0.4D))));
-                color = RotClientUiDraw.withAlpha(color, a);
+                int outlineA = Math.max(40, Math.min(255, (int) Math.round(255.0D * (1.0D - board.outlineBlur * 0.4D))));
+                color = RotClientUiDraw.withAlpha(color, outlineA);
                 graphics.fill(x + i, y + i, x + w - i, y + i + 1, color);
                 graphics.fill(x + i, y + h - i - 1, x + w - i, y + h - i, color);
                 graphics.fill(x + i, y + i, x + i + 1, y + h - i, color);
@@ -255,6 +266,15 @@ final class CustomScoreboardRuntime {
                     "Custom Scoreboard saw an unknown sidebar line: " + plain));
             return;
         }
+    }
+
+    private static SidebarCapture captureCached(Minecraft client, long now) {
+        if (lastCapture != null && now - lastCaptureAt >= 0L && now - lastCaptureAt < 120L) {
+            return lastCapture;
+        }
+        lastCapture = capture(client);
+        lastCaptureAt = now;
+        return lastCapture;
     }
 
     private static SidebarCapture capture(Minecraft client) {
@@ -323,29 +343,52 @@ final class CustomScoreboardRuntime {
         return out.toString();
     }
 
-    private static String islandName() {
+    private static String islandName(List<String> tab) {
         SkyBlockArea area = SkyBlockAreaDetector.detect();
-        return area == null || area == SkyBlockArea.UNKNOWN_SKYBLOCK_AREA ? "" : area.displayName();
+        if (area != null && area != SkyBlockArea.UNKNOWN_SKYBLOCK_AREA) {
+            return area.displayName();
+        }
+        for (String line : tab == null ? List.<String>of() : tab) {
+            String plain = SkyBlockStatBarParser.stripFormatting(line);
+            String lower = plain.toLowerCase();
+            if (lower.startsWith("area:") || lower.startsWith("island:")) {
+                int colon = plain.indexOf(':');
+                if (colon >= 0 && colon + 1 < plain.length()) {
+                    return plain.substring(colon + 1).trim();
+                }
+            }
+        }
+        return "";
     }
 
     private static String locationHint(List<String> lines) {
+        if (lines == null) {
+            return "";
+        }
         for (String line : lines) {
-            if (line != null && line.contains("⏣")) {
+            if (line == null) {
+                continue;
+            }
+            CustomScoreboardLines.Hit hit = CustomScoreboardLines.classify(line);
+            if (hit.kind() == CustomScoreboardLines.Kind.LOCATION) {
                 return line;
             }
         }
         return "";
     }
 
-    private static String profileName() {
-        Minecraft client = Minecraft.getInstance();
-        return SkyBlockProfileIdentity.detect(
-                        SkyBlockTabSnapshotRuntime.lines(client, System.currentTimeMillis()))
-                .orElse("");
+    private static String profileName(List<String> tab) {
+        return SkyBlockProfileIdentity.detectRaw(tab).orElse("");
     }
 
-    private static String profileType(List<String> lines) {
-        for (String line : lines) {
+    private static String profileType(List<String> sidebar, List<String> tab) {
+        for (String line : sidebar == null ? List.<String>of() : sidebar) {
+            String plain = CustomScoreboardPolicy.strip(line).toLowerCase();
+            if (plain.contains("ironman") || plain.contains("stranded") || plain.contains("bingo")) {
+                return CustomScoreboardPolicy.strip(line);
+            }
+        }
+        for (String line : tab == null ? List.<String>of() : tab) {
             String plain = CustomScoreboardPolicy.strip(line).toLowerCase();
             if (plain.contains("ironman") || plain.contains("stranded") || plain.contains("bingo")) {
                 return CustomScoreboardPolicy.strip(line);

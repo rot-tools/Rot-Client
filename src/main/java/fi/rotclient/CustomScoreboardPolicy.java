@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.OptionalLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ public final class CustomScoreboardPolicy {
     private static final Pattern NUMBER = Pattern.compile("([+-]?[\\d,]+(?:\\.\\d+)?)");
     private static final Pattern TAB_LABEL = Pattern.compile(
             "(?i)^\\s*(?<key>[a-z][a-z /]+)\\s*:\\s*(?<value>.+)$");
+    private static final Pattern TAB_LABEL_FIND = Pattern.compile(
+            "(?i)(?<key>[a-z][a-z /]{1,32})\\s*:\\s*(?<value>[^|]+)");
 
     private CustomScoreboardPolicy() {
     }
@@ -165,7 +168,13 @@ public final class CustomScoreboardPolicy {
         GEMS("Gems"),
         HEAT("Heat"),
         COLD("Cold"),
-        NORTH_STARS("North Stars");
+        NORTH_STARS("North Stars"),
+        HEALTH("Health"),
+        DEFENSE("Defense"),
+        MANA("Mana"),
+        SPEED("Speed"),
+        OVERFLOW("Overflow"),
+        VITALITY("Vitality");
 
         private final String label;
 
@@ -242,7 +251,7 @@ public final class CustomScoreboardPolicy {
             alignH = alignH == null ? Align.RIGHT : alignH;
             alignV = alignV == null ? VAlign.CENTER : alignV;
             arrowMode = arrowMode == null ? ArrowMode.COUNT : arrowMode;
-            chunkedStats = chunkedStats == null || chunkedStats.isEmpty()
+            chunkedStats = chunkedStats == null
                     ? defaultChunkedStats()
                     : List.copyOf(chunkedStats);
             titleAlign = titleAlign == null ? Align.CENTER : titleAlign;
@@ -282,7 +291,8 @@ public final class CustomScoreboardPolicy {
             OptionalLong quiverCurrent,
             OptionalLong quiverMax,
             boolean bingo,
-            long nowMillis) {
+            long nowMillis,
+            SkyBlockStatBarParser.Stats combat) {
         public BoardView {
             title = title == null ? "" : title;
             sidebar = sidebar == null ? List.of() : List.copyOf(sidebar);
@@ -293,6 +303,38 @@ public final class CustomScoreboardPolicy {
             profileType = profileType == null ? "" : profileType;
             quiverCurrent = quiverCurrent == null ? OptionalLong.empty() : quiverCurrent;
             quiverMax = quiverMax == null ? OptionalLong.empty() : quiverMax;
+            combat = combat == null ? SkyBlockStatBarParser.Stats.empty() : combat;
+        }
+
+        public BoardView(
+                boolean skyblock,
+                boolean hypixelAlpha,
+                String title,
+                List<String> sidebar,
+                List<String> tab,
+                String island,
+                String locationHint,
+                String profileName,
+                String profileType,
+                OptionalLong quiverCurrent,
+                OptionalLong quiverMax,
+                boolean bingo,
+                long nowMillis) {
+            this(
+                    skyblock,
+                    hypixelAlpha,
+                    title,
+                    sidebar,
+                    tab,
+                    island,
+                    locationHint,
+                    profileName,
+                    profileType,
+                    quiverCurrent,
+                    quiverMax,
+                    bingo,
+                    nowMillis,
+                    SkyBlockStatBarParser.Stats.empty());
         }
     }
 
@@ -384,7 +426,17 @@ public final class CustomScoreboardPolicy {
     }
 
     public static List<ChunkStat> defaultChunkedStats() {
-        return List.of(ChunkStat.values());
+        return List.of(
+                ChunkStat.PURSE,
+                ChunkStat.MOTES,
+                ChunkStat.BANK,
+                ChunkStat.BITS,
+                ChunkStat.COPPER,
+                ChunkStat.SOWDUST,
+                ChunkStat.GEMS,
+                ChunkStat.HEAT,
+                ChunkStat.COLD,
+                ChunkStat.NORTH_STARS);
     }
 
     public static String defaultAppearanceText() {
@@ -402,6 +454,85 @@ public final class CustomScoreboardPolicy {
                 out.append('\n');
             }
             out.append(stat.label());
+        }
+        return out.toString();
+    }
+
+    public static boolean isListTextSetting(String settingId) {
+        return "qol.custom_scoreboard.appearance".equals(settingId)
+                || "qol.custom_scoreboard.event_priority".equals(settingId)
+                || "qol.custom_scoreboard.chunked_stats".equals(settingId);
+    }
+
+    public static String listSettingTitle(String settingId) {
+        return switch (settingId == null ? "" : settingId) {
+            case "qol.custom_scoreboard.appearance" -> "Appearance";
+            case "qol.custom_scoreboard.event_priority" -> "Event Priority";
+            case "qol.custom_scoreboard.chunked_stats" -> "Chunked Stats";
+            default -> "List";
+        };
+    }
+
+    public static String defaultListText(String settingId) {
+        return switch (settingId == null ? "" : settingId) {
+            case "qol.custom_scoreboard.appearance" -> defaultAppearanceText();
+            case "qol.custom_scoreboard.event_priority" -> defaultEventText();
+            case "qol.custom_scoreboard.chunked_stats" -> defaultChunkedText();
+            default -> "";
+        };
+    }
+
+    public static List<String> listChoices(String settingId) {
+        List<String> out = new ArrayList<>();
+        switch (settingId == null ? "" : settingId) {
+            case "qol.custom_scoreboard.appearance" -> {
+                for (Slot slot : Slot.values()) {
+                    out.add(slot.label());
+                }
+            }
+            case "qol.custom_scoreboard.event_priority" -> {
+                for (EventKind event : EventKind.values()) {
+                    out.add(event.label());
+                }
+            }
+            case "qol.custom_scoreboard.chunked_stats" -> {
+                for (ChunkStat stat : ChunkStat.values()) {
+                    out.add(stat.label());
+                }
+            }
+            default -> {
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    public static List<String> splitListText(String raw) {
+        List<String> out = new ArrayList<>();
+        if (raw == null || raw.isBlank()) {
+            return out;
+        }
+        for (String line : raw.split("\\R")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                out.add(trimmed);
+            }
+        }
+        return out;
+    }
+
+    public static String joinListText(List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        for (String line : lines) {
+            if (line == null || line.isBlank()) {
+                continue;
+            }
+            if (!out.isEmpty()) {
+                out.append('\n');
+            }
+            out.append(line.trim());
         }
         return out.toString();
     }
@@ -463,11 +594,11 @@ public final class CustomScoreboardPolicy {
         }
         for (String line : raw.split("\\R")) {
             ChunkStat stat = parseChunkStat(line);
-            if (stat != null) {
+            if (stat != null && !out.contains(stat)) {
                 out.add(stat);
             }
         }
-        return out.isEmpty() ? defaultChunkedStats() : List.copyOf(out);
+        return List.copyOf(out);
     }
 
     public static Slot parseSlot(String raw) {
@@ -506,13 +637,23 @@ public final class CustomScoreboardPolicy {
         if (needle.isEmpty()) {
             return null;
         }
-        for (ChunkStat stat : ChunkStat.values()) {
-            if (normalizeToken(stat.name()).equals(needle)
-                    || normalizeToken(stat.label()).equals(needle)) {
-                return stat;
+        return switch (needle) {
+            case "hp", "health", "hearts" -> ChunkStat.HEALTH;
+            case "def", "defense", "defence" -> ChunkStat.DEFENSE;
+            case "mana" -> ChunkStat.MANA;
+            case "speed", "walkspeed" -> ChunkStat.SPEED;
+            case "overflow", "overflowmana" -> ChunkStat.OVERFLOW;
+            case "vitality" -> ChunkStat.VITALITY;
+            default -> {
+                for (ChunkStat stat : ChunkStat.values()) {
+                    if (normalizeToken(stat.name()).equals(needle)
+                            || normalizeToken(stat.label()).equals(needle)) {
+                        yield stat;
+                    }
+                }
+                yield null;
             }
-        }
-        return null;
+        };
     }
 
     public static Align parseAlign(String raw) {
@@ -812,10 +953,7 @@ public final class CustomScoreboardPolicy {
                     view.nowMillis(),
                     hideEmpty,
                     !place.inRift());
-            case BANK -> singleton(
-                    bankLine(parsed, options),
-                    options.textAlign(),
-                    hideEmpty && isZero(parsed.bank) && isZero(parsed.personalBank));
+            case BANK -> bankRows(parsed, options, deltas, view.nowMillis(), hideEmpty);
             case BITS -> bitsLine(view, parsed, options, deltas, place, hideEmpty, hideWrong);
             case COPPER -> moneyLine(
                     "Copper",
@@ -880,11 +1018,8 @@ public final class CustomScoreboardPolicy {
                     hideEmpty);
             case PLAYER_AMOUNT -> playersLine(parsed, options, hideEmpty);
             case VISITING -> singleton(parsed.visiting, options.textAlign(), hideEmpty);
-            case DATE -> singleton(parsed.date, options.textAlign(), hideEmpty);
-            case TIME -> singleton(
-                    formatTime(parsed.time, options),
-                    options.textAlign(),
-                    hideEmpty);
+            case DATE -> singleton(dateLine(parsed, view.nowMillis()), options.textAlign(), hideEmpty);
+            case TIME -> singleton(timeLine(parsed, options, view.nowMillis()), options.textAlign(), hideEmpty);
             case LOBBY_CODE -> singleton(
                     lobbyLine(parsed, options),
                     options.textAlign(),
@@ -980,6 +1115,25 @@ public final class CustomScoreboardPolicy {
         }
         number += note;
         return List.of(new Row(layout("Bits", number, "§b", options.numberLayout()), options.textAlign(), false));
+    }
+
+    private static List<Row> bankRows(
+            ParsedBoard parsed,
+            Options options,
+            DeltaBook deltas,
+            long now,
+            boolean hideEmpty) {
+        if (hideEmpty && isZero(parsed.bank) && isZero(parsed.personalBank)) {
+            return List.of();
+        }
+        long coop = parsed.bank.orElse(0L);
+        String note = deltas.suffix("bank", coop, options.showDiff(), options.numberStyle(), "§6", now);
+        String number = "§6" + formatNumber(coop, options.numberStyle());
+        if (parsed.personalBank.isPresent()) {
+            number += " §7/ §6" + formatNumber(parsed.personalBank.getAsLong(), options.numberStyle());
+        }
+        number += note;
+        return List.of(new Row(layout("Bank", number, "§6", options.numberLayout()), options.textAlign(), false));
     }
 
     private static String bankLine(ParsedBoard parsed, Options options) {
@@ -1108,6 +1262,7 @@ public final class CustomScoreboardPolicy {
             case COLD -> place.inGlacite();
             case NORTH_STARS -> place.inWinter();
             case BITS -> !place.inDungeon() && !place.inKuudra();
+            case HEALTH, DEFENSE, MANA, SPEED, OVERFLOW, VITALITY -> true;
             default -> true;
         };
     }
@@ -1151,7 +1306,32 @@ public final class CustomScoreboardPolicy {
                 yield parsed.cold.isBlank() ? "§b0❄" : parsed.cold;
             }
             case NORTH_STARS -> chunkAmount("§d", parsed.northStars, hideEmpty, options);
+            case HEALTH -> chunkCombat(
+                    "§c", parsed.combat.health(), parsed.combat.maxHealth(), hideEmpty);
+            case DEFENSE -> chunkCombat("§a", parsed.combat.defense(), OptionalDouble.empty(), hideEmpty);
+            case MANA -> chunkCombat(
+                    "§b", parsed.combat.mana(), parsed.combat.maxMana(), hideEmpty);
+            case SPEED -> chunkCombat("§f", parsed.combat.speed(), OptionalDouble.empty(), hideEmpty);
+            case OVERFLOW -> chunkCombat(
+                    "§3", parsed.combat.overflowMana(), OptionalDouble.empty(), hideEmpty);
+            case VITALITY -> chunkCombat(
+                    "§4", parsed.combat.vitality(), OptionalDouble.empty(), hideEmpty);
         };
+    }
+
+    private static String chunkCombat(
+            String color,
+            OptionalDouble current,
+            OptionalDouble max,
+            boolean hideEmpty) {
+        if (current.isEmpty()) {
+            return hideEmpty ? null : color + "0";
+        }
+        String text = color + SkyBlockStatBarParser.formatStat(current);
+        if (max.isPresent()) {
+            text += "§7/" + color + SkyBlockStatBarParser.formatStat(max);
+        }
+        return text;
     }
 
     private static String chunkAmount(
@@ -1266,10 +1446,16 @@ public final class CustomScoreboardPolicy {
 
     private static String profileLine(BoardView view, ParsedBoard parsed, Options options) {
         String symbol = profileSymbol(firstNonBlank(parsed.profileType, view.profileType()));
-        if (options.showProfileName() && !view.profileName().isBlank()) {
-            return symbol + view.profileName();
+        if (options.showProfileName()) {
+            String name = firstNonBlank(view.profileName(), parsed.profileName);
+            if (!name.isBlank()) {
+                return symbol + name;
+            }
         }
-        String type = firstNonBlank(parsed.profileType, view.profileType(), "Profile");
+        String type = firstNonBlank(parsed.profileType, view.profileType());
+        if (type.isBlank()) {
+            return "";
+        }
         return symbol + type;
     }
 
@@ -1282,6 +1468,30 @@ public final class CustomScoreboardPolicy {
                     + " §8" + parsed.lobbyCode;
         }
         return "§8" + parsed.lobbyCode;
+    }
+
+    private static String dateLine(ParsedBoard parsed, long nowMillis) {
+        if (!parsed.date.isBlank() && looksSkyBlockDate(parsed.date)) {
+            return parsed.date;
+        }
+        return "§7" + SkyBlockClock.formatDate(SkyBlockClock.at(nowMillis));
+    }
+
+    private static boolean looksSkyBlockDate(String raw) {
+        String plain = strip(raw).toLowerCase(Locale.ROOT);
+        return plain.contains("spring")
+                || plain.contains("summer")
+                || plain.contains("autumn")
+                || plain.contains("fall")
+                || plain.contains("winter");
+    }
+
+    private static String timeLine(ParsedBoard parsed, Options options, long nowMillis) {
+        if (options.timeExact() || parsed.time.isBlank()) {
+            return SkyBlockClock.formatTime(
+                    SkyBlockClock.at(nowMillis), options.time24h(), options.timeExact());
+        }
+        return formatTime(parsed.time, options);
     }
 
     private static String formatTime(String raw, Options options) {
@@ -1381,8 +1591,8 @@ public final class CustomScoreboardPolicy {
         return "§e";
     }
 
-    private static List<Row> singleton(String text, Align align, boolean skip) {
-        if (skip || text == null || strip(text).isEmpty()) {
+    private static List<Row> singleton(String text, Align align, boolean hideIfEmpty) {
+        if (text == null || strip(text).isEmpty()) {
             return List.of();
         }
         return List.of(new Row(text, align, false));
@@ -1485,6 +1695,8 @@ public final class CustomScoreboardPolicy {
         parsed.island = view.island();
         parsed.location = view.locationHint();
         parsed.profileType = view.profileType();
+        parsed.profileName = view.profileName();
+        parsed.combat = view.combat();
         List<String> sidebar = view.sidebar();
         boolean[] taken = new boolean[sidebar.size()];
         for (int i = 0; i < sidebar.size(); i++) {
@@ -1509,7 +1721,7 @@ public final class CustomScoreboardPolicy {
             }
         }
         for (String raw : view.tab()) {
-            consumeTab(raw, parsed);
+            ingestTabLine(raw, parsed);
         }
         return parsed;
     }
@@ -1575,42 +1787,256 @@ public final class CustomScoreboardPolicy {
         }
     }
 
-    private static void consumeTab(String raw, ParsedBoard parsed) {
-        String plain = strip(raw);
+    private static void ingestTabLine(String raw, ParsedBoard parsed) {
+        String plain = SkyBlockStatBarParser.stripFormatting(raw);
+        if (plain.isBlank()) {
+            parsed.tabSection = "";
+            parsed.readingParty = false;
+            return;
+        }
+        String header = tabSection(plain);
+        if (header != null) {
+            parsed.tabSection = header;
+            parsed.readingParty = "party".equals(header);
+            return;
+        }
+        String lowerPlain = plain.toLowerCase(Locale.ROOT);
+        if (lowerPlain.startsWith("mayor ") && parsed.mayor.isBlank()) {
+            parsed.tabSection = "mayor";
+            parsed.mayor = stripMayorPrefix(plain);
+            return;
+        }
+        if (lowerPlain.startsWith("minister ") && parsed.minister.isBlank()) {
+            parsed.tabSection = "minister";
+            parsed.minister = stripMayorPrefix(plain);
+            return;
+        }
+        if (applyTabKeyValue(plain, parsed)) {
+            return;
+        }
+        applyTabSectionBody(plain, raw, parsed);
+    }
+
+    private static String tabSection(String plain) {
+        String needle = normalizeToken(plain);
+        return switch (needle) {
+            case "mayor", "mayors" -> "mayor";
+            case "minister" -> "minister";
+            case "election", "elections" -> "election";
+            case "cookiebuff", "boostercookie", "cookie" -> "cookie";
+            case "accessories", "accessorybag", "maxwell", "tunings", "tuning", "magicalpower" -> "maxwell";
+            case "party" -> "party";
+            case "event", "events", "activeevent", "currentevent" -> "event";
+            case "communityshop", "community", "bitsshop", "bitshop", "gemshop" -> "shop";
+            case "info", "profile" -> "info";
+            default -> null;
+        };
+    }
+
+    private static boolean applyTabKeyValue(String plain, ParsedBoard parsed) {
         Matcher matcher = TAB_LABEL.matcher(plain);
         if (!matcher.matches()) {
-            if (plain.toLowerCase(Locale.ROOT).contains("party") && parsed.party.isEmpty()) {
-                parsed.readingParty = true;
-            } else if (parsed.readingParty) {
-                if (plain.isBlank() || plain.contains(":")) {
-                    parsed.readingParty = false;
-                } else {
-                    parsed.party.add(plain.replace("★", "").trim());
-                    if (raw.contains("★") || raw.contains("leader")) {
-                        parsed.partyLeader = true;
-                    }
-                }
+            matcher = TAB_LABEL_FIND.matcher(plain);
+            if (!matcher.find()) {
+                return false;
             }
-            return;
         }
         String key = matcher.group("key").trim().toLowerCase(Locale.ROOT);
         String value = matcher.group("value").trim();
-        switch (key) {
+        applyTabPair(parsed, key, value);
+        return true;
+    }
+
+    private static void applyTabSectionBody(String plain, String raw, ParsedBoard parsed) {
+        String section = parsed.tabSection == null ? "" : parsed.tabSection;
+        switch (section) {
+            case "mayor" -> {
+                if (parsed.mayor.isBlank()) {
+                    parsed.mayor = stripMayorPrefix(plain);
+                } else if (parsed.mayorPerks.size() < 6 && looksMayorPerk(plain)) {
+                    parsed.mayorPerks.add(plain);
+                }
+            }
+            case "minister" -> {
+                if (parsed.minister.isBlank()) {
+                    parsed.minister = stripMayorPrefix(plain);
+                } else if (parsed.ministerPerk.isBlank()) {
+                    parsed.ministerPerk = plain;
+                }
+            }
+            case "election" -> parsed.mayorTime = plain;
+            case "cookie" -> parsed.cookie = "§dCookie: §f" + plain;
+            case "maxwell" -> applyMaxwellLine(plain, parsed);
+            case "party" -> {
+                parsed.party.add(plain.replace("★", "").trim());
+                if (raw.contains("★") || plain.toLowerCase(Locale.ROOT).contains("leader")) {
+                    parsed.partyLeader = true;
+                }
+            }
+            case "event" -> addTabEvent(plain, raw, parsed);
+            case "shop" -> {
+                OptionalLong amount = parseLong(plain);
+                if (amount.isPresent() && parsed.gems.isEmpty()) {
+                    parsed.gems = amount;
+                }
+            }
+            default -> {
+                if (parsed.readingParty) {
+                    if (plain.contains(":")) {
+                        parsed.readingParty = false;
+                    } else {
+                        parsed.party.add(plain.replace("★", "").trim());
+                        if (raw.contains("★") || plain.toLowerCase(Locale.ROOT).contains("leader")) {
+                            parsed.partyLeader = true;
+                        }
+                    }
+                } else {
+                    // Ignore leftover tab names so player list rows do not become events.
+                }
+            }
+        }
+    }
+
+    private static String stripMayorPrefix(String plain) {
+        String trimmed = plain.trim();
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("mayor ")) {
+            return trimmed.substring(6).trim();
+        }
+        if (lower.startsWith("minister ")) {
+            return trimmed.substring(9).trim();
+        }
+        return trimmed;
+    }
+
+    private static boolean looksMayorPerk(String plain) {
+        if (plain == null || plain.isBlank() || plain.length() > 48) {
+            return false;
+        }
+        String lower = plain.toLowerCase(Locale.ROOT);
+        if (lower.contains("[") || lower.contains("]") || lower.contains("●")) {
+            return false;
+        }
+        if (lower.contains("xp")
+                || lower.contains("buff")
+                || lower.contains("perk")
+                || lower.contains("bonus")
+                || lower.contains("discount")
+                || lower.contains("interest")
+                || lower.contains("stat")
+                || lower.contains("coin")
+                || lower.contains("pet")
+                || lower.contains("event")
+                || lower.contains("speed")
+                || lower.contains("fiesta")) {
+            return true;
+        }
+        return plain.contains(" ") && Character.isUpperCase(plain.trim().charAt(0));
+    }
+
+    private static void applyMaxwellLine(String plain, ParsedBoard parsed) {
+        OptionalLong amount = parseLong(plain);
+        if (parsed.magicalPower.isEmpty() && amount.isPresent() && !looksTuning(plain)) {
+            parsed.magicalPower = amount;
+            return;
+        }
+        if (looksTuning(plain) || amount.isPresent()) {
+            parsed.tunings.add(plain);
+        }
+    }
+
+    private static boolean looksTuning(String plain) {
+        String lower = plain.toLowerCase(Locale.ROOT);
+        return lower.contains("+")
+                || lower.contains("health")
+                || lower.contains("defense")
+                || lower.contains("strength")
+                || lower.contains("crit")
+                || lower.contains("intelligence")
+                || lower.contains("speed")
+                || lower.contains("vitality")
+                || lower.contains("magic find")
+                || lower.contains("ferocity");
+    }
+
+    private static void addTabEvent(String plain, String raw, ParsedBoard parsed) {
+        EventKind event = CustomScoreboardLines.eventKind(raw, plain);
+        if (event == null) {
+            event = CustomScoreboardLines.eventKind(plain, plain);
+        }
+        if (event == null && "event".equals(parsed.tabSection)) {
+            event = EventKind.ACTIVE_TABLIST;
+        }
+        if (event != null) {
+            String text = raw.isBlank() ? plain : raw;
+            List<String> lines = parsed.events.computeIfAbsent(event, ignored -> new ArrayList<>());
+            if (!lines.contains(text)) {
+                lines.add(text);
+            }
+        }
+    }
+
+    private static void applyTabPair(ParsedBoard parsed, String key, String value) {
+        OptionalLong amount = parseLong(value);
+        String needle = key.toLowerCase(Locale.ROOT);
+        if (bitsAvailableKey(needle) && amount.isPresent()) {
+            parsed.bitsAvailable = amount;
+            return;
+        }
+        switch (needle) {
             case "area", "island" -> parsed.island = value;
-            case "profile" -> parsed.profileType = value;
-            case "bank" -> parsed.bank = parseLong(value);
-            case "purse" -> parsed.purse = parseLong(value);
-            case "bits" -> parsed.bits = parseLong(value);
-            case "unclaimed bits", "bits available" -> parsed.bitsAvailable = parseLong(value);
-            case "soulflow" -> parsed.soulflow = parseLong(value);
-            case "cookie buff", "cookie" -> parsed.cookie = "§dCookie: §f" + value;
-            case "sb level", "skyblock xp", "skyblock level" -> parsed.skyblockXp = "§bSB XP: §f" + value;
-            case "magical power" -> parsed.magicalPower = parseLong(value);
-            case "mayor" -> parsed.mayor = value;
-            case "minister" -> parsed.minister = value;
-            case "election", "next mayor" -> parsed.mayorTime = value;
+            case "profile" -> {
+                String lower = value.toLowerCase(Locale.ROOT);
+                if (lower.contains("ironman") || lower.contains("stranded") || lower.contains("bingo")) {
+                    parsed.profileType = value;
+                } else {
+                    parsed.profileName = value;
+                }
+            }
+            case "bank" -> parsed.bank = amount;
+            case "purse" -> parsed.purse = amount;
+            case "bits" -> parsed.bits = amount;
+            case "soulflow" -> parsed.soulflow = amount;
+            case "gems" -> parsed.gems = amount;
+            case "copper" -> parsed.copper = amount;
+            case "motes" -> parsed.motes = amount;
+            case "sowdust" -> parsed.sowdust = amount;
+            case "north stars", "northstars" -> parsed.northStars = amount;
+            case "cookie buff", "cookie", "booster cookie" -> {
+                parsed.cookie = "§dCookie: §f" + value;
+                parsed.tabSection = "cookie";
+            }
+            case "sb level", "skyblock xp", "skyblock level" ->
+                    parsed.skyblockXp = "§bSB XP: §f" + value;
+            case "magical power", "mp" -> {
+                parsed.magicalPower = amount;
+                parsed.tabSection = "maxwell";
+            }
+            case "mayor" -> {
+                parsed.mayor = value;
+                parsed.tabSection = "mayor";
+            }
+            case "minister" -> {
+                parsed.minister = value;
+                parsed.tabSection = "minister";
+            }
+            case "election", "next mayor", "election over in", "over in" -> {
+                parsed.mayorTime = value;
+                parsed.tabSection = "election";
+            }
+            case "event", "active event", "current event" -> {
+                addTabEvent(value, value, parsed);
+                parsed.tabSection = "event";
+            }
+            case "ends in", "starts in" -> {
+                if ("election".equals(parsed.tabSection)) {
+                    parsed.mayorTime = value;
+                } else {
+                    addTabEvent(key + ": " + value, key + ": " + value, parsed);
+                }
+            }
             case "players" -> {
-                parsed.players = parseLong(value);
+                parsed.players = amount;
                 Matcher max = Pattern.compile("/\\s*([\\d,]+)").matcher(value);
                 if (max.find()) {
                     parsed.maxPlayers = parseLong(max.group(1));
@@ -1621,12 +2047,152 @@ public final class CustomScoreboardPolicy {
                 ChunkStat stat = parseChunkStat(key);
                 if (stat != null) {
                     parsed.chunked.put(stat, value);
-                } else if (key.contains("tuning")) {
+                    applyChunkMoney(parsed, stat, value);
+                    if ("maxwell".equals(parsed.tabSection) && looksTuning(key + " " + value)) {
+                        String tuning = key + ": " + value;
+                        if (!parsed.tunings.contains(tuning)) {
+                            parsed.tunings.add(tuning);
+                        }
+                    } else {
+                        parsed.combat = mergeCombat(parsed.combat, stat, value);
+                    }
+                } else if (needle.contains("tuning")) {
                     parsed.tunings.add(value);
-                } else if (key.contains("perk") && !parsed.mayor.isBlank()) {
+                    parsed.tabSection = "maxwell";
+                } else if (needle.contains("perk") && !parsed.mayor.isBlank()) {
                     parsed.mayorPerks.add(value);
+                } else if (needle.contains("minister") && needle.contains("perk")) {
+                    parsed.ministerPerk = value;
+                } else if ((needle.contains("election") || needle.contains("mayor"))
+                        && (needle.contains("time") || needle.contains("over"))) {
+                    parsed.mayorTime = value;
+                    parsed.tabSection = "election";
+                } else if ("shop".equals(parsed.tabSection) && needle.contains("unclaimed") && amount.isPresent()) {
+                    parsed.bitsAvailable = amount;
+                } else if ("maxwell".equals(parsed.tabSection) && looksTuning(key + " " + value)) {
+                    String tuning = key + ": " + value;
+                    if (!parsed.tunings.contains(tuning)) {
+                        parsed.tunings.add(tuning);
+                    }
                 }
             }
+        }
+    }
+
+    private static boolean bitsAvailableKey(String key) {
+        String needle = key.toLowerCase(Locale.ROOT);
+        if (needle.contains("chest") || needle.contains("reward")) {
+            return false;
+        }
+        return needle.contains("unclaimed bits")
+                || needle.contains("bits available")
+                || needle.contains("available bits")
+                || (needle.contains("unclaimed") && needle.contains("bit"))
+                || needle.equals("unclaimed")
+                || needle.equals("uncollected");
+    }
+
+    private static void applyChunkMoney(ParsedBoard parsed, ChunkStat chunk, String raw) {
+        OptionalLong amount = parseLong(raw);
+        if (amount.isEmpty()) {
+            return;
+        }
+        switch (chunk) {
+            case PURSE -> parsed.purse = amount;
+            case BITS -> parsed.bits = amount;
+            case MOTES -> parsed.motes = amount;
+            case COPPER -> parsed.copper = amount;
+            case GEMS -> parsed.gems = amount;
+            case NORTH_STARS -> parsed.northStars = amount;
+            case BANK -> parsed.bank = amount;
+            default -> {
+            }
+        }
+    }
+
+    private static SkyBlockStatBarParser.Stats mergeCombat(
+            SkyBlockStatBarParser.Stats previous, ChunkStat stat, String raw) {
+        SkyBlockStatBarParser.Stats current = previous == null
+                ? SkyBlockStatBarParser.Stats.empty()
+                : previous;
+        OptionalDouble amount = optionalAmount(raw);
+        if (amount.isEmpty()) {
+            return current;
+        }
+        OptionalDouble max = optionalMax(raw);
+        return switch (stat) {
+            case HEALTH -> new SkyBlockStatBarParser.Stats(
+                    amount,
+                    max.isPresent() ? max : current.maxHealth(),
+                    current.defense(),
+                    current.mana(),
+                    current.maxMana(),
+                    current.overflowMana(),
+                    current.speed(),
+                    current.vitality());
+            case DEFENSE -> new SkyBlockStatBarParser.Stats(
+                    current.health(),
+                    current.maxHealth(),
+                    amount,
+                    current.mana(),
+                    current.maxMana(),
+                    current.overflowMana(),
+                    current.speed(),
+                    current.vitality());
+            case MANA -> new SkyBlockStatBarParser.Stats(
+                    current.health(),
+                    current.maxHealth(),
+                    current.defense(),
+                    amount,
+                    max.isPresent() ? max : current.maxMana(),
+                    current.overflowMana(),
+                    current.speed(),
+                    current.vitality());
+            case SPEED -> new SkyBlockStatBarParser.Stats(
+                    current.health(),
+                    current.maxHealth(),
+                    current.defense(),
+                    current.mana(),
+                    current.maxMana(),
+                    current.overflowMana(),
+                    amount,
+                    current.vitality());
+            case OVERFLOW -> new SkyBlockStatBarParser.Stats(
+                    current.health(),
+                    current.maxHealth(),
+                    current.defense(),
+                    current.mana(),
+                    current.maxMana(),
+                    amount,
+                    current.speed(),
+                    current.vitality());
+            case VITALITY -> new SkyBlockStatBarParser.Stats(
+                    current.health(),
+                    current.maxHealth(),
+                    current.defense(),
+                    current.mana(),
+                    current.maxMana(),
+                    current.overflowMana(),
+                    current.speed(),
+                    amount);
+            default -> current;
+        };
+    }
+
+    private static OptionalDouble optionalAmount(String raw) {
+        OptionalLong parsed = parseLong(raw);
+        return parsed.isPresent() ? OptionalDouble.of(parsed.getAsLong()) : OptionalDouble.empty();
+    }
+
+    private static OptionalDouble optionalMax(String raw) {
+        Matcher matcher = Pattern.compile("/\\s*([\\d,]+(?:\\.\\d+)?)").matcher(strip(raw));
+        if (!matcher.find()) {
+            return OptionalDouble.empty();
+        }
+        try {
+            return OptionalDouble.of(Double.parseDouble(matcher.group(1).replace(",", "")));
+        } catch (NumberFormatException ignored) {
+            return OptionalDouble.empty();
         }
     }
 
@@ -1667,6 +2233,7 @@ public final class CustomScoreboardPolicy {
         OptionalLong players = OptionalLong.empty();
         OptionalLong maxPlayers = OptionalLong.empty();
         OptionalLong magicalPower = OptionalLong.empty();
+        SkyBlockStatBarParser.Stats combat = SkyBlockStatBarParser.Stats.empty();
         String heat = "";
         String cold = "";
         String island = "";
@@ -1676,6 +2243,7 @@ public final class CustomScoreboardPolicy {
         String time = "";
         String lobbyCode = "";
         String profileType = "";
+        String profileName = "";
         String power = "";
         String cookie = "";
         String skyblockXp = "";
@@ -1685,6 +2253,7 @@ public final class CustomScoreboardPolicy {
         String mayorTime = "";
         boolean readingParty;
         boolean partyLeader;
+        String tabSection = "";
         final List<String> tunings = new ArrayList<>();
         final List<String> mayorPerks = new ArrayList<>();
         final List<String> party = new ArrayList<>();

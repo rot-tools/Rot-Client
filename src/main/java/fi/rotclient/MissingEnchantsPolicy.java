@@ -145,7 +145,7 @@ public final class MissingEnchantsPolicy {
         }
         if (loreLines != null) {
             for (int i = loreLines.size() - 1; i >= 0; i--) {
-                String stripped = AutoConversationPolicy.stripFormatting(loreLines.get(i));
+                String stripped = ChatTextPolicy.stripFormatting(loreLines.get(i));
                 Matcher matcher = TYPE.matcher(stripped.toUpperCase(Locale.ROOT));
                 if (matcher.find()) {
                     String type = matcher.group(1).trim();
@@ -180,7 +180,7 @@ public final class MissingEnchantsPolicy {
             return names;
         }
         for (String line : loreLines) {
-            String stripped = AutoConversationPolicy.stripFormatting(line);
+            String stripped = ChatTextPolicy.stripFormatting(line);
             Matcher matcher = ENCHANT.matcher(stripped);
             while (matcher.find()) {
                 names.add(normalizeEnchant(matcher.group(1)));

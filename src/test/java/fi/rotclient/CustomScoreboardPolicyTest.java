@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
 
@@ -232,6 +233,98 @@ final class CustomScoreboardPolicyTest {
     }
 
     @Test
+    void locationSlotKeepsYourIsland() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Location";
+        settings.hideEmpty = true;
+        List<String> sidebar = List.of("Your Island");
+        assertEquals(
+                CustomScoreboardLines.Kind.LOCATION,
+                CustomScoreboardLines.classify(sidebar.get(0)).kind());
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(sidebar, List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertEquals(
+                List.of("Your Island"),
+                result.rows().stream().map(CustomScoreboardPolicy.Row::plain).toList(),
+                "unknown=" + result.unknownPlain());
+    }
+
+    @Test
+    void chunkedHealthDefenseManaSpeedDoNotFallBackToBankBits() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Bank\nBits\nChunked Stats\nLocation\nFooter";
+        settings.chunkedStats = "Health\nDefense\nMana\nSpeed";
+        settings.hideEmpty = true;
+        SkyBlockStatBarParser.Stats combat = new SkyBlockStatBarParser.Stats(
+                OptionalDouble.of(12_345),
+                OptionalDouble.of(15_000),
+                OptionalDouble.of(800),
+                OptionalDouble.of(400),
+                OptionalDouble.of(500),
+                OptionalDouble.empty(),
+                OptionalDouble.of(117),
+                OptionalDouble.empty());
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                new CustomScoreboardPolicy.BoardView(
+                        true,
+                        false,
+                        "SKYBLOCK",
+                        List.of("§6Bank: §6122", "§bBits: §b82,540", "Your Island", "www.hypixel.net"),
+                        List.of(),
+                        "",
+                        "",
+                        "",
+                        "",
+                        OptionalLong.empty(),
+                        OptionalLong.empty(),
+                        false,
+                        1_000L,
+                        combat),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        List<String> plains = result.rows().stream().map(CustomScoreboardPolicy.Row::plain).toList();
+        assertTrue(text.contains("Bank"));
+        assertTrue(text.contains("Bits"));
+        assertTrue(text.contains("12,345"));
+        assertTrue(text.contains("800"));
+        assertTrue(text.contains("400"));
+        assertTrue(text.contains("117"));
+        assertFalse(plains.stream().anyMatch(
+                line -> line.contains("|") && line.contains("122") && line.contains("82,540")));
+        assertTrue(plains.stream().anyMatch(line -> line.contains("Your Island")), plains.toString());
+        assertEquals(1, plains.stream().filter(line -> line.toLowerCase().contains("hypixel.net")).count(), plains.toString());
+        assertTrue(result.unknownPlain().isEmpty());
+    }
+
+    @Test
+    void classifiesIslandAndFooterLines() {
+        assertEquals(
+                CustomScoreboardLines.Kind.LOCATION,
+                CustomScoreboardLines.classify("📍 Your Island").kind());
+        assertEquals(
+                CustomScoreboardLines.Kind.LOCATION,
+                CustomScoreboardLines.classify("Your Island").kind());
+        assertEquals(
+                CustomScoreboardLines.Kind.SKIP,
+                CustomScoreboardLines.classify("www.hypixel.net").kind());
+    }
+
+    @Test
+    void unknownChunkedNamesStayEmptyInsteadOfDefaultCurrencies() {
+        assertEquals(
+                List.of(
+                        CustomScoreboardPolicy.ChunkStat.HEALTH,
+                        CustomScoreboardPolicy.ChunkStat.DEFENSE,
+                        CustomScoreboardPolicy.ChunkStat.MANA,
+                        CustomScoreboardPolicy.ChunkStat.SPEED),
+                CustomScoreboardPolicy.parseChunked("Health\nDefense\nMana\nSpeed"));
+        assertTrue(CustomScoreboardPolicy.parseChunked("Not A Stat").isEmpty());
+    }
+
+    @Test
     void hideEmptySkipsZeroPurse() {
         CustomScoreboardSettings settings = new CustomScoreboardSettings();
         settings.appearance = "Purse";
@@ -293,6 +386,156 @@ final class CustomScoreboardPolicyTest {
                 "§x§f§f§a§a§0§0Purse: §x§f§f§a§a§0§01,000");
         assertEquals(CustomScoreboardLines.Kind.PURSE, hit.kind());
         assertEquals("1,000", hit.capture());
+    }
+
+    @Test
+    void tabGemsFillTheGemsSlot() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Gems";
+        settings.hideEmpty = true;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§6Purse: §61,000"), List.of("Community Shop", "Gems: 12")),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertTrue(joined(result).contains("12"), joined(result));
+        assertTrue(joined(result).toLowerCase().contains("gems"), joined(result));
+    }
+
+    @Test
+    void unclaimedBitsComeFromTabAliases() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Bits";
+        settings.showUnclaimedBits = true;
+        settings.hideEmpty = true;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§bBits: §b82,540"), List.of("Unclaimed: 400")),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("82,540"), text);
+        assertTrue(text.contains("400"), text);
+    }
+
+    @Test
+    void mayorPerksMinisterAndElectionComeFromTabWidgets() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Mayor";
+        settings.showMayorPerks = true;
+        settings.showMayorTime = true;
+        settings.showExtraMayor = true;
+        settings.hideEmpty = true;
+        List<String> tab = List.of(
+                "Mayor",
+                "Aatrox",
+                "Slayer XP Buff",
+                "Minister",
+                "Cole",
+                "Mining Fiesta",
+                "Election",
+                "3d 12h");
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of("§6Purse: §610"), tab),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("Aatrox"), text);
+        assertTrue(text.contains("Slayer XP Buff"), text);
+        assertTrue(text.contains("3d 12h"), text);
+        assertTrue(text.contains("Cole"), text);
+        assertTrue(text.contains("Mining Fiesta"), text);
+    }
+
+    @Test
+    void magicalPowerAndCompactTuningsComeFromTabSection() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Tuning";
+        settings.showMagicalPower = true;
+        settings.compactTuning = true;
+        settings.hideEmpty = true;
+        List<String> tab = List.of(
+                "Magical Power",
+                "1,420",
+                "Health: +50",
+                "Critical Damage: +12");
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(List.of(), tab),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("1,420") || text.contains("1420"), text);
+        assertTrue(text.contains("+50"), text);
+        assertTrue(text.contains("+12"), text);
+        assertTrue(text.contains("§7,") || text.contains(", "), text);
+    }
+
+    @Test
+    void tabEventsShowWhenShowAllActiveIsOn() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Events";
+        settings.eventPriority = "Dark Auction\nSpooky";
+        settings.showAllEvents = true;
+        settings.hideEmpty = true;
+        CustomScoreboardPolicy.ComposeResult result = CustomScoreboardPolicy.compose(
+                view(
+                        List.of("Dark Auction in 5m"),
+                        List.of("Event", "Spooky Festival")),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        String text = joined(result);
+        assertTrue(text.contains("Dark Auction"), text);
+        assertTrue(text.contains("Spooky"), text);
+    }
+
+    @Test
+    void exactMinutesUseComputedSkyBlockClock() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Time";
+        settings.timeExact = true;
+        settings.hideEmpty = true;
+        long now = SkyBlockClock.EPOCH_MILLIS + 6_667L;
+        CustomScoreboardPolicy.ComposeResult exact = CustomScoreboardPolicy.compose(
+                view(now, List.of(), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertTrue(joined(exact).contains(":08"), joined(exact));
+        settings.timeExact = false;
+        CustomScoreboardPolicy.ComposeResult rounded = CustomScoreboardPolicy.compose(
+                view(now, List.of(), List.of()),
+                settings.options(),
+                new CustomScoreboardPolicy.DeltaBook());
+        assertTrue(joined(rounded).contains(":00"), joined(rounded));
+        assertFalse(joined(rounded).contains(":08"), joined(rounded));
+    }
+
+    @Test
+    void bankNumberDiffSuffixLastsFiveSeconds() {
+        CustomScoreboardSettings settings = new CustomScoreboardSettings();
+        settings.appearance = "Bank";
+        settings.showDiff = true;
+        settings.hideEmpty = false;
+        CustomScoreboardPolicy.DeltaBook deltas = new CustomScoreboardPolicy.DeltaBook();
+        CustomScoreboardPolicy.compose(
+                view(1_000L, List.of("Bank: 100"), List.of()),
+                settings.options(),
+                deltas);
+        CustomScoreboardPolicy.ComposeResult next = CustomScoreboardPolicy.compose(
+                view(1_100L, List.of("Bank: 200"), List.of()),
+                settings.options(),
+                deltas);
+        assertTrue(joined(next).contains("+100") || joined(next).contains("(+100"), joined(next));
+    }
+
+    @Test
+    void listTextSettingsHaveChoicesAndJoinRoundTrip() {
+        assertTrue(CustomScoreboardPolicy.isListTextSetting("qol.custom_scoreboard.appearance"));
+        assertTrue(CustomScoreboardPolicy.listChoices("qol.custom_scoreboard.appearance")
+                .contains("Purse"));
+        assertEquals(
+                "Purse\nBits",
+                CustomScoreboardPolicy.joinListText(List.of("Purse", "Bits")));
+        assertEquals(
+                List.of("Health", "Mana"),
+                CustomScoreboardPolicy.splitListText("Health\nMana"));
     }
 
     private static CustomScoreboardPolicy.ComposeResult compose(List<String> sidebar, List<String> tab) {

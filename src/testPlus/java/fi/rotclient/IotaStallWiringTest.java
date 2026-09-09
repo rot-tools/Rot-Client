@@ -58,7 +58,7 @@ final class IotaStallWiringTest {
         assertTrue(source.contains("StallMarketRuntime.appendTooltip"));
         assertTrue(source.contains("literal(\"bazaarsearch\")"));
         String clicker = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/AutoClickerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/AutoClickerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(clicker.contains("IotaRuntime.leftClickLatched"));
         assertTrue(clicker.contains("IotaRuntime.rightClickLatched"));
@@ -140,8 +140,11 @@ final class IotaStallWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(iota.contains("IotaPolicy.partyCommand"));
         assertTrue(iota.contains("IotaKuudraRuntime.onGameMessage"));
-        assertTrue(iota.contains("TOGGLE_CLICK_CPS"));
         assertTrue(iota.contains("SkyBlockAreaDetector.isInSkyblock()"));
+        String iotaPlus = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/IotaPlusRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(iotaPlus.contains("TOGGLE_CLICK_CPS"));
         String market = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/StallMarketRuntime.java"),
                 StandardCharsets.UTF_8);

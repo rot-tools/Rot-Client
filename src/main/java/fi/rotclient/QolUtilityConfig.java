@@ -32,18 +32,18 @@ final class QolUtilityConfig {
     boolean autoClickerAllowBreaking;
     boolean autoClickerBlockBreaker = true;
     boolean autoClickerTerminatorOnly = true;
-    float autoClickerCps = AutoClickerPolicy.DEFAULT_CPS;
+    float autoClickerCps = 5.0F;
     boolean autoClickerEnableLeft = true;
     boolean autoClickerEnableRight = true;
-    float autoClickerLeftCps = AutoClickerPolicy.DEFAULT_CPS;
-    float autoClickerRightCps = AutoClickerPolicy.DEFAULT_CPS;
+    float autoClickerLeftCps = 5.0F;
+    float autoClickerRightCps = 5.0F;
     String autoClickerLeftKeybind = "";
     String autoClickerRightKeybind = "";
     java.util.List<String> autoClickerLeftWhitelist = new java.util.ArrayList<>();
     java.util.List<String> autoClickerRightWhitelist = new java.util.ArrayList<>();
 
     boolean inventoryWalkEnabled;
-    int inventoryWalkPingMs = InventoryWalkPolicy.DEFAULT_PING_MS;
+    int inventoryWalkPingMs = 200;
 
     boolean inventoryOverlayEnabled = true;
     boolean inventoryOverlayEquipment = true;
@@ -114,7 +114,7 @@ final class QolUtilityConfig {
     boolean autoConversationEnabled;
     boolean autoConversationMulti = true;
     boolean autoConversationGreen = true;
-    int autoConversationDelayTicks = AutoConversationPolicy.DEFAULT_DELAY_TICKS;
+    int autoConversationDelayTicks = 4;
 
     boolean fishingHelperEnabled;
     boolean fishingHelperAutoPull = true;
@@ -461,7 +461,6 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled;
             case "qol.etherwarp" -> etherwarpEnabled;
             case "qol.click_gui" -> clickGuiEnabled;
-            case "qol.auto_clicker" -> autoClickerEnabled;
             case "qol.inventory_walk" -> inventoryWalkEnabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled;
             case "qol.skill_levels" -> skillLevelsEnabled;
@@ -483,7 +482,10 @@ final class QolUtilityConfig {
             case "qol.mob_highlight" -> mobHighlightEnabled;
             case "qol.custom_tooltip" -> customTooltipEnabled;
             case "qol.fullbright", "qol.auto_sprint", "qol.camera" -> false;
-            default -> extras().isModuleEnabled(moduleId);
+            default -> {
+                Boolean flavored = QolFlavorSupport.extension().readModuleEnabled(this, moduleId);
+                yield flavored != null ? flavored : extras().isModuleEnabled(moduleId);
+            }
         };
     }
 
@@ -507,7 +509,6 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled = enabled;
             case "qol.etherwarp" -> etherwarpEnabled = enabled;
             case "qol.click_gui" -> clickGuiEnabled = enabled;
-            case "qol.auto_clicker" -> autoClickerEnabled = enabled;
             case "qol.inventory_walk" -> inventoryWalkEnabled = enabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled = enabled;
             case "qol.skill_levels" -> skillLevelsEnabled = enabled;
@@ -529,7 +530,11 @@ final class QolUtilityConfig {
             case "qol.item_rarity" -> itemRarityEnabled = enabled;
             case "qol.mob_highlight" -> mobHighlightEnabled = enabled;
             case "qol.custom_tooltip" -> customTooltipEnabled = enabled;
-            default -> extras().setModuleEnabled(moduleId, enabled);
+            default -> {
+                if (!QolFlavorSupport.extension().writeModuleEnabled(this, moduleId, enabled)) {
+                    extras().setModuleEnabled(moduleId, enabled);
+                }
+            }
         }
     }
 
@@ -578,13 +583,6 @@ final class QolUtilityConfig {
             case "qol.click_gui.chat_notifications" -> clickGuiChatNotifications;
             case "qol.click_gui.rounded_bottoms" -> clickGuiRoundedBottoms;
             case "qol.click_gui.developer_message" -> clickGuiDeveloperMessage;
-            case "qol.auto_clicker.whitelist_only" -> autoClickerWhitelistOnly;
-            case "qol.auto_clicker.cps_hud" -> autoClickerCpsHudEnabled;
-            case "qol.auto_clicker.allow_breaking" -> autoClickerAllowBreaking;
-            case "qol.auto_clicker.block_breaker" -> autoClickerBlockBreaker;
-            case "qol.auto_clicker.terminator_only" -> autoClickerTerminatorOnly;
-            case "qol.auto_clicker.enable_left" -> autoClickerEnableLeft;
-            case "qol.auto_clicker.enable_right" -> autoClickerEnableRight;
             case "qol.trajectories.bows" -> trajectoriesBows;
             case "qol.trajectories.pearls" -> trajectoriesPearls;
             case "qol.trajectories.lines" -> trajectoriesLines;
@@ -698,7 +696,10 @@ final class QolUtilityConfig {
             case "qol.item_tooltips.style" -> customTooltipEnabled;
             case "qol.item_tooltips.info" -> extras().isModuleEnabled("qol.info_tooltips");
             case "qol.item_tooltips.prices" -> extras().isModuleEnabled("qol.price_tooltips");
-            default -> extras().readBoolean(settingId);
+            default -> {
+                Boolean flavored = QolFlavorSupport.extension().readBoolean(this, settingId);
+                yield flavored != null ? flavored : extras().readBoolean(settingId);
+            }
         };
     }
 
@@ -739,13 +740,6 @@ final class QolUtilityConfig {
             case "qol.click_gui.chat_notifications" -> clickGuiChatNotifications = value;
             case "qol.click_gui.rounded_bottoms" -> clickGuiRoundedBottoms = value;
             case "qol.click_gui.developer_message" -> clickGuiDeveloperMessage = value;
-            case "qol.auto_clicker.whitelist_only" -> autoClickerWhitelistOnly = value;
-            case "qol.auto_clicker.cps_hud" -> autoClickerCpsHudEnabled = value;
-            case "qol.auto_clicker.allow_breaking" -> autoClickerAllowBreaking = value;
-            case "qol.auto_clicker.block_breaker" -> autoClickerBlockBreaker = value;
-            case "qol.auto_clicker.terminator_only" -> autoClickerTerminatorOnly = value;
-            case "qol.auto_clicker.enable_left" -> autoClickerEnableLeft = value;
-            case "qol.auto_clicker.enable_right" -> autoClickerEnableRight = value;
             case "qol.trajectories.bows" -> trajectoriesBows = value;
             case "qol.trajectories.pearls" -> trajectoriesPearls = value;
             case "qol.trajectories.lines" -> trajectoriesLines = value;
@@ -865,7 +859,11 @@ final class QolUtilityConfig {
             case "qol.item_tooltips.style" -> customTooltipEnabled = value;
             case "qol.item_tooltips.info" -> extras().setModuleEnabled("qol.info_tooltips", value);
             case "qol.item_tooltips.prices" -> extras().setModuleEnabled("qol.price_tooltips", value);
-            default -> extras().writeBoolean(settingId, value);
+            default -> {
+                if (!QolFlavorSupport.extension().writeBoolean(this, settingId, value)) {
+                    extras().writeBoolean(settingId, value);
+                }
+            }
         }
     }
 
@@ -1035,9 +1033,6 @@ final class QolUtilityConfig {
             case "qol.player_size.z" -> (double) playerSizeZ;
             case "qol.no_cursor_reset.unhook_timeout" -> (double) noCursorUnhookTimeoutMs;
             case "qol.slot_binds.line_width" -> (double) slotBindLineWidth;
-            case "qol.auto_clicker.cps" -> (double) autoClickerCps;
-            case "qol.auto_clicker.left_cps" -> (double) autoClickerLeftCps;
-            case "qol.auto_clicker.right_cps" -> (double) autoClickerRightCps;
             case "qol.inventory_walk.ping" -> (double) inventoryWalkPingMs;
             case "qol.trajectories.range" -> (double) trajectoriesRange;
             case "qol.trajectories.width" -> (double) trajectoriesWidth;
@@ -1064,7 +1059,10 @@ final class QolUtilityConfig {
             case "qol.command_keybinds.ratelimit_count" -> (double) commandBindRatelimitCount;
             case "qol.command_keybinds.ratelimit_ticks" -> (double) commandBindRatelimitTicks;
             case "qol.command_keybinds.length_limit" -> (double) commandBindLengthLimit;
-            default -> extras().readNumber(settingId);
+            default -> {
+                Double flavored = QolFlavorSupport.extension().readNumber(this, settingId);
+                yield flavored != null ? flavored : extras().readNumber(settingId);
+            }
         };
     }
 
@@ -1091,13 +1089,8 @@ final class QolUtilityConfig {
                     noCursorUnhookTimeoutMs = (int) Math.round(value);
             case "qol.slot_binds.line_width" ->
                     slotBindLineWidth = SlotBindsPolicy.clampLineWidth((float) value);
-            case "qol.auto_clicker.cps" -> autoClickerCps = AutoClickerPolicy.clampCps((float) value);
-            case "qol.auto_clicker.left_cps" ->
-                    autoClickerLeftCps = AutoClickerPolicy.clampCps((float) value);
-            case "qol.auto_clicker.right_cps" ->
-                    autoClickerRightCps = AutoClickerPolicy.clampCps((float) value);
             case "qol.inventory_walk.ping" ->
-                    inventoryWalkPingMs = InventoryWalkPolicy.clampPingMs((int) Math.round(value));
+                    inventoryWalkPingMs = clampPingMs((int) Math.round(value));
             case "qol.wardrobe_keybinds.ping" ->
                     wardrobePingMs = WardrobeKeybindPolicy.clampPingMs((int) Math.round(value));
             case "qol.wardrobe_keybinds.swap_a" ->
@@ -1131,7 +1124,7 @@ final class QolUtilityConfig {
             case "qol.chat_commands.previous_server_time" ->
                     chatPreviousServerSeconds = SkyBlockUtilityPolicy.clampPreviousServerSeconds((int) Math.round(value));
             case "qol.auto_conversation.delay" ->
-                    autoConversationDelayTicks = AutoConversationPolicy.clampDelayTicks((int) Math.round(value));
+                    autoConversationDelayTicks = Math.max(0, Math.min(40, (int) Math.round(value)));
             case "qol.fishing_helper.pull_delay" ->
                     fishingHelperPullDelay = FishingHelperPolicy.clampDelay((int) Math.round(value));
             case "qol.fishing_helper.pull_variance" ->
@@ -1151,6 +1144,9 @@ final class QolUtilityConfig {
             case "qol.custom_tooltip.border_width" ->
                     customTooltipBorderWidth = (int) Math.round(clamp(value, 1.0D, 4.0D));
             default -> {
+                if (QolFlavorSupport.extension().writeNumber(this, settingId, value)) {
+                    return true;
+                }
                 if (extras().writeNumber(settingId, value)) {
                     return true;
                 }
@@ -1265,8 +1261,6 @@ final class QolUtilityConfig {
             case "qol.etherwarp.keybind" -> etherwarpKeybind;
             case "qol.click_gui.keybind" -> clickGuiKeybind;
             case "qol.auto_sprint.keybind" -> autoSprintKeybind;
-            case "qol.auto_clicker.left_keybind" -> autoClickerLeftKeybind;
-            case "qol.auto_clicker.right_keybind" -> autoClickerRightKeybind;
             case "qol.camera.keybind" -> cameraKeybind;
             case "qol.command_keybinds.pets" -> commandPetsKey;
             case "qol.command_keybinds.storage" -> commandStorageKey;
@@ -1305,7 +1299,10 @@ final class QolUtilityConfig {
             case "qol.mob_highlight.add_key" -> mobHighlightAddKey;
             case "qol.custom_tooltip.horizontal_key" -> customTooltipHorizontalKey;
             case "qol.custom_tooltip.only_name_key" -> customTooltipOnlyNameKey;
-            default -> extras().readKeybind(settingId);
+            default -> {
+                String flavored = QolFlavorSupport.extension().readKeybind(this, settingId);
+                yield flavored != null ? flavored : extras().readKeybind(settingId);
+            }
         };
         return value == null ? "" : value;
     }
@@ -1323,8 +1320,6 @@ final class QolUtilityConfig {
             case "qol.etherwarp.keybind" -> etherwarpKeybind = stored;
             case "qol.click_gui.keybind" -> clickGuiKeybind = stored;
             case "qol.auto_sprint.keybind" -> autoSprintKeybind = stored;
-            case "qol.auto_clicker.left_keybind" -> autoClickerLeftKeybind = stored;
-            case "qol.auto_clicker.right_keybind" -> autoClickerRightKeybind = stored;
             case "qol.camera.keybind" -> cameraKeybind = stored;
             case "qol.command_keybinds.pets" -> commandPetsKey = stored;
             case "qol.command_keybinds.storage" -> commandStorageKey = stored;
@@ -1364,6 +1359,9 @@ final class QolUtilityConfig {
             case "qol.custom_tooltip.horizontal_key" -> customTooltipHorizontalKey = stored;
             case "qol.custom_tooltip.only_name_key" -> customTooltipOnlyNameKey = stored;
             default -> {
+                if (QolFlavorSupport.extension().writeKeybind(this, settingId, stored)) {
+                    return true;
+                }
                 return extras().writeKeybind(settingId, stored);
             }
         }
@@ -1913,23 +1911,6 @@ final class QolUtilityConfig {
                 clickGuiDeveloperMessage = d.clickGuiDeveloperMessage;
                 clickGuiKeybind = d.clickGuiKeybind;
             }
-            case "qol.auto_clicker" -> {
-                autoClickerEnabled = d.autoClickerEnabled;
-                autoClickerCpsHudEnabled = d.autoClickerCpsHudEnabled;
-                autoClickerWhitelistOnly = d.autoClickerWhitelistOnly;
-                autoClickerAllowBreaking = d.autoClickerAllowBreaking;
-                autoClickerBlockBreaker = d.autoClickerBlockBreaker;
-                autoClickerTerminatorOnly = d.autoClickerTerminatorOnly;
-                autoClickerCps = d.autoClickerCps;
-                autoClickerEnableLeft = d.autoClickerEnableLeft;
-                autoClickerEnableRight = d.autoClickerEnableRight;
-                autoClickerLeftCps = d.autoClickerLeftCps;
-                autoClickerRightCps = d.autoClickerRightCps;
-                autoClickerLeftKeybind = d.autoClickerLeftKeybind;
-                autoClickerRightKeybind = d.autoClickerRightKeybind;
-                autoClickerLeftWhitelist = new java.util.ArrayList<>(d.autoClickerLeftWhitelist);
-                autoClickerRightWhitelist = new java.util.ArrayList<>(d.autoClickerRightWhitelist);
-            }
             case "qol.inventory_walk" -> {
                 inventoryWalkEnabled = d.inventoryWalkEnabled;
                 inventoryWalkPingMs = d.inventoryWalkPingMs;
@@ -2118,6 +2099,9 @@ final class QolUtilityConfig {
                 customTooltipShadows = d.customTooltipShadows;
             }
             default -> {
+                if (QolFlavorSupport.extension().resetModule(this, moduleId)) {
+                    return true;
+                }
                 return extras().resetModule(moduleId);
             }
         }
@@ -2246,6 +2230,17 @@ final class QolUtilityConfig {
         }
         worldScannerTarget(parts[0]).colorArgb = argb;
         return true;
+    }
+
+    private static float clampCps(float value) {
+        if (!Float.isFinite(value)) {
+            return 5.0F;
+        }
+        return Math.max(3.0F, Math.min(20.0F, value));
+    }
+
+    private static int clampPingMs(int pingMs) {
+        return Math.max(1, Math.min(500, pingMs));
     }
 
     private static float clampScale(float value) {

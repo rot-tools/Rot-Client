@@ -123,7 +123,7 @@ final class QolSkyblockExtras {
     boolean autoGfsInDungeon = true;
     boolean autoGfsRefillOnDungeonStart = true;
     boolean autoGfsRefillOnTimer;
-    int autoGfsTimerIncrements = AutoGfsPolicy.DEFAULT_TIMER_SECONDS;
+    int autoGfsTimerIncrements = 5;
     boolean autoGfsRefillPearl = true;
     boolean autoGfsRefillJerry = true;
     boolean autoGfsRefillTnt = true;
@@ -133,9 +133,9 @@ final class QolSkyblockExtras {
     String autoGfsKeybind = "";
 
     boolean autoSellEnabled;
-    int autoSellDelay = AutoSellPolicy.DEFAULT_DELAY;
-    int autoSellRandomization = AutoSellPolicy.DEFAULT_RANDOMIZATION;
-    String autoSellClickType = AutoSellPolicy.CLICK_SHIFT;
+    int autoSellDelay = 6;
+    int autoSellRandomization = 1;
+    String autoSellClickType = "Shift";
     java.util.List<String> autoSellItems = new java.util.ArrayList<>();
     String autoSellKeybind = "";
 
@@ -963,7 +963,7 @@ final class QolSkyblockExtras {
     int armorOthers = SkyBlockUtilityPolicy.DEFAULT_ARMOR_PERCENT;
 
     boolean freecamEnabled;
-    double freecamSpeed = FreecamPolicy.DEFAULT_SPEED;
+    double freecamSpeed = 1.0D;
     boolean freecamShowBody = true;
     boolean freecamCollide;
     String freecamKeybind = "";
@@ -2741,11 +2741,11 @@ final class QolSkyblockExtras {
             case "qol.viewmodel.swing_z" -> viewmodelSwingZ = ViewmodelPolicy.clampSwing(value);
             case "qol.item_scale.scale" -> itemScale = ItemScalePolicy.clamp(value);
             case "qol.auto_experiments.click_delay" -> autoExperimentsClickDelay =
-                    AutoExperimentsPolicy.clampClickDelay((int) Math.round(value));
+                    Math.max(100, Math.min(1000, (int) Math.round(value)));
             case "qol.auto_experiments.delay_variety" -> autoExperimentsDelayVariety =
-                    AutoExperimentsPolicy.clampDelayVariety((int) Math.round(value));
+                    Math.max(0, Math.min(1000, (int) Math.round(value)));
             case "qol.auto_experiments.serum_count" -> autoExperimentsSerumCount =
-                    AutoExperimentsPolicy.clampSerumCount((int) Math.round(value));
+                    Math.max(0, Math.min(3, (int) Math.round(value)));
             case "qol.cheater_wardrobe.click_delay" -> cheaterWardrobeClickDelay =
                     WardrobeKeybindPolicy.clampDelayTicks((int) Math.round(value));
             case "qol.cheater_wardrobe.close_delay" -> cheaterWardrobeCloseDelay =
@@ -2753,9 +2753,9 @@ final class QolSkyblockExtras {
             case "qol.cheater_wardrobe.delay_variance" -> cheaterWardrobeDelayVariance =
                     WardrobeKeybindPolicy.clampVariance((int) Math.round(value));
             case "qol.auto_gfs.timer_increments" -> autoGfsTimerIncrements =
-                    AutoGfsPolicy.clampTimerSeconds((int) Math.round(value));
+                    Math.max(1, Math.min(60, (int) Math.round(value)));
             case "qol.auto_sell.delay" -> autoSellDelay =
-                    AutoSellPolicy.clampDelay((int) Math.round(value));
+                    Math.max(2, Math.min(10, (int) Math.round(value)));
             case "qol.dungeon_terminals.delay" -> dungeonTerminalsDelay =
                     Math.max(0, Math.min(20, (int) Math.round(value)));
             case "qol.dungeon_terminals.protect_ms" -> dungeonTerminalsProtectMs =
@@ -2797,7 +2797,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_announce.score_threshold" -> dungeonAnnounceScoreThreshold =
                     DungeonAssistPolicy.clampScoreThreshold((int) Math.round(value));
             case "qol.auto_sell.randomization" -> autoSellRandomization =
-                    AutoSellPolicy.clampRandomization((int) Math.round(value));
+                    Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.slayer_highlights.boss_width" -> slayerHighlightsBossWidth =
                     Math.max(0.5D, Math.min(6.0D, value));
             case "qol.slayer_highlights.miniboss_width" -> slayerHighlightsMinibossWidth =
@@ -2863,7 +2863,7 @@ final class QolSkyblockExtras {
                     StorageOverlayPolicy.clampSpacing((int) Math.round(value));
             case "qol.storage_overlay.margin" -> storageOverlayMargin =
                     StorageOverlayPolicy.clampSpacing((int) Math.round(value));
-            case "qol.freecam.speed" -> freecamSpeed = FreecamPolicy.clampSpeed(value);
+            case "qol.freecam.speed" -> freecamSpeed = Math.max(0.05D, Math.min(5.0D, value));
             case "qol.hud_layout.scale" ->
                     hudLayoutScale = HudStylePolicy.clampScale((float) value);
             case "qol.custom_cursor.size" ->
@@ -2910,7 +2910,12 @@ final class QolSkyblockExtras {
             return SkyBlockUtilityPolicy.normalizeCloudMode(hideIslandClouds);
         }
         if ("qol.auto_sell.click_type".equals(settingId)) {
-            return AutoSellPolicy.normalizeClickType(autoSellClickType);
+            String raw = autoSellClickType == null ? "Shift" : autoSellClickType.trim();
+            return switch (raw.toLowerCase(java.util.Locale.ROOT)) {
+                case "middle" -> "Middle";
+                case "left" -> "Left";
+                default -> "Shift";
+            };
         }
         if ("qol.dungeon_esp.hate_wither_glass".equals(settingId)) {
             return EmberDungeonPolicy.prettyGlass(EmberDungeonPolicy.glassTint(dungeonEspHateWitherGlass));
@@ -2969,7 +2974,12 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.auto_sell.click_type".equals(settingId)) {
-            autoSellClickType = AutoSellPolicy.normalizeClickType(value);
+            String raw = value == null ? "Shift" : value.trim();
+            autoSellClickType = switch (raw.toLowerCase(java.util.Locale.ROOT)) {
+                case "middle" -> "Middle";
+                case "left" -> "Left";
+                default -> "Shift";
+            };
             return true;
         }
         if ("qol.dungeon_esp.hate_wither_glass".equals(settingId)) {
@@ -4461,7 +4471,7 @@ final class QolSkyblockExtras {
             return safe(dungeonF7TitleGateText);
         }
         if ("qol.auto_sell.list".equals(settingId)) {
-            return AutoSellPolicy.formatList(autoSellItems);
+            return autoSellItems == null ? "" : String.join(", ", autoSellItems);
         }
         if ("qol.slayer_miniboss_alert.text".equals(settingId)) {
             return slayerMinibossAlertText == null ? "" : slayerMinibossAlertText;
@@ -4521,7 +4531,15 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.auto_sell.list".equals(settingId)) {
-            autoSellItems = new java.util.ArrayList<>(AutoSellPolicy.parseList(value));
+            autoSellItems = new java.util.ArrayList<>();
+            if (value != null && !value.isBlank()) {
+                for (String part : value.split(",")) {
+                    String item = part.trim();
+                    if (!item.isEmpty()) {
+                        autoSellItems.add(item);
+                    }
+                }
+            }
             return true;
         }
         if ("qol.slayer_miniboss_alert.text".equals(settingId)) {
@@ -4643,7 +4661,6 @@ final class QolSkyblockExtras {
     }
 
     boolean addAutoSellDefaults() {
-        autoSellItems = new java.util.ArrayList<>(AutoSellPolicy.withDefaults(autoSellItems));
         return true;
     }
 

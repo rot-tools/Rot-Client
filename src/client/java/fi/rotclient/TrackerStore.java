@@ -21,6 +21,7 @@ final class TrackerStore {
     }
 
     static TrackerConfig load() {
+        QolFlavorSupport.extension().loadPersistence();
         Path path = configPath();
         if (!Files.exists(path)) return normalizedDefault();
         try (Reader reader = Files.newBufferedReader(path)) {
@@ -49,6 +50,7 @@ final class TrackerStore {
         try {
             Path path = configPath();
             AtomicFileWriter.writeAtomically(path, GSON.toJson(toJson(config)));
+            QolFlavorSupport.extension().savePersistence();
         } catch (Exception ignored) {
         }
     }
@@ -243,7 +245,7 @@ final class TrackerStore {
     private static Path configPath() {
         return FabricLoader.getInstance()
                 .getConfigDir()
-                .resolve("rotclient.json");
+                .resolve(QolFlavorSupport.extension().configFileName());
     }
 
     private static void maybeBackupOnce(Path path) {

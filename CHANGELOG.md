@@ -7,6 +7,16 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### Dual editions
+
+* One `./gradlew build` produces **Rot Client**
+  (`RotClient-2.0.1+mc26.2.jar`, Fabric id `rotclient`, **110** catalog
+  parents) and **Rot Client+** (`RotClientPlus-2.0.1+mc26.2.jar`, id
+  `rotclientplus`, **131** parents). Plus holds automation bytecode; the
+  legit JAR does not. Playtest and versioned GitHub Releases upload both
+  files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
+  in `rotclient-plus.json`.
+
 ### Dungeons
 
 * Auto Requeue no longer treats live Catacombs `Team Score:` scoreboard/chat

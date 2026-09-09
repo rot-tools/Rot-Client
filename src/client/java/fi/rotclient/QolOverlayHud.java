@@ -87,7 +87,7 @@ final class QolOverlayHud {
         if (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled) {
             renderWardrobe(graphics, font, qol);
         }
-        if (qol.autoClickerCpsHudEnabled) {
+        if (qol.autoClickerCpsHudEnabled && QolClientFlavorSupport.hooks().autoClickerHud() != null) {
             renderAutoClickerHud(graphics, font, qol);
         }
         if (FishingSuiteRuntime.hudVisible(qol)) {
@@ -443,7 +443,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        String text = WardrobeAutoEquipRuntime.hudText(editorOpen);
+        String text = QolClientFlavorSupport.hooks().wardrobeHudText(editorOpen);
         if (text.isEmpty() && !editorOpen) {
             return;
         }
@@ -464,11 +464,12 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        AutoClickerCpsMeter.Snapshot snapshot = AutoClickerRuntime.cpsSnapshot();
-        boolean blockHold = AutoClickerRuntime.isHoldingBlockBreak();
-        String state = blockHold ? "BLOCK HOLD" : "PULSING";
-        String text = "Auto Clicker  " + state + "  L " + snapshot.leftCps()
-                + "  R " + snapshot.rightCps() + "  Total " + snapshot.totalCps() + " CPS";
+        QolClientFlavorHooks.CpsHud hud = QolClientFlavorSupport.hooks().autoClickerHud();
+        if (hud == null) {
+            return;
+        }
+        String text = hud.text();
+        boolean blockHold = hud.blockHold();
         float[] pose = qol.pose("auto_clicker");
         int x = Math.round(pose[0]);
         int y = Math.round(pose[1]);
@@ -1075,7 +1076,7 @@ final class QolOverlayHud {
             return "commission";
         }
         if ((qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled)) {
-            String text = WardrobeAutoEquipRuntime.hudText(true);
+            String text = QolClientFlavorSupport.hooks().wardrobeHudText(true);
             int width = Math.max(110, Minecraft.getInstance().font.width(
                     text.isBlank() ? "Equipping [9]" : text) + 10);
             if (inside(mouseX, mouseY, "wardrobe", width, 16)) {

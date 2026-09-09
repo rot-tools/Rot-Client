@@ -11,50 +11,56 @@ import org.junit.jupiter.api.Test;
 final class ColumnStyleQolWiringTest {
     @Test
     void clientTicksConversationFishingAndSlayerRuntimes() throws Exception {
-        String source = Files.readString(Path.of(
+        String client = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/RotClientClient.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(source.contains("AutoConversationRuntime.onChat"));
-        assertTrue(source.contains("AutoConversationRuntime.tick"));
-        assertTrue(source.contains("FishingHelperRuntime.tick"));
-        assertTrue(source.contains("FishingSuiteRuntime.tick"));
-        assertTrue(source.contains("FishingSuiteRuntime.onChat"));
-        assertTrue(source.contains("EtherwarpHelperRuntime.tick"));
+        String plus = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(plus.contains("AutoConversationRuntime.onChat"));
+        assertTrue(plus.contains("AutoConversationRuntime.tick"));
+        assertTrue(client.contains("FishingHelperRuntime.tick"));
+        assertTrue(client.contains("FishingSuiteRuntime.tick"));
+        assertTrue(client.contains("FishingSuiteRuntime.onChat"));
+        assertTrue(plus.contains("EtherwarpPlusRuntime"));
         String etherwarpHelper = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/EtherwarpHelperRuntime.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(etherwarpHelper.contains("shouldAssistLookTarget"));
+        String etherwarpPlus = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/EtherwarpPlusRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(etherwarpPlus.contains("shouldAssistLookTarget"));
         assertTrue(etherwarpHelper.contains("EtherwarpPredictor.canWarpTo"));
         assertTrue(etherwarpHelper.contains("hasValidLookTarget"));
-        assertTrue(source.contains("CommissionDisplayRuntime.tick"));
-        assertTrue(source.contains("MiningLeftoverRuntime.tick"));
-        assertTrue(source.contains("MiningLeftoverRuntime.onChat"));
+        assertTrue(client.contains("CommissionDisplayRuntime.tick"));
+        assertTrue(client.contains("MiningLeftoverRuntime.tick"));
+        assertTrue(client.contains("MiningLeftoverRuntime.onChat"));
         String commissionRuntime = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/CommissionDisplayRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(commissionRuntime.contains("rotclient$getNameForDisplay"));
-        assertTrue(source.contains("MobHighlightRuntime.tick"));
-        assertTrue(source.contains("MenuKeybindRuntime.tick"));
-        assertTrue(source.contains("WardrobeAutoEquipRuntime.tick"));
-        assertTrue(source.contains("WardrobeAutoEquipRuntime.onScreenOpened"));
-        assertTrue(source.contains("AutoHarpRuntime.tick"));
-        assertTrue(source.contains("AutoGfsRuntime.tick"));
-        assertTrue(source.contains("AutoSellRuntime.tick"));
-        assertTrue(source.contains("EscrowFixRuntime.onChat"));
-        assertTrue(source.contains("QolModuleKeybindRuntime.tick"));
-        assertTrue(source.contains("SlayerRuntime.tick"));
-        assertTrue(source.contains("SlayerRuntime.onChat"));
-        assertTrue(source.contains("SlayerRuntime.onBlockUpdate"));
-        assertTrue(source.contains("SlayerRuntime.onEntityEvent"));
-        assertTrue(source.contains("SlayerRuntime.onAttack"));
-        assertTrue(source.contains("literal(\"slayer\")"));
-        assertTrue(source.contains("RotClientClient::slayerStatus"));
-        assertTrue(source.contains("NameHiderRuntime.beginTick()"));
-        assertTrue(source.contains("QolVisualRuntime.beginTick()"));
+        assertTrue(client.contains("MobHighlightRuntime.tick"));
+        assertTrue(client.contains("MenuKeybindRuntime.tick"));
+        assertTrue(plus.contains("WardrobeAutoEquipRuntime.tick"));
+        assertTrue(plus.contains("WardrobeAutoEquipRuntime.onScreenOpened"));
+        assertTrue(plus.contains("AutoHarpRuntime.tick"));
+        assertTrue(plus.contains("AutoGfsRuntime.tick"));
+        assertTrue(plus.contains("AutoSellRuntime.tick"));
+        assertTrue(client.contains("EscrowFixRuntime.onChat"));
+        assertTrue(client.contains("QolModuleKeybindRuntime.tick"));
+        assertTrue(client.contains("SlayerRuntime.tick"));
+        assertTrue(client.contains("SlayerRuntime.onChat"));
+        assertTrue(client.contains("SlayerRuntime.onBlockUpdate"));
+        assertTrue(client.contains("SlayerRuntime.onEntityEvent"));
+        assertTrue(client.contains("SlayerRuntime.onAttack"));
+        assertTrue(client.contains("literal(\"slayer\")"));
+        assertTrue(client.contains("RotClientClient::slayerStatus"));
+        assertTrue(client.contains("NameHiderRuntime.beginTick()"));
+        assertTrue(client.contains("QolVisualRuntime.beginTick()"));
         String slayerRuntime = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/SlayerRuntime.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(slayerRuntime.contains("AutoClickerRuntime.pulseUse"));
+        assertTrue(slayerRuntime.contains("ClickPulseHelper.pulseUse"));
         assertTrue(slayerRuntime.contains("SoulcryAbilityGate"));
         assertTrue(slayerRuntime.contains("heldItemOnCooldown"));
         assertTrue(!slayerRuntime.contains("soulcryUseCooldown"));
@@ -75,6 +81,9 @@ final class ColumnStyleQolWiringTest {
         String json = Files.readString(Path.of(
                 "src/client/resources/rotclient.client.mixins.json"),
                 StandardCharsets.UTF_8);
+        String plusJson = Files.readString(Path.of(
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
+                StandardCharsets.UTF_8);
         assertTrue(json.contains("AbstractContainerScreenCustomCursorMixin"));
         assertTrue(json.contains("GuiGraphicsExtractorCustomTooltipMixin"));
         assertTrue(json.contains("MouseHandlerCustomTooltipMixin"));
@@ -87,13 +96,13 @@ final class ColumnStyleQolWiringTest {
         assertTrue(tooltipMixin.contains("positionTooltip(IIIIII)Lorg/joml/Vector2ic;"));
         assertTrue(!tooltipMixin.contains("setTooltipForNextFrame"));
         assertTrue(!tooltipMixin.contains("ModifyVariable"));
-        assertTrue(json.contains("MouseHandlerEtherwarpMixin"));
-        assertTrue(json.contains("KeyboardInputEtherwarpMixin"));
-        assertTrue(json.contains("KeyboardHandlerWardrobeMixin"));
         assertTrue(json.contains("CreeperRendererGhostsMixin"));
         assertTrue(json.contains("CreeperPoweredGhostsMixin"));
+        assertTrue(json.contains("KeyboardHandlerWardrobeMixin"));
+        assertTrue(plusJson.contains("MouseHandlerEtherwarpMixin"));
+        assertTrue(plusJson.contains("KeyboardInputEtherwarpMixin"));
         String mouse = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/MouseHandlerEtherwarpMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/MouseHandlerEtherwarpMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(mouse.contains("method = \"onButton\""));
         assertTrue(mouse.contains("MouseButtonInfo"));
@@ -136,9 +145,9 @@ final class ColumnStyleQolWiringTest {
         String packets = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/ClientPacketListenerMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(packets.contains("WardrobeAutoEquipRuntime.consumeOpenScreen"));
+        assertTrue(packets.contains("QolClientFlavorSupport.hooks().consumeHiddenOpenScreen"));
         String autoEquip = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
+                "src/plusClient/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(autoEquip.contains("sendCommand(WardrobeKeybindPolicy.OPEN_COMMAND)"));
         assertTrue(autoEquip.contains("packet.getType().create"));

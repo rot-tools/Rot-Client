@@ -4,9 +4,11 @@ Contributions should preserve a clear in-game UI, tracker accuracy, family isola
 
 Rot Client is created and owned by **Rot Tools** and developed publicly at [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client). Branch from `development`, keep one task per branch, and open a pull request into `development`. Merge `development` into `main` only for a fully stable, tested release. See [docs/BRANCHING.md](docs/BRANCHING.md).
 
-Playtesters can skip a local build: download `RotClient-2.0.1+mc26.2.jar` from the
+Playtesters can skip a local build: download `RotClient-2.0.1+mc26.2.jar`
+(HUD/QoL) or `RotClientPlus-2.0.1+mc26.2.jar` (automation) from the
 [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
-pre-release. That file is replaced on each green push to `development`.
+pre-release. Enable only one. Those files are replaced on each green push to
+`development`. See [docs/WHICH_JAR.md](docs/WHICH_JAR.md).
 
 Local-only files stay out of Git: `AGENTS.md`, `rotclient-dev.local.json`, and the Discord project-feed bootstrap path. Do not commit credentials, tokens, secrets, or personal machine paths. The optional local helper is `scripts/ensure-discord-project-feed.ps1`.
 
@@ -17,8 +19,8 @@ Rot Tools targets Minecraft `26.2`, Java `25`, Fabric Loader `0.19.3`, and Fabri
 Before proposing a change, run with Java 25:
 
 ```sh
-./gradlew test --rerun-tasks
-./gradlew compileClientJava
+./gradlew test testPlus --rerun-tasks
+./gradlew compileClientJava compilePlusJava compilePlusClientJava
 git diff --check
 ./gradlew clean build
 ```

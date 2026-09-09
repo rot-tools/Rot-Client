@@ -2,7 +2,6 @@ package fi.rotclient;
 
 /**
  * Ranges, steps, and slider-vs-stepper policy for QoL NUMBER settings.
- * Auto Clicker CPS stays a numeric stepper; everything else uses a slider.
  */
 public final class QolNumberSettings {
     public record Spec(double min, double max, double step, boolean slider) {
@@ -69,15 +68,11 @@ public final class QolNumberSettings {
         if (board != null) {
             return board;
         }
+        QolNumberSettings.Spec flavored = QolFlavorSupport.extension().numberSpec(settingId);
+        if (flavored != null) {
+            return flavored;
+        }
         return switch (settingId) {
-            case "qol.auto_clicker.cps",
-                 "qol.auto_clicker.left_cps",
-                 "qol.auto_clicker.right_cps" ->
-                    new Spec(
-                            AutoClickerPolicy.MIN_CPS,
-                            AutoClickerPolicy.MAX_CPS,
-                            0.5D,
-                            false);
             case "qol.player_size.x", "qol.player_size.y", "qol.player_size.z" ->
                     new Spec(
                             PlayerSizePolicy.MIN_SCALE,
@@ -117,12 +112,6 @@ public final class QolNumberSettings {
                             SlotBindsPolicy.MAX_LINE_WIDTH,
                             0.1D,
                             true);
-            case "qol.inventory_walk.ping" ->
-                    new Spec(
-                            InventoryWalkPolicy.MIN_PING_MS,
-                            InventoryWalkPolicy.MAX_PING_MS,
-                            10.0D,
-                            true);
             case "qol.wardrobe_keybinds.ping" ->
                     new Spec(
                             WardrobeKeybindPolicy.MIN_PING_MS,
@@ -161,11 +150,7 @@ public final class QolNumberSettings {
                  "qol.fishing_helper.recast_delay",
                  "qol.fishing_helper.recast_variance",
                  "qol.fishing_creatures.auto_delay" ->
-                    new Spec(
-                            AutoConversationPolicy.MIN_DELAY_TICKS,
-                            AutoConversationPolicy.MAX_DELAY_TICKS,
-                            1.0D,
-                            true);
+                    new Spec(0.0D, 40.0D, 1.0D, true);
             case "qol.fishing_creatures.timer_length" ->
                     new Spec(30.0D, FishingCreaturesPolicy.MAX_TIMER_SECONDS, 1.0D, true);
             case "qol.item_rarity.fill_alpha", "qol.item_rarity.outline_alpha" ->
@@ -187,24 +172,6 @@ public final class QolNumberSettings {
                     new Spec(ViewmodelPolicy.SWING_MIN, ViewmodelPolicy.SWING_MAX, 0.05D, true);
             case "qol.item_scale.scale" ->
                     new Spec(ItemScalePolicy.MIN, ItemScalePolicy.MAX, 0.05D, true);
-            case "qol.auto_experiments.click_delay" ->
-                    new Spec(
-                            AutoExperimentsPolicy.MIN_CLICK_DELAY,
-                            AutoExperimentsPolicy.MAX_CLICK_DELAY,
-                            1.0D,
-                            true);
-            case "qol.auto_experiments.delay_variety" ->
-                    new Spec(
-                            AutoExperimentsPolicy.MIN_DELAY_VARIETY,
-                            AutoExperimentsPolicy.MAX_DELAY_VARIETY,
-                            1.0D,
-                            true);
-            case "qol.auto_experiments.serum_count" ->
-                    new Spec(
-                            AutoExperimentsPolicy.MIN_SERUM,
-                            AutoExperimentsPolicy.MAX_SERUM,
-                            1.0D,
-                            true);
             case "qol.cheater_wardrobe.click_delay",
                  "qol.cheater_wardrobe.close_delay" ->
                     new Spec(
@@ -214,20 +181,6 @@ public final class QolNumberSettings {
                             true);
             case "qol.cheater_wardrobe.delay_variance" ->
                     new Spec(0.0D, WardrobeKeybindPolicy.MAX_VARIANCE, 1.0D, true);
-            case "qol.auto_gfs.timer_increments" ->
-                    new Spec(
-                            AutoGfsPolicy.MIN_TIMER_SECONDS,
-                            AutoGfsPolicy.MAX_TIMER_SECONDS,
-                            1.0D,
-                            true);
-            case "qol.auto_sell.delay" ->
-                    new Spec(AutoSellPolicy.MIN_DELAY, AutoSellPolicy.MAX_DELAY, 1.0D, true);
-            case "qol.auto_sell.randomization" ->
-                    new Spec(
-                            AutoSellPolicy.MIN_RANDOMIZATION,
-                            AutoSellPolicy.MAX_RANDOMIZATION,
-                            1.0D,
-                            true);
             case "qol.slayer_highlights.boss_width",
                  "qol.slayer_highlights.miniboss_width",
                  "qol.slayer_highlights.demon_width",
@@ -364,26 +317,12 @@ public final class QolNumberSettings {
             case "qol.storage_overlay.scroll_speed" -> new Spec(1.0D, 40.0D, 1.0D, true);
             case "qol.storage_overlay.padding", "qol.storage_overlay.margin" ->
                     new Spec(0.0D, 40.0D, 1.0D, true);
-            case "qol.freecam.speed" ->
-                    new Spec(
-                            FreecamPolicy.MIN_SPEED,
-                            FreecamPolicy.MAX_SPEED,
-                            0.1D,
-                            true);
             case "qol.hud_layout.scale",
                  "rotclient.hud_style.scale" -> new Spec(0.6D, 2.5D, 0.05D, true);
             case "qol.custom_cursor.size" -> new Spec(0.6D, 2.4D, 0.05D, true);
             case "qol.stall_market.sell_threshold" ->
                     new Spec(0.0D, 2_000_000_000D, 10_000D, true);
             case "qol.foraging_helpers.sea_lumies_min" -> new Spec(1.0D, 4.0D, 1.0D, true);
-            case "qol.foraging_cheats.min_cluster" -> new Spec(1.0D, 35.0D, 1.0D, true);
-            case "qol.foraging_cheats.click_delay" -> new Spec(1.0D, 20.0D, 1.0D, true);
-            case "qol.camera.distance" ->
-                    new Spec(
-                            TempleDungeonPolicy.MIN_CAMERA_DISTANCE,
-                            TempleDungeonPolicy.MAX_CAMERA_DISTANCE,
-                            0.5D,
-                            true);
             case "qol.command_keybinds.ratelimit_count" ->
                     new Spec(
                             RingPolicy.MIN_RATELIMIT_COUNT,

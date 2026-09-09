@@ -4,13 +4,10 @@ import fi.rotclient.ChatCommandsRuntime;
 import fi.rotclient.RingKeybindsRuntime;
 import fi.rotclient.ClientThreadGuard;
 import fi.rotclient.DiagnosticRecorder;
-import fi.rotclient.AutoExperimentsRuntime;
-import fi.rotclient.AutoHarpRuntime;
 import fi.rotclient.DianaRuntime;
 import fi.rotclient.ExperimentSolverRuntime;
 import fi.rotclient.IotaRuntime;
 import fi.rotclient.QolVisualRuntime;
-import fi.rotclient.WardrobeAutoEquipRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.BlockPos;
@@ -122,7 +119,7 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) return;
         fi.rotclient.RotClientClient.onInventoryPacket("slot-packet");
         ExperimentSolverRuntime.onSlotUpdate(packet.getSlot(), packet.getItem());
-        AutoExperimentsRuntime.onSlotUpdate();
+        fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 
     @Inject(method = "handleContainerContent", at = @At("TAIL"))
@@ -132,7 +129,7 @@ abstract class ClientPacketListenerMixin {
                 fi.rotclient.StorageOverlayRuntime.onContainerContent(packet.containerId(), packet.items().size()));
         fi.rotclient.RotClientClient.onInventoryPacket("content-packet");
         ExperimentSolverRuntime.onContainerRefresh();
-        AutoExperimentsRuntime.onSlotUpdate();
+        fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 
     @Inject(method = "handleOpenScreen", at = @At("HEAD"), cancellable = true)
@@ -142,7 +139,7 @@ abstract class ClientPacketListenerMixin {
         }
         if (RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
                 || fi.rotclient.RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
-                || WardrobeAutoEquipRuntime.consumeOpenScreen(packet)) {
+                || fi.rotclient.QolClientFlavorSupport.hooks().consumeHiddenOpenScreen(packet)) {
 
             ci.cancel();
         }
@@ -155,10 +152,8 @@ abstract class ClientPacketListenerMixin {
         }
         RotClientPetAutoEquipRuntime.onContainerClosed();
         fi.rotclient.RotClientEquipmentAutoEquipRuntime.onContainerClosed();
-        WardrobeAutoEquipRuntime.onContainerClosed();
+        fi.rotclient.QolClientFlavorSupport.hooks().onContainerClosed();
         ExperimentSolverRuntime.onScreenClosed();
-        AutoExperimentsRuntime.reset();
-        AutoHarpRuntime.reset();
     }
 
     @Inject(method = "handleEntityEvent", at = @At("HEAD"))

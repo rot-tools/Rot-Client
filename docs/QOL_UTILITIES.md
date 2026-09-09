@@ -13,28 +13,32 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All 131 current catalog entries are wired and automated-tested. The group-wide
-runtime matrix is still pending, so this table intentionally does not claim
-that every option is release-ready.
+All **131** Rot Client+ catalog entries (and the **110** legit subset) are wired
+and automated-tested. The group-wide runtime matrix is still pending, so this
+table intentionally does not claim that every option is release-ready.
+
+Rot Client omits 21 automation parents (Auto Clicker, Free Camera, Farm Keys,
+and the rest listed in [Which JAR](WHICH_JAR.md)). Mixed parents keep visual
+settings; cheat children exist only in Plus.
 
 ## Catalog
 
 | Group | Modules | Current evidence |
 | --- | --- | --- |
-| Combat | Auto Clicker; Hide Players; Trajectories; Etherwarp; Auto Dojo; Mob Highlight | Wired · automated tested · runtime matrix pending |
-| Events | Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
-| Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Dagger Swap; Enderman Laser Hider; Attunement Display; Auto Soulcry; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras | Wired · automated tested · runtime matrix pending |
-| Dungeons | Secret Hitboxes; Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Term Sim; Requeue; Puzzles; F7 Boss; Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Hover Terms; Party Finder Join Stats; Soulsand Triggerbot; Terminal Click Trails; Watcher Helper; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
+| Combat | Hide Players; Trajectories; Etherwarp; Mob Highlight. **Plus:** Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
+| Events | Diana Burrows; Diana Mobs; Diana Profit. **Plus:** Diana Share | Wired · automated tested · runtime matrix pending |
+| Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Enderman Laser Hider; Attunement Display; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras. **Plus:** Dagger Swap; Auto Soulcry; Auto Start | Wired · automated tested · runtime matrix pending |
+| Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Term Sim; Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Terminal Click Trails; Watcher Helper. **Plus:** Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
 | Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; World Scanner; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
-| Foraging | Foraging Trees; Foraging Audio; Foraging Helpers; Foraging Cheats | Wired · automated tested · runtime matrix pending |
-| Garden | Farm Keys | Wired · automated tested · runtime matrix pending |
+| Foraging | Foraging Trees; Foraging Audio; Foraging Helpers. **Plus:** Foraging Cheats | Wired · automated tested · runtime matrix pending |
+| Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Camera; Free Camera; Legacy SkyBlock Textures; Dark SkyBlock Pack | Wired · automated tested · runtime matrix pending |
-| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; Auto Experiments; Auto Harp; No Cursor Reset; Click GUI | Wired · automated tested · runtime matrix pending |
-| Utilities | Hotkey Macros; Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Wardrobe Swapper; Chat Commands (including overlay-only Vanguard prize reel); Auto Conversation; Auto Sprint; Inventory Walk; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; No Cursor Reset; Click GUI. **Plus:** Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
+| Utilities | Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard. **Plus:** Hotkey Macros; Wardrobe Swapper; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
 
 ## Fishing suite
 
@@ -64,7 +68,7 @@ New cards: Dungeon Carry Tracker (`/rot dcarry`), Hover Terms, Party Finder Join
 
 ## Hotkey Macros
 
-`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) and runs backward-compatible macro logic on the same parent (catalog remains **131**). Custom macros are one line each: `KEY[+LIMIT] | message[,,message] | SEND/TYPE/EDIT/CYCLE/RANDOM/REPEAT | ASSERT/SUBMIT/VETO/AVOID | HOLD/VANILLA/RELEASE`. Placeholders (`%pos%`, `%x+3%`, `%clipboard%`, `%#regex%`, …), a 4-per-20-tick default rate limit, and a 256-character SEND cap are supported. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
+`qol.command_keybinds` keeps the eight SkyBlock menu binds (`/pets`, `/storage`, `/armor`, `/equipment`, `/loadout`, `/stats`, `/warp dungeon_hub`, `/potionbag`) on both editions. Custom macros and the sequence editor are **Rot Client+** only. SkyBlock presets stay SkyBlock-gated; custom macros fire in any world while no GUI is focused. The visual sequence editor supports list/add/edit/delete, key capture, ordered steps, delays, rate-limit selection, and safe save/cancel. EDIT opens chat and selects `%edit%`. Automated-tested; Minecraft playtest pending.
 
 ## Protocol and test scope
 
@@ -81,7 +85,7 @@ the official network.
 
 ## Fullbright and Night
 
-`qol.fullbright` stays one Render / Lighting card (catalog still **131**). Child
+`qol.fullbright` stays one Render / Lighting card. Child
 rows are Fullbright, Always Night, and Force both on (square latch, accent red
 when armed). The two modes are exclusive unless Force both is on. Releasing
 force while both are on keeps Fullbright. Flags persist in `rotclient.json`

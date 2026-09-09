@@ -80,16 +80,20 @@ final class QolUtilityDashboard {
         if (tab == null) {
             return;
         }
-        if (tab.qolGroup != null && !tab.qolGroup.isBlank()) {
-            activePage = QolUtilityCatalog.Group.fromId(tab.qolGroup);
+        QolWorkspaceView view = QolWorkspaceView.fromTab(tab);
+        if (!view.groupId().isBlank()) {
+            activePage = QolUtilityCatalog.Group.fromId(view.groupId());
         }
-        if (tab.qolModuleId != null && !tab.qolModuleId.isBlank()) {
-            if (MiningTrackerCatalogPolicy.APPEARANCE.equals(tab.qolModuleId)) {
-                openAppearanceLanding();
-            } else if (MiningTrackerCatalogPolicy.HUD_LAYOUT.equals(tab.qolModuleId)) {
-                openHudLayoutLanding();
+        if (view.appearanceLanding()) {
+            openAppearanceLanding();
+        } else if (view.hudLayoutLanding()) {
+            openHudLayoutLanding();
+        }
+        if (view.hasDrawerModule()) {
+            if (view.hudDrawer()) {
+                openHudSettings(view.moduleId());
             } else {
-                openModule(tab.qolModuleId);
+                openModule(view.moduleId());
             }
         }
     }
@@ -99,13 +103,13 @@ final class QolUtilityDashboard {
         if (workspace == null) {
             return;
         }
-        workspace.setQolView(
+        workspace.setQolView(QolWorkspaceView.capture(
                 activePage.name(),
-                appearanceLanding
-                        ? MiningTrackerCatalogPolicy.APPEARANCE
-                        : (hudLayoutLanding
-                                ? MiningTrackerCatalogPolicy.HUD_LAYOUT
-                                : (isDrawerOpen() ? openModuleId : "")));
+                appearanceLanding,
+                hudLayoutLanding,
+                isDrawerOpen(),
+                drawerKind == DrawerKind.HUD,
+                openModuleId));
     }
 
     boolean isDrawerOpen() {
@@ -251,7 +255,7 @@ final class QolUtilityDashboard {
                 && drawerKind == DrawerKind.HUD;
     }
 
-    private boolean hudDrawerOpen() {
+    boolean hudDrawerOpen() {
         return isDrawerOpen() && drawerKind == DrawerKind.HUD;
     }
 
@@ -906,7 +910,7 @@ final class QolUtilityDashboard {
                 false);
 
         String title = module.name();
-        boolean cheat = QolUtilityCatalog.hasCheatTag(module);
+        boolean cheat = QolFlavorSupport.isPlus() && QolUtilityCatalog.hasCheatTag(module);
         int titleMax = Math.max(40, width - (cheat ? 88 : 36));
         String shownTitle = RotClientUiDraw.ellipsizeAndHover(
                 font, title, titleMax, x + 16, y + 23, 12);
@@ -1043,7 +1047,7 @@ final class QolUtilityDashboard {
         graphics.fill(x, y + 8, x + 3, y + 40, RotClientTheme.HUD_ACCENT);
         String drawerTitle = hudDrawerTitle(module);
         RotClientUiDraw.text(graphics, font, drawerTitle, x + 14, y + 12, RotClientTheme.TEXT, true);
-        if (QolUtilityCatalog.hasCheatTag(module) && !hudDrawerOpen()) {
+        if (QolFlavorSupport.isPlus() && QolUtilityCatalog.hasCheatTag(module) && !hudDrawerOpen()) {
             RotClientUiDraw.text(
                     graphics,
                     font,
@@ -1528,7 +1532,9 @@ final class QolUtilityDashboard {
                     trailing,
                     disabled,
                     setting.id().equals(openEnumSettingId));
-        } else if (setting.type() == QolUtilityCatalog.SettingType.ACTION) {
+        } else if (setting.type() == QolUtilityCatalog.SettingType.ACTION
+                || (setting.type() == QolUtilityCatalog.SettingType.TEXT
+                && CustomScoreboardPolicy.isListTextSetting(setting.id()))) {
             RotClientUiDraw.drawButton(
                     graphics,
                     font,
@@ -1541,6 +1547,27 @@ final class QolUtilityDashboard {
                     trailing,
                     true,
                     !disabled);
+        } else if (setting.type() == QolUtilityCatalog.SettingType.TEXT) {
+            int fieldW = Math.min(188, Math.max(120, width / 2));
+            int fieldX = x + width - fieldW - 8;
+            int fieldY = y + 10;
+            graphics.fill(
+                    fieldX,
+                    fieldY,
+                    fieldX + fieldW,
+                    fieldY + 22,
+                    setting.id().equals(listeningTextSettingId)
+                            ? RotClientTheme.FIELD_ACTIVE
+                            : RotClientTheme.FIELD);
+            String shown = trailing == null || trailing.isBlank() ? "Click, type, Enter" : trailing;
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(font, shown, fieldW - 12),
+                    fieldX + 6,
+                    fieldY + 6,
+                    disabled ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,
+                    false);
         } else {
             RotClientUiDraw.text(graphics, font,
                     trailing,
@@ -1779,13 +1806,19 @@ final class QolUtilityDashboard {
                 yield qol().displayKeybind(setting.id());
             }
             case TEXT -> {
+                if (CustomScoreboardPolicy.isListTextSetting(setting.id())) {
+                    yield "Edit →";
+                }
                 String value = qol().readText(setting.id());
                 if (setting.id().equals(listeningTextSettingId)) {
                     yield (value.isEmpty() ? "" : value) + "▌";
                 }
-                yield value.isBlank() ? "Click to type" : ellipsize(value, 16);
+                if (value.isBlank()) {
+                    yield "Click, type, Enter";
+                }
+                yield ellipsize(value.replace('\n', ' '), 28);
             }
-            case ACTION -> "Open →";
+            case ACTION -> setting.id().contains(".reset_") ? "Reset" : "Open →";
             default -> "";
         };
     }
@@ -2165,7 +2198,12 @@ final class QolUtilityDashboard {
                             listeningKeybindSettingId = setting.id();
                         }
                     } else if (setting.type() == QolUtilityCatalog.SettingType.TEXT) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        if (CustomScoreboardPolicy.isListTextSetting(setting.id())) {
+                            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                                listeningTextSettingId = "";
+                                openBoardListEditor(setting.id());
+                            }
+                        } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                             if (qol().writeText(setting.id(), "")) {
                                 TrackerStore.save(config);
                             }
@@ -2318,6 +2356,10 @@ final class QolUtilityDashboard {
         }
     }
 
+    private void openBoardListEditor(String settingId) {
+        Minecraft.getInstance().gui.setScreen(new QolListEditorScreen(host, settingId));
+    }
+
     private void handleAction(String settingId) {
         if (settingId == null) {
             return;
@@ -2330,11 +2372,13 @@ final class QolUtilityDashboard {
         if ("qol.custom_scoreboard.reset_appearance".equals(settingId)) {
             qol().extras().board().resetAppearance();
             TrackerStore.save(config);
+            openBoardListEditor("qol.custom_scoreboard.appearance");
             return;
         }
         if ("qol.custom_scoreboard.reset_events".equals(settingId)) {
             qol().extras().board().resetEvents();
             TrackerStore.save(config);
+            openBoardListEditor("qol.custom_scoreboard.event_priority");
             return;
         }
         if (host instanceof MiningUiScreen screen) {
@@ -2360,7 +2404,7 @@ final class QolUtilityDashboard {
             }
         }
         if ("qol.auto_sell.add_defaults".equals(settingId)) {
-            if (AutoSellRuntime.addDefaults()) {
+            if (QolClientFlavorSupport.hooks().handleDashboardAction(settingId)) {
                 TrackerStore.save(config);
             }
             return;

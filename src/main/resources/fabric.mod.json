@@ -3,7 +3,7 @@
 	"id": "rotclient",
 	"version": "${version}",
 	"name": "Rot Client",
-	"description": "Client-side Fabric companion for SkyBlock: dashboard, HUD editor, storage, slayer and dungeon helpers. Automation is opt-in for development and test-server use.",
+	"description": "Client-side Fabric companion for SkyBlock: dashboard, HUD editor, storage, slayer and dungeon helpers.",
 	"authors": [
 		{
 			"name": "Rot Tools"
@@ -39,6 +39,7 @@
 		"modmenu": "*"
 	},
 	"breaks": {
-		"miningtracker": "*"
+		"miningtracker": "*",
+		"rotclientplus": "*"
 	}
 }

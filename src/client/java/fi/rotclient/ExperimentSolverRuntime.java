@@ -118,7 +118,7 @@ public final class ExperimentSolverRuntime {
             return false;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (!extras.experimentBlockWrongClicks) {
+        if (!QolFlavorSupport.isPlus() || !extras.experimentBlockWrongClicks) {
             return false;
         }
         if (experiment == ExperimentSolverPolicy.Experiment.CHRONOMATRON && !extras.experimentChronomatron) {

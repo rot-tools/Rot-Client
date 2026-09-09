@@ -37,6 +37,8 @@ final class RotClientIdentityTest {
                 root.getAsJsonArray("mixins").get(0).getAsString());
         assertTrue(root.has("breaks"));
         assertTrue(root.getAsJsonObject("breaks").has("miningtracker"));
+        assertTrue(root.getAsJsonObject("breaks").has("rotclientplus"));
+        assertFalse(raw.contains("rotclient.plus.mixins.json"));
         assertFalse(raw.contains("Rot Client contributors"));
         assertTrue(raw.contains("\"name\": \"Rot Tools\"")
                 || raw.contains("\"name\":\"Rot Tools\""));
@@ -51,6 +53,33 @@ final class RotClientIdentityTest {
                 root.getAsJsonObject("contact").get("issues").getAsString());
         assertFalse(raw.toLowerCase(Locale.ROOT).contains("fi.miningtracker"));
         assertFalse(raw.contains("assets/miningtracker"));
+    }
+
+    @Test
+    void plusFabricModJsonUsesRotClientPlusIdentity() throws IOException {
+        String raw = Files.readString(
+                Path.of("src/plus/resources/fabric.mod.json"),
+                StandardCharsets.UTF_8);
+        JsonObject root = JsonParser.parseString(raw).getAsJsonObject();
+        assertEquals("rotclientplus", root.get("id").getAsString());
+        assertEquals("Rot Client+", root.get("name").getAsString());
+        assertEquals(
+                "fi.rotclient.RotClientClient",
+                root.getAsJsonObject("entrypoints")
+                        .getAsJsonArray("client")
+                        .get(0)
+                        .getAsString());
+        assertEquals(
+                "fi.rotclient.RotClientPlusClient",
+                root.getAsJsonObject("entrypoints")
+                        .getAsJsonArray("client")
+                        .get(1)
+                        .getAsString());
+        assertTrue(raw.contains("rotclient.plus.mixins.json"));
+        assertTrue(root.getAsJsonObject("breaks").has("rotclient"));
+        assertTrue(root.getAsJsonObject("breaks").has("miningtracker"));
+        assertTrue(raw.contains("\"name\": \"Rot Tools\"")
+                || raw.contains("\"name\":\"Rot Tools\""));
     }
 
     @Test
@@ -70,6 +99,8 @@ final class RotClientIdentityTest {
                 Path.of("build.gradle"),
                 StandardCharsets.UTF_8);
         assertTrue(build.contains("\"rotclient\""));
+        assertTrue(build.contains("\"rotclientplus\""));
+        assertTrue(build.contains("plusJar"));
         assertFalse(build.contains("\"miningtracker\""));
     }
 

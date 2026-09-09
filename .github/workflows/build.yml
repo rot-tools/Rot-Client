@@ -12,7 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      jar_filename: ${{ steps.playable_jar.outputs.filename }}
+      legit_filename: ${{ steps.playable_jar.outputs.legit }}
+      plus_filename: ${{ steps.playable_jar.outputs.plus }}
 
     steps:
       - name: Check out repository
@@ -38,46 +39,60 @@ jobs:
           ./gradlew --version
 
       - name: Test
-        run: ./gradlew test --rerun-tasks --console=plain
+        run: ./gradlew test testPlus --rerun-tasks --console=plain
 
-      - name: Compile client
-        run: ./gradlew compileClientJava --console=plain
+      - name: Compile client editions
+        run: ./gradlew compileClientJava compilePlusJava compilePlusClientJava --console=plain
 
       - name: Clean build
         run: ./gradlew clean build --console=plain
 
-      - name: Locate playable JAR
+      - name: Locate playable JARs
         id: playable_jar
         shell: bash
         run: |
           shopt -s nullglob
 
-          candidates=(build/libs/*.jar)
-          playable=()
+          legit=(build/libs/RotClient-*.jar)
+          plus=(build/libs/RotClientPlus-*.jar)
 
-          for jar in "${candidates[@]}"; do
-            case "$jar" in
-              *-sources.jar|*-javadoc.jar|*-dev.jar)
-                ;;
-              *)
-                playable+=("$jar")
-                ;;
-            esac
-          done
+          filter_playable() {
+            local -n src=$1
+            local -n out=$2
+            out=()
+            for jar in "${src[@]}"; do
+              case "$jar" in
+                *-sources.jar|*-javadoc.jar|*-dev.jar|*-dev-unsigned.jar)
+                  ;;
+                *)
+                  out+=("$jar")
+                  ;;
+              esac
+            done
+          }
 
-          if (( ${#playable[@]} != 1 )); then
-            echo "Expected exactly one playable JAR, found ${#playable[@]}."
-            printf 'Candidate: %s\n' "${playable[@]}"
+          filter_playable legit legit_playable
+          filter_playable plus plus_playable
+
+          if (( ${#legit_playable[@]} != 1 || ${#plus_playable[@]} != 1 )); then
+            echo "Expected exactly one RotClient and one RotClientPlus playable JAR."
+            printf 'RotClient candidates: %s\n' "${legit_playable[@]}"
+            printf 'RotClientPlus candidates: %s\n' "${plus_playable[@]}"
+            ls -la build/libs || true
             exit 1
           fi
 
           mkdir -p build/playable
-          cp "${playable[0]}" build/playable/
-          sha256sum "${playable[0]}" | sed 's#  build/libs/#  #' > build/playable/SHA256SUMS.txt
+          cp "${legit_playable[0]}" "${plus_playable[0]}" build/playable/
+          {
+            sha256sum "${legit_playable[0]}" | sed 's#  build/libs/#  #'
+            sha256sum "${plus_playable[0]}" | sed 's#  build/libs/#  #'
+          } > build/playable/SHA256SUMS.txt
 
-          echo "Playable JAR: ${playable[0]}"
-          echo "path=build/playable/$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
-          echo "filename=$(basename "${playable[0]}")" >> "$GITHUB_OUTPUT"
+          echo "Legit JAR: ${legit_playable[0]}"
+          echo "Plus JAR: ${plus_playable[0]}"
+          echo "legit=$(basename "${legit_playable[0]}")" >> "$GITHUB_OUTPUT"
+          echo "plus=$(basename "${plus_playable[0]}")" >> "$GITHUB_OUTPUT"
 
       - name: Upload playable JAR
         uses: actions/upload-artifact@v7
@@ -110,13 +125,15 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JAR_NAME: ${{ needs.build.outputs.jar_filename }}
+          LEGIT_NAME: ${{ needs.build.outputs.legit_filename }}
+          PLUS_NAME: ${{ needs.build.outputs.plus_filename }}
         run: |
           set -euo pipefail
-          jar="dist/${JAR_NAME}"
+          legit="dist/${LEGIT_NAME}"
+          plus="dist/${PLUS_NAME}"
           sums="dist/SHA256SUMS.txt"
-          if [[ ! -f "$jar" || ! -f "$sums" ]]; then
-            echo "Missing playable JAR or checksum in dist/."
+          if [[ ! -f "$legit" || ! -f "$plus" || ! -f "$sums" ]]; then
+            echo "Missing playable JARs or checksum in dist/."
             ls -la dist || true
             exit 1
           fi
@@ -125,10 +142,11 @@ jobs:
           Latest playtest build from the development branch. This is not a versioned release.
 
           - Commit: ${GITHUB_SHA}
-          - Playable JAR: ${JAR_NAME}
-          - Install only that file. Skip -sources.jar.
+          - Rot Client (legit HUD/QoL): ${LEGIT_NAME}
+          - Rot Client+ (automation, opt-in, default off): ${PLUS_NAME}
+          - Enable only one JAR in Prism. Skip -sources.jar and -dev-unsigned.jar.
 
-          Automation (clickers, scanners, dungeon helpers, Free Camera, Terminal Simulator) stays opt-in and off by default.
+          Rot Client+ automation stays opt-in and off by default. Do not use cheat features on Hypixel.
           EOF
           )"
 
@@ -137,7 +155,7 @@ jobs:
               [[ -z "$asset" ]] && continue
               gh release delete-asset playtest "$asset" --repo "$GITHUB_REPOSITORY" --yes
             done < <(gh release view playtest --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
-            gh release upload playtest "$jar" "$sums" --repo "$GITHUB_REPOSITORY"
+            gh release upload playtest "$legit" "$plus" "$sums" --repo "$GITHUB_REPOSITORY"
             gh release edit playtest \
               --repo "$GITHUB_REPOSITORY" \
               --title "Latest playtest" \
@@ -146,7 +164,7 @@ jobs:
               --target "$GITHUB_SHA" \
               --notes "$notes"
           else
-            gh release create playtest "$jar" "$sums" \
+            gh release create playtest "$legit" "$plus" "$sums" \
               --repo "$GITHUB_REPOSITORY" \
               --title "Latest playtest" \
               --prerelease \

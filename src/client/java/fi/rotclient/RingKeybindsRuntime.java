@@ -151,6 +151,22 @@ public final class RingKeybindsRuntime {
     }
 
     private static List<RingPolicy.MacroDef> macros(QolUtilityConfig qol) {
+        List<RingPolicy.MacroDef> presets = RingPolicy.skyblockPresets(
+                qol.commandPetsKey,
+                qol.commandStorageKey,
+                qol.commandArmorWardrobeKey,
+                qol.commandEquipWardrobeKey,
+                qol.commandLoadoutsKey,
+                qol.commandStatsKey,
+                qol.commandDungeonHubKey,
+                qol.commandPotionBagKey,
+                qol.commandBindSendMode,
+                qol.commandBindConflict,
+                qol.commandBindActivation,
+                qol.commandBindUseRatelimit);
+        if (!QolFlavorSupport.isPlus()) {
+            return presets;
+        }
         return RingPolicy.mergeMacros(
                 RingPolicy.parseMacroList(
                         qol.commandBindMacros,
@@ -158,19 +174,7 @@ public final class RingKeybindsRuntime {
                         qol.commandBindConflict,
                         qol.commandBindActivation,
                         qol.commandBindUseRatelimit),
-                RingPolicy.skyblockPresets(
-                        qol.commandPetsKey,
-                        qol.commandStorageKey,
-                        qol.commandArmorWardrobeKey,
-                        qol.commandEquipWardrobeKey,
-                        qol.commandLoadoutsKey,
-                        qol.commandStatsKey,
-                        qol.commandDungeonHubKey,
-                        qol.commandPotionBagKey,
-                        qol.commandBindSendMode,
-                        qol.commandBindConflict,
-                        qol.commandBindActivation,
-                        qol.commandBindUseRatelimit));
+                presets);
     }
 
     private static void dispatch(Minecraft client, QolUtilityConfig qol, RingPolicy.DueSend send) {

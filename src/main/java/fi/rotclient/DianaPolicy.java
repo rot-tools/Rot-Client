@@ -200,7 +200,7 @@ public final class DianaPolicy {
     }
 
     public static String strip(String raw) {
-        return AutoConversationPolicy.stripFormatting(raw).trim();
+        return ChatTextPolicy.stripFormatting(raw).trim();
     }
 
     public static boolean isDianaSpade(String skyblockId, String hoverName) {

@@ -66,7 +66,7 @@ public final class QolVisualRuntime {
         if (flags.ghosts && GhostsRuntime.shouldSuppress(entity)) {
             return true;
         }
-        if (flags.freecam && FreecamRuntime.shouldHideLocalBody(entity)) {
+        if (flags.freecam && QolClientFlavorSupport.hooks().freecamHideLocalBody(entity)) {
             return true;
         }
         if (flags.slayerLaser && SlayerRuntime.shouldHideLaser(entity)) {
@@ -149,7 +149,7 @@ public final class QolVisualRuntime {
                 && (extras.fishingVisualsHideOtherBobbers || extras.fishingVisualsChumHider));
         boolean foraging = extras.foragingTreesEnabled && extras.foragingTreesHideBits;
         boolean ghosts = extras.ghostsEnabled && !extras.ghostsShowGhosts && !extras.ghostsShowPowered;
-        boolean freecam = FreecamRuntime.active();
+        boolean freecam = QolClientFlavorSupport.hooks().freecamActive();
         boolean slayerLaser = extras.slayerLaserHiderEnabled;
         boolean slayerPups = extras.slayerSvenEnabled && extras.slayerSvenHidePupNametags;
         boolean slayerInferno = extras.slayerInfernoEnabled && extras.slayerInfernoHideParticles;
@@ -612,7 +612,7 @@ public final class QolVisualRuntime {
                 && entity instanceof net.minecraft.world.entity.item.ItemEntity item) {
             ItemStack stack = item.getItem();
             return stack.is(Items.BONE_MEAL)
-                    && AutoConversationPolicy.stripFormatting(stack.getHoverName().getString())
+                    && ChatTextPolicy.stripFormatting(stack.getHoverName().getString())
                     .equalsIgnoreCase("Bone Meal");
         }
         if (extras.hideTreeBits && entity.getType() == EntityTypes.BLOCK_DISPLAY) {

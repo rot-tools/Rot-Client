@@ -750,7 +750,7 @@ public final class MiningAssistPolicy {
         if (raw == null) {
             return "";
         }
-        return AutoConversationPolicy.stripFormatting(raw).trim();
+        return ChatTextPolicy.stripFormatting(raw).trim();
     }
 
     private record FossilDef(String percent, String[] rows, boolean rotate, boolean flip) {

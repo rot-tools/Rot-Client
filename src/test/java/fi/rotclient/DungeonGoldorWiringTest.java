@@ -69,11 +69,13 @@ final class DungeonGoldorWiringTest {
         assertTrue(catalog.contains("qol.dungeon_f7.hide_after_leap"));
         assertTrue(catalog.contains("qol.dungeon_hud.melody_other"));
         assertTrue(catalog.contains("qol.dungeon_f7.relic_highlight"));
-        assertTrue(catalog.contains("qol.dungeon_f7.relic_block_wrong"));
+        String plusCatalog = Files.readString(Path.of(
+                "src/plus/java/fi/rotclient/QolPlusCatalog.java"), StandardCharsets.UTF_8);
+        assertTrue(plusCatalog.contains("qol.dungeon_f7.relic_block_wrong"));
         String leap = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/DungeonLeapOverlayRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(leap.contains("fromLore"));
         assertTrue(leap.contains("statusLabel"));
-        assertEquals(131, QolUtilityCatalog.modules().size());
+        assertEquals(110, QolUtilityCatalog.modules().size());
     }
 }

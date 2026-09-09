@@ -81,7 +81,7 @@ public final class PriceTooltipsPolicy {
     public static int stackQuantity(List<String> lore, int stackCount) {
         if (lore != null) {
             for (String raw : lore) {
-                String line = AutoConversationPolicy.stripFormatting(raw).trim();
+                String line = ChatTextPolicy.stripFormatting(raw).trim();
                 Matcher stored = STORED.matcher(line);
                 if (stored.find()) {
                     return Math.max(1, parseInt(stored.group(1)));
@@ -104,7 +104,7 @@ public final class PriceTooltipsPolicy {
             return OptionalLong.empty();
         }
         for (String raw : lore) {
-            String line = AutoConversationPolicy.stripFormatting(raw).trim();
+            String line = ChatTextPolicy.stripFormatting(raw).trim();
             Matcher matcher = COST.matcher(line);
             if (matcher.find()) {
                 long value = Math.round(parseDouble(matcher.group(1)));
@@ -144,7 +144,7 @@ public final class PriceTooltipsPolicy {
             return 0.0D;
         }
         for (String raw : lore) {
-            String line = AutoConversationPolicy.stripFormatting(raw).trim();
+            String line = ChatTextPolicy.stripFormatting(raw).trim();
             Matcher matcher = pattern.matcher(line);
             if (matcher.find()) {
                 return parseDouble(matcher.group(1));
