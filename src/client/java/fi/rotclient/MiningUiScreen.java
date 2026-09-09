@@ -79,6 +79,7 @@ final class MiningUiScreen extends Screen {
     private Integer draggingTabIndex = null;
     private int dragStartX;
     private int dragStartY;
+    private int loadoutScrollIndex;
     private boolean tabDragging = false;
     private boolean panelDragging = false;
     private boolean openInNewTabGesture;
@@ -90,6 +91,11 @@ final class MiningUiScreen extends Screen {
     private boolean awaitingNewSessionConfirm = false;
     private boolean profileCreateOpen;
     private boolean profileNameFocused;
+    private boolean loadoutCreateOpen;
+    private boolean loadoutNameFocused;
+    private String loadoutNameInput = "";
+    private String loadoutCreateError = "";
+    private String loadoutPageError = "";
     private boolean profileCreateFromCurrent = true;
     private String profileNameInput = "";
     private String profileCreateError = "";
@@ -113,6 +119,39 @@ final class MiningUiScreen extends Screen {
     private String profileDeleteProfileId = "";
     private String profileDeleteReplacementId = "";
     private String profileDeleteError = "";
+    private String loadoutCreateSettingsProfileId = "";
+
+    private enum LoadoutEditMode {
+        NONE,
+        RENAME,
+        DUPLICATE
+    }
+
+    private enum LoadoutWizardStep {
+        NAME,
+        WARDROBE,
+        PET,
+        EQUIPMENT,
+        SETTINGS,
+        REVIEW
+    }
+    private final RotClientLoadoutWizardDraft loadoutWizardDraft =
+            new RotClientLoadoutWizardDraft();
+
+    private LoadoutWizardStep loadoutWizardStep =
+            LoadoutWizardStep.NAME;
+
+    private LoadoutEditMode loadoutEditMode =
+            LoadoutEditMode.NONE;
+
+    private String loadoutMenuLoadoutId = "";
+    private String loadoutEditLoadoutId = "";
+    private String loadoutDeleteLoadoutId = "";
+    private String loadoutDeleteError = "";
+    private String loadoutEditNameInput = "";
+    private boolean loadoutEditNameFocused;
+    private String loadoutEditError = "";
+
     private final DashboardNavStack navStack = new DashboardNavStack();
     private boolean restoringNav;
     private boolean skipSidebarReveal;
@@ -283,6 +322,13 @@ final class MiningUiScreen extends Screen {
                     panelY,
                     logicalMouseX,
                     logicalMouseY);
+        } else if (activeRoute == RotClientWorkspaceRoute.LOADOUTS) {
+            drawLoadoutsPage(
+                    graphics,
+                    panelX,
+                    panelY,
+                    logicalMouseX,
+                    logicalMouseY);
         } else if (activeRoute.isAppearance()) {
             drawAppearanceTabPlaceholder(
                     graphics, panelX, panelY, logicalMouseX, logicalMouseY);
@@ -399,6 +445,10 @@ final class MiningUiScreen extends Screen {
             return "Profiles";
         }
 
+        if (route == RotClientWorkspaceRoute.LOADOUTS) {
+            return "Loadouts";
+        }
+
         if (route.isAppearance()) {
             return "Appearance";
         }
@@ -450,10 +500,15 @@ final class MiningUiScreen extends Screen {
                 workspace.activeRoute()
                         == RotClientWorkspaceRoute.PROFILES;
 
+        boolean loadoutsSelected =
+                workspace.activeRoute()
+                        == RotClientWorkspaceRoute.LOADOUTS;
+
         boolean visualsChildSelected =
                 appearanceSelected
                         || hudLayoutSelected
-                        || profilesSelected;
+                        || profilesSelected
+                        || loadoutsSelected;
         boolean qolSelected = selectedModule == DashboardModule.QOL_SETTINGS
                 && !visualsChildSelected;
 
@@ -518,6 +573,22 @@ final class MiningUiScreen extends Screen {
                                     false,
                                     false);
                         }
+
+                        if (layout.loadoutsVisible()) {
+                            drawModuleEntry(
+                                    graphics,
+                                    mouseX,
+                                    mouseY,
+                                    itemX,
+                                    mapY.applyAsInt(layout.loadoutsY()),
+                                    MODULE_WIDTH,
+                                    NAV_ITEM_HEIGHT,
+                                    "Loadouts",
+                                    "Gear & profile setups",
+                                    loadoutsSelected,
+                                    false,
+                                    false);
+                        }
                     });
 
             drawSidebarSectionHeader(
@@ -571,6 +642,8 @@ final class MiningUiScreen extends Screen {
                     sidebarScroll.isThumbDragging());
         }
     }
+
+
 
     private void drawSidebarChildren(
             GuiGraphicsExtractor graphics,
@@ -640,6 +713,334 @@ final class MiningUiScreen extends Screen {
         return profileCreateOpen
                 || profileEditMode != ProfileEditMode.NONE
                 || !profileDeleteProfileId.isBlank();
+    }
+
+    private boolean loadoutPanelOpen() {
+        return loadoutCreateOpen
+                || loadoutEditMode != LoadoutEditMode.NONE
+                || !loadoutDeleteLoadoutId.isBlank();
+    }
+
+    private RotClientLoadout loadoutById(
+            String loadoutId) {
+
+        if (loadoutId == null
+                || loadoutId.isBlank()) {
+            return null;
+        }
+
+        return RotClientClient
+                .loadouts()
+                .findById(loadoutId);
+    }
+
+    private void startLoadoutWizard() {
+        cancelLoadoutEdit();
+
+        loadoutMenuLoadoutId = "";
+
+        loadoutWizardDraft.reset();
+        loadoutWizardStep =
+                LoadoutWizardStep.NAME;
+
+        loadoutCreateOpen = true;
+        loadoutNameFocused = true;
+
+        loadoutNameInput = "";
+        loadoutCreateSettingsProfileId = "";
+        loadoutCreateError = "";
+        loadoutPageError = "";
+    }
+
+    private void cancelLoadoutWizard() {
+        RotClientWardrobePickerRuntime.cancel();
+        RotClientPetPickerRuntime.cancel();
+        RotClientEquipmentPickerRuntime.cancel();
+
+        loadoutWizardDraft.reset();
+
+        loadoutWizardStep =
+                LoadoutWizardStep.NAME;
+
+        loadoutCreateOpen = false;
+        loadoutNameFocused = false;
+
+
+        loadoutNameInput = "";
+        loadoutCreateSettingsProfileId = "";
+        loadoutCreateError = "";
+    }
+
+    private void continueLoadoutWizardFromName() {
+        if (!RotClientLoadout.isValidName(
+                loadoutNameInput)) {
+
+            loadoutCreateError =
+                    "Enter a valid loadout name.";
+
+            loadoutNameFocused = true;
+            return;
+        }
+
+        loadoutWizardDraft.name =
+                RotClientLoadout.normalizeName(
+                        loadoutNameInput);
+
+        loadoutCreateError = "";
+        loadoutNameFocused = false;
+
+        loadoutWizardStep =
+                LoadoutWizardStep.WARDROBE;
+    }
+
+    private void openLoadoutWizardEquipmentPicker() {
+        boolean opened =
+                RotClientEquipmentPickerRuntime.beginDraft(
+                        this,
+                        selected -> {
+                            loadoutWizardDraft.equipmentSetNumber =
+                                    selected;
+
+                            loadoutCreateError = "";
+                        });
+
+        if (!opened) {
+            loadoutCreateError =
+                    "Could not open the Equipment Wardrobe.";
+        }
+    }
+
+    private void openLoadoutWizardPetPicker() {
+        boolean opened =
+                RotClientPetPickerRuntime.beginDraft(
+                        this,
+                        (petUuid, petName) -> {
+                            loadoutWizardDraft.petUuid =
+                                    petUuid;
+
+                            loadoutWizardDraft.petName =
+                                    petName;
+
+                            loadoutCreateError = "";
+                        });
+
+        if (!opened) {
+            loadoutCreateError =
+                    "Could not open the Pets menu.";
+        }
+    }
+
+    private void openLoadoutWizardWardrobePicker() {
+        boolean opened =
+                RotClientWardrobePickerRuntime.beginDraft(
+                        this,
+                        selected -> {
+                            loadoutWizardDraft.wardrobeSlotNumber =
+                                    selected;
+
+                            loadoutCreateError = "";
+                        });
+
+        if (!opened) {
+            loadoutCreateError =
+                    "Could not open the Wardrobe.";
+        }
+    }
+
+    private void openLoadoutDelete(
+            RotClientLoadout loadout) {
+
+        if (loadout == null) {
+            return;
+        }
+
+        cancelLoadoutWizard();
+        cancelLoadoutEdit();
+
+        loadoutMenuLoadoutId = "";
+
+        loadoutDeleteLoadoutId =
+                loadout.id;
+
+        loadoutDeleteError = "";
+        loadoutPageError = "";
+    }
+
+    private void cancelLoadoutDelete() {
+        loadoutDeleteLoadoutId = "";
+        loadoutDeleteError = "";
+    }
+
+    private void submitLoadoutDelete() {
+        RotClientLoadout target =
+                loadoutById(
+                        loadoutDeleteLoadoutId);
+
+        if (target == null) {
+            loadoutDeleteError =
+                    "Loadout no longer exists.";
+            return;
+        }
+
+        boolean deleted =
+                RotClientClient
+                        .loadouts()
+                        .delete(
+                                target.id);
+
+        if (!deleted) {
+            loadoutDeleteError =
+                    "Could not delete loadout.";
+            return;
+        }
+
+        cancelLoadoutDelete();
+        loadoutMenuLoadoutId = "";
+        loadoutPageError = "";
+
+        /*
+         * Keep scrolling valid after the list shrinks.
+         */
+        int maxScroll =
+                Math.max(
+                        0,
+                        RotClientClient
+                                .loadouts()
+                                .loadouts()
+                                .size() - 7);
+
+        loadoutScrollIndex =
+                Math.min(
+                        loadoutScrollIndex,
+                        maxScroll);
+    }
+
+    private void openLoadoutEdit(
+            LoadoutEditMode mode,
+            RotClientLoadout loadout) {
+
+        if (mode == null
+                || mode == LoadoutEditMode.NONE
+                || loadout == null) {
+            return;
+        }
+
+        cancelLoadoutCreate();
+
+        loadoutMenuLoadoutId = "";
+
+        loadoutEditMode = mode;
+        loadoutEditLoadoutId = loadout.id;
+        loadoutEditNameFocused = true;
+        loadoutEditError = "";
+        loadoutPageError = "";
+
+        if (mode == LoadoutEditMode.RENAME) {
+            loadoutEditNameInput =
+                    loadout.name == null
+                            ? ""
+                            : loadout.name;
+
+            return;
+        }
+
+        String base =
+                loadout.name == null
+                        ? "Loadout"
+                        : loadout.name;
+
+        String suffix =
+                " Copy";
+
+        int maxBaseLength =
+                Math.max(
+                        1,
+                        RotClientLoadout.MAX_NAME_LENGTH
+                                - suffix.length());
+
+        if (base.length() > maxBaseLength) {
+            base =
+                    base.substring(
+                            0,
+                            maxBaseLength);
+        }
+
+        loadoutEditNameInput =
+                base + suffix;
+    }
+
+    private void cancelLoadoutEdit() {
+        loadoutEditMode =
+                LoadoutEditMode.NONE;
+
+        loadoutEditLoadoutId = "";
+        loadoutEditNameInput = "";
+        loadoutEditNameFocused = false;
+        loadoutEditError = "";
+    }
+
+    private void submitLoadoutEdit() {
+        if (loadoutEditMode
+                == LoadoutEditMode.NONE) {
+            return;
+        }
+
+        if (!RotClientLoadout.isValidName(
+                loadoutEditNameInput)) {
+
+            loadoutEditError =
+                    "Enter a valid loadout name.";
+
+            loadoutEditNameFocused = true;
+            return;
+        }
+
+        RotClientLoadout source =
+                loadoutById(
+                        loadoutEditLoadoutId);
+
+        if (source == null) {
+            loadoutEditError =
+                    "Loadout no longer exists.";
+
+            return;
+        }
+
+        String name =
+                RotClientLoadout.normalizeName(
+                        loadoutEditNameInput);
+
+        RotClientLoadoutManager manager =
+                RotClientClient.loadouts();
+
+        boolean success;
+
+        if (loadoutEditMode
+                == LoadoutEditMode.RENAME) {
+
+            success =
+                    manager.rename(
+                            source.id,
+                            name);
+
+        } else {
+            success =
+                    manager.duplicate(
+                            source.id,
+                            name) != null;
+        }
+
+        if (!success) {
+            loadoutEditError =
+                    "Name already used or save failed.";
+
+            loadoutEditNameFocused = true;
+            return;
+        }
+
+        cancelLoadoutEdit();
+
+        loadoutPageError = "";
     }
 
     private RotClientProfile profileById(String profileId) {
@@ -1638,7 +2039,7 @@ final class MiningUiScreen extends Screen {
 
             int actionY =
                     activeWithAlternatives
-                            ? formY + 96
+                            ? formY + 112
                             : formY + 72;
 
             if (inside(
@@ -1866,6 +2267,913 @@ final class MiningUiScreen extends Screen {
         return true;
     }
 
+    private boolean handleLoadoutsClick(
+            double mouseX,
+            double mouseY,
+            int contentLeft,
+            int contentRight,
+            int panelY) {
+
+        int top =
+                panelY + MASTER_Y;
+
+        int contentWidth =
+                contentRight - contentLeft;
+
+        int createButtonWidth =
+                136;
+
+        int createButtonX =
+                contentRight - createButtonWidth;
+
+        if (!loadoutCreateOpen
+                && inside(
+                mouseX,
+                mouseY,
+                createButtonX,
+                top,
+                createButtonWidth,
+                BUTTON_HEIGHT)) {
+
+            startLoadoutWizard();
+            return true;
+        }
+
+        if (loadoutEditMode
+                != LoadoutEditMode.NONE) {
+
+            int formY =
+                    top + 42;
+
+            int inputX =
+                    contentLeft + 14;
+
+            int inputY =
+                    formY + 38;
+
+            int inputWidth =
+                    contentWidth - 28;
+
+            /*
+             * Click inside the rename/duplicate text field.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX,
+                    inputY,
+                    inputWidth,
+                    22)) {
+
+                loadoutEditNameFocused = true;
+                return true;
+            }
+
+            int actionY =
+                    formY + 72;
+
+            /*
+             * RENAME / DUPLICATE submit button.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                submitLoadoutEdit();
+                return true;
+            }
+
+            /*
+             * CANCEL button.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX + 102,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutEdit();
+                return true;
+            }
+
+            /*
+             * Clicking elsewhere in the edit panel removes focus
+             * from the text field, but keeps the panel open.
+             */
+            loadoutEditNameFocused = false;
+
+            return true;
+        }
+
+        /*
+         * Delete confirmation.
+         */
+        if (!loadoutDeleteLoadoutId.isBlank()) {
+
+            int formY =
+                    top + 42;
+
+            int actionY =
+                    formY + 76;
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                submitLoadoutDelete();
+                return true;
+            }
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 116,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutDelete();
+                return true;
+            }
+
+            return true;
+        }
+
+        if (!loadoutPanelOpen()) {
+            RotClientLoadoutManager manager =
+                    RotClientClient.loadouts();
+
+            List<RotClientLoadout> loadouts =
+                    manager.loadouts();
+
+            RotClientLoadout active =
+                    manager.activeLoadout();
+
+            int listY =
+                    top + 42;
+
+            if (!loadouts.isEmpty()) {
+                /*
+                 * drawLoadoutsPage() places the SAVED LOADOUTS heading here first.
+                 */
+                listY += 18;
+
+                int visibleRows =
+                        7;
+
+                int maxScroll =
+                        Math.max(
+                                0,
+                                loadouts.size() - visibleRows);
+
+                loadoutScrollIndex =
+                        Math.max(
+                                0,
+                                Math.min(
+                                        loadoutScrollIndex,
+                                        maxScroll));
+
+                int shown =
+                        Math.min(
+                                visibleRows,
+                                loadouts.size()
+                                        - loadoutScrollIndex);
+
+                for (int i = 0;
+                     i < shown;
+                     i++) {
+
+                    RotClientLoadout loadout =
+                            loadouts.get(
+                                    loadoutScrollIndex + i);
+
+                    boolean isActive =
+                            active != null
+                                    && active.matchesId(
+                                    loadout.id);
+
+                    /*
+                     * First handle the ... button.
+                     */
+                    int menuButtonX =
+                            contentRight - 40;
+
+                    if (inside(
+                            mouseX,
+                            mouseY,
+                            menuButtonX,
+                            listY + 7,
+                            28,
+                            BUTTON_HEIGHT)) {
+
+                        if (loadout.matchesId(
+                                loadoutMenuLoadoutId)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                        } else {
+                            loadoutMenuLoadoutId =
+                                    loadout.id;
+                        }
+
+                        return true;
+                    }
+
+                    /*
+                     * Then handle buttons inside the open ... menu.
+                     */
+                    boolean menuOpen =
+                            loadout.matchesId(
+                                    loadoutMenuLoadoutId);
+
+                    if (menuOpen) {
+                        int menuY =
+                                listY + 44;
+
+                        int actionWidth =
+                                94;
+
+                        int gap =
+                                6;
+
+                        int menuX =
+                                contentRight
+                                        - actionWidth * 3
+                                        - gap * 2;
+
+                        /*
+                         * Rename
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX,
+                                menuY,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            openLoadoutEdit(
+                                    LoadoutEditMode.RENAME,
+                                    loadout);
+
+                            return true;
+                        }
+
+                        /*
+                         * Duplicate
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX + actionWidth + gap,
+                                menuY,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            openLoadoutEdit(
+                                    LoadoutEditMode.DUPLICATE,
+                                    loadout);
+
+                            return true;
+                        }
+
+                        /*
+                         * Wardrobe picker
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX
+                                        + (actionWidth + gap) * 2,
+                                menuY,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                            boolean opened =
+                                    RotClientWardrobePickerRuntime.begin(
+                                            loadout.id,
+                                            this);
+
+                            loadoutPageError =
+                                    opened
+                                            ? ""
+                                            : "Could not open the Wardrobe.";
+
+                            return true;
+                        }
+
+                        /*
+                         * Pet picker
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX,
+                                menuY + 32,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                            boolean opened =
+                                    RotClientPetPickerRuntime.begin(
+                                            loadout.id,
+                                            this);
+
+                            loadoutPageError =
+                                    opened
+                                            ? ""
+                                            : "Could not open the Pets menu.";
+
+                            return true;
+                        }
+
+                        /*
+                         * Equipment picker
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX + actionWidth + gap,
+                                menuY + 32,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            loadoutMenuLoadoutId = "";
+
+                            boolean opened =
+                                    RotClientEquipmentPickerRuntime.begin(
+                                            loadout.id,
+                                            this);
+
+                            loadoutPageError =
+                                    opened
+                                            ? ""
+                                            : "Could not open the Equipment Wardrobe.";
+
+                            return true;
+                        }
+
+                        /*
+                         * Delete
+                         */
+                        if (inside(
+                                mouseX,
+                                mouseY,
+                                menuX
+                                        + (actionWidth + gap) * 2,
+                                menuY + 32,
+                                actionWidth,
+                                BUTTON_HEIGHT)) {
+
+                            openLoadoutDelete(
+                                    loadout);
+
+                            return true;
+                        }
+
+                    }
+
+                    /*
+                     * Only after menu controls have been checked do we allow
+                     * clicking the row to activate the loadout.
+                     */
+                    if (!isActive
+                            && inside(
+                            mouseX,
+                            mouseY,
+                            contentLeft,
+                            listY,
+                            contentRight - contentLeft,
+                            40)) {
+
+                        boolean success =
+                                RotClientClient
+                                        .loadoutActivation()
+                                        .activate(
+                                                loadout.id);
+
+                        if (success) {
+                            loadoutPageError = "";
+                        } else {
+                            loadoutPageError =
+                                    "Could not activate loadout or linked settings profile.";
+                        }
+
+                        return true;
+                    }
+
+                    /*
+                     * Open menus take more vertical space.
+                     */
+                    listY +=
+                            menuOpen
+                                    ? 112
+                                    : 48;
+                }
+            }
+
+            return true;
+        }
+
+        /*
+         * Step 1: Name
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.NAME) {
+
+            int formY =
+                    top + 42;
+
+            int inputX =
+                    contentLeft + 14;
+
+            int inputY =
+                    formY + 38;
+
+            int inputWidth =
+                    contentWidth - 28;
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX,
+                    inputY,
+                    inputWidth,
+                    22)) {
+
+                loadoutNameFocused = true;
+                return true;
+            }
+
+            int actionY =
+                    formY + 72;
+
+            /*
+             * Next -> Wardrobe.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                continueLoadoutWizardFromName();
+                return true;
+            }
+
+            /*
+             * Cancel wizard.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    inputX + 102,
+                    actionY,
+                    94,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            loadoutNameFocused = false;
+
+            return true;
+        }
+
+        /*
+         * Step 2: Wardrobe
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.WARDROBE) {
+
+            int formY =
+                    top + 42;
+
+            /*
+             * Open the real Hypixel Wardrobe GUI.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    BUTTON_HEIGHT)) {
+
+                openLoadoutWizardWardrobePicker();
+                return true;
+            }
+
+            int actionY =
+                    formY + 100;
+
+            /*
+             * Back -> Name.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.NAME;
+
+                loadoutNameInput =
+                        loadoutWizardDraft.name;
+
+                loadoutNameFocused = true;
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Next -> Settings.
+             */
+            if (loadoutWizardDraft.wardrobeSlotNumber > 0
+                    && inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.PET;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Cancel entire wizard.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            return true;
+        }
+
+        /*
+         * Step 3: Settings Profile
+         */
+
+        /*
+         * Step 3: Pet
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.PET) {
+
+            int formY =
+                    top + 42;
+
+            /*
+             * Open the real Hypixel Pets GUI.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    BUTTON_HEIGHT)) {
+
+                openLoadoutWizardPetPicker();
+                return true;
+            }
+
+            int actionY =
+                    formY + 100;
+
+            /*
+             * Back -> Wardrobe.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.WARDROBE;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Next -> Settings.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.EQUIPMENT;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Cancel entire wizard.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            return true;
+        }
+
+        /*
+         * Step 4: Equipment
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.EQUIPMENT) {
+
+            int formY =
+                    top + 42;
+
+            /*
+             * Open the real Hypixel Equipment Wardrobe.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    BUTTON_HEIGHT)) {
+
+                openLoadoutWizardEquipmentPicker();
+                return true;
+            }
+
+            int actionY =
+                    formY + 100;
+
+            /*
+             * Back -> Pet.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.PET;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Next -> Settings.
+             *
+             * Equipment is optional, so this is always available.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.SETTINGS;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            return true;
+        }
+
+            if (loadoutWizardStep
+                    == LoadoutWizardStep.SETTINGS) {
+
+                int formY =
+                        top + 42;
+
+                int selectorY =
+                        formY + 48;
+
+                /*
+                 * Cycle through:
+                 *
+                 * None -> Profile 1 -> Profile 2 -> ... -> None
+                 */
+                if (inside(
+                        mouseX,
+                        mouseY,
+                        contentLeft + 14,
+                        selectorY,
+                        contentWidth - 28,
+                        BUTTON_HEIGHT)) {
+
+                    cycleLoadoutCreateSettingsProfile();
+
+                    loadoutWizardDraft.settingsProfileId =
+                            loadoutCreateSettingsProfileId;
+
+                    loadoutCreateError = "";
+
+                    return true;
+                }
+
+                int actionY =
+                        formY + 100;
+
+                /*
+                 * Back -> Wardrobe.
+                 */
+                if (inside(
+                        mouseX,
+                        mouseY,
+                        contentLeft + 14,
+                        actionY,
+                        80,
+                        BUTTON_HEIGHT)) {
+
+                    loadoutWizardStep =
+                            LoadoutWizardStep.EQUIPMENT;
+
+                    loadoutCreateError = "";
+
+                    return true;
+                }
+
+                /*
+                 * Next -> Review.
+                 */
+                if (inside(
+                        mouseX,
+                        mouseY,
+                        contentLeft + 102,
+                        actionY,
+                        80,
+                        BUTTON_HEIGHT)) {
+
+                    loadoutWizardDraft.settingsProfileId =
+                            loadoutCreateSettingsProfileId;
+
+                    loadoutWizardStep =
+                            LoadoutWizardStep.REVIEW;
+
+                    loadoutCreateError = "";
+
+                    return true;
+                }
+
+                /*
+                 * Cancel entire wizard.
+                 */
+                if (inside(
+                        mouseX,
+                        mouseY,
+                        contentLeft + 190,
+                        actionY,
+                        80,
+                        BUTTON_HEIGHT)) {
+
+                    cancelLoadoutWizard();
+                    return true;
+                }
+
+                return true;
+            }
+
+        /*
+         * Step 4: Review
+         */
+        if (loadoutWizardStep
+                == LoadoutWizardStep.REVIEW) {
+
+            int formY =
+                    top + 42;
+
+            int actionY =
+                    formY + 160;
+
+            /*
+             * Back -> Settings.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                loadoutWizardStep =
+                        LoadoutWizardStep.SETTINGS;
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            /*
+             * Final creation.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    136,
+                    BUTTON_HEIGHT)) {
+
+                submitLoadoutCreate();
+                return true;
+            }
+
+            /*
+             * Cancel whole wizard.
+             */
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentLeft + 246,
+                    actionY,
+                    80,
+                    BUTTON_HEIGHT)) {
+
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            return true;
+        }
+
+            return true;
+    }
+
 
     private void submitProfileCreate() {
         if (!profileCreateOpen) {
@@ -1928,6 +3236,1754 @@ final class MiningUiScreen extends Screen {
         profileCreateError = "";
         profilePageError = "";
         profileMenuProfileId = "";
+    }
+
+    private void openLoadoutCreate() {
+        loadoutPageError = "";
+        loadoutCreateOpen = true;
+        loadoutNameFocused = true;
+        loadoutNameInput = "";
+        loadoutCreateSettingsProfileId = "";
+        loadoutCreateError = "";
+    }
+
+    private void cancelLoadoutCreate() {
+        loadoutCreateOpen = false;
+        loadoutNameFocused = false;
+        loadoutNameInput = "";
+        loadoutCreateSettingsProfileId = "";
+        loadoutCreateError = "";
+    }
+
+    private void cycleLoadoutCreateSettingsProfile() {
+        List<RotClientProfile> profiles =
+                RotClientClient
+                        .settingsProfileController()
+                        .profiles();
+
+        if (profiles.isEmpty()) {
+            loadoutCreateSettingsProfileId = "";
+            return;
+        }
+
+        if (loadoutCreateSettingsProfileId == null
+                || loadoutCreateSettingsProfileId.isBlank()) {
+
+            loadoutCreateSettingsProfileId =
+                    profiles.get(0).id;
+
+            return;
+        }
+
+        int currentIndex = -1;
+
+        for (int i = 0;
+             i < profiles.size();
+             i++) {
+
+            RotClientProfile profile =
+                    profiles.get(i);
+
+            if (profile != null
+                    && profile.matchesId(
+                    loadoutCreateSettingsProfileId)) {
+
+                currentIndex = i;
+                break;
+            }
+        }
+
+        int nextIndex =
+                currentIndex + 1;
+
+        /*
+         * After the final profile, cycle back to NONE.
+         */
+        if (currentIndex < 0
+                || nextIndex >= profiles.size()) {
+
+            loadoutCreateSettingsProfileId = "";
+            return;
+        }
+
+        loadoutCreateSettingsProfileId =
+                profiles.get(nextIndex).id;
+    }
+
+    private String loadoutCreateSettingsProfileLabel() {
+        if (loadoutCreateSettingsProfileId == null
+                || loadoutCreateSettingsProfileId.isBlank()) {
+
+            return "SETTINGS PROFILE: NONE";
+        }
+
+        RotClientProfile profile =
+                profileById(
+                        loadoutCreateSettingsProfileId);
+
+        if (profile == null) {
+            return "SETTINGS PROFILE: MISSING";
+        }
+
+        return "SETTINGS PROFILE: "
+                + profile.name;
+    }
+
+    private void submitLoadoutCreate() {
+        if (!RotClientLoadout.isValidName(
+                loadoutWizardDraft.name)) {
+
+            loadoutCreateError =
+                    "Enter a valid loadout name.";
+
+            loadoutWizardStep =
+                    LoadoutWizardStep.NAME;
+
+            loadoutNameInput =
+                    loadoutWizardDraft.name;
+
+            loadoutNameFocused = true;
+
+            return;
+        }
+
+        String name =
+                RotClientLoadout.normalizeName(
+                        loadoutWizardDraft.name);
+
+        RotClientLoadoutManager manager =
+                RotClientClient.loadouts();
+
+        RotClientLoadout created =
+                manager.create(name);
+
+        if (created == null) {
+            loadoutCreateError =
+                    "Name already used or save failed.";
+
+            return;
+        }
+
+        /*
+         * Apply the Wardrobe selection.
+         */
+        if (loadoutWizardDraft.wardrobeSlotNumber > 0) {
+            boolean wardrobeSaved =
+                    manager.setWardrobeSlot(
+                            created.id,
+                            loadoutWizardDraft.wardrobeSlotNumber);
+
+            if (!wardrobeSaved) {
+                manager.delete(
+                        created.id);
+
+                loadoutCreateError =
+                        "Could not save the Wardrobe selection.";
+
+                return;
+            }
+        }
+
+        /*
+         * Apply the optional Pet selection.
+         */
+        if (loadoutWizardDraft.petUuid != null
+                && !loadoutWizardDraft.petUuid.isBlank()) {
+
+            boolean petSaved =
+                    manager.setPet(
+                            created.id,
+                            loadoutWizardDraft.petUuid,
+                            loadoutWizardDraft.petName);
+
+            if (!petSaved) {
+                /*
+                 * Do not leave a partially-created loadout behind.
+                 */
+                manager.delete(
+                        created.id);
+
+                loadoutCreateError =
+                        "Could not save the Pet selection.";
+
+                return;
+            }
+        }
+
+
+        /*
+         * Apply the optional Equipment Set selection.
+         */
+        if (loadoutWizardDraft.equipmentSetNumber > 0) {
+            boolean equipmentSaved =
+                    manager.setEquipmentSet(
+                            created.id,
+                            loadoutWizardDraft.equipmentSetNumber);
+
+            if (!equipmentSaved) {
+                manager.delete(
+                        created.id);
+
+                loadoutCreateError =
+                        "Could not save the Equipment Set selection.";
+
+                return;
+            }
+        }
+        if (loadoutWizardDraft.settingsProfileId != null
+                && !loadoutWizardDraft.settingsProfileId.isBlank()) {
+
+            boolean linked =
+                    manager.linkSettingsProfile(
+                            created.id,
+                            loadoutWizardDraft.settingsProfileId,
+                            RotClientClient.settingsProfiles());
+
+            if (!linked) {
+                /*
+                 * Do not leave a partially-created loadout behind.
+                 */
+                manager.delete(
+                        created.id);
+
+                loadoutCreateError =
+                        "Could not link the settings profile.";
+
+                return;
+            }
+        }
+
+        loadoutPageError = "";
+
+        cancelLoadoutWizard();
+    }
+
+    private int drawLoadoutDeletePanel(
+            GuiGraphicsExtractor graphics,
+            int contentLeft,
+            int contentRight,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        RotClientLoadout target =
+                loadoutById(
+                        loadoutDeleteLoadoutId);
+
+        int width =
+                contentRight - contentLeft;
+
+        int formY =
+                top + 42;
+
+        int formHeight =
+                112;
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                contentLeft,
+                formY,
+                width,
+                formHeight);
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "DELETE LOADOUT",
+                contentLeft + 14,
+                formY + 10);
+
+        String name =
+                target == null
+                        ? "this loadout"
+                        : "\""
+                        + target.name
+                        + "\"";
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "Delete "
+                        + name
+                        + "? This cannot be undone.",
+                contentLeft + 14,
+                formY + 30);
+
+        if (!loadoutDeleteError.isBlank()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    loadoutDeleteError,
+                    contentLeft + 14,
+                    formY + 54,
+                    RotClientTheme.WARNING,
+                    false);
+        }
+
+        int actionY =
+                formY + 76;
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                contentLeft + 14,
+                actionY,
+                94,
+                "DELETE",
+                true,
+                false,
+                true);
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                contentLeft + 116,
+                actionY,
+                94,
+                "CANCEL",
+                false,
+                false,
+                true);
+
+        return formY
+                + formHeight
+                + 12;
+    }
+
+    private int drawLoadoutEditPanel(
+            GuiGraphicsExtractor graphics,
+            int contentLeft,
+            int contentRight,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        int width =
+                contentRight - contentLeft;
+
+        int formY =
+                top + 42;
+
+        int formHeight =
+                112;
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                contentLeft,
+                formY,
+                width,
+                formHeight);
+
+        graphics.fill(
+                contentLeft,
+                formY + 10,
+                contentLeft + 3,
+                formY + formHeight - 10,
+                RotClientTheme.HUD_ACCENT);
+
+        String title =
+                loadoutEditMode == LoadoutEditMode.RENAME
+                        ? "RENAME LOADOUT"
+                        : "DUPLICATE LOADOUT";
+
+        String help =
+                loadoutEditMode == LoadoutEditMode.RENAME
+                        ? "Change the visible loadout name. Its internal ID stays the same."
+                        : "Create an independent copy with the same linked settings profile.";
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                title,
+                contentLeft + 14,
+                formY + 10);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                help,
+                contentLeft + 14,
+                formY + 21);
+
+        int inputX =
+                contentLeft + 14;
+
+        int inputY =
+                formY + 38;
+
+        int inputWidth =
+                width - 28;
+
+        boolean inputHover =
+                inside(
+                        mouseX,
+                        mouseY,
+                        inputX,
+                        inputY,
+                        inputWidth,
+                        22);
+
+        roundedFill(
+                graphics,
+                inputX,
+                inputY,
+                inputX + inputWidth,
+                inputY + 22,
+                loadoutEditNameFocused || inputHover
+                        ? RotClientTheme.FIELD_ACTIVE
+                        : RotClientTheme.FIELD);
+
+        roundedOutline(
+                graphics,
+                inputX,
+                inputY,
+                inputX + inputWidth,
+                inputY + 22,
+                loadoutEditNameFocused
+                        ? RotClientTheme.HUD_ACCENT
+                        : inputHover
+                        ? RotClientTheme.BORDER_BRIGHT
+                        : RotClientTheme.BORDER);
+
+        String shown =
+                loadoutEditNameInput.isEmpty()
+                        ? "Loadout name"
+                        : RotClientUiDraw.ellipsize(
+                        font,
+                        loadoutEditNameInput,
+                        inputWidth - 16);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                shown,
+                inputX + 8,
+                inputY + 7,
+                loadoutEditNameInput.isEmpty()
+                        ? RotClientTheme.TEXT_MUTED
+                        : RotClientTheme.TEXT,
+                false);
+
+        if (loadoutEditNameFocused
+                && (System.currentTimeMillis() / 500L)
+                % 2L == 0L) {
+
+            String visible =
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            loadoutEditNameInput,
+                            inputWidth - 16);
+
+            int caretX =
+                    inputX + 8
+                            + font.width(visible);
+
+            graphics.fill(
+                    caretX,
+                    inputY + 5,
+                    caretX + 1,
+                    inputY + 17,
+                    RotClientTheme.TEXT);
+        }
+
+        int actionY =
+                formY + 72;
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                inputX,
+                actionY,
+                94,
+                loadoutEditMode == LoadoutEditMode.RENAME
+                        ? "RENAME"
+                        : "DUPLICATE",
+                true,
+                false,
+                RotClientLoadout.isValidName(
+                        loadoutEditNameInput));
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                inputX + 102,
+                actionY,
+                94,
+                "CANCEL",
+                false,
+                false,
+                true);
+
+        if (!loadoutEditError.isBlank()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    loadoutEditError,
+                    inputX + 206,
+                    actionY + 8,
+                    RotClientTheme.WARNING,
+                    false);
+        }
+
+        return formY
+                + formHeight
+                + 12;
+    }
+
+    private void drawLoadoutsPage(
+            GuiGraphicsExtractor graphics,
+            int panelX,
+            int panelY,
+            int mouseX,
+            int mouseY) {
+
+        int contentLeft =
+                panelX + SIDEBAR_WIDTH + CONTENT_INSET;
+
+        int contentRight =
+                panelX + panelW() - CONTENT_INSET;
+
+        int contentWidth =
+                contentRight - contentLeft;
+
+        int top =
+                panelY + MASTER_Y;
+
+        RotClientLoadoutManager manager =
+                RotClientClient.loadouts();
+
+        List<RotClientLoadout> loadouts =
+                manager.loadouts();
+
+        RotClientLoadout active =
+                manager.activeLoadout();
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "LOADOUTS",
+                contentLeft,
+                top,
+                RotClientTheme.TEXT,
+                true);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Create SkyBlock gear setups and optionally link them to a settings profile.",
+                contentLeft,
+                top + 16,
+                RotClientTheme.TEXT_DIM,
+                false);
+
+        if (!loadoutPageError.isBlank()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    loadoutPageError,
+                    contentLeft,
+                    top + 29,
+                    RotClientTheme.WARNING,
+                    false);
+        }
+
+        int createButtonWidth =
+                136;
+
+        int createButtonX =
+                contentRight - createButtonWidth;
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                createButtonX,
+                top,
+                createButtonWidth,
+                loadoutCreateOpen
+                        ? "CREATING..."
+                        : "+ CREATE LOADOUT",
+                true,
+                false,
+                !loadoutPanelOpen());
+
+        int listY;
+
+        if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.NAME) {
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    112;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 1 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Choose a name and optionally connect this loadout to a Rot Client settings profile.",
+                    contentLeft + 14,
+                    formY + 21);
+
+            int inputX =
+                    contentLeft + 14;
+
+            int inputY =
+                    formY + 38;
+
+            int inputWidth =
+                    contentWidth - 28;
+
+            boolean inputHover =
+                    inside(
+                            mouseX,
+                            mouseY,
+                            inputX,
+                            inputY,
+                            inputWidth,
+                            22);
+
+            roundedFill(
+                    graphics,
+                    inputX,
+                    inputY,
+                    inputX + inputWidth,
+                    inputY + 22,
+                    loadoutNameFocused || inputHover
+                            ? RotClientTheme.FIELD_ACTIVE
+                            : RotClientTheme.FIELD);
+
+            roundedOutline(
+                    graphics,
+                    inputX,
+                    inputY,
+                    inputX + inputWidth,
+                    inputY + 22,
+                    loadoutNameFocused
+                            ? RotClientTheme.HUD_ACCENT
+                            : inputHover
+                            ? RotClientTheme.BORDER_BRIGHT
+                            : RotClientTheme.BORDER);
+
+            String shownName =
+                    loadoutNameInput.isEmpty()
+                            ? "Loadout name"
+                            : RotClientUiDraw.ellipsize(
+                            font,
+                            loadoutNameInput,
+                            inputWidth - 16);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    shownName,
+                    inputX + 8,
+                    inputY + 7,
+                    loadoutNameInput.isEmpty()
+                            ? RotClientTheme.TEXT_MUTED
+                            : RotClientTheme.TEXT,
+                    false);
+
+            if (loadoutNameFocused
+                    && (System.currentTimeMillis() / 500L)
+                    % 2L == 0L) {
+
+                String visible =
+                        RotClientUiDraw.ellipsize(
+                                font,
+                                loadoutNameInput,
+                                inputWidth - 16);
+
+                int caretX =
+                        inputX + 8
+                                + font.width(visible);
+
+                graphics.fill(
+                        caretX,
+                        inputY + 5,
+                        caretX + 1,
+                        inputY + 17,
+                        RotClientTheme.TEXT);
+            }
+
+            int actionY =
+                    formY + 72;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    inputX,
+                    actionY,
+                    94,
+                    "NEXT",
+                    true,
+                    false,
+                    RotClientLoadout.isValidName(
+                            loadoutNameInput));
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    inputX + 102,
+                    actionY,
+                    94,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            if (!loadoutCreateError.isBlank()) {
+                RotClientUiDraw.text(
+                        graphics,
+                        font,
+                        loadoutCreateError,
+                        inputX + 206,
+                        actionY + 8,
+                        RotClientTheme.WARNING,
+                        false);
+            }
+
+            listY =
+                    formY + formHeight + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.WARDROBE) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    132;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 2 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Choose the actual SkyBlock Wardrobe set for this loadout.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            String wardrobeLabel =
+                    loadoutWizardDraft.wardrobeSlotNumber > 0
+                            ? "Selected: Wardrobe Set "
+                            + loadoutWizardDraft.wardrobeSlotNumber
+                            : "No Wardrobe set selected";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    wardrobeLabel,
+                    contentLeft + 14,
+                    formY + 46,
+                    loadoutWizardDraft.wardrobeSlotNumber > 0
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.TEXT_MUTED,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    loadoutWizardDraft.wardrobeSlotNumber > 0
+                            ? "CHANGE WARDROBE"
+                            : "CHOOSE WARDROBE",
+                    true,
+                    false,
+                    true);
+
+            int actionY =
+                    formY + 100;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    "NEXT",
+                    true,
+                    false,
+                    loadoutWizardDraft.wardrobeSlotNumber > 0);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.PET) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    132;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 3 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Optionally choose the SkyBlock pet for this loadout.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            String petStatus =
+                    loadoutWizardDraft.petUuid == null
+                            || loadoutWizardDraft.petUuid.isBlank()
+                            ? "Selected: None"
+                            : "Selected: "
+                            + loadoutWizardDraft.petName;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    petStatus,
+                    contentLeft + 14,
+                    formY + 46,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    loadoutWizardDraft.petUuid == null
+                            || loadoutWizardDraft.petUuid.isBlank()
+                            ? "CHOOSE PET"
+                            : "CHANGE PET",
+                    false,
+                    false,
+                    true);
+
+            int actionY =
+                    formY + 100;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    "NEXT",
+                    true,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.EQUIPMENT) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    132;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 4 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Optionally choose the SkyBlock Equipment Set for this loadout.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            String equipmentStatus =
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "Selected: Equipment Set "
+                            + loadoutWizardDraft.equipmentSetNumber
+                            : "Selected: None";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    equipmentStatus,
+                    contentLeft + 14,
+                    formY + 46,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    formY + 66,
+                    184,
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "CHANGE EQUIPMENT SET"
+                            : "CHOOSE EQUIPMENT SET",
+                    false,
+                    false,
+                    true);
+
+            int actionY =
+                    formY + 100;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    "NEXT",
+                    true,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.SETTINGS) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    132;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 5 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Optionally link this loadout to a Rot Client settings profile.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            int selectorY =
+                    formY + 48;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    selectorY,
+                    contentWidth - 28,
+                    loadoutCreateSettingsProfileLabel(),
+                    false,
+                    !loadoutCreateSettingsProfileId.isBlank(),
+                    true);
+
+            int actionY =
+                    formY + 100;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    80,
+                    "NEXT",
+                    true,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 190,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutCreateOpen
+                && loadoutWizardStep
+                == LoadoutWizardStep.REVIEW) {
+
+            int formY =
+                    top + 42;
+
+            int formHeight =
+                    196;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    formY,
+                    contentWidth,
+                    formHeight);
+
+            graphics.fill(
+                    contentLeft,
+                    formY + 10,
+                    contentLeft + 3,
+                    formY + formHeight - 10,
+                    RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NEW LOADOUT \u00B7 6 / 6",
+                    contentLeft + 14,
+                    formY + 10);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Review the loadout before creating it.",
+                    contentLeft + 14,
+                    formY + 22);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "Name: "
+                            + loadoutWizardDraft.name,
+                    contentLeft + 14,
+                    formY + 46,
+                    RotClientTheme.TEXT,
+                    false);
+
+            String wardrobeReview =
+                    loadoutWizardDraft.wardrobeSlotNumber > 0
+                            ? "Wardrobe: Set "
+                            + loadoutWizardDraft.wardrobeSlotNumber
+                            : "Wardrobe: None";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    wardrobeReview,
+                    contentLeft + 14,
+                    formY + 62,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            String petReview =
+                    loadoutWizardDraft.petUuid == null
+                            || loadoutWizardDraft.petUuid.isBlank()
+                            ? "Pet: None"
+                            : "Pet: "
+                            + loadoutWizardDraft.petName;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    petReview,
+                    contentLeft + 14,
+                    formY + 78,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            String equipmentReview =
+                    loadoutWizardDraft.equipmentSetNumber > 0
+                            ? "Equipment: Set "
+                            + loadoutWizardDraft.equipmentSetNumber
+                            : "Equipment: None";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    equipmentReview,
+                    contentLeft + 14,
+                    formY + 94,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+            String settingsReview;
+
+            if (loadoutWizardDraft.settingsProfileId == null
+                    || loadoutWizardDraft.settingsProfileId.isBlank()) {
+
+                settingsReview =
+                        "Settings: None";
+
+            } else {
+                RotClientProfile profile =
+                        profileById(
+                                loadoutWizardDraft.settingsProfileId);
+
+                settingsReview =
+                        profile == null
+                                ? "Settings: Missing"
+                                : "Settings: "
+                                + profile.name;
+            }
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    settingsReview,
+                    contentLeft + 14,
+                    formY + 110,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            if (!loadoutCreateError.isBlank()) {
+                RotClientUiDraw.text(
+                        graphics,
+                        font,
+                        loadoutCreateError,
+                        contentLeft + 14,
+                        formY + 128,
+                        RotClientTheme.WARNING,
+                        false);
+            }
+
+            int actionY =
+                    formY + 160;
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 14,
+                    actionY,
+                    80,
+                    "BACK",
+                    false,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 102,
+                    actionY,
+                    136,
+                    "CREATE LOADOUT",
+                    true,
+                    false,
+                    true);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentLeft + 246,
+                    actionY,
+                    80,
+                    "CANCEL",
+                    false,
+                    false,
+                    true);
+
+            listY =
+                    formY
+                            + formHeight
+                            + 12;
+
+        } else if (loadoutEditMode
+                != LoadoutEditMode.NONE) {
+
+            listY =
+                    drawLoadoutEditPanel(
+                            graphics,
+                            contentLeft,
+                            contentRight,
+                            top,
+                            mouseX,
+                            mouseY);
+
+        } else if (!loadoutDeleteLoadoutId.isBlank()) {
+
+            listY =
+                    drawLoadoutDeletePanel(
+                            graphics,
+                            contentLeft,
+                            contentRight,
+                            top,
+                            mouseX,
+                            mouseY);
+
+        } else {
+            listY =
+                    top + 42;
+        }
+
+        if (loadouts.isEmpty()) {
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    contentLeft,
+                    listY,
+                    contentWidth,
+                    64);
+
+            RotClientUiDraw.sectionLabel(
+                    graphics,
+                    font,
+                    "NO LOADOUTS YET",
+                    contentLeft + 14,
+                    listY + 12);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Create your first loadout. Gear configuration will be added next.",
+                    contentLeft + 14,
+                    listY + 30);
+
+            return;
+        }
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "SAVED LOADOUTS",
+                contentLeft,
+                listY);
+
+        listY += 18;
+
+        int visibleRows =
+                loadoutPanelOpen()
+                        ? 4
+                        : 7;
+
+        int maxScroll =
+                Math.max(
+                        0,
+                        loadouts.size()
+                                - visibleRows);
+
+        loadoutScrollIndex =
+                Math.max(
+                        0,
+                        Math.min(
+                                loadoutScrollIndex,
+                                maxScroll));
+
+        int shown =
+                Math.min(
+                        visibleRows,
+                        loadouts.size()
+                                - loadoutScrollIndex);
+
+        for (int i = 0;
+             i < shown;
+             i++) {
+
+            RotClientLoadout loadout =
+                    loadouts.get(
+                            loadoutScrollIndex + i);
+
+            boolean isActive =
+                    active != null
+                            && active.matchesId(
+                            loadout.id);
+
+            boolean rowHover =
+                    !loadoutPanelOpen()
+                            && inside(
+                            mouseX,
+                            mouseY,
+                            contentLeft,
+                            listY,
+                            contentWidth,
+                            40);
+
+            roundedFill(
+                    graphics,
+                    contentLeft,
+                    listY,
+                    contentRight,
+                    listY + 40,
+                    isActive
+                            ? RotClientTheme.SELECTED_ROW
+                            : rowHover
+                            ? RotClientTheme.HOVER_ROW
+                            : RotClientTheme.SURFACE_ALT);
+
+            roundedOutline(
+                    graphics,
+                    contentLeft,
+                    listY,
+                    contentRight,
+                    listY + 40,
+                    isActive
+                            ? RotClientTheme.HUD_ACCENT
+                            : rowHover
+                            ? RotClientTheme.BORDER_BRIGHT
+                            : RotClientTheme.BORDER);
+
+            graphics.fill(
+                    contentLeft,
+                    listY + 7,
+                    contentLeft + 3,
+                    listY + 33,
+                    isActive
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    loadout.name,
+                    contentLeft + 14,
+                    listY + 7,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientProfile linkedProfile =
+                    loadout.hasLinkedSettingsProfile()
+                            ? profileById(
+                            loadout.settingsProfileId)
+                            : null;
+
+            String settingsLabel;
+
+            if (linkedProfile != null) {
+                settingsLabel =
+                        "Settings: "
+                                + linkedProfile.name;
+            } else if (loadout.hasLinkedSettingsProfile()) {
+                settingsLabel =
+                        "Settings profile missing";
+            } else {
+                settingsLabel =
+                        "Settings: None";
+            }
+
+            String wardrobeLabel =
+                    loadout.wardrobeSlotNumber > 0
+                            ? "Wardrobe: Set "
+                            + loadout.wardrobeSlotNumber
+                            : "Wardrobe: None";
+
+            String petLabel;
+
+            if (loadout.petUuid == null
+                    || loadout.petUuid.isBlank()) {
+
+                petLabel =
+                        "Pet: None";
+
+            } else if (loadout.petName == null
+                    || loadout.petName.isBlank()) {
+
+                petLabel =
+                        "Pet: Selected";
+
+            } else {
+                petLabel =
+                        "Pet: "
+                                + loadout.petName;
+            }
+
+            String equipmentLabel =
+                    loadout.equipmentSetNumber > 0
+                            ? "Equipment: Set "
+                            + loadout.equipmentSetNumber
+                            : "Equipment: None";
+
+            String loadoutDetail =
+                    settingsLabel
+                            + "  \u00B7  "
+                            + wardrobeLabel
+                            + "  \u00B7  "
+                            + petLabel
+                            + "  \u00B7  "
+                            + equipmentLabel;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    loadoutDetail,
+                    contentLeft + 14,
+                    listY + 22,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            int menuButtonX =
+                    contentRight - 40;
+
+            if (isActive) {
+                RotClientUiDraw.drawStatusPill(
+                        graphics,
+                        font,
+                        contentRight - 48,
+                        listY + 12,
+                        "ACTIVE",
+                        RotClientTheme.SUCCESS);
+            } else {
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        contentRight - 126,
+                        listY + 7,
+                        78,
+                        "SWITCH",
+                        false,
+                        false,
+                        !loadoutPanelOpen());
+            }
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    menuButtonX,
+                    listY + 7,
+                    28,
+                    "...",
+                    false,
+                    loadout.matchesId(
+                            loadoutMenuLoadoutId),
+                    !loadoutPanelOpen());
+
+            boolean menuOpen =
+                    loadout.matchesId(
+                            loadoutMenuLoadoutId)
+                            && !loadoutPanelOpen();
+
+            if (menuOpen) {
+                int menuY =
+                        listY + 44;
+
+                int actionWidth =
+                        94;
+
+                int gap =
+                        6;
+
+                int menuX =
+                        contentRight
+                                - actionWidth * 3
+                                - gap * 2;
+
+                /*
+                 * Rename
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX,
+                        menuY,
+                        actionWidth,
+                        "RENAME",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Duplicate
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX + actionWidth + gap,
+                        menuY,
+                        actionWidth,
+                        "DUPLICATE",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Choose the actual SkyBlock Wardrobe set.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX
+                                + (actionWidth + gap) * 2,
+                        menuY,
+                        actionWidth,
+                        "WARDROBE",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Change Pet.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX,
+                        menuY + 32,
+                        actionWidth,
+                        "PET",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Change Equipment Set.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX + actionWidth + gap,
+                        menuY + 32,
+                        actionWidth,
+                        "EQUIPMENT",
+                        false,
+                        false,
+                        true);
+
+                /*
+                 * Delete loadout.
+                 */
+                drawProfileActionButton(
+                        graphics,
+                        mouseX,
+                        mouseY,
+                        menuX
+                                + (actionWidth + gap) * 2,
+                        menuY + 32,
+                        actionWidth,
+                        "DELETE",
+                        true,
+                        false,
+                        true);
+            }
+
+            listY +=
+                    menuOpen
+                            ? 112
+                            : 48;
+        }
+
+        if (loadouts.size() > visibleRows) {
+
+            int firstVisible =
+                    loadoutScrollIndex + 1;
+
+            int lastVisible =
+                    loadoutScrollIndex + shown;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "Showing "
+                            + firstVisible
+                            + "-"
+                            + lastVisible
+                            + " of "
+                            + loadouts.size(),
+                    contentLeft,
+                    listY + 4,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+        }
     }
 
     private void drawProfilesPage(
@@ -3967,6 +7023,56 @@ int selectorY = masterY + 10;
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && loadoutCreateOpen
+                && loadoutNameFocused) {
+
+            if (!event.isAllowedChatCharacter()) {
+                return true;
+            }
+
+            if (loadoutNameInput.codePointCount(
+                    0,
+                    loadoutNameInput.length())
+                    >= RotClientLoadout.MAX_NAME_LENGTH) {
+
+                return true;
+            }
+
+            loadoutNameInput +=
+                    event.codepointAsString();
+
+            loadoutCreateError = "";
+
+            return true;
+        }
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && loadoutEditMode != LoadoutEditMode.NONE
+                && loadoutEditNameFocused) {
+
+            if (!event.isAllowedChatCharacter()) {
+                return true;
+            }
+
+            if (loadoutEditNameInput.codePointCount(
+                    0,
+                    loadoutEditNameInput.length())
+                    >= RotClientLoadout.MAX_NAME_LENGTH) {
+
+                return true;
+            }
+
+            loadoutEditNameInput +=
+                    event.codepointAsString();
+
+            loadoutEditError = "";
+
+            return true;
+        }
+
+        if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.PROFILES
                 && profileCreateOpen
                 && profileNameFocused) {
@@ -4055,6 +7161,114 @@ int selectorY = masterY + 10;
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && loadoutCreateOpen) {
+
+            if (key == GLFW.GLFW_KEY_ESCAPE) {
+                cancelLoadoutWizard();
+                return true;
+            }
+
+            if (loadoutNameFocused
+                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+
+                if (!loadoutNameInput.isEmpty()) {
+                    int newLength =
+                            loadoutNameInput.offsetByCodePoints(
+                                    loadoutNameInput.length(),
+                                    -1);
+
+                    loadoutNameInput =
+                            loadoutNameInput.substring(
+                                    0,
+                                    newLength);
+                }
+
+                loadoutCreateError = "";
+
+                return true;
+            }
+
+            if (key == GLFW.GLFW_KEY_ENTER
+                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+
+                if (loadoutWizardStep
+                        == LoadoutWizardStep.NAME) {
+
+                    continueLoadoutWizardFromName();
+
+                } else if (loadoutWizardStep
+                        == LoadoutWizardStep.REVIEW) {
+
+                    submitLoadoutCreate();
+                }
+
+                return true;
+            }
+        }
+
+        /*
+         * Loadout delete confirmation keyboard controls.
+         */
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && !loadoutDeleteLoadoutId.isBlank()) {
+
+            if (key == GLFW.GLFW_KEY_ESCAPE) {
+                cancelLoadoutDelete();
+                return true;
+            }
+
+            if (key == GLFW.GLFW_KEY_ENTER
+                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+
+                submitLoadoutDelete();
+                return true;
+            }
+        }
+
+        /*
+         * Existing loadout rename/duplicate keyboard controls.
+         */
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && loadoutEditMode != LoadoutEditMode.NONE) {
+
+            if (key == GLFW.GLFW_KEY_ESCAPE) {
+                cancelLoadoutEdit();
+                return true;
+            }
+
+            if (loadoutEditNameFocused
+                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+
+                if (!loadoutEditNameInput.isEmpty()) {
+                    int newLength =
+                            loadoutEditNameInput.offsetByCodePoints(
+                                    loadoutEditNameInput.length(),
+                                    -1);
+
+                    loadoutEditNameInput =
+                            loadoutEditNameInput.substring(
+                                    0,
+                                    newLength);
+                }
+
+                loadoutEditError = "";
+
+                return true;
+            }
+
+            if (key == GLFW.GLFW_KEY_ENTER
+                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+
+                submitLoadoutEdit();
+                return true;
+            }
+        }
 
         /*
          * Create Profile keyboard controls.
@@ -4500,6 +7714,74 @@ int selectorY = masterY + 10;
                 return true;
             }
         }
+
+        if (!trackerDropdownOpen
+                && RotClientClient
+                .workspace()
+                .activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS
+                && !loadoutPanelOpen()) {
+
+            int contentLeft =
+                    panelX
+                            + SIDEBAR_WIDTH
+                            + CONTENT_INSET;
+
+            int contentRight =
+                    panelX
+                            + panelW()
+                            - CONTENT_INSET;
+
+            int contentTop =
+                    panelY + MASTER_Y;
+
+            int contentBottom =
+                    panelY
+                            + actionRowY()
+                            - 10;
+
+            if (inside(
+                    logicalX,
+                    logicalY,
+                    contentLeft,
+                    contentTop,
+                    contentRight - contentLeft,
+                    contentBottom - contentTop)) {
+
+                List<RotClientLoadout> loadouts =
+                        RotClientClient
+                                .loadouts()
+                                .loadouts();
+
+                int maxScroll =
+                        Math.max(
+                                0,
+                                loadouts.size() - 7);
+
+                if (maxScroll <= 0) {
+                    loadoutScrollIndex = 0;
+                    return false;
+                }
+
+                if (verticalAmount > 0.0D) {
+                    loadoutScrollIndex =
+                            Math.max(
+                                    0,
+                                    loadoutScrollIndex - 1);
+
+                } else if (verticalAmount < 0.0D) {
+                    loadoutScrollIndex =
+                            Math.min(
+                                    maxScroll,
+                                    loadoutScrollIndex + 1);
+                }
+
+                loadoutMenuLoadoutId = "";
+
+                return true;
+            }
+        }
+
         if (!trackerDropdownOpen) {
             return super.mouseScrolled(
                     mouseX,
@@ -4759,6 +8041,11 @@ int selectorY = masterY + 10;
                 return true;
             }
 
+            case LOADOUTS -> {
+                openLoadoutsPage();
+                return true;
+            }
+
             case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
                  QOL_GARDEN, QOL_GUI, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
                 QolUtilityCatalog.Group group =
@@ -4776,7 +8063,9 @@ int selectorY = masterY + 10;
                         && (qolDashboard.appearanceLanding()
                         || qolDashboard.hudLayoutLanding()
                         || workspace.activeRoute()
-                        == RotClientWorkspaceRoute.PROFILES)) {
+                        == RotClientWorkspaceRoute.PROFILES
+                        || workspace.activeRoute()
+                        == RotClientWorkspaceRoute.LOADOUTS)) {
                     goHome();
                 }
                 workspace.toggleSidebarSection(RotClientSidebarNav.SECTION_SETTINGS);
@@ -4806,6 +8095,17 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.PROFILES) {
 
             return handleProfilesClick(
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentLeft,
+                    contentRight,
+                    panelY);
+        }
+
+        if (workspace.activeRoute()
+                == RotClientWorkspaceRoute.LOADOUTS) {
+
+            return handleLoadoutsClick(
                     logicalMouseX,
                     logicalMouseY,
                     contentLeft,
@@ -5514,6 +8814,74 @@ if (trackerDropdownOpen) {
             sidebarScroll.setScrollPixels(next);
         });
     }
+
+        void openLoadoutsPage() {
+            pushThen(() -> {
+                qolDashboard.closeLandings();
+
+                RotClientWorkspace workspace =
+                        RotClientClient.workspace();
+
+                if (openInNewTabGesture) {
+                    workspace.addTab(
+                            RotClientWorkspaceRoute.LOADOUTS);
+                } else {
+                    workspace.navigateActive(
+                            RotClientWorkspaceRoute.LOADOUTS);
+                }
+
+                syncSelectedModuleFromWorkspace();
+
+                if (!RotClientSidebarNav.isExpanded(
+                        workspace.expandedSidebarSections(),
+                        RotClientSidebarNav.SECTION_SETTINGS)) {
+
+                    workspace.toggleSidebarSection(
+                            RotClientSidebarNav.SECTION_SETTINGS);
+                }
+
+                RotClientSidebarNav.Layout layout =
+                        RotClientSidebarNav.layout(
+                                OVERVIEW_MODULE_Y,
+                                workspace.expandedSidebarSections());
+
+                int viewportHeight =
+                        sidebarViewportHeight();
+
+                int contentHeight =
+                        layout.contentHeight(
+                                OVERVIEW_MODULE_Y);
+
+                sidebarScroll.setBounds(
+                        contentHeight,
+                        viewportHeight);
+
+                int top =
+                        RotClientSidebarNav.targetTop(
+                                layout,
+                                RotClientSidebarNav.HitTarget.LOADOUTS);
+
+                int bottom =
+                        top
+                                + RotClientSidebarNav.targetHeight(
+                                RotClientSidebarNav.HitTarget.LOADOUTS);
+
+                int next =
+                        RotClientSidebarNav.scrollToReveal(
+                                sidebarScroll.scrollPixels(),
+                                viewportHeight,
+                                contentHeight,
+                                Math.max(
+                                        0,
+                                        top - OVERVIEW_MODULE_Y),
+                                Math.max(
+                                        0,
+                                        bottom - OVERVIEW_MODULE_Y));
+
+                sidebarScroll.setScrollPixels(
+                        next);
+            });
+        }
 
     private void selectVisualsChild(RotClientSidebarNav.HitTarget target) {
         skipSidebarReveal = true;

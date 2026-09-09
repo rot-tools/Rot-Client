@@ -76,11 +76,17 @@ public final class RotClientClient implements ClientModInitializer {
 
     private static final RotClientProfileManager SETTINGS_PROFILES =
             new RotClientProfileManager();
+    private static final RotClientLoadoutManager LOADOUTS =
+            new RotClientLoadoutManager();
 
     private static final RotClientProfileController SETTINGS_PROFILE_CONTROLLER =
             new RotClientProfileController(
                     SETTINGS_PROFILES,
                     CONFIG);
+    private static final RotClientLoadoutActivationCoordinator LOADOUT_ACTIVATION =
+            new RotClientLoadoutActivationCoordinator(
+                    LOADOUTS,
+                    SETTINGS_PROFILE_CONTROLLER);
 
     private static final RotClientCurrentSession CURRENT_SESSION =
             new RotClientCurrentSession();
@@ -93,6 +99,7 @@ public final class RotClientClient implements ClientModInitializer {
     static {
         WORKSPACE.loadFromDisk();
         SETTINGS_PROFILES.loadFromDisk();
+        LOADOUTS.loadFromDisk();
         CURRENT_SESSION.loadFromDisk();
     }
 
@@ -210,6 +217,12 @@ public final class RotClientClient implements ClientModInitializer {
 
     static RotClientProfileManager settingsProfiles() {
         return SETTINGS_PROFILES;
+    }
+    static RotClientLoadoutManager loadouts() {
+        return LOADOUTS;
+    }
+    static RotClientLoadoutActivationCoordinator loadoutActivation() {
+        return LOADOUT_ACTIVATION;
     }
 
     static RotClientProfileController settingsProfileController() {
@@ -531,6 +544,9 @@ public final class RotClientClient implements ClientModInitializer {
                     () -> {
                         MenuKeybindRuntime.tick(client);
                         WardrobeAutoEquipRuntime.tick(client);
+                        RotClientPetAutoEquipRuntime.tick(client);
+                        RotClientEquipmentAutoEquipRuntime.tick(client);
+                        LOADOUT_ACTIVATION.tick();
                     });
             ClientBoundaryGuard.run(
                     "WORLD_SCANNER",

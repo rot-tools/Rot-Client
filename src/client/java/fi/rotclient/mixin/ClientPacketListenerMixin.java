@@ -39,7 +39,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import fi.rotclient.RotClientPetAutoEquipRuntime;
 import java.util.List;
 
 @Mixin(ClientPacketListener.class)
@@ -140,7 +140,10 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) {
             return;
         }
-        if (WardrobeAutoEquipRuntime.consumeOpenScreen(packet)) {
+        if (RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
+                || fi.rotclient.RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
+                || WardrobeAutoEquipRuntime.consumeOpenScreen(packet)) {
+
             ci.cancel();
         }
     }
@@ -150,6 +153,8 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) {
             return;
         }
+        RotClientPetAutoEquipRuntime.onContainerClosed();
+        fi.rotclient.RotClientEquipmentAutoEquipRuntime.onContainerClosed();
         WardrobeAutoEquipRuntime.onContainerClosed();
         ExperimentSolverRuntime.onScreenClosed();
         AutoExperimentsRuntime.reset();

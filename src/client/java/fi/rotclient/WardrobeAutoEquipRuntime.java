@@ -30,12 +30,77 @@ public final class WardrobeAutoEquipRuntime {
     private static int waitTicks;
     private static long startedAtMs;
     private static int pendingCloseTicks = -1;
+    private static boolean loadoutDriven;
+    private static int targetPage = 1;
+    private static int currentPage = -1;
+    private static int totalPages = 1;
+    private static boolean awaitingPageTurn;
+    private static final int LOADOUT_HIDDEN_CLOSE_GRACE_TICKS = 4;
 
     private WardrobeAutoEquipRuntime() {
     }
 
     static boolean swapping() {
         return swapping;
+    }
+    static boolean busy() {
+        return swapping
+                || pendingCloseTicks >= 0;
+    }
+    static boolean beginLoadoutEquip(
+            int globalWardrobeNumber) {
+
+        if (globalWardrobeNumber <= 0) {
+            return true;
+        }
+
+        if (busy()) {
+            return false;
+        }
+
+        Minecraft client =
+                Minecraft.getInstance();
+
+        LocalPlayer player =
+                client == null
+                        ? null
+                        : client.player;
+
+        if (player == null
+                || player.connection == null) {
+
+            return false;
+        }
+
+        int zeroBased =
+                globalWardrobeNumber - 1;
+
+        targetPage =
+                zeroBased / 9 + 1;
+
+        int slotOnPage =
+                zeroBased % 9;
+
+        slotIndex =
+                MenuKeybindPolicy.WARDROBE_SLOT_BASE
+                        + slotOnPage;
+
+        currentPage = -1;
+        totalPages = 1;
+        awaitingPageTurn = false;
+
+        loadoutDriven = true;
+        swapping = true;
+        inMenu = false;
+        containerId = -1;
+        waitTicks = 0;
+        startedAtMs =
+                System.currentTimeMillis();
+
+        player.connection.sendCommand(
+                WardrobeKeybindPolicy.OPEN_COMMAND);
+
+        return true;
     }
 
     static String hudText(boolean editorOpen) {
@@ -58,7 +123,9 @@ public final class WardrobeAutoEquipRuntime {
          * close. This matters when a profile switch disables the module while
          * an equip operation is still in progress.
          */
-        if (!hiddenEquipEnabled(qol)) {
+        if (!loadoutDriven
+                && !hiddenEquipEnabled(qol)) {
+
             reset();
             return;
         }
@@ -69,7 +136,8 @@ public final class WardrobeAutoEquipRuntime {
             return;
         }
 
-        if (stationaryOnly(qol)
+        if (!loadoutDriven
+                && stationaryOnly(qol)
                 && !isPlayerStationary(
                 client,
                 -1)) {
@@ -121,6 +189,47 @@ public final class WardrobeAutoEquipRuntime {
             return;
         }
 
+
+    /*
+     * Loadout wardrobe numbers are global.
+     *
+     * 1-9   = page 1
+     * 10-18 = page 2
+     * etc.
+     */
+if (loadoutDriven
+        && currentPage > 0
+            && currentPage != targetPage) {
+
+        int navigationSlot =
+                currentPage < targetPage
+                        ? MenuKeybindPolicy.WARDROBE_NEXT_SLOT
+                        : MenuKeybindPolicy.WARDROBE_PREVIOUS_SLOT;
+
+        if (navigationSlot < 0
+                || navigationSlot >= menu.slots.size()) {
+
+            reset();
+            return;
+        }
+
+        client.gameMode.handleContainerInput(
+                containerId,
+                navigationSlot,
+                0,
+                ContainerInput.PICKUP,
+                player);
+
+        awaitingPageTurn = true;
+        inMenu = false;
+        containerId = -1;
+
+        startedAtMs =
+                System.currentTimeMillis();
+
+        return;
+    }
+
         Slot slot =
                 menu.slots.get(
                         slotIndex);
@@ -163,11 +272,18 @@ public final class WardrobeAutoEquipRuntime {
                     player);
         }
 
-        pendingCloseTicks =
+        int requestedCloseTicks =
                 WardrobeKeybindPolicy.delayWithVariance(
                         closeDelay(qol),
                         delayVariance(qol),
                         Math.random());
+
+        pendingCloseTicks =
+                loadoutDriven
+                        ? Math.max(
+                        LOADOUT_HIDDEN_CLOSE_GRACE_TICKS,
+                        requestedCloseTicks)
+                        : requestedCloseTicks;
 
         resetSwapState();
     }
@@ -214,13 +330,53 @@ public final class WardrobeAutoEquipRuntime {
     }
 
     public static boolean consumeOpenScreen(ClientboundOpenScreenPacket packet) {
-        if (!swapping || packet == null) {
+        boolean pendingHiddenClose =
+                pendingCloseTicks >= 0;
+
+        if ((!swapping && !pendingHiddenClose)
+                || packet == null) {
+
             return false;
         }
-        String title = packet.getTitle() == null ? "" : packet.getTitle().getString();
-        if (!WardrobeKeybindPolicy.containsArmorSets(title)) {
+        String title =
+                packet.getTitle() == null
+                        ? ""
+                        : packet.getTitle()
+                        .getString();
+
+        if (!WardrobeKeybindPolicy
+                .containsArmorSets(title)) {
+
             return false;
         }
+
+        MenuKeybindPolicy.PageTitle page =
+                MenuKeybindPolicy
+                        .parseWardrobeTitle(title);
+
+        if (page != null) {
+            currentPage =
+                    Math.max(
+                            1,
+                            page.current());
+
+            totalPages =
+                    Math.max(
+                            currentPage,
+                            page.total());
+        } else {
+            currentPage = 1;
+            totalPages = 1;
+        }
+
+        if (loadoutDriven
+                && targetPage > totalPages) {
+
+            reset();
+            return false;
+        }
+
+        awaitingPageTurn = false;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
         if (player == null || packet.getType() == null) {
@@ -241,6 +397,30 @@ public final class WardrobeAutoEquipRuntime {
     }
 
     public static void onContainerClosed() {
+        /*
+         * A page turn closes the old hidden container before the next page opens.
+         */
+        if (swapping
+                && loadoutDriven
+                && awaitingPageTurn) {
+
+            inMenu = false;
+            containerId = -1;
+            return;
+        }
+
+        /*
+         * After equipping a set Hypixel can close/refresh the Armor Sets menu.
+         *
+         * Keep the hidden-close state alive so a follow-up Armor Sets open packet
+         * is still consumed instead of briefly rendering a real screen.
+         */
+        if (pendingCloseTicks >= 0) {
+            inMenu = false;
+            containerId = -1;
+            return;
+        }
+
         reset();
     }
 
@@ -454,10 +634,15 @@ public final class WardrobeAutoEquipRuntime {
         containerId = -1;
         waitTicks = 0;
         startedAtMs = 0L;
+        currentPage = -1;
+        totalPages = 1;
+        targetPage = 1;
+        awaitingPageTurn = false;
     }
 
     private static void reset() {
         resetSwapState();
         pendingCloseTicks = -1;
+        loadoutDriven = false;
     }
 }
