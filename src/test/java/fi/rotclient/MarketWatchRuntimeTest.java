@@ -186,6 +186,55 @@ final class MarketWatchRuntimeTest {
                 runtime.drainAlerts().size());
     }
 
+        @Test
+    void drainingPopupQueueDoesNotEraseAlertHistory() {
+        Path path =
+                tempDir.resolve(
+                        "history.json");
+
+        MarketWatchManager manager =
+                configuredAuctionManager(
+                        path);
+
+        MarketWatchRuntime runtime =
+                new MarketWatchRuntime(
+                        manager);
+
+        runtime.startInternal();
+
+        assertEquals(
+                1,
+                runtime.acceptAuctionSnapshot(
+                        auctionSnapshot(),
+                        1000L)
+                        .size());
+
+        assertEquals(
+                1,
+                runtime.drainAlerts()
+                        .size());
+
+        assertEquals(
+                1,
+                runtime.historySnapshot()
+                        .size());
+
+        assertEquals(
+                "Shadow Fury",
+                runtime.historySnapshot()
+                        .getFirst()
+                        .displayName());
+
+        runtime.clearAlertStateInternal();
+
+        assertTrue(
+                runtime.historySnapshot()
+                        .isEmpty());
+
+        assertTrue(
+                runtime.drainAlerts()
+                        .isEmpty());
+    }
     private static MarketWatchManager configuredAuctionManager(
             Path path) {
 

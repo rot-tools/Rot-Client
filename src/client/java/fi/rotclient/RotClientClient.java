@@ -432,6 +432,23 @@ public final class RotClientClient implements ClientModInitializer {
                             }
                         }));
 
+        HudElementRegistry.addLast(
+                Identifier.fromNamespaceAndPath(
+                        "rotclient",
+                        "market_watch_alerts"),
+                (graphics, delta) ->
+                        ClientBoundaryGuard.run(
+                                "MARKET_WATCH_ALERT_HUD",
+                                () -> {
+                                    if (!StorageOverlayRuntime
+                                            .isOverlayOpen()) {
+
+                                        MarketWatchAlertHud
+                                                .render(
+                                                        graphics);
+                                    }
+                                }));
+
         registerVanillaHudHides();
 
         ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {

@@ -14,7 +14,16 @@ final class MarketWatchRuntime {
     private final MarketWatchAlertEngine alertEngine =
             new MarketWatchAlertEngine();
 
+    private static final int ALERT_HISTORY_LIMIT = 100;
+
     private final ArrayDeque<MarketWatchLiveAlert> pendingAlerts =
+            new ArrayDeque<>();
+
+    /*
+     * Newest alert first. This is independent from the popup queue,
+     * so displaying a popup never removes dashboard history.
+     */
+    private final ArrayDeque<MarketWatchLiveAlert> alertHistory =
             new ArrayDeque<>();
 
     private boolean started;
@@ -52,6 +61,14 @@ final class MarketWatchRuntime {
 
     static List<MarketWatchLiveAlert> drainPendingAlerts() {
         return DEFAULT.drainAlerts();
+    }
+
+    static List<MarketWatchLiveAlert> alertHistory() {
+        return DEFAULT.historySnapshot();
+    }
+
+    static void clearAlertHistory() {
+        DEFAULT.clearAlertStateInternal();
     }
 
     static boolean enabled() {
@@ -160,6 +177,7 @@ final class MarketWatchRuntime {
         manager.loadFromDisk();
         alertEngine.clear();
         pendingAlerts.clear();
+        alertHistory.clear();
 
         started = true;
     }
@@ -195,6 +213,7 @@ final class MarketWatchRuntime {
                             observedAtMillis);
 
             pendingAlerts.addLast(alert);
+            rememberAlert(alert);
             emitted.add(alert);
         }
 
@@ -232,10 +251,41 @@ final class MarketWatchRuntime {
                             observedAtMillis);
 
             pendingAlerts.addLast(alert);
+            rememberAlert(alert);
             emitted.add(alert);
         }
 
         return List.copyOf(emitted);
+    }
+
+    private void rememberAlert(
+            MarketWatchLiveAlert alert) {
+
+        if (alert == null) {
+            return;
+        }
+
+        alertHistory.addFirst(alert);
+
+        while (alertHistory.size()
+                > ALERT_HISTORY_LIMIT) {
+
+            alertHistory.removeLast();
+        }
+    }
+
+    synchronized List<MarketWatchLiveAlert> historySnapshot() {
+        if (alertHistory.isEmpty()) {
+            return List.of();
+        }
+
+        return List.copyOf(
+                alertHistory);
+    }
+
+    synchronized void clearAlertStateInternal() {
+        alertHistory.clear();
+        pendingAlerts.clear();
     }
 
     synchronized List<MarketWatchLiveAlert> drainAlerts() {

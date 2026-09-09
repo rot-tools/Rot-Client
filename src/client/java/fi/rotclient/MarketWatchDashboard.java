@@ -10,7 +10,8 @@ import java.util.Locale;
 final class MarketWatchDashboard {
     private enum Page {
         AUCTION_HOUSE,
-        BAZAAR
+        BAZAAR,
+        ALERTS
     }
 
     private static final int WATCH_ROW_HEIGHT = 56;
@@ -19,6 +20,12 @@ final class MarketWatchDashboard {
     private static final int WATCH_EDIT_WIDTH = 40;
     private static final int WATCH_DELETE_WIDTH = 40;
     private static final int WATCH_CONTROL_GAP = 6;
+
+    private static final int ALERT_TAB_X_OFFSET = 240;
+    private static final int ALERT_TAB_WIDTH = 72;
+
+    private static final int ALERT_ROW_HEIGHT = 54;
+    private static final int ALERT_ROW_STEP = 61;
 
 
     /*
@@ -37,6 +44,8 @@ final class MarketWatchDashboard {
 
     private final MarketWatchCreateForm createForm =
             new MarketWatchCreateForm();
+
+    private int alertScrollOffset;
 
     void draw(
             GuiGraphicsExtractor graphics,
@@ -272,8 +281,20 @@ RotClientUiDraw.text(
                 left + 138,
                 tabsY,
                 92,
-                "BAZAAR WATCHES",
+                "BAZAAR",
                 page == Page.BAZAAR,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                left + ALERT_TAB_X_OFFSET,
+                tabsY,
+                ALERT_TAB_WIDTH,
+                "ALERTS",
+                page == Page.ALERTS,
                 true);
 
         int addWidth = 104;
@@ -288,8 +309,14 @@ RotClientUiDraw.text(
                 addWidth,
                 page == Page.AUCTION_HOUSE
                         ? "+ ADD AH WATCH"
-                        : "+ ADD BAZAAR",
-                !createForm.isOpen(),
+                        : page == Page.BAZAAR
+                        ? "+ ADD BAZAAR"
+                        : "CLEAR HISTORY",
+                !createForm.isOpen()
+                        && (page != Page.ALERTS
+                        || !MarketWatchRuntime
+                                .alertHistory()
+                                .isEmpty()),
                 true);
 
         int sectionY = tabsY + 40;
@@ -304,6 +331,18 @@ RotClientUiDraw.text(
                     bottom,
                     mouseX,
                     mouseY);
+            return;
+        }
+
+        if (page == Page.ALERTS) {
+            drawAlertHistory(
+                    graphics,
+                    font,
+                    left,
+                    sectionY,
+                    right,
+                    bottom);
+
             return;
         }
 
@@ -457,7 +496,11 @@ RotClientUiDraw.text(
                  */
                 graphics.item(
                         MarketWatchItemIconResolver.auctionIcon(
-                                "",
+                                MarketWatchItemCatalog
+                                        .auctionStats(
+                                                title,
+                                                watch.tier)
+                                        .category(),
                                 title),
                         left + 10,
                         rowY + 19);
@@ -691,6 +734,19 @@ RotClientUiDraw.text(
             return true;
         }
 
+        if (RotClientUiDraw.inside(
+                mx,
+                my,
+                left + ALERT_TAB_X_OFFSET,
+                tabsY,
+                ALERT_TAB_WIDTH,
+                RotClientUiDraw.BUTTON_HEIGHT)) {
+
+            page = Page.ALERTS;
+            alertScrollOffset = 0;
+            return true;
+        }
+
         int addWidth = 104;
 
         if (RotClientUiDraw.inside(
@@ -703,11 +759,25 @@ RotClientUiDraw.text(
 
             if (page == Page.AUCTION_HOUSE) {
                 createForm.openAuction();
-            } else {
+
+            } else if (page == Page.BAZAAR) {
                 createForm.openBazaar();
+
+            } else {
+                MarketWatchRuntime
+                        .clearAlertHistory();
+
+                MarketWatchAlertHud
+                        .clearVisuals();
+
+                alertScrollOffset = 0;
             }
 
             return true;
+        }
+
+        if (page == Page.ALERTS) {
+            return false;
         }
 
         /*
@@ -892,18 +962,46 @@ RotClientUiDraw.text(
             int right,
             int bottom) {
 
-        if (!createForm.isOpen()) {
+        if (createForm.isOpen()) {
+            return createForm.mouseScrolled(
+                    verticalAmount,
+                    mouseX,
+                    mouseY,
+                    left,
+                    top + 34,
+                    right,
+                    bottom);
+        }
+
+        if (page != Page.ALERTS
+                || verticalAmount == 0.0D) {
+
             return false;
         }
 
-        return createForm.mouseScrolled(
-                verticalAmount,
-                mouseX,
-                mouseY,
-                left,
-                top + 34,
-                right,
-                bottom);
+        List<MarketWatchLiveAlert> alerts =
+                MarketWatchRuntime
+                        .alertHistory();
+
+        if (alerts.size() <= 1) {
+            alertScrollOffset = 0;
+            return false;
+        }
+
+        int direction =
+                verticalAmount < 0.0D
+                        ? 1
+                        : -1;
+
+        alertScrollOffset =
+                Math.max(
+                        0,
+                        Math.min(
+                                alerts.size() - 1,
+                                alertScrollOffset
+                                        + direction));
+
+        return true;
     }
     boolean captureChar(
             String incoming,
@@ -1136,6 +1234,253 @@ RotClientUiDraw.text(
                 0,
                 end)
                 + suffix;
+    }
+        private void drawAlertHistory(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int left,
+            int sectionY,
+            int right,
+            int bottom) {
+
+        List<MarketWatchLiveAlert> alerts =
+                MarketWatchRuntime
+                        .alertHistory();
+
+        int width =
+                Math.max(
+                        1,
+                        right - left);
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "RECENT ALERTS",
+                left,
+                sectionY);
+
+        RotClientUiDraw.drawStatusPill(
+                graphics,
+                font,
+                right,
+                sectionY - 4,
+                alerts.size() == 1
+                        ? "1 HIT"
+                        : alerts.size()
+                        + " HITS",
+                alerts.isEmpty()
+                        ? RotClientTheme.TEXT_MUTED
+                        : RotClientTheme.HUD_ACCENT);
+
+        int listY =
+                sectionY + 20;
+
+        if (alerts.isEmpty()) {
+            alertScrollOffset = 0;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    left,
+                    listY,
+                    width,
+                    62);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "No Market Watch alerts yet",
+                    left + 14,
+                    listY + 13,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Matched conditions appear here and as in-game popups.",
+                    left + 14,
+                    listY + 34);
+
+            return;
+        }
+
+        int availableHeight =
+                Math.max(
+                        0,
+                        bottom
+                                - listY
+                                - 8);
+
+        int maxRows =
+                Math.max(
+                        1,
+                        availableHeight
+                                / ALERT_ROW_STEP);
+
+        int shown =
+                Math.min(
+                        alerts.size(),
+                        maxRows);
+
+        int maxOffset =
+                Math.max(
+                        0,
+                        alerts.size()
+                                - shown);
+
+        alertScrollOffset =
+                Math.max(
+                        0,
+                        Math.min(
+                                alertScrollOffset,
+                                maxOffset));
+
+        int textX =
+                left + 36;
+
+        int textWidth =
+                Math.max(
+                        20,
+                        right
+                                - 12
+                                - textX);
+
+        for (int visible = 0;
+                visible < shown;
+                visible++) {
+
+            MarketWatchLiveAlert alert =
+                    alerts.get(
+                            alertScrollOffset
+                                    + visible);
+
+            int rowY =
+                    listY
+                            + visible
+                            * ALERT_ROW_STEP;
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    left,
+                    rowY,
+                    width,
+                    ALERT_ROW_HEIGHT);
+
+            int accent =
+                    alert.market()
+                            == MarketWatchLiveAlert.Market.BAZAAR
+                            ? RotClientTheme.VIOLET
+                            : RotClientTheme.HUD_ACCENT;
+
+            graphics.fill(
+                    left,
+                    rowY,
+                    left + 3,
+                    rowY + ALERT_ROW_HEIGHT,
+                    accent);
+
+            graphics.item(
+                    MarketWatchAlertHud
+                            .icon(alert),
+                    left + 10,
+                    rowY + 19);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    fitWatchText(
+                            font,
+                            MarketWatchAlertHud
+                                    .displayName(
+                                            alert),
+                            textWidth),
+                    textX,
+                    rowY + 6,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    fitWatchText(
+                            font,
+                            MarketWatchAlertHud
+                                    .summary(
+                                            alert),
+                            textWidth),
+                    textX,
+                    rowY + 22);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    (alert.market()
+                            == MarketWatchLiveAlert.Market.BAZAAR
+                            ? "BAZAAR"
+                            : "AUCTION HOUSE")
+                            + " / "
+                            + alertAge(
+                                    alert.observedAtMillis()),
+                    textX,
+                    rowY + 39,
+                    accent,
+                    false);
+        }
+
+        if (alerts.size() > shown) {
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Showing "
+                            + (alertScrollOffset + 1)
+                            + "-"
+                            + (alertScrollOffset + shown)
+                            + " of "
+                            + alerts.size()
+                            + " / scroll for older alerts",
+                    left,
+                    listY
+                            + shown
+                            * ALERT_ROW_STEP
+                            + 1);
+        }
+    }
+
+    private static String alertAge(
+            long observedAtMillis) {
+
+        long seconds =
+                Math.max(
+                        0L,
+                        System.currentTimeMillis()
+                                - Math.max(
+                                        0L,
+                                        observedAtMillis))
+                        / 1_000L;
+
+        if (seconds < 60L) {
+            return seconds
+                    + "s ago";
+        }
+
+        long minutes =
+                seconds / 60L;
+
+        if (minutes < 60L) {
+            return minutes
+                    + "m ago";
+        }
+
+        long hours =
+                minutes / 60L;
+
+        if (hours < 24L) {
+            return hours
+                    + "h ago";
+        }
+
+        return hours / 24L
+                + "d ago";
     }
     private static int enabledWatchCount(
             List<MarketWatchAuctionWatch> auctionWatches,

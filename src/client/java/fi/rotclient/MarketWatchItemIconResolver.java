@@ -37,18 +37,40 @@ final class MarketWatchItemIconResolver {
                     Items.DIAMOND_CHESTPLATE);
         }
 
+        /*
+         * Resolve specific weapon families before the broad AH
+         * "weapon" category.
+         */
+        if (normalized.contains("bow")
+                || normalized.contains("juju")
+                || normalized.contains("terminator")) {
+
+            return new ItemStack(
+                    Items.BOW);
+        }
+
+        if (normalized.contains("pickaxe")
+                || normalized.contains("drill")) {
+
+            return new ItemStack(
+                    Items.DIAMOND_PICKAXE);
+        }
+
+        if (normalized.contains("fishing rod")
+                || normalized.contains("fishing")) {
+
+            return new ItemStack(
+                    Items.FISHING_ROD);
+        }
+
         if (normalized.contains("weapon")
                 || normalized.contains("sword")
                 || normalized.contains("dagger")
-                || normalized.contains("blade")) {
+                || normalized.contains("blade")
+                || normalized.contains("aspect")) {
 
             return new ItemStack(
                     Items.DIAMOND_SWORD);
-        }
-
-        if (normalized.contains("bow")) {
-            return new ItemStack(
-                    Items.BOW);
         }
 
         if (normalized.contains("accessor")
@@ -93,7 +115,7 @@ final class MarketWatchItemIconResolver {
 
         if (id.isBlank()) {
             return new ItemStack(
-                    Items.PAPER);
+                    Items.CHEST);
         }
 
         String base =
@@ -105,6 +127,19 @@ final class MarketWatchItemIconResolver {
             base =
                     base.substring(
                             "ENCHANTED_".length());
+        }
+
+        /*
+         * First choice: Hypixel's own underlying Minecraft material.
+         */
+        ItemStack official =
+                materialIcon(
+                        SkyBlockMarketQuoteService
+                                .material(id),
+                        id);
+
+        if (!official.isEmpty()) {
+            return official;
         }
 
         ItemStack explicit =
@@ -121,8 +156,241 @@ final class MarketWatchItemIconResolver {
             return registry;
         }
 
+        ItemStack semantic =
+                semanticFallback(base);
+
+        if (!semantic.isEmpty()) {
+            return semantic;
+        }
+
+        /*
+         * Final generic fallback. PAPER is deliberately not used.
+         */
         return new ItemStack(
-                Items.PAPER);
+                Items.CHEST);
+    }
+
+    private static ItemStack materialIcon(
+            String material,
+            String productId) {
+
+        String value =
+                material == null
+                        ? ""
+                        : material
+                        .trim()
+                        .toUpperCase(Locale.ROOT);
+
+        if (value.isBlank()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack direct =
+                registryGuess(value);
+
+        if (!direct.isEmpty()) {
+            return direct;
+        }
+
+        return switch (value) {
+            case "SKULL", "SKULL_ITEM" ->
+                    new ItemStack(
+                            Items.PLAYER_HEAD);
+
+            case "SULPHUR" ->
+                    new ItemStack(
+                            Items.GUNPOWDER);
+
+            case "NETHER_STALK" ->
+                    new ItemStack(
+                            Items.NETHER_WART);
+
+            case "CARROT_ITEM" ->
+                    new ItemStack(
+                            Items.CARROT);
+
+            case "POTATO_ITEM" ->
+                    new ItemStack(
+                            Items.POTATO);
+
+            case "EXP_BOTTLE" ->
+                    new ItemStack(
+                            Items.EXPERIENCE_BOTTLE);
+
+            case "SNOW_BALL" ->
+                    new ItemStack(
+                            Items.SNOWBALL);
+
+            case "WATER_LILY" ->
+                    new ItemStack(
+                            Items.LILY_PAD);
+
+            case "NETHER_BRICK_ITEM" ->
+                    new ItemStack(
+                            Items.NETHER_BRICK);
+
+            case "FIREWORK_CHARGE" ->
+                    new ItemStack(
+                            Items.FIREWORK_STAR);
+
+            case "SPECKLED_MELON" ->
+                    new ItemStack(
+                            Items.GLISTERING_MELON_SLICE);
+
+            case "RED_ROSE" ->
+                    new ItemStack(
+                            Items.POPPY);
+
+            case "YELLOW_FLOWER" ->
+                    new ItemStack(
+                            Items.DANDELION);
+
+            case "WOOD" ->
+                    new ItemStack(
+                            Items.OAK_PLANKS);
+
+            case "LOG" ->
+                    new ItemStack(
+                            Items.OAK_LOG);
+
+            case "LOG_2" ->
+                    new ItemStack(
+                            Items.ACACIA_LOG);
+
+            case "RAW_FISH" ->
+                    fishIcon(
+                            productId,
+                            false);
+
+            case "COOKED_FISH" ->
+                    fishIcon(
+                            productId,
+                            true);
+
+            case "INK_SACK" ->
+                    dyeIcon(
+                            productId);
+
+            default ->
+                    ItemStack.EMPTY;
+        };
+    }
+
+    private static ItemStack fishIcon(
+            String productId,
+            boolean cooked) {
+
+        String id =
+                productId == null
+                        ? ""
+                        : productId
+                        .toUpperCase(Locale.ROOT);
+
+        if (id.contains("SALMON")) {
+            return new ItemStack(
+                    cooked
+                            ? Items.COOKED_SALMON
+                            : Items.SALMON);
+        }
+
+        if (!cooked
+                && id.contains("PUFFER")) {
+
+            return new ItemStack(
+                    Items.PUFFERFISH);
+        }
+
+        if (!cooked
+                && id.contains("CLOWNFISH")) {
+
+            return new ItemStack(
+                    Items.TROPICAL_FISH);
+        }
+
+        return new ItemStack(
+                cooked
+                        ? Items.COOKED_COD
+                        : Items.COD);
+    }
+
+    private static ItemStack dyeIcon(
+            String productId) {
+
+        String id =
+                productId == null
+                        ? ""
+                        : productId
+                        .toUpperCase(Locale.ROOT);
+
+        if (id.contains("LAPIS")) {
+            return new ItemStack(
+                    Items.LAPIS_LAZULI);
+        }
+
+        if (id.contains("COCOA")) {
+            return new ItemStack(
+                    Items.COCOA_BEANS);
+        }
+
+        return new ItemStack(
+                Items.INK_SAC);
+    }
+
+    private static ItemStack semanticFallback(
+            String id) {
+
+        if (id == null
+                || id.isBlank()) {
+
+            return ItemStack.EMPTY;
+        }
+
+        if (contains(id, "ESSENCE")) {
+            return new ItemStack(
+                    Items.NETHER_STAR);
+        }
+
+        if (contains(id, "FRAGMENT")
+                || contains(id, "SHARD")
+                || contains(id, "GEM")) {
+
+            return new ItemStack(
+                    Items.AMETHYST_SHARD);
+        }
+
+        if (contains(id, "DUST")
+                || contains(id, "POWDER")) {
+
+            return new ItemStack(
+                    Items.GLOWSTONE_DUST);
+        }
+
+        if (contains(id, "BOOK")) {
+            return new ItemStack(
+                    Items.ENCHANTED_BOOK);
+        }
+
+        if (contains(id, "COOKIE")) {
+            return new ItemStack(
+                    Items.COOKIE);
+        }
+
+        if (contains(id, "POTION")) {
+            return new ItemStack(
+                    Items.POTION);
+        }
+
+        if (contains(id, "EGG")) {
+            return new ItemStack(
+                    Items.EGG);
+        }
+
+        if (contains(id, "FISH")) {
+            return new ItemStack(
+                    Items.COD);
+        }
+
+        return ItemStack.EMPTY;
     }
 
     private static ItemStack explicit(
@@ -320,6 +588,12 @@ final class MarketWatchItemIconResolver {
 
         String path =
                 id.toLowerCase(Locale.ROOT);
+
+        if (path.startsWith("minecraft:")) {
+            path =
+                    path.substring(
+                            "minecraft:".length());
+        }
 
         Identifier identifier =
                 Identifier.tryParse(
