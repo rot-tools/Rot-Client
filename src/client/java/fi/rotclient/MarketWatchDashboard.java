@@ -13,12 +13,19 @@ final class MarketWatchDashboard {
         BAZAAR
     }
 
-    private static final int WATCH_ROW_HEIGHT = 42;
-    private static final int WATCH_ROW_STEP = 50;
+    private static final int WATCH_ROW_HEIGHT = 56;
+    private static final int WATCH_ROW_STEP = 64;
 
-    private static final int WATCH_EDIT_WIDTH = 44;
-    private static final int WATCH_DELETE_WIDTH = 56;
-    private static final int WATCH_CONTROL_GAP = 8;
+    private static final int WATCH_EDIT_WIDTH = 40;
+    private static final int WATCH_DELETE_WIDTH = 40;
+    private static final int WATCH_CONTROL_GAP = 6;
+
+    /*
+     * PREMIUM MARKET WATCH ROWS
+     *
+     * Row drawing and click geometry deliberately continue to share these
+     * constants, preventing the visual controls and hitboxes from drifting.
+     */
     private Page page = Page.AUCTION_HOUSE;
 
     private final MarketWatchCreateForm createForm =
@@ -122,8 +129,8 @@ final class MarketWatchDashboard {
                 graphics,
                 font,
                 enabled
-                        ? "Monitoring configured watches and applying alert cooldowns."
-                        : "Turn on to evaluate saved watches against fresh market snapshots.",
+                        ? "Watching your enabled alerts in the background."
+                        : "Paused. Your saved alerts stay configured.",
                 left + 14,
                 masterY + 27);
 
@@ -251,7 +258,9 @@ final class MarketWatchDashboard {
                 right - addWidth,
                 tabsY,
                 addWidth,
-                "+ ADD WATCH",
+                page == Page.AUCTION_HOUSE
+                        ? "+ ADD AH WATCH"
+                        : "+ ADD BAZAAR",
                 !createForm.isOpen(),
                 true);
 
@@ -330,7 +339,7 @@ final class MarketWatchDashboard {
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Watch creation and editing controls are the next UI step.",
+                    "Use the Add Watch button above to create your first alert.",
                     left + 14,
                     listY + 43);
 
@@ -364,12 +373,24 @@ final class MarketWatchDashboard {
                     width,
                     WATCH_ROW_HEIGHT);
 
+            boolean rowHover =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            left,
+                            rowY,
+                            width,
+                            WATCH_ROW_HEIGHT);
+
+            int textX =
+                    left + 36;
+
             int textWidth =
                     Math.max(
                             20,
                             watchToggleX(right)
                                     - WATCH_CONTROL_GAP
-                                    - (left + 12));
+                                    - textX);
 
             if (page == Page.AUCTION_HOUSE) {
                 MarketWatchAuctionWatch watch =
@@ -385,6 +406,30 @@ final class MarketWatchDashboard {
                             "Unnamed Auction Watch";
                 }
 
+                /*
+                 * Thin state rail provides a much stronger card hierarchy
+                 * without adding another bulky control.
+                 */
+                graphics.fill(
+                        left,
+                        rowY,
+                        left + (rowHover ? 3 : 2),
+                        rowY + WATCH_ROW_HEIGHT,
+                        watch.enabled
+                                ? RotClientTheme.HUD_ACCENT
+                                : RotClientTheme.DIVIDER);
+
+                /*
+                 * AH item_bytes are not decoded yet, so the existing icon
+                 * resolver supplies the best representative Minecraft icon.
+                 */
+                graphics.item(
+                        MarketWatchItemIconResolver.auctionIcon(
+                                "",
+                                title),
+                        left + 10,
+                        rowY + 19);
+
                 RotClientUiDraw.text(
                         graphics,
                         font,
@@ -392,8 +437,8 @@ final class MarketWatchDashboard {
                                 font,
                                 title,
                                 textWidth),
-                        left + 12,
-                        rowY + 8,
+                        textX,
+                        rowY + 7,
                         watch.enabled
                                 ? RotClientTheme.TEXT
                                 : RotClientTheme.TEXT_MUTED,
@@ -404,10 +449,24 @@ final class MarketWatchDashboard {
                         font,
                         fitWatchText(
                                 font,
-                                auctionSummary(watch),
+                                auctionSummary(
+                                        watch),
                                 textWidth),
-                        left + 12,
+                        textX,
                         rowY + 23);
+
+                RotClientUiDraw.text(
+                        graphics,
+                        font,
+                        watch.enabled
+                                ? "AH ALERT  /  ACTIVE"
+                                : "AH ALERT  /  PAUSED",
+                        textX,
+                        rowY + 40,
+                        watch.enabled
+                                ? RotClientTheme.SUCCESS
+                                : RotClientTheme.TEXT_MUTED,
+                        false);
 
                 drawWatchControls(
                         graphics,
@@ -423,9 +482,23 @@ final class MarketWatchDashboard {
                         bazaarWatches.get(i);
 
                 String title =
-                        watch.productId.isBlank()
-                                ? "Unnamed Bazaar Watch"
-                                : watch.productId;
+                        bazaarWatchTitle(
+                                watch);
+
+                graphics.fill(
+                        left,
+                        rowY,
+                        left + (rowHover ? 3 : 2),
+                        rowY + WATCH_ROW_HEIGHT,
+                        watch.enabled
+                                ? RotClientTheme.VIOLET
+                                : RotClientTheme.DIVIDER);
+
+                graphics.item(
+                        MarketWatchItemIconResolver.bazaarIcon(
+                                watch.productId),
+                        left + 10,
+                        rowY + 19);
 
                 RotClientUiDraw.text(
                         graphics,
@@ -434,8 +507,8 @@ final class MarketWatchDashboard {
                                 font,
                                 title,
                                 textWidth),
-                        left + 12,
-                        rowY + 8,
+                        textX,
+                        rowY + 7,
                         watch.enabled
                                 ? RotClientTheme.TEXT
                                 : RotClientTheme.TEXT_MUTED,
@@ -446,10 +519,24 @@ final class MarketWatchDashboard {
                         font,
                         fitWatchText(
                                 font,
-                                bazaarSummary(watch),
+                                bazaarSummary(
+                                        watch),
                                 textWidth),
-                        left + 12,
+                        textX,
                         rowY + 23);
+
+                RotClientUiDraw.text(
+                        graphics,
+                        font,
+                        watch.enabled
+                                ? "BAZAAR ALERT  /  ACTIVE"
+                                : "BAZAAR ALERT  /  PAUSED",
+                        textX,
+                        rowY + 40,
+                        watch.enabled
+                                ? RotClientTheme.SUCCESS
+                                : RotClientTheme.TEXT_MUTED,
+                        false);
 
                 drawWatchControls(
                         graphics,
@@ -892,11 +979,83 @@ final class MarketWatchDashboard {
                 watchDeleteX(right),
                 watchButtonY(rowY),
                 WATCH_DELETE_WIDTH,
-                "DELETE",
+                "DEL",
                 false,
                 true);
     }
 
+    private static String bazaarWatchTitle(
+            MarketWatchBazaarWatch watch) {
+
+        if (watch == null
+                || watch.productId == null
+                || watch.productId.isBlank()) {
+
+            return "Unnamed Bazaar Watch";
+        }
+
+        MarketWatchItemCatalog.BazaarStats stats =
+                MarketWatchItemCatalog.bazaarStats(
+                        watch.productId);
+
+        if (stats.available()
+                && stats.displayName() != null
+                && !stats.displayName().isBlank()) {
+
+            return stats.displayName();
+        }
+
+        return prettyProductId(
+                watch.productId);
+    }
+
+    private static String prettyProductId(
+            String productId) {
+
+        if (productId == null
+                || productId.isBlank()) {
+
+            return "Unnamed Bazaar Watch";
+        }
+
+        String source =
+                productId
+                        .replace('_', ' ')
+                        .trim()
+                        .toLowerCase(
+                                Locale.ROOT);
+
+        StringBuilder result =
+                new StringBuilder(
+                        source.length());
+
+        boolean capitalize =
+                true;
+
+        for (int i = 0;
+                i < source.length();
+                i++) {
+
+            char c =
+                    source.charAt(i);
+
+            if (Character.isWhitespace(c)) {
+                result.append(c);
+                capitalize = true;
+                continue;
+            }
+
+            result.append(
+                    capitalize
+                            ? Character.toUpperCase(c)
+                            : c);
+
+            capitalize =
+                    false;
+        }
+
+        return result.toString();
+    }
     private static String fitWatchText(
             Font font,
             String text,
@@ -978,7 +1137,9 @@ final class MarketWatchDashboard {
                 new StringBuilder();
 
         if (!watch.tier.isBlank()) {
-            summary.append(watch.tier);
+            appendPart(
+                    summary,
+                    watch.tier);
         }
 
         if (watch.binOnly) {
@@ -990,19 +1151,18 @@ final class MarketWatchDashboard {
         if (watch.maxPriceCoins > 0L) {
             appendPart(
                     summary,
-                    "\u2193 Buy at "
+                    "\u2193 Buy "
                             + formatCoins(
                             watch.maxPriceCoins)
-                            + " or less");
+                            + " max");
         }
 
         if (summary.isEmpty()) {
-            return "No active price threshold";
+            return "No price condition configured";
         }
 
         return summary.toString();
     }
-
     private static String bazaarSummary(
             MarketWatchBazaarWatch watch) {
 
@@ -1012,38 +1172,37 @@ final class MarketWatchDashboard {
         if (watch.maxInstantBuyPrice > 0.0D) {
             appendPart(
                     summary,
-                    "\u2193 Buy at "
+                    "\u2193 Buy "
                             + formatPrice(
                             watch.maxInstantBuyPrice)
-                            + " or less");
+                            + " max");
         }
 
         if (watch.minInstantSellPrice > 0.0D) {
             appendPart(
                     summary,
-                    "\u2191 Sell at "
+                    "\u2191 Sell "
                             + formatPrice(
                             watch.minInstantSellPrice)
-                            + " or more");
+                            + " min");
         }
 
         if (watch.minSpreadPercent > 0.0D) {
             appendPart(
                     summary,
-                    "spread >= "
+                    "Spread "
                             + String.format(
                             Locale.ROOT,
-                            "%.1f%%",
+                            "%.1f%%+",
                             watch.minSpreadPercent));
         }
 
         if (summary.isEmpty()) {
-            return "No active price threshold";
+            return "No price condition configured";
         }
 
         return summary.toString();
     }
-
     private static void appendPart(
             StringBuilder builder,
             String value) {
