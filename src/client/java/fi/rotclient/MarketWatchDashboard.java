@@ -20,7 +20,14 @@ final class MarketWatchDashboard {
     private static final int WATCH_DELETE_WIDTH = 40;
     private static final int WATCH_CONTROL_GAP = 6;
 
+
     /*
+     * PREMIUM MARKET WATCH HEADER
+     *
+     * Gives the dashboard a clearer hierarchy:
+     * status -> live market data -> enabled alerts -> watch management.
+     */
+/*
      * PREMIUM MARKET WATCH ROWS
      *
      * Row drawing and click geometry deliberately continue to share these
@@ -77,7 +84,7 @@ final class MarketWatchDashboard {
                 font,
                 right,
                 top,
-                enabled ? "ACTIVE" : "DISABLED",
+                enabled ? "RUNNING" : "PAUSED",
                 enabled
                         ? RotClientTheme.SUCCESS
                         : RotClientTheme.TEXT_MUTED);
@@ -116,10 +123,21 @@ final class MarketWatchDashboard {
                 width,
                 masterH);
 
-        RotClientUiDraw.text(
+
+        graphics.fill(
+                left,
+                masterY,
+                left + 3,
+                masterY + masterH,
+                enabled
+                        ? RotClientTheme.SUCCESS
+                        : RotClientTheme.DIVIDER);
+RotClientUiDraw.text(
                 graphics,
                 font,
-                "Market Watch",
+                enabled
+                        ? "Alerts running"
+                        : "Alerts paused",
                 left + 14,
                 masterY + 12,
                 RotClientTheme.TEXT,
@@ -129,8 +147,8 @@ final class MarketWatchDashboard {
                 graphics,
                 font,
                 enabled
-                        ? "Watching your enabled alerts in the background."
-                        : "Paused. Your saved alerts stay configured.",
+                        ? "Market Watch is checking your enabled alerts."
+                        : "Your alerts are saved but are not being checked.",
                 left + 14,
                 masterY + 27);
 
@@ -161,7 +179,17 @@ final class MarketWatchDashboard {
                 enabled,
                 toggleHover);
 
-        int metricsY = masterY + masterH + 14;
+        int enabledWatchCount =
+                enabledWatchCount(
+                        auctionWatches,
+                        bazaarWatches);
+
+        int totalWatchCount =
+                auctionWatches.size()
+                        + bazaarWatches.size();
+
+        int metricsY =
+                masterY + masterH + 14;
         int gap = 10;
         int metricWidth =
                 Math.max(
@@ -174,7 +202,7 @@ final class MarketWatchDashboard {
                 left,
                 metricsY,
                 metricWidth,
-                "AUCTION HOUSE",
+                "AH MARKET",
                 auctionState.available()
                         ? formatCount(
                                 auctionState.snapshot()
@@ -182,7 +210,7 @@ final class MarketWatchDashboard {
                                         .size())
                         : "--",
                 auctionState.available()
-                        ? "LIVE SNAPSHOT"
+                        ? "LIVE AUCTIONS"
                         : "WAITING FOR DATA",
                 auctionState.available());
 
@@ -212,15 +240,15 @@ final class MarketWatchDashboard {
                 right
                         - (left
                         + (metricWidth + gap) * 2),
-                "SAVED WATCHES",
+                "ACTIVE ALERTS",
                 Integer.toString(
-                        auctionWatches.size()
-                                + bazaarWatches.size()),
-                auctionWatches.size()
-                        + " AH / "
-                        + bazaarWatches.size()
-                        + " BZ",
-                enabled);
+                        enabledWatchCount),
+                enabledWatchCount
+                        + " enabled / "
+                        + totalWatchCount
+                        + " saved",
+                enabled
+                        && enabledWatchCount > 0);
 
         int tabsY = metricsY + 70;
 
@@ -232,7 +260,7 @@ final class MarketWatchDashboard {
                 left,
                 tabsY,
                 128,
-                "AUCTION HOUSE",
+                "AH WATCHES",
                 page == Page.AUCTION_HOUSE,
                 true);
 
@@ -244,7 +272,7 @@ final class MarketWatchDashboard {
                 left + 138,
                 tabsY,
                 92,
-                "BAZAAR",
+                "BAZAAR WATCHES",
                 page == Page.BAZAAR,
                 true);
 
@@ -321,7 +349,9 @@ final class MarketWatchDashboard {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    "No watches configured",
+                    page == Page.AUCTION_HOUSE
+                            ? "No Auction House alerts yet"
+                            : "No Bazaar alerts yet",
                     left + 14,
                     listY + 13,
                     RotClientTheme.TEXT,
@@ -331,15 +361,17 @@ final class MarketWatchDashboard {
                     graphics,
                     font,
                     page == Page.AUCTION_HOUSE
-                            ? "Add an AH watch to monitor a specific item and price."
-                            : "Add a Bazaar watch to monitor price, spread, and liquidity.",
+                            ? "Get notified when an Auction House item reaches your target."
+                            : "Get notified when a Bazaar item reaches your buy or sell target.",
                     left + 14,
                     listY + 29);
 
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Use the Add Watch button above to create your first alert.",
+                    page == Page.AUCTION_HOUSE
+                            ? "Use + ADD AH WATCH above to create one."
+                            : "Use + ADD BAZAAR above to create one.",
                     left + 14,
                     listY + 43);
 
@@ -1104,6 +1136,34 @@ final class MarketWatchDashboard {
                 0,
                 end)
                 + suffix;
+    }
+    private static int enabledWatchCount(
+            List<MarketWatchAuctionWatch> auctionWatches,
+            List<MarketWatchBazaarWatch> bazaarWatches) {
+
+        int count = 0;
+
+        if (auctionWatches != null) {
+            for (MarketWatchAuctionWatch watch : auctionWatches) {
+                if (watch != null
+                        && watch.enabled) {
+
+                    count++;
+                }
+            }
+        }
+
+        if (bazaarWatches != null) {
+            for (MarketWatchBazaarWatch watch : bazaarWatches) {
+                if (watch != null
+                        && watch.enabled) {
+
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
     private static void drawMetric(
             GuiGraphicsExtractor graphics,
