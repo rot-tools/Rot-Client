@@ -391,6 +391,7 @@ final class QolUtilityCatalogTest {
                 .map(QolUtilityCatalog.SettingDef::id)
                 .filter(id -> !id.endsWith("_hud_editor")
                         && !id.equals("qol.auto_sell.add_defaults")
+                        && !id.equals("qol.market_watch.open_dashboard")
                         && !id.equals("qol.command_keybinds.open_sequence_editor")
                         && !id.equals("qol.storage_overlay.open_item_search")
                         && !id.equals("qol.slayer_carry.open_manager")
@@ -451,6 +452,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(131, moduleIds.size());
+        assertEquals(132, moduleIds.size());
     }
 }

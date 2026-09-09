@@ -196,7 +196,9 @@ public final class QolUtilityCatalog {
      * Modules → HUD &amp; Display cards. Catalog ids stay in this group.
      */
     public static boolean hiddenFromGroupPage(ModuleDef module) {
-        return module != null && VisualsLandingNavPolicy.hiddenFromGroupPage(module.id());
+        return module != null
+                && (VisualsLandingNavPolicy.hiddenFromGroupPage(module.id())
+                || "qol.market_watch".equals(module.id()));
     }
 
     public static List<ModuleDef> modulesOnGroupPage(Group group) {
@@ -2938,6 +2940,31 @@ public final class QolUtilityCatalog {
                 setting("qol.cheater_wardrobe.slot_8", "Wardrobe 8", "Equip wardrobe slot 8 with this key.", SettingType.KEYBIND),
                 setting("qol.cheater_wardrobe.slot_9", "Wardrobe 9", "Equip wardrobe slot 9 with this key.", SettingType.KEYBIND)));
 
+        modules.add(module(
+                "qol.market_watch",
+                "Market Watch",
+                "Informational Auction House and Bazaar price alerts using public market data. Never clicks, buys, bids, or trades for you.",
+                Group.UTILITIES,
+                "Market",
+                false,
+                true,
+                true,
+                List.of(
+                        "market watch",
+                        "auction house",
+                        "bazaar",
+                        "market alerts",
+                        "price alerts",
+                        "ah",
+                        "bz"),
+                setting(
+                        "qol.market_watch.open_dashboard",
+                        "Open Dashboard",
+                        "Open the full Market Watch dashboard to manage Auction House and Bazaar watches.",
+                        SettingType.ACTION,
+                        "watches",
+                        "alerts",
+                        "market")));
         modules.add(module(
                 "qol.escrow_fix",
                 "Escrow Fix",

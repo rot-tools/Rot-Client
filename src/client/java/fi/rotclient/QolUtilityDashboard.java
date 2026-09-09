@@ -425,6 +425,13 @@ final class QolUtilityDashboard {
         if (entryId == null || entryId.isBlank()) {
             return;
         }
+        if ("qol.market_watch".equals(entryId)
+                || "qol.market_watch.open_dashboard".equals(entryId)) {
+            if (host instanceof MiningUiScreen screen) {
+                screen.openMarketWatchPage();
+            }
+            return;
+        }
         if ("nav.mining_tracker".equals(entryId)
                 || MiningTrackerCatalogPolicy.TRACKER.equals(entryId)) {
             openModule(MiningTrackerCatalogPolicy.TRACKER);
@@ -471,6 +478,7 @@ final class QolUtilityDashboard {
             case "qol.camera" -> config.cameraEnabled;
             case "qol.mining_tracker" -> config.enabled;
             case "qol.powder_chest" -> config.powderChestTrackerEnabled;
+            case "qol.market_watch" -> MarketWatchRuntime.enabled();
             case "qol.mining_session", "qol.mining_history", "qol.appearance" -> true;
             default -> qol().isModuleEnabled(module.id());
         };
@@ -501,6 +509,17 @@ final class QolUtilityDashboard {
                 TrackerStore.save(config);
                 if (was != enabled) {
                     RotClientClient.notifyQolModuleToggled(module.name(), enabled);
+                }
+            }
+            case "qol.market_watch" -> {
+                boolean was =
+                        MarketWatchRuntime.enabled();
+
+                if (MarketWatchRuntime.setEnabled(enabled)
+                        && was != enabled) {
+                    RotClientClient.notifyQolModuleToggled(
+                            module.name(),
+                            enabled);
                 }
             }
             default -> {
@@ -2338,6 +2357,10 @@ final class QolUtilityDashboard {
             return;
         }
         if (host instanceof MiningUiScreen screen) {
+            if ("qol.market_watch.open_dashboard".equals(settingId)) {
+                screen.openMarketWatchPage();
+                return;
+            }
             if (MiningTrackerCatalogPolicy.TRACKER_OPEN_PAGE.equals(settingId)) {
                 screen.openTrackedPage(DashboardModule.MINING_TRACKER);
                 return;

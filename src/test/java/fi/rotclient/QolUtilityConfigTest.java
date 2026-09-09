@@ -54,7 +54,8 @@ final class QolUtilityConfigTest {
                 "qol.auto_sprint",
                 "qol.camera",
                 "qol.mining_tracker",
-                "qol.powder_chest");
+                "qol.powder_chest",
+                "qol.market_watch");
 
         for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
             if (!module.toggleable() || external.contains(module.id())) {

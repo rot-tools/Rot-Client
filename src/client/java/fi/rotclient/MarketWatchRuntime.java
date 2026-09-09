@@ -54,6 +54,22 @@ final class MarketWatchRuntime {
         return DEFAULT.drainAlerts();
     }
 
+    static boolean enabled() {
+        return DEFAULT.manager.enabled();
+    }
+
+    static boolean setEnabled(boolean enabled) {
+        return DEFAULT.manager.setEnabled(enabled);
+    }
+
+    static List<MarketWatchAuctionWatch> auctionWatches() {
+        return DEFAULT.manager.auctionWatches();
+    }
+
+    static List<MarketWatchBazaarWatch> bazaarWatches() {
+        return DEFAULT.manager.bazaarWatches();
+    }
+
     synchronized void startInternal() {
         if (started) {
             return;

@@ -44,6 +44,7 @@ final class RotClientSidebarNav {
         HUD_LAYOUT,
         PROFILES,
         SECTION_QOL,
+        MARKET_WATCH,
         QOL_COMBAT,
         QOL_SLAYER,
         QOL_FISHING,
@@ -74,6 +75,7 @@ final class RotClientSidebarNav {
             int hudLayoutY,
             int profilesY,
             int qolHeaderY,
+            int marketWatchY,
             int[] qolPageYs,
             boolean miningExpanded,
             boolean sessionsExpanded,
@@ -147,7 +149,7 @@ final class RotClientSidebarNav {
         int qolClipHeight() {
             return RotClientEase.shownPixels(
                     childStackHeight(
-                            QolUtilityCatalog.sidebarPages().size()),
+                            QolUtilityCatalog.sidebarPages().size() + 1),
                     qolOpen);
         }
 
@@ -214,12 +216,10 @@ final class RotClientSidebarNav {
                             + HEADER_HIT_HEIGHT);
 
             if (qolClipHeight() > 0
-                    && qolPageYs != null
-                    && qolPageYs.length > 0
-                    && qolPageYs[0] >= 0) {
+                    && marketWatchY >= 0) {
                 bottom = Math.max(
                         bottom,
-                        qolPageYs[0]
+                        marketWatchY
                                 + qolClipHeight());
             }
 
@@ -471,10 +471,13 @@ final class RotClientSidebarNav {
         List<QolUtilityCatalog.Group> pages =
                 QolUtilityCatalog.sidebarPages();
 
+        int marketWatchY = y;
+
         int[] qolPageYs =
                 new int[pages.size()];
 
-        int qolStackTop = y;
+        int qolStackTop =
+                y + ITEM_HEIGHT + ITEM_GAP;
 
         for (int i = 0;
              i < pages.size();
@@ -489,7 +492,7 @@ final class RotClientSidebarNav {
 
         y += RotClientEase.shownPixels(
                 childStackHeight(
-                        pages.size()),
+                        pages.size() + 1),
                 qolOpen);
 
         return new Layout(
@@ -506,6 +509,7 @@ final class RotClientSidebarNav {
                 hudLayoutY,
                 profilesY,
                 qolHeaderY,
+                marketWatchY,
                 qolPageYs,
                 mining,
                 sessions,
@@ -672,10 +676,18 @@ final class RotClientSidebarNav {
 
         if (layout.qolChildrenVisible()) {
             int qolClipTop =
-                    layout.qolPageYs() != null
-                            && layout.qolPageYs().length > 0
-                            ? layout.qolPageYs()[0]
-                            : -1;
+                    layout.marketWatchY();
+
+            if (inClippedItem(
+                    localX,
+                    localY,
+                    itemX,
+                    itemW,
+                    layout.marketWatchY(),
+                    qolClipTop,
+                    layout.qolClipHeight())) {
+                return HitTarget.MARKET_WATCH;
+            }
 
             for (QolUtilityCatalog.Group group
                     : QolUtilityCatalog.sidebarPages()) {
@@ -900,6 +912,10 @@ final class RotClientSidebarNav {
 
             case SECTION_QOL ->
                     layout.qolHeaderY();
+
+
+            case MARKET_WATCH ->
+                    layout.marketWatchY();
 
             case QOL_COMBAT,
                  QOL_SLAYER,
