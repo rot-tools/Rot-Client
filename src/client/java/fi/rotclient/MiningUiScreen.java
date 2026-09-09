@@ -4026,6 +4026,15 @@ int selectorY = masterY + 10;
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.captureChar(
+                        event.codepointAsString(),
+                        event.isAllowedChatCharacter())) {
+
+            return true;
+        }
+
+        if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.PROFILES
                 && profileCreateOpen
                 && profileNameFocused) {
@@ -4114,6 +4123,13 @@ int selectorY = masterY + 10;
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.captureKey(key)) {
+
+            return true;
+        }
 
         /*
          * Create Profile keyboard controls.
@@ -4519,6 +4535,38 @@ int selectorY = masterY + 10;
             }
             sidebarScroll.scrollBySteps(verticalAmount, 40);
             return true;
+        }        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH) {
+
+            int contentLeft =
+                    panelX
+                            + SIDEBAR_WIDTH
+                            + CONTENT_INSET;
+
+            int contentRight =
+                    panelX
+                            + panelW()
+                            - CONTENT_INSET;
+
+            int contentTop =
+                    panelY + MASTER_Y;
+
+            int contentBottom =
+                    panelY
+                            + panelH()
+                            - CONTENT_INSET;
+
+            if (marketWatchDashboard.mouseScrolled(
+                    logicalX,
+                    logicalY,
+                    verticalAmount,
+                    contentLeft,
+                    contentTop,
+                    contentRight,
+                    contentBottom)) {
+
+                return true;
+            }
         }
         if (selectedModule == DashboardModule.SESSION_ANALYTICS
                 && !trackerDropdownOpen
@@ -5134,6 +5182,32 @@ if (trackerDropdownOpen) {
 
         int panelX = panelX();
         int panelY = panelY();
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH) {
+
+            int marketContentLeft =
+                    panelX
+                            + SIDEBAR_WIDTH
+                            + CONTENT_INSET;
+
+            int marketContentRight =
+                    panelX
+                            + panelW()
+                            - CONTENT_INSET;
+
+            if (marketWatchDashboard.mouseDragged(
+                    snappedMouseX,
+                    snappedMouseY,
+                    marketContentLeft,
+                    panelY + MASTER_Y,
+                    marketContentRight,
+                    panelY + panelH() - CONTENT_INSET)) {
+
+                return true;
+            }
+        }
+
         int sidebarTop = panelY + CHROME_HEIGHT;
         int sidebarBottom = sidebarBottomY(panelY);
         if (sidebarScroll.dragThumbTo(
@@ -5219,6 +5293,14 @@ if (trackerDropdownOpen) {
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return super.mouseReleased(event);
         }
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.mouseReleased()) {
+
+            return true;
+        }
+
         boolean scrollbarReleased = sidebarScroll.endThumbDrag();
         if (selectedModule == DashboardModule.QOL_SETTINGS) {
             scrollbarReleased = qolDashboard.mouseReleased() || scrollbarReleased;

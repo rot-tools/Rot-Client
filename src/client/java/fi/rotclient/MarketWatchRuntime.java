@@ -70,6 +70,88 @@ final class MarketWatchRuntime {
         return DEFAULT.manager.bazaarWatches();
     }
 
+    static MarketWatchAuctionWatch createAuctionWatch(
+            String itemName,
+            String tier,
+            boolean binOnly,
+            long maxPriceCoins,
+            long cooldownSeconds) {
+
+        MarketWatchAuctionWatch created =
+                DEFAULT.manager.createAuctionWatch(
+                        "",
+                        itemName);
+
+        if (created == null) {
+            return null;
+        }
+
+        created.tier = tier;
+        created.binOnly = binOnly;
+        created.maxPriceCoins = maxPriceCoins;
+        created.cooldownSeconds = cooldownSeconds;
+        created.normalize();
+
+        if (!DEFAULT.manager.updateAuctionWatch(created)) {
+            DEFAULT.manager.deleteWatch(created.id);
+            return null;
+        }
+
+        return DEFAULT.manager.findAuctionWatch(created.id);
+    }
+
+    static MarketWatchBazaarWatch createBazaarWatch(
+            String productId,
+            double maxInstantBuyPrice,
+            double minInstantSellPrice,
+            double minSpreadCoins,
+            double minSpreadPercent,
+            long minWeeklyVolume,
+            long cooldownSeconds) {
+
+        MarketWatchBazaarWatch created =
+                DEFAULT.manager.createBazaarWatch(productId);
+
+        if (created == null) {
+            return null;
+        }
+
+        created.maxInstantBuyPrice = maxInstantBuyPrice;
+        created.minInstantSellPrice = minInstantSellPrice;
+        created.minSpreadCoins = minSpreadCoins;
+        created.minSpreadPercent = minSpreadPercent;
+        created.minWeeklyVolume = minWeeklyVolume;
+        created.cooldownSeconds = cooldownSeconds;
+        created.normalize();
+
+        if (!DEFAULT.manager.updateBazaarWatch(created)) {
+            DEFAULT.manager.deleteWatch(created.id);
+            return null;
+        }
+
+        return DEFAULT.manager.findBazaarWatch(created.id);
+    }
+
+    static boolean updateAuctionWatch(
+            MarketWatchAuctionWatch watch) {
+
+        return DEFAULT.manager.updateAuctionWatch(
+                watch);
+    }
+
+    static boolean updateBazaarWatch(
+            MarketWatchBazaarWatch watch) {
+
+        return DEFAULT.manager.updateBazaarWatch(
+                watch);
+    }
+
+    static boolean deleteWatch(
+            String watchId) {
+
+        return DEFAULT.manager.deleteWatch(
+                watchId);
+    }
     synchronized void startInternal() {
         if (started) {
             return;

@@ -13,7 +13,16 @@ final class MarketWatchDashboard {
         BAZAAR
     }
 
+    private static final int WATCH_ROW_HEIGHT = 42;
+    private static final int WATCH_ROW_STEP = 50;
+
+    private static final int WATCH_EDIT_WIDTH = 44;
+    private static final int WATCH_DELETE_WIDTH = 56;
+    private static final int WATCH_CONTROL_GAP = 8;
     private Page page = Page.AUCTION_HOUSE;
+
+    private final MarketWatchCreateForm createForm =
+            new MarketWatchCreateForm();
 
     void draw(
             GuiGraphicsExtractor graphics,
@@ -65,6 +74,30 @@ final class MarketWatchDashboard {
                 enabled
                         ? RotClientTheme.SUCCESS
                         : RotClientTheme.TEXT_MUTED);
+
+        /*
+         * DEDICATED MARKET WATCH EDITOR
+         *
+         * Watch creation gets the full dashboard body instead of being
+         * squeezed underneath metrics and tabs. Scrolling remains available
+         * only as a fallback for unusually small windows.
+         */
+        if (createForm.isOpen()) {
+            int editorTop =
+                    top + 34;
+
+            createForm.draw(
+                    graphics,
+                    font,
+                    left,
+                    editorTop,
+                    right,
+                    bottom,
+                    mouseX,
+                    mouseY);
+
+            return;
+        }
 
         int masterY = top + 34;
         int masterH = 58;
@@ -208,6 +241,35 @@ final class MarketWatchDashboard {
                 page == Page.BAZAAR,
                 true);
 
+        int addWidth = 104;
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                right - addWidth,
+                tabsY,
+                addWidth,
+                "+ ADD WATCH",
+                !createForm.isOpen(),
+                true);
+
+        int sectionY = tabsY + 40;
+
+        if (createForm.isOpen()) {
+            createForm.draw(
+                    graphics,
+                    font,
+                    left,
+                    sectionY,
+                    right,
+                    bottom,
+                    mouseX,
+                    mouseY);
+            return;
+        }
+
         List<?> watches =
                 page == Page.AUCTION_HOUSE
                         ? auctionWatches
@@ -217,8 +279,6 @@ final class MarketWatchDashboard {
                 page == Page.AUCTION_HOUSE
                         ? "AUCTION HOUSE WATCHES"
                         : "BAZAAR WATCHES";
-
-        int sectionY = tabsY + 40;
 
         RotClientUiDraw.sectionLabel(
                 graphics,
@@ -282,7 +342,7 @@ final class MarketWatchDashboard {
                         0,
                         bottom - listY - 8);
 
-        int rowStep = 50;
+        int rowStep = WATCH_ROW_STEP;
         int maxRows =
                 Math.max(
                         1,
@@ -302,7 +362,14 @@ final class MarketWatchDashboard {
                     left,
                     rowY,
                     width,
-                    42);
+                    WATCH_ROW_HEIGHT);
+
+            int textWidth =
+                    Math.max(
+                            20,
+                            watchToggleX(right)
+                                    - WATCH_CONTROL_GAP
+                                    - (left + 12));
 
             if (page == Page.AUCTION_HOUSE) {
                 MarketWatchAuctionWatch watch =
@@ -313,12 +380,18 @@ final class MarketWatchDashboard {
                                 ? watch.itemName
                                 : watch.itemId;
 
+                if (title.isBlank()) {
+                    title =
+                            "Unnamed Auction Watch";
+                }
+
                 RotClientUiDraw.text(
                         graphics,
                         font,
-                        title.isBlank()
-                                ? "Unnamed Auction Watch"
-                                : title,
+                        fitWatchText(
+                                font,
+                                title,
+                                textWidth),
                         left + 12,
                         rowY + 8,
                         watch.enabled
@@ -329,29 +402,38 @@ final class MarketWatchDashboard {
                 RotClientUiDraw.helpText(
                         graphics,
                         font,
-                        auctionSummary(watch),
+                        fitWatchText(
+                                font,
+                                auctionSummary(watch),
+                                textWidth),
                         left + 12,
                         rowY + 23);
 
-                RotClientUiDraw.drawStatusPill(
+                drawWatchControls(
                         graphics,
                         font,
-                        right - 10,
-                        rowY + 13,
-                        watch.enabled ? "ON" : "OFF",
-                        watch.enabled
-                                ? RotClientTheme.SUCCESS
-                                : RotClientTheme.TEXT_MUTED);
+                        mouseX,
+                        mouseY,
+                        right,
+                        rowY,
+                        watch.enabled);
+
             } else {
                 MarketWatchBazaarWatch watch =
                         bazaarWatches.get(i);
 
+                String title =
+                        watch.productId.isBlank()
+                                ? "Unnamed Bazaar Watch"
+                                : watch.productId;
+
                 RotClientUiDraw.text(
                         graphics,
                         font,
-                        watch.productId.isBlank()
-                                ? "Unnamed Bazaar Watch"
-                                : watch.productId,
+                        fitWatchText(
+                                font,
+                                title,
+                                textWidth),
                         left + 12,
                         rowY + 8,
                         watch.enabled
@@ -362,19 +444,21 @@ final class MarketWatchDashboard {
                 RotClientUiDraw.helpText(
                         graphics,
                         font,
-                        bazaarSummary(watch),
+                        fitWatchText(
+                                font,
+                                bazaarSummary(watch),
+                                textWidth),
                         left + 12,
                         rowY + 23);
 
-                RotClientUiDraw.drawStatusPill(
+                drawWatchControls(
                         graphics,
                         font,
-                        right - 10,
-                        rowY + 13,
-                        watch.enabled ? "ON" : "OFF",
-                        watch.enabled
-                                ? RotClientTheme.SUCCESS
-                                : RotClientTheme.TEXT_MUTED);
+                        mouseX,
+                        mouseY,
+                        right,
+                        rowY,
+                        watch.enabled);
             }
         }
 
@@ -409,6 +493,17 @@ final class MarketWatchDashboard {
         int my =
                 (int) Math.round(mouseY);
 
+        if (createForm.isOpen()) {
+            return createForm.mouseClicked(
+                    button,
+                    mx,
+                    my,
+                    left,
+                    top + 34,
+                    right,
+                    bottom);
+        }
+
         int masterY = top + 34;
 
         int toggleX =
@@ -442,6 +537,17 @@ final class MarketWatchDashboard {
                         + 14
                         + 70;
 
+        if (createForm.isOpen()) {
+            return createForm.mouseClicked(
+                    button,
+                    mx,
+                    my,
+                    left,
+                    tabsY + 40,
+                    right,
+                    bottom);
+        }
+
         if (RotClientUiDraw.inside(
                 mx,
                 my,
@@ -466,9 +572,380 @@ final class MarketWatchDashboard {
             return true;
         }
 
+        int addWidth = 104;
+
+        if (RotClientUiDraw.inside(
+                mx,
+                my,
+                right - addWidth,
+                tabsY,
+                addWidth,
+                RotClientUiDraw.BUTTON_HEIGHT)) {
+
+            if (page == Page.AUCTION_HOUSE) {
+                createForm.openAuction();
+            } else {
+                createForm.openBazaar();
+            }
+
+            return true;
+        }
+
+        /*
+         * EXISTING WATCH MANAGEMENT
+         *
+         * Uses exactly the same geometry helpers as rendering, so the visual
+         * controls and hitboxes cannot drift apart.
+         */
+        int sectionY =
+                tabsY + 40;
+
+        int listY =
+                sectionY + 20;
+
+        List<MarketWatchAuctionWatch> auctionRows =
+                MarketWatchRuntime.auctionWatches();
+
+        List<MarketWatchBazaarWatch> bazaarRows =
+                MarketWatchRuntime.bazaarWatches();
+
+        int watchCount =
+                page == Page.AUCTION_HOUSE
+                        ? auctionRows.size()
+                        : bazaarRows.size();
+
+        if (watchCount > 0) {
+            int availableHeight =
+                    Math.max(
+                            0,
+                            bottom - listY - 8);
+
+            int maxRows =
+                    Math.max(
+                            1,
+                            availableHeight
+                                    / WATCH_ROW_STEP);
+
+            int shown =
+                    Math.min(
+                            watchCount,
+                            maxRows);
+
+            for (int i = 0;
+                    i < shown;
+                    i++) {
+
+                int rowY =
+                        listY
+                                + i
+                                * WATCH_ROW_STEP;
+
+                int rowToggleX =
+                        watchToggleX(
+                                right);
+
+                int rowToggleY =
+                        watchToggleY(
+                                rowY);
+
+                /*
+                 * Per-watch ON/OFF.
+                 */
+                if (RotClientUiDraw.inside(
+                        mx,
+                        my,
+                        rowToggleX - 4,
+                        rowToggleY - 6,
+                        QolUtilityUiMath.TOGGLE_WIDTH + 8,
+                        QolUtilityUiMath.TOGGLE_HEIGHT + 12)) {
+
+                    if (page == Page.AUCTION_HOUSE) {
+                        MarketWatchAuctionWatch watch =
+                                auctionRows.get(i);
+
+                        watch.enabled =
+                                !watch.enabled;
+
+                        MarketWatchRuntime.updateAuctionWatch(
+                                watch);
+
+                    } else {
+                        MarketWatchBazaarWatch watch =
+                                bazaarRows.get(i);
+
+                        watch.enabled =
+                                !watch.enabled;
+
+                        MarketWatchRuntime.updateBazaarWatch(
+                                watch);
+                    }
+
+                    return true;
+                }
+
+                /*
+                 * EDIT.
+                 */
+                if (RotClientUiDraw.inside(
+                        mx,
+                        my,
+                        watchEditX(right),
+                        watchButtonY(rowY),
+                        WATCH_EDIT_WIDTH,
+                        RotClientUiDraw.BUTTON_HEIGHT)) {
+
+                    if (page == Page.AUCTION_HOUSE) {
+                        createForm.openAuctionEdit(
+                                auctionRows.get(i));
+
+                    } else {
+                        createForm.openBazaarEdit(
+                                bazaarRows.get(i));
+                    }
+
+                    return true;
+                }
+
+                /*
+                 * DELETE.
+                 *
+                 * This is currently immediate. We can add an explicit
+                 * confirmation state later if desired.
+                 */
+                if (RotClientUiDraw.inside(
+                        mx,
+                        my,
+                        watchDeleteX(right),
+                        watchButtonY(rowY),
+                        WATCH_DELETE_WIDTH,
+                        RotClientUiDraw.BUTTON_HEIGHT)) {
+
+                    String watchId =
+                            page == Page.AUCTION_HOUSE
+                                    ? auctionRows.get(i).id
+                                    : bazaarRows.get(i).id;
+
+                    MarketWatchRuntime.deleteWatch(
+                            watchId);
+
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
+    boolean mouseDragged(
+            int mouseX,
+            int mouseY,
+            int left,
+            int top,
+            int right,
+            int bottom) {
+
+        if (!createForm.isOpen()) {
+            return false;
+        }
+
+        return createForm.mouseDragged(
+                mouseX,
+                mouseY,
+                left,
+                top + 34,
+                right,
+                bottom);
+    }
+
+    boolean mouseReleased() {
+        if (!createForm.isOpen()) {
+            return false;
+        }
+
+        return createForm.mouseReleased();
+    }
+    boolean mouseScrolled(
+            int mouseX,
+            int mouseY,
+            double verticalAmount,
+            int left,
+            int top,
+            int right,
+            int bottom) {
+
+        if (!createForm.isOpen()) {
+            return false;
+        }
+
+        return createForm.mouseScrolled(
+                verticalAmount,
+                mouseX,
+                mouseY,
+                left,
+                top + 34,
+                right,
+                bottom);
+    }
+    boolean captureChar(
+            String incoming,
+            boolean allowed) {
+
+        return createForm.captureChar(
+                incoming,
+                allowed);
+    }
+
+    boolean captureKey(int key) {
+        return createForm.captureKey(key);
+    }
+
+    private static int watchDeleteX(
+            int right) {
+
+        return right
+                - 10
+                - WATCH_DELETE_WIDTH;
+    }
+
+    private static int watchEditX(
+            int right) {
+
+        return watchDeleteX(right)
+                - WATCH_CONTROL_GAP
+                - WATCH_EDIT_WIDTH;
+    }
+
+    private static int watchToggleX(
+            int right) {
+
+        return watchEditX(right)
+                - WATCH_CONTROL_GAP
+                - QolUtilityUiMath.TOGGLE_WIDTH;
+    }
+
+    private static int watchButtonY(
+            int rowY) {
+
+        return rowY
+                + (WATCH_ROW_HEIGHT
+                - RotClientUiDraw.BUTTON_HEIGHT)
+                / 2;
+    }
+
+    private static int watchToggleY(
+            int rowY) {
+
+        return rowY
+                + (WATCH_ROW_HEIGHT
+                - QolUtilityUiMath.TOGGLE_HEIGHT)
+                / 2;
+    }
+
+    private static void drawWatchControls(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            int mouseX,
+            int mouseY,
+            int right,
+            int rowY,
+            boolean enabled) {
+
+        int toggleX =
+                watchToggleX(right);
+
+        int toggleY =
+                watchToggleY(rowY);
+
+        boolean toggleHover =
+                RotClientUiDraw.inside(
+                        mouseX,
+                        mouseY,
+                        toggleX - 4,
+                        toggleY - 6,
+                        QolUtilityUiMath.TOGGLE_WIDTH + 8,
+                        QolUtilityUiMath.TOGGLE_HEIGHT + 12);
+
+        RotClientUiDraw.drawToggle(
+                graphics,
+                toggleX,
+                toggleY,
+                enabled,
+                toggleHover);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                watchEditX(right),
+                watchButtonY(rowY),
+                WATCH_EDIT_WIDTH,
+                "EDIT",
+                false,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                watchDeleteX(right),
+                watchButtonY(rowY),
+                WATCH_DELETE_WIDTH,
+                "DELETE",
+                false,
+                true);
+    }
+
+    private static String fitWatchText(
+            Font font,
+            String text,
+            int maxWidth) {
+
+        if (text == null
+                || text.isEmpty()
+                || maxWidth <= 0) {
+
+            return "";
+        }
+
+        if (font.width(text)
+                <= maxWidth) {
+
+            return text;
+        }
+
+        String suffix = "...";
+
+        int suffixWidth =
+                font.width(suffix);
+
+        if (suffixWidth >= maxWidth) {
+            return "";
+        }
+
+        int usable =
+                maxWidth
+                        - suffixWidth;
+
+        int end =
+                text.length();
+
+        while (end > 0
+                && font.width(
+                        text.substring(
+                                0,
+                                end))
+                > usable) {
+
+            end--;
+        }
+
+        return text.substring(
+                0,
+                end)
+                + suffix;
+    }
     private static void drawMetric(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -513,9 +990,10 @@ final class MarketWatchDashboard {
         if (watch.maxPriceCoins > 0L) {
             appendPart(
                     summary,
-                    "max "
+                    "\u2193 Buy at "
                             + formatCoins(
-                            watch.maxPriceCoins));
+                            watch.maxPriceCoins)
+                            + " or less");
         }
 
         if (summary.isEmpty()) {
@@ -534,17 +1012,19 @@ final class MarketWatchDashboard {
         if (watch.maxInstantBuyPrice > 0.0D) {
             appendPart(
                     summary,
-                    "buy <= "
+                    "\u2193 Buy at "
                             + formatPrice(
-                            watch.maxInstantBuyPrice));
+                            watch.maxInstantBuyPrice)
+                            + " or less");
         }
 
         if (watch.minInstantSellPrice > 0.0D) {
             appendPart(
                     summary,
-                    "sell >= "
+                    "\u2191 Sell at "
                             + formatPrice(
-                            watch.minInstantSellPrice));
+                            watch.minInstantSellPrice)
+                            + " or more");
         }
 
         if (watch.minSpreadPercent > 0.0D) {
