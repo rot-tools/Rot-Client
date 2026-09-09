@@ -166,10 +166,30 @@ final class BazaarPriceService {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) return;
 
-            JsonObject products = JsonParser.parseString(response.body())
-                    .getAsJsonObject()
-                    .getAsJsonObject("products");
+            JsonElement parsed = JsonParser.parseString(response.body());
+            if (parsed == null || !parsed.isJsonObject()) {
+                return;
+            }
+
+            JsonObject root = parsed.getAsJsonObject();
+            JsonObject products =
+                    root.has("products")
+                            && root.get("products").isJsonObject()
+                            ? root.getAsJsonObject("products")
+                            : null;
+
             MarketPrices marketPrices = parseMarketPrices(products);
+
+            MarketWatchBazaarSnapshot marketWatchSnapshot =
+                    MarketWatchBazaarParser.parse(root);
+
+            if (!marketWatchSnapshot.products().isEmpty()) {
+                MarketWatchDataService.publishBazaar(
+                        marketWatchSnapshot,
+                        System.currentTimeMillis());
+
+            }
+
             if (!marketPrices.byMaterial().isEmpty()
                     || !marketPrices.byGemstoneProductId().isEmpty()
                     || !marketPrices.byProductId().isEmpty()) {

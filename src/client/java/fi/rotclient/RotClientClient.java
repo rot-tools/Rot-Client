@@ -396,6 +396,7 @@ public final class RotClientClient implements ClientModInitializer {
                     TrackerStore.save(CONFIG);
                 })));
 
+        MarketWatchAuctionHouseService.start();
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath("rotclient", "tracker"),
                 (graphics, delta) -> ClientBoundaryGuard.run(
