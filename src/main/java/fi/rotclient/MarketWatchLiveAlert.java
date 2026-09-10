@@ -6,6 +6,7 @@ record MarketWatchLiveAlert(
         String targetId,
         String displayName,
         long auctionPriceCoins,
+        String sellerUuid,
         double bazaarBuyPrice,
         double bazaarSellPrice,
         double spreadCoins,
@@ -24,14 +25,52 @@ record MarketWatchLiveAlert(
                         ? Market.AUCTION_HOUSE
                         : market;
 
-        watchId = clean(watchId);
-        targetId = clean(targetId);
-        displayName = clean(displayName);
+        watchId =
+                clean(
+                        watchId);
+
+        targetId =
+                clean(
+                        targetId);
+
+        displayName =
+                clean(
+                        displayName);
+
+        sellerUuid =
+                clean(
+                        sellerUuid);
     }
 
     static MarketWatchLiveAlert fromAuction(
             MarketWatchAuctionMatch match,
             long observedAtMillis) {
+
+        return fromAuction(
+                match,
+                "",
+                match.referencePriceCoins(),
+                observedAtMillis);
+    }
+
+    static MarketWatchLiveAlert fromAuction(
+            MarketWatchAuctionMatch match,
+            String sellerUuid,
+            long referencePriceCoins,
+            long observedAtMillis) {
+
+        double possibleMargin =
+                Math.max(
+                        0L,
+                        referencePriceCoins
+                                - match.priceCoins());
+
+        double possibleMarginPercent =
+                referencePriceCoins <= 0L
+                        ? 0.0D
+                        : (possibleMargin
+                        / (double) referencePriceCoins)
+                        * 100.0D;
 
         return new MarketWatchLiveAlert(
                 Market.AUCTION_HOUSE,
@@ -39,10 +78,11 @@ record MarketWatchLiveAlert(
                 match.auctionUuid(),
                 match.itemName(),
                 match.priceCoins(),
+                sellerUuid,
                 0.0D,
                 0.0D,
-                0.0D,
-                0.0D,
+                possibleMargin,
+                possibleMarginPercent,
                 0L,
                 observedAtMillis);
     }
@@ -57,6 +97,7 @@ record MarketWatchLiveAlert(
                 match.productId(),
                 match.productId(),
                 0L,
+                "",
                 match.instantBuyPrice(),
                 match.instantSellPrice(),
                 match.spreadCoins(),
@@ -65,7 +106,11 @@ record MarketWatchLiveAlert(
                 observedAtMillis);
     }
 
-    private static String clean(String value) {
-        return value == null ? "" : value.trim();
+    private static String clean(
+            String value) {
+
+        return value == null
+                ? ""
+                : value.trim();
     }
 }

@@ -85,7 +85,9 @@ final class MarketWatchEvaluator {
                                 auction.itemName(),
                                 auction.tier(),
                                 price,
-                                auction.bin()));
+                                auction.bin(),
+                                price,
+                                0.0D));
             }
         }
 

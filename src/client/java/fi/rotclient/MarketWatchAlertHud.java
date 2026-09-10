@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import java.util.Locale;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -21,10 +23,10 @@ final class MarketWatchAlertHud {
             100;
 
     private static final int CARD_WIDTH =
-            226;
+            268;
 
     private static final int CARD_HEIGHT =
-            55;
+            68;
 
     private static final int CARD_GAP =
             6;
@@ -247,10 +249,49 @@ final class MarketWatchAlertHud {
         if (alert.market()
                 == MarketWatchLiveAlert.Market.AUCTION_HOUSE) {
 
-            return "BIN "
-                    + compact(
-                            alert.auctionPriceCoins())
-                    + " matched your buy alert";
+            StringBuilder result =
+                    new StringBuilder(
+                            "Price ")
+                            .append(
+                                    compact(
+                                            alert.auctionPriceCoins()))
+                            .append(
+                                    " coins");
+
+            if (alert.spreadCoins() > 0.0D) {
+                result.append(
+                                "  /  Possible Margin ")
+                        .append(
+                                compact(
+                                        alert.spreadCoins()))
+                        .append(
+                                " coins");
+            }
+
+            if (alert.spreadPercent() > 0.0D) {
+                result.append(
+                                " (")
+                        .append(
+                                String.format(
+                                        Locale.ROOT,
+                                        "%.1f%%",
+                                        alert.spreadPercent()))
+                        .append(
+                                ")");
+            }
+
+            String seller =
+                    sellerSummary(
+                            alert);
+
+            if (!seller.isBlank()) {
+                result.append(
+                                "  /  ")
+                        .append(
+                                seller);
+            }
+
+            return result.toString();
         }
 
         StringBuilder result =
@@ -259,7 +300,8 @@ final class MarketWatchAlertHud {
         if (alert.bazaarBuyPrice()
                 > 0.0D) {
 
-            result.append("Buy ")
+            result.append(
+                            "Buy ")
                     .append(
                             compact(
                                     alert.bazaarBuyPrice()));
@@ -269,10 +311,12 @@ final class MarketWatchAlertHud {
                 > 0.0D) {
 
             if (!result.isEmpty()) {
-                result.append(" / ");
+                result.append(
+                        "  /  ");
             }
 
-            result.append("Sell ")
+            result.append(
+                            "Sell ")
                     .append(
                             compact(
                                     alert.bazaarSellPrice()));
@@ -282,15 +326,119 @@ final class MarketWatchAlertHud {
                 && alert.spreadCoins()
                 > 0.0D) {
 
-            result.append("Spread ")
+            result.append(
+                            "Spread ")
                     .append(
                             compact(
                                     alert.spreadCoins()));
         }
 
         return result.isEmpty()
-                ? "Bazaar condition matched"
+                ? "Bazaar deal matched"
                 : result.toString();
+    }
+
+    static String conditionSummary(
+            MarketWatchLiveAlert alert) {
+
+        if (alert == null) {
+            return "";
+        }
+
+        if (alert.market()
+                == MarketWatchLiveAlert.Market.AUCTION_HOUSE) {
+
+            for (MarketWatchAuctionWatch watch
+                    : MarketWatchRuntime
+                    .auctionWatches()) {
+
+                if (watch == null
+                        || !watch.id.equals(
+                                alert.watchId())) {
+
+                    continue;
+                }
+
+                if (watch.minDiscountPercent
+                        > 0.0D) {
+
+                    return "Dynamic "
+                            + trimmed(
+                                    watch.minDiscountPercent)
+                            + "% below market";
+                }
+
+                if (watch.maxPriceCoins
+                        > 0L) {
+
+                    return "Fixed max "
+                            + compact(
+                                    watch.maxPriceCoins)
+                            + " coins";
+                }
+
+                return "";
+            }
+
+            return "";
+        }
+
+        for (MarketWatchBazaarWatch watch
+                : MarketWatchRuntime
+                .bazaarWatches()) {
+
+            if (watch == null
+                    || !watch.id.equals(
+                            alert.watchId())) {
+
+                continue;
+            }
+
+            if (watch.buyDealPercent
+                    > 0.0D) {
+
+                return "Dynamic "
+                        + trimmed(
+                                watch.buyDealPercent)
+                        + "% below market";
+            }
+
+            if (watch.maxInstantBuyPrice
+                    > 0.0D) {
+
+                return "Fixed max "
+                        + compact(
+                                watch.maxInstantBuyPrice);
+            }
+
+            return "";
+        }
+
+        return "";
+    }
+
+    static String sellerSummary(
+            MarketWatchLiveAlert alert) {
+
+        if (alert == null
+                || alert.market()
+                != MarketWatchLiveAlert.Market.AUCTION_HOUSE
+                || alert.sellerUuid().isBlank()) {
+
+            return "";
+        }
+
+        String sellerName =
+                MarketWatchSellerNameService
+                        .displayName(
+                                alert.sellerUuid());
+
+        if (sellerName.isBlank()) {
+            return "";
+        }
+
+        return "Seller "
+                + sellerName;
     }
 
     private static void drawCard(
@@ -324,15 +472,18 @@ final class MarketWatchAlertHud {
         graphics.item(
                 icon(alert),
                 x + 10,
-                y + 20);
+                y + 26);
+
+        String market =
+                alert.market()
+                        == MarketWatchLiveAlert.Market.BAZAAR
+                        ? "BAZAAR ALERT"
+                        : "AUCTION HOUSE ALERT";
 
         RotClientUiDraw.text(
                 graphics,
                 font,
-                alert.market()
-                        == MarketWatchLiveAlert.Market.BAZAAR
-                        ? "BAZAAR ALERT"
-                        : "AUCTION HOUSE ALERT",
+                market,
                 x + 36,
                 y + 7,
                 accent,
@@ -343,8 +494,11 @@ final class MarketWatchAlertHud {
                 font,
                 fit(
                         font,
-                        displayName(alert),
-                        width - 48),
+                        displayName(
+                                alert),
+                        Math.max(
+                                20,
+                                width - 48)),
                 x + 36,
                 y + 21,
                 RotClientTheme.TEXT,
@@ -355,10 +509,26 @@ final class MarketWatchAlertHud {
                 font,
                 fit(
                         font,
-                        summary(alert),
-                        width - 48),
+                        summary(
+                                alert),
+                        Math.max(
+                                20,
+                                width - 48)),
                 x + 36,
                 y + 38);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                fit(
+                        font,
+                        conditionSummary(
+                                alert),
+                        Math.max(
+                                20,
+                                width - 48)),
+                x + 36,
+                y + 52);
     }
 
     private static String fit(

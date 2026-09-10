@@ -10,17 +10,66 @@ record MarketWatchAuction(
         long startingBid,
         long highestBidAmount,
         boolean bin,
-        String itemBytes) {
+        String itemBytes,
+        String auctioneerUuid) {
 
-    MarketWatchAuction {
-        uuid = normalize(uuid);
-        itemName = normalize(itemName);
-        category = normalize(category);
-        tier = normalize(tier);
-        itemBytes = normalize(itemBytes);
+    MarketWatchAuction(
+            String uuid,
+            String itemName,
+            String category,
+            String tier,
+            long startMillis,
+            long endMillis,
+            long startingBid,
+            long highestBidAmount,
+            boolean bin,
+            String itemBytes) {
+
+        this(
+                uuid,
+                itemName,
+                category,
+                tier,
+                startMillis,
+                endMillis,
+                startingBid,
+                highestBidAmount,
+                bin,
+                itemBytes,
+                "");
     }
 
-    private static String normalize(String value) {
-        return value == null ? "" : value.trim();
+    MarketWatchAuction {
+        uuid =
+                normalize(
+                        uuid);
+
+        itemName =
+                normalize(
+                        itemName);
+
+        category =
+                normalize(
+                        category);
+
+        tier =
+                normalize(
+                        tier);
+
+        itemBytes =
+                normalize(
+                        itemBytes);
+
+        auctioneerUuid =
+                normalize(
+                        auctioneerUuid);
+    }
+
+    private static String normalize(
+            String value) {
+
+        return value == null
+                ? ""
+                : value.trim();
     }
 }

@@ -210,6 +210,10 @@ final class MarketWatchRuntime {
             MarketWatchLiveAlert alert =
                     MarketWatchLiveAlert.fromAuction(
                             match,
+                            auctionSellerUuid(
+                                    snapshot,
+                                    match.auctionUuid()),
+                            match.referencePriceCoins(),
                             observedAtMillis);
 
             pendingAlerts.addLast(alert);
@@ -258,6 +262,30 @@ final class MarketWatchRuntime {
         return List.copyOf(emitted);
     }
 
+    private static String auctionSellerUuid(
+            MarketWatchAuctionSnapshot snapshot,
+            String auctionUuid) {
+
+        if (snapshot == null
+                || auctionUuid == null
+                || auctionUuid.isBlank()) {
+
+            return "";
+        }
+
+        for (MarketWatchAuction auction
+                : snapshot.auctions()) {
+
+            if (auction != null
+                    && auctionUuid.equals(
+                            auction.uuid())) {
+
+                return auction.auctioneerUuid();
+            }
+        }
+
+        return "";
+    }
     private void rememberAlert(
             MarketWatchLiveAlert alert) {
 

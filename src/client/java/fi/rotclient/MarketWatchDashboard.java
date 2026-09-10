@@ -24,8 +24,8 @@ final class MarketWatchDashboard {
     private static final int ALERT_TAB_X_OFFSET = 240;
     private static final int ALERT_TAB_WIDTH = 72;
 
-    private static final int ALERT_ROW_HEIGHT = 54;
-    private static final int ALERT_ROW_STEP = 61;
+    private static final int ALERT_ROW_HEIGHT = 44;
+    private static final int ALERT_ROW_STEP = 48;
 
 
     /*
@@ -46,6 +46,18 @@ final class MarketWatchDashboard {
             new MarketWatchCreateForm();
 
     private int alertScrollOffset;
+
+    private boolean alertScrollbarDragging;
+
+    private int alertScrollbarX;
+    private int alertScrollbarTrackTop;
+    private int alertScrollbarTrackBottom;
+
+    private int alertScrollbarThumbTop;
+    private int alertScrollbarThumbHeight;
+
+    private int alertScrollbarMaxOffset;
+    private int alertScrollbarGrabOffset;
 
     void draw(
             GuiGraphicsExtractor graphics,
@@ -636,6 +648,125 @@ RotClientUiDraw.text(
         }
     }
 
+    private void resetAlertScrollbarGeometry() {
+        alertScrollbarDragging = false;
+
+        alertScrollbarX = 0;
+        alertScrollbarTrackTop = 0;
+        alertScrollbarTrackBottom = 0;
+
+        alertScrollbarThumbTop = 0;
+        alertScrollbarThumbHeight = 0;
+
+        alertScrollbarMaxOffset = 0;
+        alertScrollbarGrabOffset = 0;
+    }
+
+    private boolean alertScrollbarClicked(
+            int mouseX,
+            int mouseY) {
+
+        if (alertScrollbarMaxOffset <= 0
+                || alertScrollbarTrackBottom
+                <= alertScrollbarTrackTop) {
+
+            return false;
+        }
+
+        boolean insideTrack =
+                mouseX
+                        >= alertScrollbarX - 5
+                        && mouseX
+                        <= alertScrollbarX + 8
+                        && mouseY
+                        >= alertScrollbarTrackTop
+                        && mouseY
+                        <= alertScrollbarTrackBottom;
+
+        if (!insideTrack) {
+            return false;
+        }
+
+        boolean insideThumb =
+                mouseY
+                        >= alertScrollbarThumbTop
+                        && mouseY
+                        <= alertScrollbarThumbTop
+                        + alertScrollbarThumbHeight;
+
+        alertScrollbarDragging =
+                true;
+
+        if (insideThumb) {
+            alertScrollbarGrabOffset =
+                    mouseY
+                            - alertScrollbarThumbTop;
+
+        } else {
+            alertScrollbarGrabOffset =
+                    alertScrollbarThumbHeight
+                            / 2;
+
+            dragAlertScrollbar(
+                    mouseY);
+        }
+
+        return true;
+    }
+
+    private void dragAlertScrollbar(
+            int mouseY) {
+
+        if (!alertScrollbarDragging
+                || alertScrollbarMaxOffset <= 0) {
+
+            return;
+        }
+
+        int trackHeight =
+                alertScrollbarTrackBottom
+                        - alertScrollbarTrackTop;
+
+        int travel =
+                Math.max(
+                        0,
+                        trackHeight
+                                - alertScrollbarThumbHeight);
+
+        if (travel <= 0) {
+            alertScrollOffset = 0;
+            return;
+        }
+
+        int desiredThumbTop =
+                mouseY
+                        - alertScrollbarGrabOffset;
+
+        desiredThumbTop =
+                Math.max(
+                        alertScrollbarTrackTop,
+                        Math.min(
+                                desiredThumbTop,
+                                alertScrollbarTrackTop
+                                        + travel));
+
+        double progress =
+                (desiredThumbTop
+                        - alertScrollbarTrackTop)
+                        / (double) travel;
+
+        alertScrollOffset =
+                (int) Math.round(
+                        progress
+                                * alertScrollbarMaxOffset);
+
+        alertScrollOffset =
+                Math.max(
+                        0,
+                        Math.min(
+                                alertScrollOffset,
+                                alertScrollbarMaxOffset));
+    }
     boolean mouseClicked(
             int button,
             double mouseX,
@@ -777,7 +908,9 @@ RotClientUiDraw.text(
         }
 
         if (page == Page.ALERTS) {
-            return false;
+            return alertScrollbarClicked(
+                    mx,
+                    my);
         }
 
         /*
@@ -933,7 +1066,13 @@ RotClientUiDraw.text(
             int right,
             int bottom) {
 
-        if (!createForm.isOpen()) {
+                if (alertScrollbarDragging) {
+            dragAlertScrollbar(
+                    mouseY);
+
+            return true;
+        }
+if (!createForm.isOpen()) {
             return false;
         }
 
@@ -947,7 +1086,11 @@ RotClientUiDraw.text(
     }
 
     boolean mouseReleased() {
-        if (!createForm.isOpen()) {
+                if (alertScrollbarDragging) {
+            alertScrollbarDragging = false;
+            return true;
+        }
+if (!createForm.isOpen()) {
             return false;
         }
 
@@ -1249,13 +1392,13 @@ RotClientUiDraw.text(
 
         int width =
                 Math.max(
-                        1,
+                        0,
                         right - left);
 
         RotClientUiDraw.sectionLabel(
                 graphics,
                 font,
-                "RECENT ALERTS",
+                "RECENT DEAL ALERTS",
                 left,
                 sectionY);
 
@@ -1263,7 +1406,7 @@ RotClientUiDraw.text(
                 graphics,
                 font,
                 right,
-                sectionY - 4,
+                sectionY,
                 alerts.size() == 1
                         ? "1 HIT"
                         : alerts.size()
@@ -1272,34 +1415,44 @@ RotClientUiDraw.text(
                         ? RotClientTheme.TEXT_MUTED
                         : RotClientTheme.HUD_ACCENT);
 
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                alerts.size() > 1
+                        ? "Mouse wheel or drag the scrollbar on the right."
+                        : "Newest alerts appear first.",
+                left,
+                sectionY + 10);
+
         int listY =
-                sectionY + 20;
+                sectionY + 24;
 
         if (alerts.isEmpty()) {
             alertScrollOffset = 0;
+            resetAlertScrollbarGeometry();
 
             RotClientUiDraw.drawElevatedCard(
                     graphics,
                     left,
                     listY,
                     width,
-                    62);
+                    50);
 
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    "No Market Watch alerts yet",
+                    "No deal alerts yet",
                     left + 14,
-                    listY + 13,
+                    listY + 10,
                     RotClientTheme.TEXT,
                     true);
 
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Matched conditions appear here and as in-game popups.",
+                    "Fixed-price and dynamic-percentage deals appear here.",
                     left + 14,
-                    listY + 34);
+                    listY + 28);
 
             return;
         }
@@ -1309,18 +1462,22 @@ RotClientUiDraw.text(
                         0,
                         bottom
                                 - listY
-                                - 8);
+                                - 6);
 
         int maxRows =
-                Math.max(
-                        1,
-                        availableHeight
-                                / ALERT_ROW_STEP);
+                availableHeight <= ALERT_ROW_HEIGHT
+                        ? 1
+                        : 1
+                        + (availableHeight
+                        - ALERT_ROW_HEIGHT)
+                        / ALERT_ROW_STEP;
 
         int shown =
                 Math.min(
                         alerts.size(),
-                        maxRows);
+                        Math.max(
+                                1,
+                                maxRows));
 
         int maxOffset =
                 Math.max(
@@ -1335,14 +1492,32 @@ RotClientUiDraw.text(
                                 alertScrollOffset,
                                 maxOffset));
 
+        boolean scrollable =
+                maxOffset > 0;
+
+        int gutter =
+                scrollable
+                        ? 14
+                        : 0;
+
+        int rowRight =
+                right
+                        - gutter;
+
+        int rowWidth =
+                Math.max(
+                        20,
+                        rowRight
+                                - left);
+
         int textX =
-                left + 36;
+                left + 35;
 
         int textWidth =
                 Math.max(
                         20,
-                        right
-                                - 12
+                        rowRight
+                                - 10
                                 - textX);
 
         for (int visible = 0;
@@ -1363,7 +1538,7 @@ RotClientUiDraw.text(
                     graphics,
                     left,
                     rowY,
-                    width,
+                    rowWidth,
                     ALERT_ROW_HEIGHT);
 
             int accent =
@@ -1382,8 +1557,8 @@ RotClientUiDraw.text(
             graphics.item(
                     MarketWatchAlertHud
                             .icon(alert),
-                    left + 10,
-                    rowY + 19);
+                    left + 9,
+                    rowY + 14);
 
             RotClientUiDraw.text(
                     graphics,
@@ -1395,7 +1570,7 @@ RotClientUiDraw.text(
                                             alert),
                             textWidth),
                     textX,
-                    rowY + 6,
+                    rowY + 4,
                     RotClientTheme.TEXT,
                     true);
 
@@ -1409,41 +1584,118 @@ RotClientUiDraw.text(
                                             alert),
                             textWidth),
                     textX,
-                    rowY + 22);
+                    rowY + 18);
+
+            String market =
+                    alert.market()
+                            == MarketWatchLiveAlert.Market.BAZAAR
+                            ? "BAZAAR"
+                            : "AUCTION HOUSE";
 
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    (alert.market()
-                            == MarketWatchLiveAlert.Market.BAZAAR
-                            ? "BAZAAR"
-                            : "AUCTION HOUSE")
-                            + " / "
-                            + alertAge(
+                    fitWatchText(
+                            font,
+                            market
+                                    + "  /  "
+                                    + alertAge(
                                     alert.observedAtMillis()),
+                            textWidth),
                     textX,
-                    rowY + 39,
-                    accent,
+                    rowY + 31,
+                    RotClientTheme.TEXT_MUTED,
                     false);
         }
 
-        if (alerts.size() > shown) {
-            RotClientUiDraw.helpText(
-                    graphics,
-                    font,
-                    "Showing "
-                            + (alertScrollOffset + 1)
-                            + "-"
-                            + (alertScrollOffset + shown)
-                            + " of "
-                            + alerts.size()
-                            + " / scroll for older alerts",
-                    left,
-                    listY
-                            + shown
-                            * ALERT_ROW_STEP
-                            + 1);
+        if (!scrollable) {
+            resetAlertScrollbarGeometry();
+            return;
         }
+
+        int trackTop =
+                listY;
+
+        int trackBottom =
+                Math.min(
+                        bottom - 6,
+                        listY
+                                + (shown - 1)
+                                * ALERT_ROW_STEP
+                                + ALERT_ROW_HEIGHT);
+
+        int trackHeight =
+                Math.max(
+                        1,
+                        trackBottom
+                                - trackTop);
+
+        int thumbHeight =
+                Math.max(
+                        18,
+                        (int) Math.round(
+                                trackHeight
+                                        * (shown
+                                        / (double) alerts.size())));
+
+        thumbHeight =
+                Math.min(
+                        trackHeight,
+                        thumbHeight);
+
+        int travel =
+                Math.max(
+                        0,
+                        trackHeight
+                                - thumbHeight);
+
+        int thumbTop =
+                trackTop;
+
+        if (travel > 0
+                && maxOffset > 0) {
+
+            thumbTop +=
+                    (int) Math.round(
+                            travel
+                                    * (alertScrollOffset
+                                    / (double) maxOffset));
+        }
+
+        int trackX =
+                right - 7;
+
+        graphics.fill(
+                trackX,
+                trackTop,
+                trackX + 3,
+                trackBottom,
+                RotClientTheme.TEXT_MUTED);
+
+        graphics.fill(
+                trackX - 1,
+                thumbTop,
+                trackX + 4,
+                thumbTop + thumbHeight,
+                RotClientTheme.HUD_ACCENT);
+
+        alertScrollbarX =
+                trackX;
+
+        alertScrollbarTrackTop =
+                trackTop;
+
+        alertScrollbarTrackBottom =
+                trackBottom;
+
+        alertScrollbarThumbTop =
+                thumbTop;
+
+        alertScrollbarThumbHeight =
+                thumbHeight;
+
+        alertScrollbarMaxOffset =
+                maxOffset;
     }
 
     private static String alertAge(
@@ -1547,37 +1799,60 @@ RotClientUiDraw.text(
                     watch.tier);
         }
 
-        if (watch.binOnly) {
+        if (watch.minDiscountPercent > 0.0D) {
             appendPart(
                     summary,
-                    "BIN");
-        }
+                    "\u2193 Dynamic "
+                            + String.format(
+                            Locale.ROOT,
+                            "%.1f%%",
+                            watch.minDiscountPercent)
+                            + " below market");
 
-        if (watch.maxPriceCoins > 0L) {
+        } else if (watch.maxPriceCoins > 0L) {
             appendPart(
                     summary,
-                    "\u2193 Buy "
+                    "\u2193 Fixed "
                             + formatCoins(
                             watch.maxPriceCoins)
                             + " max");
         }
 
+        if (watch.binOnly
+                || watch.minDiscountPercent > 0.0D) {
+
+            appendPart(
+                    summary,
+                    "BIN");
+        }
+
         if (summary.isEmpty()) {
-            return "No price condition configured";
+            return "No deal trigger configured";
         }
 
         return summary.toString();
     }
+
     private static String bazaarSummary(
             MarketWatchBazaarWatch watch) {
 
         StringBuilder summary =
                 new StringBuilder();
 
-        if (watch.maxInstantBuyPrice > 0.0D) {
+        if (watch.buyDealPercent > 0.0D) {
             appendPart(
                     summary,
-                    "\u2193 Buy "
+                    "\u2193 Dynamic "
+                            + String.format(
+                            Locale.ROOT,
+                            "%.1f%%",
+                            watch.buyDealPercent)
+                            + " below market");
+
+        } else if (watch.maxInstantBuyPrice > 0.0D) {
+            appendPart(
+                    summary,
+                    "\u2193 Fixed "
                             + formatPrice(
                             watch.maxInstantBuyPrice)
                             + " max");
@@ -1592,22 +1867,40 @@ RotClientUiDraw.text(
                             + " min");
         }
 
+        if (watch.minSpreadCoins > 0.0D) {
+            appendPart(
+                    summary,
+                    "spread "
+                            + formatPrice(
+                            watch.minSpreadCoins)
+                            + "+");
+        }
+
         if (watch.minSpreadPercent > 0.0D) {
             appendPart(
                     summary,
-                    "Spread "
+                    "spread "
                             + String.format(
                             Locale.ROOT,
                             "%.1f%%+",
                             watch.minSpreadPercent));
         }
 
+        if (watch.minWeeklyVolume > 0L) {
+            appendPart(
+                    summary,
+                    "volume "
+                            + watch.minWeeklyVolume
+                            + "+");
+        }
+
         if (summary.isEmpty()) {
-            return "No price condition configured";
+            return "No deal trigger configured";
         }
 
         return summary.toString();
     }
+
     private static void appendPart(
             StringBuilder builder,
             String value) {

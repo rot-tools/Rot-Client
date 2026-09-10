@@ -10,6 +10,13 @@ final class MarketWatchBazaarWatch {
     boolean enabled = true;
 
     double maxInstantBuyPrice;
+
+    /*
+     * 0 = fixed-price mode.
+     * >0 = dynamic percentage below robust market reference.
+     */
+    double buyDealPercent;
+
     double minInstantSellPrice;
     double minSpreadCoins;
     double minSpreadPercent;
@@ -26,6 +33,7 @@ final class MarketWatchBazaarWatch {
         copy.enabled = enabled;
 
         copy.maxInstantBuyPrice = maxInstantBuyPrice;
+        copy.buyDealPercent = buyDealPercent;
         copy.minInstantSellPrice = minInstantSellPrice;
         copy.minSpreadCoins = minSpreadCoins;
         copy.minSpreadPercent = minSpreadPercent;
@@ -51,6 +59,13 @@ final class MarketWatchBazaarWatch {
 
         maxInstantBuyPrice =
                 nonNegative(maxInstantBuyPrice);
+
+        buyDealPercent =
+                Math.min(
+                        99.999D,
+                        nonNegative(
+                                buyDealPercent));
+
         minInstantSellPrice =
                 nonNegative(minInstantSellPrice);
         minSpreadCoins =

@@ -150,10 +150,14 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 watch.binOnly;
 
         auctionMaxPrice =
-                watch.maxPriceCoins > 0L
+                watch.minDiscountPercent > 0.0D
+                        ? editablePlain(
+                                watch.minDiscountPercent)
+                                + "%"
+                        : (watch.maxPriceCoins > 0L
                         ? editableAmount(
                                 watch.maxPriceCoins)
-                        : "";
+                        : "");
 
         auctionCooldown =
                 Long.toString(
@@ -227,10 +231,14 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 watch.productId;
 
         bazaarMaxBuy =
-                watch.maxInstantBuyPrice > 0.0D
+                watch.buyDealPercent > 0.0D
+                        ? editablePlain(
+                                watch.buyDealPercent)
+                                + "%"
+                        : (watch.maxInstantBuyPrice > 0.0D
                         ? editableAmount(
                                 watch.maxInstantBuyPrice)
-                        : "";
+                        : "");
 
         bazaarMinSell =
                 watch.minInstantSellPrice > 0.0D
@@ -1247,6 +1255,105 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 referencePrice);
     }
 
+    private String dynamicDealDifferenceText(
+            double referencePrice) {
+
+        String rawValue =
+                kind == Kind.AUCTION_HOUSE
+                        ? auctionMaxPrice
+                        : kind == Kind.BAZAAR
+                        ? bazaarMaxBuy
+                        : "";
+
+        Double percent =
+                parsePercentShortcut(
+                        rawValue);
+
+        /*
+         * Fixed coin inputs have no percentage preview.
+         *
+         * 20% -> 20% ↓ = 4M
+         * 11m -> no preview
+         */
+        if (percent == null) {
+            return "";
+        }
+
+        if (!Double.isFinite(percent)
+                || percent <= 0.0D
+                || percent >= 100.0D) {
+
+            return "";
+        }
+
+        String percentText =
+                editablePlain(percent)
+                        + "%";
+
+        if (!Double.isFinite(referencePrice)
+                || referencePrice <= 0.0D) {
+
+            return percentText
+                    + " \u2193 = --";
+        }
+
+        double coinDifference =
+                referencePrice
+                        * percent
+                        / 100.0D;
+
+        return percentText
+                + " \u2193 = "
+                + shortCoinDelta(
+                        coinDifference);
+    }
+    private static String shortCoinDelta(
+            double value) {
+
+        if (!Double.isFinite(value)
+                || value < 0.0D) {
+
+            return "--";
+        }
+
+        if (value >= 1_000_000_000D) {
+            return shortCoinNumber(
+                    value / 1_000_000_000D)
+                    + "B";
+        }
+
+        if (value >= 1_000_000D) {
+            return shortCoinNumber(
+                    value / 1_000_000D)
+                    + "M";
+        }
+
+        if (value >= 1_000D) {
+            return shortCoinNumber(
+                    value / 1_000D)
+                    + "k";
+        }
+
+        return Long.toString(
+                Math.round(
+                        value));
+    }
+
+    private static String shortCoinNumber(
+            double value) {
+
+        java.math.BigDecimal rounded =
+                java.math.BigDecimal
+                        .valueOf(value)
+                        .setScale(
+                                value >= 100.0D
+                                        ? 0
+                                        : 1,
+                                java.math.RoundingMode.HALF_UP)
+                        .stripTrailingZeros();
+
+        return rounded.toPlainString();
+    }
     private void drawQuickBuyPanel(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -1268,8 +1375,12 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 quickBuyReferencePrice();
 
         boolean enabled =
-                Double.isFinite(referencePrice)
-                        && referencePrice > 0.0D;
+                kind == Kind.AUCTION_HOUSE
+                        ? selectedAuction != null
+                        || editingAuctionWatch != null
+                        : kind == Kind.BAZAAR
+                        && (selectedBazaar != null
+                        || editingBazaarWatch != null);
 
         RotClientUiDraw.drawElevatedCard(
                 graphics,
@@ -1294,7 +1405,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
         RotClientUiDraw.text(
                 graphics,
                 font,
-                "\u2193 QUICK BUY TARGET",
+                "\u2193 DYNAMIC DEAL %",
                 x + 9,
                 y + 6,
                 RotClientTheme.TEXT,
@@ -1319,7 +1430,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 font,
                 fit(
                         font,
-                        "Quickly fill the Buy Alert Price above",
+                        dynamicDealDifferenceText(referencePrice),
                         Math.max(
                                 20,
                                 width - 18)),
@@ -1361,15 +1472,19 @@ private MarketWatchItemCatalog.AuctionSuggestion
             Layout layout) {
 
         /*
-         * Require live data because percentage alerts are resolved using
-         * the current reference price when saved.
+         * A dynamic percentage no longer requires a live reference at
+         * configuration time. The alert engine calculates the reference
+         * whenever market data is evaluated.
          */
-        double referencePrice =
-                quickBuyReferencePrice();
+        boolean itemAvailable =
+                kind == Kind.AUCTION_HOUSE
+                        ? selectedAuction != null
+                        || editingAuctionWatch != null
+                        : kind == Kind.BAZAAR
+                        && (selectedBazaar != null
+                        || editingBazaarWatch != null);
 
-        if (!Double.isFinite(referencePrice)
-                || referencePrice <= 0.0D) {
-
+        if (!itemAvailable) {
             return false;
         }
 
@@ -1401,42 +1516,15 @@ private MarketWatchItemCatalog.AuctionSuggestion
             int discount =
                     QUICK_BUY_DISCOUNTS[i];
 
-            double targetPrice =
-                    referencePrice
-                            * (1.0D
-                            - discount / 100.0D);
-
-            if (!Double.isFinite(targetPrice)
-                    || targetPrice <= 0.0D) {
-
-                return true;
-            }
-
-            /*
-             * Preset buttons are calculators:
-             *
-             * Clicking -10% immediately shows the resulting coin price.
-             *
-             * Manual input remains separate, so the user can still type
-             * "10%" directly into BUY ALERT PRICE if preferred.
-             */
             if (kind == Kind.AUCTION_HOUSE) {
-
                 auctionMaxPrice =
-                        editableAmount(
-                                Math.max(
-                                        1L,
-                                        Math.round(
-                                                targetPrice)));
+                        discount + "%";
 
             } else if (kind == Kind.BAZAAR) {
-
                 bazaarMaxBuy =
-                        editableAmount(
-                                targetPrice);
+                        discount + "%";
 
             } else {
-
                 return false;
             }
 
@@ -1475,9 +1563,9 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 layout.rightX(),
                 y,
                 layout.rightWidth(),
-                "BUY ALERT PRICE",
+                "DEAL TRIGGER",
                 auctionMaxPrice,
-                "optional",
+                "Coins = fixed price | % = dynamic deal",
                 focusedField == 1);
 
         /*
@@ -1549,9 +1637,9 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 layout.rightX(),
                 y,
                 fieldWidth,
-                "BUY ALERT PRICE",
+                "DEAL TRIGGER",
                 bazaarMaxBuy,
-                "optional",
+                "Coins = fixed price | % = dynamic deal",
                 focusedField == 1);
 
         drawInput(
@@ -2425,7 +2513,11 @@ private MarketWatchItemCatalog.AuctionSuggestion
         }
 
         if (focusedField > 0
-                && !validNumericInput(incoming)) {
+                && !validNumericInput(incoming)
+                && !(
+                    buyPriceField()
+                            && incoming == "%"
+                )) {
 
             return true;
         }
@@ -2726,12 +2818,16 @@ private MarketWatchItemCatalog.AuctionSuggestion
         Long maxPrice =
                 resolveAuctionBuyPrice();
 
+        double dealPercent =
+                resolveAuctionDealPercent();
+
         if (maxPrice == null
-                || maxPrice <= 0L) {
+                || (maxPrice <= 0L
+                && dealPercent <= 0.0D)) {
 
             fail(
                     1,
-                    "Enter a buy price like 11m, or a discount like 10%.");
+                    "Enter 11m for fixed or 10% for dynamic.");
 
             return;
         }
@@ -2776,10 +2872,14 @@ private MarketWatchItemCatalog.AuctionSuggestion
             }
 
             updated.binOnly =
-                    auctionBinOnly;
+                    dealPercent > 0.0D
+                            || auctionBinOnly;
 
             updated.maxPriceCoins =
                     maxPrice;
+
+            updated.minDiscountPercent =
+                    dealPercent;
 
             updated.cooldownSeconds =
                     cooldown;
@@ -2803,7 +2903,8 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 MarketWatchRuntime.createAuctionWatch(
                         selectedAuction.itemName(),
                         selectedAuction.tier(),
-                        auctionBinOnly,
+                        dealPercent > 0.0D
+                                || auctionBinOnly,
                         maxPrice,
                         cooldown);
 
@@ -2813,6 +2914,31 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
             return;
         }
+
+        created.maxPriceCoins =
+                maxPrice;
+
+        created.minDiscountPercent =
+                dealPercent;
+
+        created.binOnly =
+                dealPercent > 0.0D
+                        || auctionBinOnly;
+
+        created.normalize();
+
+        if (!MarketWatchRuntime.updateAuctionWatch(
+                created)) {
+
+            MarketWatchRuntime.deleteWatch(
+                    created.id);
+
+            error =
+                    "Could not save Auction House deal trigger.";
+
+            return;
+        }
+
 
         cancel();
     }
@@ -2844,6 +2970,9 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
         Double maxBuy =
                 resolveBazaarBuyPrice();
+
+        double dealPercent =
+                resolveBazaarDealPercent();
 
         Double minSell =
                 parseAmount(
@@ -2908,12 +3037,10 @@ private MarketWatchItemCatalog.AuctionSuggestion
         }
 
         if (maxBuy <= 0.0D
-                && minSell <= 0.0D
-                && spreadCoins <= 0.0D
-                && spreadPercent <= 0.0D) {
+                && dealPercent <= 0.0D) {
 
             error =
-                    "Set at least one price or spread threshold.";
+                    "Enter a fixed buy price or dynamic deal percentage.";
 
             return;
         }
@@ -2929,6 +3056,9 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
             updated.maxInstantBuyPrice =
                     maxBuy;
+
+            updated.buyDealPercent =
+                    dealPercent;
 
             updated.minInstantSellPrice =
                     minSell;
@@ -2976,6 +3106,27 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
             return;
         }
+
+        created.maxInstantBuyPrice =
+                maxBuy;
+
+        created.buyDealPercent =
+                dealPercent;
+
+        created.normalize();
+
+        if (!MarketWatchRuntime.updateBazaarWatch(
+                created)) {
+
+            MarketWatchRuntime.deleteWatch(
+                    created.id);
+
+            error =
+                    "Could not save Bazaar deal trigger.";
+
+            return;
+        }
+
 
         cancel();
     }
@@ -3455,125 +3606,45 @@ private MarketWatchItemCatalog.AuctionSuggestion
     }
 
     private Long resolveAuctionBuyPrice() {
-
-        if (!hasPercentShortcut(
+        if (hasPercentShortcut(
                 auctionMaxPrice)) {
 
-            return parseLongAmount(
-                    auctionMaxPrice);
+            return 0L;
         }
 
+        return parseLongAmount(
+                auctionMaxPrice);
+    }
+
+    private double resolveAuctionDealPercent() {
         Double percentage =
                 parsePercentShortcut(
                         auctionMaxPrice);
 
-        if (percentage == null) {
-            return null;
-        }
-
-        String itemName = "";
-        String tier = "";
-
-        if (selectedAuction != null) {
-            itemName =
-                    selectedAuction.itemName();
-
-            tier =
-                    selectedAuction.tier();
-
-        } else if (editingAuctionWatch != null) {
-            itemName =
-                    editingAuctionWatch.itemName;
-
-            tier =
-                    editingAuctionWatch.tier;
-        }
-
-        if (itemName.isBlank()) {
-            return null;
-        }
-
-        MarketWatchItemCatalog.AuctionStats stats =
-                MarketWatchItemCatalog.auctionStats(
-                        itemName,
-                        tier);
-
-        if (!stats.available()
-                || stats.medianBin() <= 0L) {
-
-            return null;
-        }
-
-        double target =
-                stats.medianBin()
-                        * (1.0D
-                        - percentage
-                        / 100.0D);
-
-        if (!Double.isFinite(target)
-                || target <= 0.0D
-                || target > Long.MAX_VALUE) {
-
-            return null;
-        }
-
-        return Math.max(
-                1L,
-                Math.round(target));
+        return percentage == null
+                ? 0.0D
+                : percentage;
     }
 
     private Double resolveBazaarBuyPrice() {
-
-        if (!hasPercentShortcut(
+        if (hasPercentShortcut(
                 bazaarMaxBuy)) {
 
-            return parseAmount(
-                    bazaarMaxBuy);
+            return 0.0D;
         }
 
+        return parseAmount(
+                bazaarMaxBuy);
+    }
+
+    private double resolveBazaarDealPercent() {
         Double percentage =
                 parsePercentShortcut(
                         bazaarMaxBuy);
 
-        if (percentage == null) {
-            return null;
-        }
-
-        String productId = "";
-
-        if (selectedBazaar != null) {
-            productId =
-                    selectedBazaar.productId();
-
-        } else if (editingBazaarWatch != null) {
-            productId =
-                    editingBazaarWatch.productId;
-        }
-
-        if (productId.isBlank()) {
-            return null;
-        }
-
-        MarketWatchItemCatalog.BazaarStats stats =
-                MarketWatchItemCatalog.bazaarStats(
-                        productId);
-
-        if (!stats.available()
-                || stats.instantBuy() <= 0.0D) {
-
-            return null;
-        }
-
-        double target =
-                stats.instantBuy()
-                        * (1.0D
-                        - percentage
-                        / 100.0D);
-
-        return Double.isFinite(target)
-                && target > 0.0D
-                ? target
-                : null;
+        return percentage == null
+                ? 0.0D
+                : percentage;
     }
 
     private static boolean hasPercentShortcut(

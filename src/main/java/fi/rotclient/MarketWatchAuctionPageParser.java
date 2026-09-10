@@ -37,7 +37,8 @@ final class MarketWatchAuctionPageParser {
                         longNumber(auction, "starting_bid", 0L),
                         longNumber(auction, "highest_bid_amount", 0L),
                         bool(auction, "bin"),
-                        text(auction, "item_bytes")));
+                        itemBytes(auction),
+                        text(auction, "auctioneer")));
             }
         }
 
@@ -59,6 +60,63 @@ final class MarketWatchAuctionPageParser {
         }
     }
 
+    private static String itemBytes(
+            JsonObject auction) {
+
+        if (auction == null
+                || !auction.has("item_bytes")) {
+
+            return "";
+        }
+
+        com.google.gson.JsonElement value =
+                auction.get("item_bytes");
+
+        if (value == null
+                || value.isJsonNull()) {
+
+            return "";
+        }
+
+        if (value.isJsonPrimitive()) {
+            try {
+                return value
+                        .getAsString()
+                        .trim();
+            } catch (RuntimeException ignored) {
+                return "";
+            }
+        }
+
+        if (!value.isJsonObject()) {
+            return "";
+        }
+
+        JsonObject object =
+                value.getAsJsonObject();
+
+        if (!object.has("data")) {
+            return "";
+        }
+
+        com.google.gson.JsonElement data =
+                object.get("data");
+
+        if (data == null
+                || data.isJsonNull()
+                || !data.isJsonPrimitive()) {
+
+            return "";
+        }
+
+        try {
+            return data
+                    .getAsString()
+                    .trim();
+        } catch (RuntimeException ignored) {
+            return "";
+        }
+    }
     private static String text(JsonObject object, String key) {
         try {
             return object.has(key) && !object.get(key).isJsonNull()

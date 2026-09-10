@@ -6,7 +6,9 @@ record MarketWatchAuctionMatch(
         String itemName,
         String tier,
         long priceCoins,
-        boolean bin) {
+        boolean bin,
+        long referencePriceCoins,
+        double discountPercent) {
 
     MarketWatchAuctionMatch {
         watchId = clean(watchId);

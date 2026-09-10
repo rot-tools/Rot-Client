@@ -21,6 +21,15 @@ final class MarketWatchItemIconResolver {
             String category,
             String itemName) {
 
+        ItemStack decoded =
+                MarketWatchSkyBlockItemDecoder
+                        .icon(
+                                itemName);
+
+        if (!decoded.isEmpty()) {
+            return decoded;
+        }
+
         String normalized =
                 normalize(
                         category
@@ -118,6 +127,23 @@ final class MarketWatchItemIconResolver {
                     Items.CHEST);
         }
 
+        /*
+         * Exact SkyBlock resource icon first:
+         * modern Hypixel item_model or custom player-head skin.
+         *
+         * Loading happens asynchronously. While metadata is still
+         * loading, the existing official-material and semantic
+         * fallbacks below continue to render normally.
+         */
+        ItemStack skyBlock =
+                MarketWatchSkyBlockResourceIconService
+                        .icon(
+                                id);
+
+        if (!skyBlock.isEmpty()) {
+            return skyBlock;
+        }
+
         String base =
                 id;
 
@@ -170,7 +196,7 @@ final class MarketWatchItemIconResolver {
                 Items.CHEST);
     }
 
-    private static ItemStack materialIcon(
+    static ItemStack materialIcon(
             String material,
             String productId) {
 
