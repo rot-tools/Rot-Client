@@ -155,6 +155,9 @@ final class MiningUiScreen extends Screen {
     private boolean loadoutEditNameFocused;
     private String loadoutEditError = "";
 
+    private final java.util.HashMap<String, Double> collectionRowHoverAmounts =
+            new java.util.HashMap<>();
+
     private final DashboardNavStack navStack = new DashboardNavStack();
     private boolean restoringNav;
     private boolean skipSidebarReveal;
@@ -3991,6 +3994,118 @@ final class MiningUiScreen extends Screen {
         cancelLoadoutWizard();
     }
 
+    private float collectionRowHoverAmount(
+            String key,
+            boolean hovered) {
+
+        String safeKey =
+                key == null
+                        ? ""
+                        : key;
+
+        double current =
+                collectionRowHoverAmounts.getOrDefault(
+                        safeKey,
+                        0.0D);
+
+        double next =
+                RotClientEase.expToward(
+                        current,
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        RotClientUiClock.seconds(),
+                        16.0D);
+
+        if (!hovered
+                && next <= 0.0001D) {
+
+            collectionRowHoverAmounts.remove(
+                    safeKey);
+
+        } else {
+            collectionRowHoverAmounts.put(
+                    safeKey,
+                    next);
+        }
+
+        return (float) RotClientEase.smoothstep(
+                next);
+    }
+
+    private void drawLoadoutWizardProgress(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int right,
+            int y,
+            LoadoutWizardStep step) {
+
+        if (step == null) {
+            return;
+        }
+
+        int current =
+                switch (step) {
+                    case NAME -> 0;
+                    case WARDROBE -> 1;
+                    case PET -> 2;
+                    case EQUIPMENT -> 3;
+                    case SETTINGS -> 4;
+                    case REVIEW -> 5;
+                };
+
+        int gap = 4;
+
+        int available =
+                Math.max(
+                        1,
+                        right - left);
+
+        int width =
+                Math.max(
+                        8,
+                        (available - gap * 5) / 6);
+
+        for (int i = 0;
+             i < 6;
+             i++) {
+
+            int x =
+                    left
+                            + i * (width + gap);
+
+            int actualWidth =
+                    i == 5
+                            ? Math.max(
+                            1,
+                            right - x)
+                            : width;
+
+            int color;
+
+            if (i < current) {
+                color =
+                        RotClientTheme.SUCCESS;
+
+            } else if (i == current) {
+                color =
+                        RotClientTheme.HUD_ACCENT;
+
+            } else {
+                color =
+                        RotClientTheme.BORDER;
+            }
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + actualWidth,
+                    y + 3,
+                    color,
+                    1);
+        }
+    }
     private int drawLoadoutDeletePanel(
             GuiGraphicsExtractor graphics,
             int contentLeft,
@@ -4295,23 +4410,19 @@ final class MiningUiScreen extends Screen {
         RotClientLoadout active =
                 manager.activeLoadout();
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
-                "LOADOUTS",
+                "Loadouts",
                 contentLeft,
-                top,
-                RotClientTheme.TEXT,
-                true);
+                top);
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.helpText(
                 graphics,
                 font,
-                "Create SkyBlock gear setups and optionally link them to a settings profile.",
+                "Bundle wardrobe, pet, equipment and Rot Client settings into reusable setups.",
                 contentLeft,
-                top + 16,
-                RotClientTheme.TEXT_DIM,
-                false);
+                top + 16);
 
         if (!loadoutPageError.isBlank()) {
             RotClientUiDraw.text(
@@ -4343,6 +4454,15 @@ final class MiningUiScreen extends Screen {
                 true,
                 false,
                 !loadoutPanelOpen());
+
+        if (loadoutCreateOpen) {
+            drawLoadoutWizardProgress(
+                    graphics,
+                    contentLeft,
+                    contentRight,
+                    top + 34,
+                    loadoutWizardStep);
+        }
 
         int listY;
 
@@ -5163,7 +5283,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Create your first loadout. Gear configuration will be added next.",
+                    "Create your first loadout to bundle wardrobe, pet, equipment and settings.",
                     contentLeft + 14,
                     listY + 30);
 
@@ -5226,29 +5346,23 @@ final class MiningUiScreen extends Screen {
                             contentWidth,
                             40);
 
-            roundedFill(
-                    graphics,
-                    contentLeft,
-                    listY,
-                    contentRight,
-                    listY + 40,
-                    isActive
-                            ? RotClientTheme.SELECTED_ROW
-                            : rowHover
-                            ? RotClientTheme.HOVER_ROW
-                            : RotClientTheme.SURFACE_ALT);
+            float rowHoverAmount =
+                    collectionRowHoverAmount(
+                            "loadout:" + loadout.id,
+                            rowHover);
 
-            roundedOutline(
+            RotClientUiDraw.drawInteractiveSurface(
                     graphics,
                     contentLeft,
                     listY,
-                    contentRight,
-                    listY + 40,
+                    contentWidth,
+                    40,
+                    rowHoverAmount,
+                    isActive,
                     isActive
-                            ? RotClientTheme.HUD_ACCENT
-                            : rowHover
-                            ? RotClientTheme.BORDER_BRIGHT
-                            : RotClientTheme.BORDER);
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
 
             graphics.fill(
                     contentLeft,
@@ -5332,7 +5446,12 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    loadoutDetail,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            loadoutDetail,
+                            Math.max(
+                                    40,
+                                    contentWidth - 162)),
                     contentLeft + 14,
                     listY + 22,
                     RotClientTheme.TEXT_MUTED,
@@ -5564,23 +5683,19 @@ final class MiningUiScreen extends Screen {
         RotClientProfile active =
                 controller.activeProfile();
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
-                "PROFILES",
+                "Profiles",
                 contentLeft,
-                top,
-                RotClientTheme.TEXT,
-                true);
+                top);
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.helpText(
                 graphics,
                 font,
                 "Save and switch between complete Rot Client setups.",
                 contentLeft,
-                top + 16,
-                RotClientTheme.TEXT_DIM,
-                false);
+                top + 16);
 
         int createButtonWidth = 126;
 
@@ -5984,45 +6099,23 @@ final class MiningUiScreen extends Screen {
                             contentWidth,
                             40);
 
-            /*
-             * Subtle shadow.
-             */
-            roundedFill(
-                    graphics,
-                    contentLeft + 1,
-                    listY + 2,
-                    contentRight + 1,
-                    listY + 42,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.SHADOW,
-                            0x45));
+            float rowHoverAmount =
+                    collectionRowHoverAmount(
+                            "profile:" + profile.id,
+                            rowHover);
 
-            int rowFill =
-                    isActive
-                            ? RotClientTheme.SELECTED_ROW
-                            : rowHover
-                            ? RotClientTheme.HOVER_ROW
-                            : RotClientTheme.SURFACE_ALT;
-
-            roundedFill(
+            RotClientUiDraw.drawInteractiveSurface(
                     graphics,
                     contentLeft,
                     listY,
-                    contentRight,
-                    listY + 40,
-                    rowFill);
-
-            roundedOutline(
-                    graphics,
-                    contentLeft,
-                    listY,
-                    contentRight,
-                    listY + 40,
+                    contentWidth,
+                    40,
+                    rowHoverAmount,
+                    isActive,
                     isActive
-                            ? RotClientTheme.HUD_ACCENT
-                            : rowHover
-                            ? RotClientTheme.BORDER_BRIGHT
-                            : RotClientTheme.BORDER);
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
 
             graphics.fill(
                     contentLeft,
@@ -6198,79 +6291,103 @@ final class MiningUiScreen extends Screen {
                         width,
                         height);
 
-        int fill;
+        boolean destructive =
+                label != null
+                        && (
+                        "DELETE".equals(label)
+                                || label.startsWith(
+                                "DELETE "));
+
+        int accent =
+                destructive
+                        ? RotClientTheme.WARNING
+                        : RotClientTheme.HUD_ACCENT;
+
+        RotClientUiDraw.drawInteractiveSurface(
+                graphics,
+                x,
+                y,
+                width,
+                height,
+                hover
+                        ? 1.0F
+                        : 0.0F,
+                selected,
+                accent,
+                RotClientUiDraw.RADIUS_SM);
 
         if (!enabled) {
-            fill =
-                    RotClientTheme.BUTTON_DISABLED;
-        } else if (selected) {
-            fill =
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.HUD_ACCENT,
-                            0x45);
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    RotClientTheme.BUTTON_DISABLED,
+                    RotClientUiDraw.RADIUS_SM);
+
+        } else if (destructive) {
+
+            if (hover) {
+                RotClientUiDraw.roundedFill(
+                        graphics,
+                        x,
+                        y,
+                        x + width,
+                        y + height,
+                        RotClientUiDraw.withAlpha(
+                                RotClientTheme.WARNING,
+                                0x28),
+                        RotClientUiDraw.RADIUS_SM);
+            }
+
+            RotClientUiDraw.roundedOutline(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    hover
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.BORDER,
+                    RotClientUiDraw.RADIUS_SM);
+
         } else if (primary) {
-            fill =
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
                     RotClientUiDraw.withAlpha(
                             RotClientTheme.HUD_ACCENT,
                             hover
-                                    ? 0xEE
-                                    : 0xCE);
-        } else if (hover) {
-            fill =
-                    RotClientTheme.HOVER_ROW;
-        } else {
-            fill =
-                    RotClientTheme.SURFACE_ALT;
+                                    ? 0xED
+                                    : 0xCB),
+                    RotClientUiDraw.RADIUS_SM);
+
+            RotClientUiDraw.roundedOutline(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
         }
-
-        /*
-         * Small shadow gives these controls more depth than the generic
-         * dashboard button without changing button styling client-wide.
-         */
-        roundedFill(
-                graphics,
-                x + 1,
-                y + 2,
-                x + width + 1,
-                y + height + 2,
-                RotClientUiDraw.withAlpha(
-                        RotClientTheme.SHADOW,
-                        0x55));
-
-        roundedFill(
-                graphics,
-                x,
-                y,
-                x + width,
-                y + height,
-                fill);
-
-        int border =
-                !enabled
-                        ? RotClientTheme.BORDER
-                        : selected || primary || hover
-                        ? RotClientTheme.BORDER_BRIGHT
-                        : RotClientTheme.BORDER;
-
-        roundedOutline(
-                graphics,
-                x,
-                y,
-                x + width,
-                y + height,
-                border);
 
         if (selected) {
             graphics.fill(
-                    x,
+                    x + 1,
                     y + 5,
-                    x + 3,
+                    x + 4,
                     y + height - 5,
-                    RotClientTheme.HUD_ACCENT);
+                    accent);
         }
 
         if (font == null
                 || label == null) {
+
             return;
         }
 
@@ -6280,21 +6397,36 @@ final class MiningUiScreen extends Screen {
                         label,
                         width - 12);
 
-        int color =
-                !enabled
-                        ? RotClientTheme.TEXT_MUTED
-                        : RotClientTheme.TEXT;
+        int color;
+
+        if (!enabled) {
+            color =
+                    RotClientTheme.TEXT_MUTED;
+
+        } else if (destructive) {
+            color =
+                    hover
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.TEXT_DIM;
+
+        } else {
+            color =
+                    RotClientTheme.TEXT;
+        }
 
         RotClientUiDraw.text(
                 graphics,
                 font,
                 shown,
-                x + (width - font.width(shown)) / 2,
+                x
+                        + (
+                        width
+                                - font.width(shown))
+                        / 2,
                 y + 9,
                 color,
                 true);
     }
-
     private OverviewLandingPolicy.Model overviewLandingModel() {
         MiningSessionAnalyticsPresentation presentation =
                 RotClientClient.sessionAnalyticsPresentation();
