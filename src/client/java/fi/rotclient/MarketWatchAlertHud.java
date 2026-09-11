@@ -60,6 +60,7 @@ final class MarketWatchAlertHud {
             return;
         }
 
+
         List<MarketWatchLiveAlert> incoming =
                 MarketWatchRuntime
                         .drainPendingAlerts();
