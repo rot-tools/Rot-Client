@@ -1448,7 +1448,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
             int discount =
                     QUICK_BUY_DISCOUNTS[i];
 
-            RotClientUiDraw.drawButton(
+            RotClientUiDraw.drawPremiumButton(
                     graphics,
                     font,
                     mouseX,
@@ -1777,7 +1777,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
                     false);
         }
 
-        RotClientUiDraw.drawButton(
+        RotClientUiDraw.drawPremiumButton(
                 graphics,
                 font,
                 mouseX,
@@ -1789,7 +1789,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 false,
                 true);
 
-        RotClientUiDraw.drawButton(
+        RotClientUiDraw.drawPremiumButton(
                 graphics,
                 font,
                 mouseX,

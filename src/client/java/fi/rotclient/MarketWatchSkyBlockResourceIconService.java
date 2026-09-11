@@ -80,6 +80,14 @@ final class MarketWatchSkyBlockResourceIconService {
     private static volatile Map<String, IconMetadata> METADATA =
             Map.of();
 
+    /*
+     * Category/tier metadata is kept independently from icon metadata.
+     * Some items may have useful filter metadata even if their icon falls
+     * back to the normal resolver.
+     */
+    private static volatile Map<String, ItemClassification> CLASSIFICATIONS =
+            Map.of();
+
     private static final Map<String, ItemStack> STACK_CACHE =
             new ConcurrentHashMap<>();
 
@@ -131,6 +139,28 @@ final class MarketWatchSkyBlockResourceIconService {
                 stack.copy());
 
         return stack;
+    }
+
+    static ItemClassification classification(
+            String productId) {
+
+        String id =
+                normalizeId(
+                        productId);
+
+        if (id.isBlank()) {
+            return ItemClassification.empty();
+        }
+
+        start();
+
+        ItemClassification classification =
+                CLASSIFICATIONS.get(
+                        id);
+
+        return classification == null
+                ? ItemClassification.empty()
+                : classification;
     }
 
     private static void start() {
@@ -225,6 +255,9 @@ final class MarketWatchSkyBlockResourceIconService {
         Map<String, IconMetadata> next =
                 new HashMap<>();
 
+        Map<String, ItemClassification> nextClassifications =
+                new HashMap<>();
+
         for (JsonElement element
                 : root.getAsJsonArray(
                         "items")) {
@@ -247,6 +280,21 @@ final class MarketWatchSkyBlockResourceIconService {
             if (id.isBlank()) {
                 continue;
             }
+
+            /*
+             * Official SkyBlock item resources expose category and tier.
+             * Store these before icon validation so filtering does not
+             * depend on whether a custom icon can be constructed.
+             */
+            nextClassifications.put(
+                    id,
+                    new ItemClassification(
+                            text(
+                                    item,
+                                    "category"),
+                            text(
+                                    item,
+                                    "tier")));
 
             String material =
                     text(
@@ -315,6 +363,12 @@ final class MarketWatchSkyBlockResourceIconService {
                             text(
                                     item,
                                     "name")));
+        }
+
+        if (!nextClassifications.isEmpty()) {
+            CLASSIFICATIONS =
+                    Map.copyOf(
+                            nextClassifications);
         }
 
         if (next.isEmpty()) {
@@ -556,6 +610,35 @@ final class MarketWatchSkyBlockResourceIconService {
                 .trim()
                 .toUpperCase(
                         Locale.ROOT);
+    }
+
+    record ItemClassification(
+            String category,
+            String tier) {
+
+        ItemClassification {
+            category =
+                    category == null
+                            ? ""
+                            : category
+                            .trim()
+                            .toUpperCase(
+                                    Locale.ROOT);
+
+            tier =
+                    tier == null
+                            ? ""
+                            : tier
+                            .trim()
+                            .toUpperCase(
+                                    Locale.ROOT);
+        }
+
+        static ItemClassification empty() {
+            return new ItemClassification(
+                    "",
+                    "");
+        }
     }
 
     private record IconMetadata(

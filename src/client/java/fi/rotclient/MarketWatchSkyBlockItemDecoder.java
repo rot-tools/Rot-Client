@@ -55,7 +55,184 @@ final class MarketWatchSkyBlockItemDecoder {
                 }
             };
 
+    /*
+     * Quantity cache used by the Opportunity Scanner.
+     *
+     * Hypixel's starting_bid represents the complete BIN listing, not
+     * necessarily one item. Stackable AH listings therefore need their
+     * serialized ItemStack count for correct per-unit valuation.
+     */
+    private static final int STACK_COUNT_CACHE_SIZE =
+            65_536;
+
+    private static final Map<String, Integer> STACK_COUNT_CACHE =
+            new LinkedHashMap<>(
+                    1024,
+                    0.75F,
+                    true) {
+
+                @Override
+                protected boolean removeEldestEntry(
+                        Map.Entry<String, Integer> eldest) {
+
+                    return size()
+                            > STACK_COUNT_CACHE_SIZE;
+                }
+            };
+
     private MarketWatchSkyBlockItemDecoder() {
+    }
+
+    static int stackCount(
+            MarketWatchAuction auction) {
+
+        if (auction == null
+                || auction.itemBytes().isBlank()) {
+
+            return 1;
+        }
+
+        String key =
+                !auction.uuid().isBlank()
+                        ? auction.uuid()
+                        : auction.itemBytes().length()
+                        + ":"
+                        + auction.itemBytes().hashCode();
+
+        synchronized (STACK_COUNT_CACHE) {
+            Integer cached =
+                    STACK_COUNT_CACHE.get(
+                            key);
+
+            if (cached != null) {
+                return cached;
+            }
+        }
+
+        int count =
+                decodeStackCount(
+                        auction.itemBytes());
+
+        synchronized (STACK_COUNT_CACHE) {
+            STACK_COUNT_CACHE.put(
+                    key,
+                    count);
+        }
+
+        return count;
+    }
+
+    private static int decodeStackCount(
+            String encoded) {
+
+        String data =
+                base64Data(
+                        encoded);
+
+        if (data.isBlank()) {
+            return 1;
+        }
+
+        byte[] bytes;
+
+        try {
+            bytes =
+                    Base64.getDecoder()
+                            .decode(
+                                    data);
+
+        } catch (IllegalArgumentException ignored) {
+
+            try {
+                bytes =
+                        Base64.getMimeDecoder()
+                                .decode(
+                                        data);
+
+            } catch (IllegalArgumentException ignoredAgain) {
+                return 1;
+            }
+        }
+
+        if (bytes.length == 0
+                || bytes.length
+                > MAX_COMPRESSED_BYTES) {
+
+            return 1;
+        }
+
+        CompoundTag root;
+
+        try (ByteArrayInputStream input =
+                     new ByteArrayInputStream(
+                             bytes)) {
+
+            root =
+                    NbtIo.readCompressed(
+                            input,
+                            NbtAccounter.create(
+                                    MAX_NBT_BYTES));
+
+        } catch (Exception ignored) {
+            return 1;
+        }
+
+        if (root == null
+                || root.isEmpty()) {
+
+            return 1;
+        }
+
+        CompoundTag item =
+                firstItemTag(
+                        root);
+
+        int count =
+                numericStackCount(
+                        item);
+
+        if (count <= 0
+                && item != root) {
+
+            count =
+                    numericStackCount(
+                            root);
+        }
+
+        if (count <= 0) {
+            return 1;
+        }
+
+        return Math.max(
+                1,
+                Math.min(
+                        64,
+                        count));
+    }
+
+    private static int numericStackCount(
+            CompoundTag tag) {
+
+        if (tag == null
+                || tag.isEmpty()) {
+
+            return 0;
+        }
+
+        int modern =
+                tag.getInt(
+                        "count")
+                        .orElse(
+                                0);
+
+        if (modern > 0) {
+            return modern;
+        }
+
+        return tag.getInt(
+                "Count")
+                .orElse(
+                        0);
     }
 
     static ItemStack icon(

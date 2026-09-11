@@ -462,6 +462,29 @@ public final class RotClientClient implements ClientModInitializer {
                                     }
                                 }));
 
+        /*
+         * Opportunity pins are frozen reference cards used while the
+         * player manually works in the Auction House / Bazaar.
+         */
+        HudElementRegistry.addLast(
+                Identifier.fromNamespaceAndPath(
+                        "rotclient",
+                        "market_watch_pinned_deals"),
+                (graphics, delta) ->
+                        ClientBoundaryGuard.run(
+                                "MARKET_WATCH_PINNED_HUD",
+                                () -> {
+                                    if (!StorageOverlayRuntime
+                                            .isOverlayOpen()) {
+
+                                        MarketWatchPinnedDealHud
+                                                .render(
+                                                        graphics,
+                                                        Minecraft
+                                                                .getInstance());
+                                    }
+                                }));
+
         registerVanillaHudHides();
 
         ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
