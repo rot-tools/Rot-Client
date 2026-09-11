@@ -778,6 +778,113 @@ public final class RotClientUiDraw {
         roundedOutline(graphics, x, y, x + width, y + height, RotClientTheme.BORDER, RADIUS_SM);
     }
 
+    static void drawInteractiveSurface(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float hoverAmount,
+            boolean selected,
+            int accentColor,
+            int radius) {
+
+        float t =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                hoverAmount));
+
+        int safeRadius =
+                Math.max(
+                        0,
+                        radius);
+
+        int safeAccent =
+                accentColor == 0
+                        ? RotClientTheme.HUD_ACCENT
+                        : accentColor;
+
+        if (selected || t > 0.01F) {
+            int shadowAlpha =
+                    selected
+                            ? 0x40
+                            : 0x18
+                            + Math.round(
+                            0x18 * t);
+
+            roundedFill(
+                    graphics,
+                    x + 1,
+                    y + 2,
+                    x + width + 1,
+                    y + height + 2,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    safeRadius);
+        }
+
+        int baseFill =
+                selected
+                        ? RotClientTheme.SELECTED_ROW
+                        : RotClientTheme.SURFACE_ALT;
+
+        roundedFill(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                baseFill,
+                safeRadius);
+
+        if (t > 0.001F) {
+            roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    withAlpha(
+                            safeAccent,
+                            Math.round(
+                                    0x18 * t)),
+                    safeRadius);
+        }
+
+        int outline;
+
+        if (selected) {
+            outline =
+                    withAlpha(
+                            safeAccent,
+                            0xD0);
+
+        } else if (t > 0.001F) {
+            outline =
+                    withAlpha(
+                            safeAccent,
+                            Math.min(
+                                    0xA0,
+                                    0x48
+                                            + Math.round(
+                                            0x48 * t)));
+
+        } else {
+            outline =
+                    RotClientTheme.BORDER;
+        }
+
+        roundedOutline(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                outline,
+                safeRadius);
+    }
+
     static void drawNavItem(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -791,41 +898,100 @@ public final class RotClientUiDraw {
             String subtitle,
             boolean selected,
             boolean active) {
-        boolean hover = inside(mouseX, mouseY, x, y, width, height);
-        int fill = selected
-                ? RotClientTheme.SELECTED_ROW
-                : (hover ? RotClientTheme.HOVER_ROW : RotClientTheme.DASHBOARD_SIDEBAR);
-        roundedFill(graphics, x, y, x + width, y + height, fill, RADIUS_SM);
+
+        boolean hover =
+                inside(
+                        mouseX,
+                        mouseY,
+                        x,
+                        y,
+                        width,
+                        height);
+
+        drawInteractiveSurface(
+                graphics,
+                x,
+                y,
+                width,
+                height,
+                hover
+                        ? 1.0F
+                        : 0.0F,
+                selected,
+                RotClientTheme.HUD_ACCENT,
+                RADIUS_SM);
+
         if (selected) {
-            graphics.fill(x, y + 6, x + 3, y + height - 6, RotClientTheme.BORDER_BRIGHT);
+            graphics.fill(
+                    x + 1,
+                    y + 7,
+                    x + 4,
+                    y + height - 7,
+                    RotClientTheme.HUD_ACCENT);
         }
+
+        if (active) {
+            int dotSize = 6;
+
+            roundedFill(
+                    graphics,
+                    x + width - 13,
+                    y + 9,
+                    x + width - 13 + dotSize,
+                    y + 9 + dotSize,
+                    RotClientTheme.SUCCESS,
+                    dotSize / 2);
+        }
+
         if (font == null) {
             return;
         }
-        glyph(
-                graphics,
-                font,
-                ellipsizeAndHover(font, label == null ? "" : label, width - 16, x + 10, y + 6, 12),
-                x + 10,
-                y + 8,
-                RotClientTheme.TEXT,
-                true);
+
+        int textReserve =
+                active
+                        ? 30
+                        : 18;
+
         glyph(
                 graphics,
                 font,
                 ellipsizeAndHover(
                         font,
-                        subtitle == null ? "" : subtitle,
-                        width - 16,
-                        x + 10,
+                        label == null
+                                ? ""
+                                : label,
+                        width - textReserve,
+                        x + 11,
+                        y + 6,
+                        12),
+                x + 11,
+                y + 8,
+                selected || hover
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_DIM,
+                true);
+
+        glyph(
+                graphics,
+                font,
+                ellipsizeAndHover(
+                        font,
+                        subtitle == null
+                                ? ""
+                                : subtitle,
+                        width - textReserve,
+                        x + 11,
                         y + 20,
                         12),
-                x + 10,
+                x + 11,
                 y + 22,
-                active ? RotClientTheme.SUCCESS : RotClientTheme.TEXT_MUTED,
+                active
+                        ? RotClientTheme.SUCCESS
+                        : selected
+                        ? RotClientTheme.TEXT_DIM
+                        : RotClientTheme.TEXT_MUTED,
                 false);
     }
-
     static void drawMetricCard(
             GuiGraphicsExtractor graphics,
             Font font,

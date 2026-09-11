@@ -710,34 +710,79 @@ final class MiningUiScreen extends Screen {
             int y,
             String label,
             double openAmount) {
-        boolean hovered = mouseX >= x
-                && mouseX < x + MODULE_WIDTH
-                && mouseY >= y
-                && mouseY < y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2;
-        RotClientUiDraw.drawChevron(
+
+        int height =
+                RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2;
+
+        int width =
+                MODULE_WIDTH - 8;
+
+        boolean hovered =
+                mouseX >= x
+                        && mouseX < x + MODULE_WIDTH
+                        && mouseY >= y
+                        && mouseY < y + height;
+
+        float open =
+                (float) RotClientEase.smoothstep(
+                        openAmount);
+
+        float surfaceAmount =
+                hovered
+                        ? 1.0F
+                        : open * 0.28F;
+
+        RotClientUiDraw.drawInteractiveSurface(
                 graphics,
                 x,
-                y,
+                y - 1,
+                width,
+                height + 2,
+                surfaceAmount,
+                false,
+                RotClientTheme.HUD_ACCENT,
+                RotClientUiDraw.RADIUS_SM);
+
+        RotClientUiDraw.drawChevron(
+                graphics,
+                x + 6,
+                y + 1,
                 openAmount,
-                hovered ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED);
+                hovered || open > 0.4F
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_MUTED);
+
         RotClientUiDraw.glyph(
                 graphics,
                 font,
                 label,
-                x + 14,
-                y,
-                hovered ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                x + 21,
+                y + 1,
+                hovered || open > 0.4F
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_DIM,
                 true);
-        if (hovered) {
+
+        if (open > 0.05F) {
+            int markerWidth =
+                    Math.max(
+                            8,
+                            Math.round(
+                                    24.0F * open));
+
             graphics.fill(
-                    x,
-                    y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 1,
-                    x + MODULE_WIDTH - 8,
-                    y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2,
-                    RotClientTheme.VIOLET);
+                    x + 21,
+                    y + height,
+                    x + 21 + markerWidth,
+                    y + height + 1,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            Math.max(
+                                    0x40,
+                                    Math.round(
+                                            0xC0 * open))));
         }
     }
-
     private boolean profilePanelOpen() {
         return profileCreateOpen
                 || profileEditMode != ProfileEditMode.NONE
