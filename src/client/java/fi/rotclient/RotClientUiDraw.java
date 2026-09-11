@@ -623,6 +623,129 @@ public final class RotClientUiDraw {
                         || hovered);
     }
 
+    static int drawAnimatedActionCard(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float hoverAmount,
+            boolean active) {
+
+        float t =
+                Math.max(
+                        0.0F,
+                        Math.min(
+                                1.0F,
+                                hoverAmount));
+
+        int lift =
+                Math.round(
+                        2.0F * t);
+
+        int visualY =
+                y - lift;
+
+        int shadowAlpha =
+                0x22
+                        + Math.round(
+                        0x24 * t);
+
+        roundedFill(
+                graphics,
+                x + 1,
+                visualY + 3,
+                x + width + 1,
+                visualY + height + 3,
+                withAlpha(
+                        0xFF000000,
+                        shadowAlpha),
+                RADIUS_SM);
+
+        roundedFill(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                RotClientTheme.SURFACE_ALT,
+                RADIUS_SM);
+
+        if (t > 0.001F) {
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            Math.round(
+                                    0x22 * t)),
+                    RADIUS_SM);
+        }
+
+        if (active) {
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0x1E),
+                    RADIUS_SM);
+        }
+
+        int borderColor;
+
+        if (active) {
+            borderColor =
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0xD0);
+
+        } else if (t > 0.001F) {
+            borderColor =
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0x58
+                                    + Math.round(
+                                    0x68 * t));
+
+        } else {
+            borderColor =
+                    RotClientTheme.BORDER;
+        }
+
+        roundedOutline(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                borderColor,
+                RADIUS_SM);
+
+        int railAlpha =
+                active
+                        ? 0xFF
+                        : 0x50
+                        + Math.round(
+                        0x70 * t);
+
+        graphics.fill(
+                x + 1,
+                visualY + 10,
+                x + 3,
+                visualY + height - 10,
+                withAlpha(
+                        RotClientTheme.HUD_ACCENT,
+                        railAlpha));
+
+        return visualY;
+    }
     static void drawCard(
             GuiGraphicsExtractor graphics, int x, int y, int width, int height, boolean hover) {
         int fill = hover ? RotClientTheme.HOVER_ROW : RotClientTheme.SURFACE_ALT;
