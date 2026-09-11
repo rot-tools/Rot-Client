@@ -711,44 +711,20 @@ final class MiningUiScreen extends Screen {
             String label,
             double openAmount) {
 
-        int height =
-                RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2;
-
-        int width =
-                MODULE_WIDTH - 8;
-
         boolean hovered =
                 mouseX >= x
                         && mouseX < x + MODULE_WIDTH
                         && mouseY >= y
-                        && mouseY < y + height;
-
-        float open =
-                (float) RotClientEase.smoothstep(
-                        openAmount);
-
-        float surfaceAmount =
-                hovered
-                        ? 1.0F
-                        : open * 0.28F;
-
-        RotClientUiDraw.drawInteractiveSurface(
-                graphics,
-                x,
-                y - 1,
-                width,
-                height + 2,
-                surfaceAmount,
-                false,
-                RotClientTheme.HUD_ACCENT,
-                RotClientUiDraw.RADIUS_SM);
+                        && mouseY < y
+                        + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                        + 2;
 
         RotClientUiDraw.drawChevron(
                 graphics,
-                x + 6,
-                y + 1,
+                x,
+                y,
                 openAmount,
-                hovered || open > 0.4F
+                hovered
                         ? RotClientTheme.TEXT
                         : RotClientTheme.TEXT_MUTED);
 
@@ -756,31 +732,24 @@ final class MiningUiScreen extends Screen {
                 graphics,
                 font,
                 label,
-                x + 21,
-                y + 1,
-                hovered || open > 0.4F
+                x + 14,
+                y,
+                hovered
                         ? RotClientTheme.TEXT
-                        : RotClientTheme.TEXT_DIM,
+                        : RotClientTheme.TEXT_MUTED,
                 true);
 
-        if (open > 0.05F) {
-            int markerWidth =
-                    Math.max(
-                            8,
-                            Math.round(
-                                    24.0F * open));
-
+        if (hovered) {
             graphics.fill(
-                    x + 21,
-                    y + height,
-                    x + 21 + markerWidth,
-                    y + height + 1,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.HUD_ACCENT,
-                            Math.max(
-                                    0x40,
-                                    Math.round(
-                                            0xC0 * open))));
+                    x,
+                    y
+                            + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                            + 1,
+                    x + MODULE_WIDTH - 8,
+                    y
+                            + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                            + 2,
+                    RotClientTheme.VIOLET);
         }
     }
     private boolean profilePanelOpen() {

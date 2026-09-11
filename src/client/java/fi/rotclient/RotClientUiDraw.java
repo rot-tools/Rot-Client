@@ -908,49 +908,34 @@ public final class RotClientUiDraw {
                         width,
                         height);
 
-        drawInteractiveSurface(
+        int fill =
+                selected
+                        ? RotClientTheme.SELECTED_ROW
+                        : hover
+                        ? RotClientTheme.HOVER_ROW
+                        : RotClientTheme.DASHBOARD_SIDEBAR;
+
+        roundedFill(
                 graphics,
                 x,
                 y,
-                width,
-                height,
-                hover
-                        ? 1.0F
-                        : 0.0F,
-                selected,
-                RotClientTheme.HUD_ACCENT,
+                x + width,
+                y + height,
+                fill,
                 RADIUS_SM);
 
         if (selected) {
             graphics.fill(
-                    x + 1,
-                    y + 7,
-                    x + 4,
-                    y + height - 7,
-                    RotClientTheme.HUD_ACCENT);
-        }
-
-        if (active) {
-            int dotSize = 6;
-
-            roundedFill(
-                    graphics,
-                    x + width - 13,
-                    y + 9,
-                    x + width - 13 + dotSize,
-                    y + 9 + dotSize,
-                    RotClientTheme.SUCCESS,
-                    dotSize / 2);
+                    x,
+                    y + 6,
+                    x + 3,
+                    y + height - 6,
+                    RotClientTheme.BORDER_BRIGHT);
         }
 
         if (font == null) {
             return;
         }
-
-        int textReserve =
-                active
-                        ? 30
-                        : 18;
 
         glyph(
                 graphics,
@@ -960,15 +945,13 @@ public final class RotClientUiDraw {
                         label == null
                                 ? ""
                                 : label,
-                        width - textReserve,
-                        x + 11,
+                        width - 16,
+                        x + 10,
                         y + 6,
                         12),
-                x + 11,
+                x + 10,
                 y + 8,
-                selected || hover
-                        ? RotClientTheme.TEXT
-                        : RotClientTheme.TEXT_DIM,
+                RotClientTheme.TEXT,
                 true);
 
         glyph(
@@ -979,16 +962,14 @@ public final class RotClientUiDraw {
                         subtitle == null
                                 ? ""
                                 : subtitle,
-                        width - textReserve,
-                        x + 11,
+                        width - 16,
+                        x + 10,
                         y + 20,
                         12),
-                x + 11,
+                x + 10,
                 y + 22,
                 active
                         ? RotClientTheme.SUCCESS
-                        : selected
-                        ? RotClientTheme.TEXT_DIM
                         : RotClientTheme.TEXT_MUTED,
                 false);
     }
