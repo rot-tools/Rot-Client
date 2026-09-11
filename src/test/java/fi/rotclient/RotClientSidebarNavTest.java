@@ -200,6 +200,24 @@ final class RotClientSidebarNavTest {
     }
 
     @Test
+    void marketWatchIsDirectModulesChild() {
+        RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
+                58, RotClientSidebarNav.defaultExpandedSections());
+
+        assertTrue(layout.marketWatchY() > layout.qolHeaderY());
+        assertTrue(layout.marketWatchY()
+                < layout.qolPageY(QolUtilityCatalog.Group.COMBAT));
+        assertEquals(
+                RotClientSidebarNav.HitTarget.MARKET_WATCH,
+                RotClientSidebarNav.hitTest(
+                        layout,
+                        20,
+                        layout.marketWatchY() + 8,
+                        8, 180, 8, 180));
+    }
+
+
+    @Test
     void miningIsNotATopLevelSidebarSection() {
         RotClientSidebarNav.Layout layout = RotClientSidebarNav.layout(
                 58, RotClientSidebarNav.defaultExpandedSections());

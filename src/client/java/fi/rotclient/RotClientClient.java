@@ -395,6 +395,8 @@ public final class RotClientClient implements ClientModInitializer {
         // ephemeral diagnostics engine so OTHER/chest collection continues without
         // a manual Session Analytics Start.
         ensureCurrentSessionCollection(System.currentTimeMillis());
+        MarketWatchRuntime.start();
+
         new BazaarPriceService().start(prices -> Minecraft.getInstance().execute(() ->
                 ClientBoundaryGuard.run("BAZAAR_PRICE_APPLY", () -> {
                     long observedAtMillis = System.currentTimeMillis();
@@ -409,6 +411,7 @@ public final class RotClientClient implements ClientModInitializer {
                     TrackerStore.save(CONFIG);
                 })));
 
+        MarketWatchAuctionHouseService.start();
         HudElementRegistry.addLast(
                 Identifier.fromNamespaceAndPath("rotclient", "tracker"),
                 (graphics, delta) -> ClientBoundaryGuard.run(
@@ -441,6 +444,23 @@ public final class RotClientClient implements ClientModInitializer {
                                 QOL_HUD.render(graphics);
                             }
                         }));
+
+        HudElementRegistry.addLast(
+                Identifier.fromNamespaceAndPath(
+                        "rotclient",
+                        "market_watch_alerts"),
+                (graphics, delta) ->
+                        ClientBoundaryGuard.run(
+                                "MARKET_WATCH_ALERT_HUD",
+                                () -> {
+                                    if (!StorageOverlayRuntime
+                                            .isOverlayOpen()) {
+
+                                        MarketWatchAlertHud
+                                                .render(
+                                                        graphics);
+                                    }
+                                }));
 
         registerVanillaHudHides();
 

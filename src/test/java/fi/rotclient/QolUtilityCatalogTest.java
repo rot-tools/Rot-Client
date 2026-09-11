@@ -392,7 +392,8 @@ final class QolUtilityCatalogTest {
                         && !id.equals("qol.mining_history.open_page")
                         && !id.startsWith("qol.appearance.open_")
                         && !id.equals("qol.custom_scoreboard.reset_appearance")
-                        && !id.equals("qol.custom_scoreboard.reset_events"))
+                        && !id.equals("qol.custom_scoreboard.reset_events")
+                        && !id.equals("qol.market_watch.open_dashboard"))
                 .collect(Collectors.toList());
 
         assertTrue(unsupported.isEmpty(), "Action rows without behavior: " + unsupported);
@@ -423,6 +424,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(110, moduleIds.size());
+        assertEquals(111, moduleIds.size());
     }
 }

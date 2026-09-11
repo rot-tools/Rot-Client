@@ -268,7 +268,7 @@ final class RingPolicyTest {
         Set<String> ids = QolUtilityCatalog.modules().stream()
                 .map(QolUtilityCatalog.ModuleDef::id)
                 .collect(java.util.stream.Collectors.toSet());
-        assertEquals(110, ids.size());
+        assertEquals(111, ids.size());
         assertTrue(QolUtilityCatalog.findById("qol.command_keybinds").settings().stream()
                 .noneMatch(setting -> "qol.command_keybinds.macros".equals(setting.id())));
     }

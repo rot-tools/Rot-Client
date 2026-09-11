@@ -61,6 +61,7 @@ final class MiningUiScreen extends Screen {
     private float autoSprintAnimation;
     private float cameraAnimation;
     private final QolUtilityDashboard qolDashboard;
+    private final MarketWatchDashboard marketWatchDashboard;
     private DashboardModule selectedModule;
 
     private boolean trackerDropdownOpen;
@@ -190,6 +191,7 @@ final class MiningUiScreen extends Screen {
         this.hud = hud;
         this.parent = parent;
         this.qolDashboard = new QolUtilityDashboard(config, this);
+        this.marketWatchDashboard = new MarketWatchDashboard();
         this.settings = List.of(
                 setting("showBlocks", () -> selectedTrackerLabel() + " BLOCKS",
                         () -> config.showBlocks,
@@ -324,6 +326,13 @@ final class MiningUiScreen extends Screen {
                     logicalMouseY);
         } else if (activeRoute == RotClientWorkspaceRoute.LOADOUTS) {
             drawLoadoutsPage(
+                    graphics,
+                    panelX,
+                    panelY,
+                    logicalMouseX,
+                    logicalMouseY);
+        } else if (activeRoute == RotClientWorkspaceRoute.MARKET_WATCH) {
+            drawMarketWatchPage(
                     graphics,
                     panelX,
                     panelY,
@@ -504,11 +513,16 @@ final class MiningUiScreen extends Screen {
                 workspace.activeRoute()
                         == RotClientWorkspaceRoute.LOADOUTS;
 
+        boolean marketWatchSelected =
+                workspace.activeRoute()
+                        == RotClientWorkspaceRoute.MARKET_WATCH;
+
         boolean visualsChildSelected =
                 appearanceSelected
                         || hudLayoutSelected
                         || profilesSelected
-                        || loadoutsSelected;
+                        || loadoutsSelected
+                        || marketWatchSelected;
         boolean qolSelected = selectedModule == DashboardModule.QOL_SETTINGS
                 && !visualsChildSelected;
 
@@ -596,8 +610,8 @@ final class MiningUiScreen extends Screen {
                     headerX, mapY.applyAsInt(layout.qolHeaderY()),
                     "Modules",
                     layout.qolOpen());
-            int qolClipTop = layout.qolPageYs() != null && layout.qolPageYs().length > 0
-                    ? mapY.applyAsInt(layout.qolPageYs()[0])
+            int qolClipTop = layout.marketWatchY() >= 0
+                    ? mapY.applyAsInt(layout.marketWatchY())
                     : mapY.applyAsInt(layout.qolHeaderY());
             drawSidebarChildren(
                     graphics,
@@ -608,6 +622,19 @@ final class MiningUiScreen extends Screen {
                     layout.qolClipHeight(),
                     () -> {
                         if (layout.qolChildrenVisible()) {
+                            drawModuleEntry(
+                                    graphics,
+                                    mouseX,
+                                    mouseY,
+                                    itemX,
+                                    mapY.applyAsInt(layout.marketWatchY()),
+                                    MODULE_WIDTH,
+                                    NAV_ITEM_HEIGHT,
+                                    "Market Watch",
+                                    "AH & Bazaar dashboard",
+                                    marketWatchSelected,
+                                    false,
+                                    false);
                             for (QolUtilityCatalog.Group group : QolUtilityCatalog.sidebarPages()) {
                                 drawModuleEntry(graphics, mouseX, mouseY,
                                         itemX, mapY.applyAsInt(layout.qolPageY(group)),
@@ -4986,6 +5013,23 @@ final class MiningUiScreen extends Screen {
         }
     }
 
+    private void drawMarketWatchPage(
+            GuiGraphicsExtractor graphics,
+            int panelX,
+            int panelY,
+            int mouseX,
+            int mouseY) {
+        marketWatchDashboard.draw(
+                graphics,
+                font,
+                panelX + SIDEBAR_WIDTH + CONTENT_INSET,
+                panelY + MASTER_Y,
+                panelX + panelW() - CONTENT_INSET,
+                panelY + panelH() - CONTENT_INSET,
+                mouseX,
+                mouseY);
+    }
+
     private void drawProfilesPage(
             GuiGraphicsExtractor graphics,
             int panelX,
@@ -7023,6 +7067,13 @@ int selectorY = masterY + 10;
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.captureChar(
+                        event.codepointAsString(),
+                        event.isAllowedChatCharacter())) {
+            return true;
+        }
+        if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.LOADOUTS
                 && loadoutCreateOpen
                 && loadoutNameFocused) {
@@ -7161,6 +7212,12 @@ int selectorY = masterY + 10;
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.captureKey(key)) {
+            return true;
+        }
 
         if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.LOADOUTS
@@ -7675,6 +7732,21 @@ int selectorY = masterY + 10;
             sidebarScroll.scrollBySteps(verticalAmount, 40);
             return true;
         }
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH) {
+            int contentLeft = panelX + SIDEBAR_WIDTH + CONTENT_INSET;
+            int contentRight = panelX + panelW() - CONTENT_INSET;
+            if (marketWatchDashboard.mouseScrolled(
+                    logicalX,
+                    logicalY,
+                    verticalAmount,
+                    contentLeft,
+                    panelY + MASTER_Y,
+                    contentRight,
+                    panelY + panelH() - CONTENT_INSET)) {
+                return true;
+            }
+        }
         if (selectedModule == DashboardModule.SESSION_ANALYTICS
                 && !trackerDropdownOpen
                 && !RotClientClient.workspace().activeRoute().isAppearance()) {
@@ -8046,6 +8118,11 @@ int selectorY = masterY + 10;
                 return true;
             }
 
+            case MARKET_WATCH -> {
+                openMarketWatchPage();
+                return true;
+            }
+
             case QOL_COMBAT, QOL_SLAYER, QOL_FISHING, QOL_FORAGING, QOL_DUNGEONS, QOL_KUUDRA, QOL_EVENTS, QOL_MINING,
                  QOL_GARDEN, QOL_GUI, QOL_UTILITIES, QOL_HUD_DISPLAY, QOL_RENDER, QOL_INTERFACE -> {
                 QolUtilityCatalog.Group group =
@@ -8111,6 +8188,18 @@ int selectorY = masterY + 10;
                     contentLeft,
                     contentRight,
                     panelY);
+        }
+
+        if (workspace.activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH) {
+            return marketWatchDashboard.mouseClicked(
+                    event.button(),
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentLeft,
+                    panelY + MASTER_Y,
+                    contentRight,
+                    panelY + panelH() - CONTENT_INSET);
         }
 
         if (workspace.activeRoute().isAppearance()) {
@@ -8358,6 +8447,17 @@ if (trackerDropdownOpen) {
 
         int panelX = panelX();
         int panelY = panelY();
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.mouseDragged(
+                        snappedMouseX,
+                        snappedMouseY,
+                        panelX + SIDEBAR_WIDTH + CONTENT_INSET,
+                        panelY + MASTER_Y,
+                        panelX + panelW() - CONTENT_INSET,
+                        panelY + panelH() - CONTENT_INSET)) {
+            return true;
+        }
         int sidebarTop = panelY + CHROME_HEIGHT;
         int sidebarBottom = sidebarBottomY(panelY);
         if (sidebarScroll.dragThumbTo(
@@ -8442,6 +8542,11 @@ if (trackerDropdownOpen) {
     public boolean mouseReleased(MouseButtonEvent event) {
         if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return super.mouseReleased(event);
+        }
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.MARKET_WATCH
+                && marketWatchDashboard.mouseReleased()) {
+            return true;
         }
         boolean scrollbarReleased = sidebarScroll.endThumbDrag();
         if (selectedModule == DashboardModule.QOL_SETTINGS) {
@@ -8746,6 +8851,20 @@ if (trackerDropdownOpen) {
         pushThen(() -> {
             selectVisualsChild(RotClientSidebarNav.HitTarget.HUD_LAYOUT);
             qolDashboard.openHudLayoutLanding();
+        });
+    }
+
+    void openMarketWatchPage() {
+        pushThen(() -> {
+            qolDashboard.closeLandings();
+            RotClientWorkspace workspace = RotClientClient.workspace();
+            if (openInNewTabGesture) {
+                workspace.addTab(RotClientWorkspaceRoute.MARKET_WATCH);
+            } else {
+                workspace.navigateActive(RotClientWorkspaceRoute.MARKET_WATCH);
+            }
+            syncSelectedModuleFromWorkspace();
+            RotClientClient.save();
         });
     }
 

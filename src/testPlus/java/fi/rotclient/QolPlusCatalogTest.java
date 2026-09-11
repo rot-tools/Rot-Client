@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 final class QolPlusCatalogTest {
     @Test
-    void plusCatalogKeepsOneHundredThirtyOneParents() {
+    void plusCatalogKeepsOneHundredThirtyTwoParents() {
         assertTrue(QolFlavorSupport.isPlus());
-        assertEquals(131, QolUtilityCatalog.modules().size());
+        assertEquals(132, QolUtilityCatalog.modules().size());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));
         assertNotNull(QolUtilityCatalog.findById("qol.freecam"));

@@ -70,7 +70,20 @@ final class SkyBlockMarketQuoteService {
         }
     }
 
-    private static volatile Quotes snapshot = new Quotes(Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
+    private static volatile Quotes snapshot =
+            new Quotes(
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of());
+
+    /*
+     * SkyBlock item ID -> underlying Minecraft/Bukkit material from
+     * Hypixel's official /resources/skyblock/items endpoint.
+     */
+    private static volatile Map<String, String> itemMaterials =
+            Map.of();
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(8))
             .build();
@@ -97,21 +110,103 @@ final class SkyBlockMarketQuoteService {
         return snapshot;
     }
 
+    static String material(
+            String itemId) {
+
+        String id =
+                itemId == null
+                        ? ""
+                        : itemId
+                        .trim()
+                        .toUpperCase(Locale.ROOT);
+
+        if (id.isBlank()) {
+            return "";
+        }
+
+        Map<String, String> current =
+                itemMaterials;
+
+        String direct =
+                current.get(id);
+
+        if (direct != null
+                && !direct.isBlank()) {
+
+            return direct;
+        }
+
+        String unstarred =
+                id.replace(
+                        "STARRED_",
+                        "");
+
+        String fallback =
+                current.get(unstarred);
+
+        return fallback == null
+                ? ""
+                : fallback;
+    }
+
     private static void refresh() {
-        Map<String, Double> buy = new HashMap<>();
-        Map<String, Double> sell = new HashMap<>();
-        Map<String, Double> npc = new HashMap<>();
-        Map<String, Double> motes = new HashMap<>();
-        Map<String, Double> bin = new HashMap<>();
-        fetchBazaar(buy, sell);
-        fetchItems(npc, motes);
-        fetchLowestBin(bin);
-        snapshot = new Quotes(
-                merge(snapshot.bazaarBuy(), buy),
-                merge(snapshot.bazaarSell(), sell),
-                merge(snapshot.npcCoins(), npc),
-                merge(snapshot.motes(), motes),
-                merge(snapshot.lowestBin(), bin));
+        Map<String, Double> buy =
+                new HashMap<>();
+
+        Map<String, Double> sell =
+                new HashMap<>();
+
+        Map<String, Double> npc =
+                new HashMap<>();
+
+        Map<String, Double> motes =
+                new HashMap<>();
+
+        Map<String, Double> bin =
+                new HashMap<>();
+
+        Map<String, String> materials =
+                new HashMap<>();
+
+        fetchBazaar(
+                buy,
+                sell);
+
+        fetchItems(
+                npc,
+                motes,
+                materials);
+
+        fetchLowestBin(
+                bin);
+
+        snapshot =
+                new Quotes(
+                        merge(
+                                snapshot.bazaarBuy(),
+                                buy),
+                        merge(
+                                snapshot.bazaarSell(),
+                                sell),
+                        merge(
+                                snapshot.npcCoins(),
+                                npc),
+                        merge(
+                                snapshot.motes(),
+                                motes),
+                        merge(
+                                snapshot.lowestBin(),
+                                bin));
+
+        /*
+         * Do not erase a good material cache when the item-resource
+         * endpoint temporarily fails.
+         */
+        if (!materials.isEmpty()) {
+            itemMaterials =
+                    Map.copyOf(
+                            materials);
+        }
     }
 
     private static Map<String, Double> merge(Map<String, Double> previous, Map<String, Double> next) {
@@ -144,28 +239,84 @@ final class SkyBlockMarketQuoteService {
         }
     }
 
-    private static void fetchItems(Map<String, Double> npc, Map<String, Double> motes) {
-        JsonObject root = getJson(ITEMS);
-        if (root == null || !root.has("items") || !root.get("items").isJsonArray()) {
+    private static void fetchItems(
+            Map<String, Double> npc,
+            Map<String, Double> motes,
+            Map<String, String> materials) {
+
+        JsonObject root =
+                getJson(ITEMS);
+
+        if (root == null
+                || !root.has("items")
+                || !root.get("items").isJsonArray()) {
+
             return;
         }
-        for (JsonElement element : root.getAsJsonArray("items")) {
-            if (element == null || !element.isJsonObject()) {
+
+        for (JsonElement element
+                : root.getAsJsonArray("items")) {
+
+            if (element == null
+                    || !element.isJsonObject()) {
+
                 continue;
             }
-            JsonObject item = element.getAsJsonObject();
-            String id = text(item, "id").toUpperCase(Locale.ROOT);
+
+            JsonObject item =
+                    element.getAsJsonObject();
+
+            String id =
+                    text(
+                            item,
+                            "id")
+                            .toUpperCase(Locale.ROOT);
+
             if (id.isBlank()) {
                 continue;
             }
-            putPositive(npc, id, number(item, "npc_sell_price"));
-            JsonObject rift = item.has("rift") && item.get("rift").isJsonObject()
-                    ? item.getAsJsonObject("rift")
-                    : null;
-            if (rift != null) {
-                putPositive(motes, id, number(rift, "motes_sell_price"));
+
+            String material =
+                    text(
+                            item,
+                            "material")
+                            .trim()
+                            .toUpperCase(Locale.ROOT);
+
+            if (!material.isBlank()) {
+                materials.put(
+                        id,
+                        material);
             }
-            putPositive(motes, id, number(item, "motes_sell_price"));
+
+            putPositive(
+                    npc,
+                    id,
+                    number(
+                            item,
+                            "npc_sell_price"));
+
+            JsonObject rift =
+                    item.has("rift")
+                            && item.get("rift").isJsonObject()
+                            ? item.getAsJsonObject("rift")
+                            : null;
+
+            if (rift != null) {
+                putPositive(
+                        motes,
+                        id,
+                        number(
+                                rift,
+                                "motes_sell_price"));
+            }
+
+            putPositive(
+                    motes,
+                    id,
+                    number(
+                            item,
+                            "motes_sell_price"));
         }
     }
 

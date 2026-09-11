@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 final class HudLayoutLandingPolicyTest {
     @Test
     void groupsVanillaAndRotOverlaysAndKeepsCatalogAt130() {
-        assertEquals(110, QolUtilityCatalog.modules().size());
+        assertEquals(111, QolUtilityCatalog.modules().size());
         assertFalse(HudLayoutLandingPolicy.sections().isEmpty());
         assertTrue(HudLayoutLandingPolicy.sections().stream()
                 .anyMatch(section -> "Vanilla / Hypixel".equals(section.title())));
