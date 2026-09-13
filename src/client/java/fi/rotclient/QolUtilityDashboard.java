@@ -38,6 +38,11 @@ final class QolUtilityDashboard {
     private final RotClientExpandState drawerExpand = new RotClientExpandState();
     private final java.util.HashMap<String, Double> moduleCardHoverAmounts =
             new java.util.HashMap<>();
+
+    private static final double MODULE_ACCORDION_SECONDS = 0.22D;
+    private double moduleAccordionProgress;
+    private long moduleAccordionLastNanos;
+    private boolean moduleAccordionClosing;
     private boolean pendingModuleResetConfirm;
     private boolean pendingHudStyleResetConfirm;
     private enum DrawerKind {
@@ -130,6 +135,7 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         draggingNumberSettingId = "";
         drawerScroll.reset();
+        resetModuleAccordionAnimation();
         persistWorkspaceView();
     }
 
@@ -163,6 +169,9 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         collapsedDrawerSections.clear();
         drawerScroll.reset();
+        moduleAccordionProgress = 0.0D;
+        moduleAccordionLastNanos = System.nanoTime();
+        moduleAccordionClosing = false;
         persistWorkspaceView();
     }
 
@@ -193,6 +202,7 @@ final class QolUtilityDashboard {
         listeningTextSettingId = "";
         collapsedDrawerSections.clear();
         drawerScroll.reset();
+        resetModuleAccordionAnimation();
         persistWorkspaceView();
     }
 
@@ -552,12 +562,17 @@ final class QolUtilityDashboard {
             int contentBottom,
             int mouseX,
             int mouseY) {
+        advanceModuleAccordionAnimation();
+
         int contentWidth = contentRight - contentLeft;
         boolean drawerOpen = isDrawerOpen();
-        boolean enumOpen = openEnumSettingId != null && !openEnumSettingId.isBlank();
-        boolean modal = drawerOpen || enumOpen;
+        boolean hudSideDrawer =
+                drawerOpen && drawerKind == DrawerKind.HUD;
+        boolean moduleAccordion =
+                drawerOpen && drawerKind == DrawerKind.MODULE;
+        boolean modal = hudSideDrawer;
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
-        boolean overlay = drawerOpen;
+        boolean overlay = hudSideDrawer;
         int listW = contentWidth;
         int listRight = contentLeft + listW;
         int listMouseX = modal ? Integer.MIN_VALUE : mouseX;
@@ -586,7 +601,7 @@ final class QolUtilityDashboard {
                     listBottom,
                     listMouseX,
                     listMouseY);
-            if (drawerOpen) {
+            if (hudSideDrawer) {
                 RotClientUiDraw.drawScrim(
                         graphics,
                         contentLeft,
@@ -636,7 +651,32 @@ final class QolUtilityDashboard {
                 listW - RotClientUiDraw.SCROLLBAR_HIT_WIDTH - 4);
         QolUtilityUiMath.PageLayout layout = QolUtilityUiMath.layoutPage(
                 modules, contentLeft, gridWidth);
-        listContentHeight = layout.height();
+
+        QolUtilityCatalog.ModuleDef accordionModule =
+                moduleAccordion ? moduleAccordionModule() : null;
+
+        int accordionRowY =
+                moduleAccordionRowY(layout, accordionModule);
+
+        int accordionTargetHeight =
+                accordionRowY >= 0
+                        ? moduleAccordionTargetHeight(accordionModule)
+                        : 0;
+
+        int accordionVisibleHeight =
+                accordionRowY >= 0
+                        ? moduleAccordionVisibleHeight(accordionModule)
+                        : 0;
+
+        if (moduleAccordion && accordionRowY < 0) {
+            completeModuleAccordionClose();
+            accordionModule = null;
+            accordionTargetHeight = 0;
+            accordionVisibleHeight = 0;
+        }
+
+        listContentHeight =
+                layout.height() + accordionVisibleHeight;
         listScroll.setBounds(
                 listContentHeight,
                 Math.max(0, listBottom - listTop));
@@ -648,7 +688,12 @@ final class QolUtilityDashboard {
         RotClientUiMotion.pushFractionalScroll(graphics, listScroll);
         try {
             for (QolUtilityUiMath.PlacedHeader header : layout.headers()) {
-                int y = baseY + header.y();
+                int y = baseY
+                        + header.y()
+                        + moduleAccordionShift(
+                                header.y(),
+                                accordionRowY,
+                                accordionVisibleHeight);
                 if (y + QolUtilityUiMath.GROUP_HEADER_HEIGHT < listTop
                         || y > listBottom) {
                     continue;
@@ -685,7 +730,12 @@ final class QolUtilityDashboard {
                 }
             }
             for (QolUtilityUiMath.PlacedCard card : layout.cards()) {
-                int y = baseY + card.y();
+                int y = baseY
+                        + card.y()
+                        + moduleAccordionShift(
+                                card.y(),
+                                accordionRowY,
+                                accordionVisibleHeight);
                 if (y + QolUtilityUiMath.CARD_HEIGHT >= listTop
                         && y <= listBottom) {
                     String tip = drawModuleCard(
@@ -699,6 +749,57 @@ final class QolUtilityDashboard {
                             listMouseY);
                     if (tip != null) {
                         hoverTip = tip;
+                    }
+                }
+            }
+            if (accordionModule != null
+                    && accordionRowY >= 0
+                    && accordionVisibleHeight > 0) {
+
+                int accordionY =
+                        baseY
+                                + accordionRowY
+                                + QolUtilityUiMath.CARD_HEIGHT
+                                + QolUtilityUiMath.CARD_GAP / 2;
+
+                int clipTop =
+                        Math.max(listTop, accordionY);
+
+                int clipBottom =
+                        Math.min(
+                                listBottom,
+                                accordionY + accordionVisibleHeight);
+
+                if (clipBottom > clipTop) {
+                    int accordionMouseX =
+                            moduleAccordionClosing
+                                    ? Integer.MIN_VALUE
+                                    : listMouseX;
+
+                    int accordionMouseY =
+                            moduleAccordionClosing
+                                    ? Integer.MIN_VALUE
+                                    : listMouseY;
+
+                    graphics.enableScissor(
+                            contentLeft,
+                            clipTop,
+                            contentLeft + gridWidth,
+                            clipBottom);
+
+                    try {
+                        drawDrawer(
+                                graphics,
+                                font,
+                                contentLeft,
+                                accordionY,
+                                gridWidth,
+                                accordionTargetHeight,
+                                accordionMouseX,
+                                accordionMouseY,
+                                false);
+                    } finally {
+                        graphics.disableScissor();
                     }
                 }
             }
@@ -746,7 +847,7 @@ final class QolUtilityDashboard {
                     Math.max(1, contentBottom - contentTop));
         }
 
-        if (drawerOpen) {
+        if (hudSideDrawer) {
             int drawerX = contentRight - drawerW;
             int drawerY = contentTop;
             drawDrawer(
@@ -1040,6 +1141,227 @@ final class QolUtilityDashboard {
                 next);
     }
 
+    private boolean moduleAccordionOpen() {
+        return isDrawerOpen() && drawerKind == DrawerKind.MODULE;
+    }
+
+    private QolUtilityCatalog.ModuleDef moduleAccordionModule() {
+        if (!moduleAccordionOpen()) {
+            return null;
+        }
+        return QolUtilityCatalog.findById(openModuleId);
+    }
+
+    private void resetModuleAccordionAnimation() {
+        moduleAccordionProgress = 0.0D;
+        moduleAccordionLastNanos = 0L;
+        moduleAccordionClosing = false;
+    }
+
+    private void requestModuleAccordionClose() {
+        if (!moduleAccordionOpen()) {
+            closeDrawer();
+            return;
+        }
+
+        pendingModuleResetConfirm = false;
+        openEnumSettingId = "";
+        enumQuery = "";
+        enumSearchFocused = false;
+        listeningKeybindSettingId = "";
+        listeningTextSettingId = "";
+        draggingNumberSettingId = "";
+
+        moduleAccordionClosing = true;
+        moduleAccordionLastNanos = System.nanoTime();
+
+        if (moduleAccordionProgress <= 0.0001D) {
+            completeModuleAccordionClose();
+        }
+    }
+
+    private void completeModuleAccordionClose() {
+        openModuleId = "";
+        drawerKind = DrawerKind.MODULE;
+        pendingModuleResetConfirm = false;
+        pendingHudStyleResetConfirm = false;
+        openEnumSettingId = "";
+        enumQuery = "";
+        enumSearchFocused = false;
+        listeningKeybindSettingId = "";
+        listeningTextSettingId = "";
+        draggingNumberSettingId = "";
+        drawerScroll.reset();
+        resetModuleAccordionAnimation();
+        persistWorkspaceView();
+    }
+
+    private void toggleModuleAccordion(String moduleId) {
+        if (moduleId == null || moduleId.isBlank()) {
+            return;
+        }
+
+        if (focusingModule(moduleId)) {
+            if (moduleAccordionClosing) {
+                moduleAccordionClosing = false;
+                moduleAccordionLastNanos = System.nanoTime();
+            } else {
+                requestModuleAccordionClose();
+            }
+            return;
+        }
+
+        openModule(moduleId);
+    }
+
+    private void advanceModuleAccordionAnimation() {
+        if (!moduleAccordionOpen()) {
+            resetModuleAccordionAnimation();
+            return;
+        }
+
+        long now = System.nanoTime();
+
+        if (moduleAccordionLastNanos == 0L) {
+            moduleAccordionLastNanos = now;
+            return;
+        }
+
+        double elapsed = Math.max(
+                0.0D,
+                Math.min(
+                        0.05D,
+                        (now - moduleAccordionLastNanos) / 1_000_000_000.0D));
+
+        moduleAccordionLastNanos = now;
+
+        double step = elapsed / MODULE_ACCORDION_SECONDS;
+
+        if (moduleAccordionClosing) {
+            moduleAccordionProgress = Math.max(
+                    0.0D,
+                    moduleAccordionProgress - step);
+
+            if (moduleAccordionProgress <= 0.0D) {
+                completeModuleAccordionClose();
+            }
+            return;
+        }
+
+        moduleAccordionProgress = Math.min(
+                1.0D,
+                moduleAccordionProgress + step);
+    }
+
+    private int moduleAccordionTargetHeight(
+            QolUtilityCatalog.ModuleDef module) {
+        if (module == null) {
+            return 0;
+        }
+
+        int bodyHeight = 0;
+
+        if (module.toggleable() && runtimeAvailable(module)) {
+            bodyHeight += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 8;
+        } else if (module.wip() || !module.runtimeReady()) {
+            bodyHeight += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 4;
+        }
+
+        String sectionId = "";
+
+        for (QolUtilityCatalog.SettingDef setting : currentDrawerSettings(module)) {
+            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
+                sectionId = setting.id();
+                bodyHeight += QolUtilityUiMath.DRAWER_SECTION_HEIGHT;
+                continue;
+            }
+
+            double open = drawerSectionAmount(sectionId);
+
+            if (open <= 0.02D) {
+                continue;
+            }
+
+            int step = QolUtilityUiMath.settingRowHeight(setting) + 4;
+            int shown = sectionId.isEmpty()
+                    ? step
+                    : RotClientEase.shownPixels(step, open);
+
+            bodyHeight += Math.max(0, shown);
+
+            if (runtimeAvailable(module)
+                    && setting.type() == QolUtilityCatalog.SettingType.ENUM
+                    && setting.id().equals(openEnumSettingId)) {
+
+                if (OverflowListPolicy.needsSearch(setting.enumOptions().size())) {
+                    int searchShown = sectionId.isEmpty()
+                            ? QolUtilityUiMath.HUD_MENU_SEARCH_HEIGHT
+                            : RotClientEase.shownPixels(
+                                    QolUtilityUiMath.HUD_MENU_SEARCH_HEIGHT,
+                                    open);
+
+                    bodyHeight += Math.max(0, searchShown);
+                }
+
+                int optionHeight = sectionId.isEmpty()
+                        ? QolUtilityUiMath.ENUM_OPTION_HEIGHT
+                        : RotClientEase.shownPixels(
+                                QolUtilityUiMath.ENUM_OPTION_HEIGHT,
+                                open);
+
+                bodyHeight += Math.max(0, optionHeight)
+                        * visibleEnumOptions(setting).size();
+            }
+        }
+
+        if (!module.settings().isEmpty() && runtimeAvailable(module)) {
+            bodyHeight += 8 + QolUtilityUiMath.DRAWER_ROW_HEIGHT + 4;
+        }
+
+        return Math.max(96, bodyHeight + 68);
+    }
+
+    private int moduleAccordionVisibleHeight(
+            QolUtilityCatalog.ModuleDef module) {
+        if (module == null) {
+            return 0;
+        }
+
+        double eased = RotClientEase.smoothstep(moduleAccordionProgress);
+
+        return (int) Math.round(
+                moduleAccordionTargetHeight(module) * eased);
+    }
+
+    private static int moduleAccordionRowY(
+            QolUtilityUiMath.PageLayout layout,
+            QolUtilityCatalog.ModuleDef module) {
+        if (layout == null || module == null) {
+            return -1;
+        }
+
+        for (QolUtilityUiMath.PlacedCard card : layout.cards()) {
+            if (card.module() != null
+                    && module.id().equals(card.module().id())) {
+                return card.y();
+            }
+        }
+
+        return -1;
+    }
+
+    private static int moduleAccordionShift(
+            int itemY,
+            int accordionRowY,
+            int visibleHeight) {
+        if (accordionRowY < 0
+                || visibleHeight <= 0
+                || itemY <= accordionRowY) {
+            return 0;
+        }
+
+        return visibleHeight;
+    }
     private static String[] moduleDescriptionLines(
             Font font,
             String value,
@@ -2837,7 +3159,7 @@ final class QolUtilityDashboard {
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
         int listW = contentWidth;
 
-        if (drawerOpen) {
+        if (drawerOpen && drawerKind == DrawerKind.HUD) {
             int drawerX = contentRight - drawerW;
             int drawerY = contentTop;
             int drawerH = contentBottom - drawerY;
@@ -2919,8 +3241,63 @@ final class QolUtilityDashboard {
                         this::isEnabled),
                 contentLeft,
                 gridWidth);
+        QolUtilityCatalog.ModuleDef accordionModule =
+                drawerOpen && drawerKind == DrawerKind.MODULE
+                        ? moduleAccordionModule()
+                        : null;
+
+        int accordionRowY =
+                moduleAccordionRowY(layout, accordionModule);
+
+        int accordionTargetHeight =
+                accordionRowY >= 0
+                        ? moduleAccordionTargetHeight(accordionModule)
+                        : 0;
+
+        int accordionVisibleHeight =
+                accordionRowY >= 0
+                        ? moduleAccordionVisibleHeight(accordionModule)
+                        : 0;
+
+        if (accordionModule != null
+                && accordionRowY >= 0
+                && accordionVisibleHeight > 0) {
+
+            int accordionY =
+                    baseY
+                            + accordionRowY
+                            + QolUtilityUiMath.CARD_HEIGHT
+                            + QolUtilityUiMath.CARD_GAP / 2;
+
+            if (RotClientUiDraw.inside(
+                    mx,
+                    my,
+                    contentLeft,
+                    accordionY,
+                    gridWidth,
+                    accordionVisibleHeight)) {
+
+                if (moduleAccordionClosing) {
+                    return true;
+                }
+
+                return handleDrawerClick(
+                        button,
+                        mx,
+                        my,
+                        contentLeft,
+                        accordionY,
+                        gridWidth,
+                        accordionTargetHeight);
+            }
+        }
         for (QolUtilityUiMath.PlacedCard card : layout.cards()) {
-            int cardY = baseY + card.y();
+            int cardY = baseY
+                    + card.y()
+                    + moduleAccordionShift(
+                            card.y(),
+                            accordionRowY,
+                            accordionVisibleHeight);
             if (RotClientUiDraw.inside(
                     mx,
                     my,
@@ -2974,7 +3351,7 @@ final class QolUtilityDashboard {
                 openAppearanceLanding();
                 return true;
             }
-            openModule(module.id());
+            toggleModuleAccordion(module.id());
             return true;
         }
         if (action == QolUtilityUiMath.CardAction.TOGGLE) {
@@ -3001,7 +3378,11 @@ final class QolUtilityDashboard {
             return true;
         }
         if (QolUtilityUiMath.hitClose(mx, my, drawerX, drawerY, drawerW)) {
-            closeDrawer();
+            if (drawerKind == DrawerKind.MODULE) {
+                requestModuleAccordionClose();
+            } else {
+                closeDrawer();
+            }
             return true;
         }
         QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openModuleId);
@@ -4049,7 +4430,7 @@ final class QolUtilityDashboard {
         boolean drawerOpen = isDrawerOpen();
         int drawerW = QolUtilityUiMath.drawerWidth(contentWidth);
 
-        if (drawerOpen) {
+        if (drawerOpen && drawerKind == DrawerKind.HUD) {
             int drawerX = contentRight - drawerW;
             int drawerY = contentTop;
             int drawerH = contentBottom - drawerY;
