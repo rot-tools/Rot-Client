@@ -21,7 +21,7 @@ public final class QolPlusCatalog {
         List<ModuleDef> modules = new ArrayList<>();
         modules.add(module(
                 "qol.map_art_override",
-                "Map Art Override",
+                "Fox",
                 "Locally replace rendered maps with the bundled image or your own local image. Supports contiguous, unrotated horizontal item-frame panels. Never changes map data or sends anything to a server.",
                 Group.RENDER,
                 "Local Visuals",

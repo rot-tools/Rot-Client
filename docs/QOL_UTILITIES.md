@@ -36,11 +36,11 @@ settings; cheat children exist only in Plus.
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Map Art Override; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Fox; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
 
-## Map Art Override (Plus)
+## Fox (Plus)
 
-`qol.map_art_override` is a local render replacement, default **off**. It uses
+**Fox** (`qol.map_art_override`) is a local render replacement, default **off**. It uses
 the bundled map-art image, or an optional image path supplied in the dashboard,
 without modifying a map item, map packet, or server state. Same-facing,
 unrotated horizontal map frames are grouped only when they form one contiguous
