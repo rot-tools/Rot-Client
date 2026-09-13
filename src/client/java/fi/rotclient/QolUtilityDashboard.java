@@ -3200,69 +3200,173 @@ final class QolUtilityDashboard {
             int listBottom,
             int mouseX,
             int mouseY) {
-        boolean backHover = AppearanceLandingPolicy.hitBack(
-                mouseX, mouseY, contentLeft, listTop);
+
+        boolean backHover =
+                AppearanceLandingPolicy.hitBack(
+                        mouseX,
+                        mouseY,
+                        contentLeft,
+                        listTop);
+
         RotClientUiDraw.text(
                 graphics,
                 font,
-                "← Back",
+                "\u2190 Back",
                 contentLeft,
                 listTop + 4,
-                backHover ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                backHover
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_MUTED,
                 backHover);
-        RotClientUiDraw.text(
+
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
                 "Appearance",
                 contentLeft + 80,
-                listTop + 4,
-                RotClientTheme.TEXT,
-                true);
-        int gridWidth = Math.max(
-                1,
-                contentRight - contentLeft - RotClientUiDraw.SCROLLBAR_HIT_WIDTH - 4);
-        java.util.List<AppearanceLandingPolicy.Card> cards = AppearanceLandingPolicy.cards();
-        for (int i = 0; i < cards.size(); i++) {
-            AppearanceLandingPolicy.Card card = cards.get(i);
-            int[] rect = AppearanceLandingPolicy.cardRect(i, contentLeft, listTop, gridWidth);
-            boolean hover = RotClientUiDraw.inside(
-                    mouseX, mouseY, rect[0], rect[1], rect[2], rect[3]);
-            RotClientUiDraw.roundedFill(
+                listTop + 1);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "Shape the dashboard, colors, background and data visuals.",
+                contentLeft + 80,
+                listTop + 16);
+
+        int gridWidth =
+                Math.max(
+                        1,
+                        contentRight
+                                - contentLeft
+                                - RotClientUiDraw.SCROLLBAR_HIT_WIDTH
+                                - 4);
+
+        java.util.List<AppearanceLandingPolicy.Card> cards =
+                AppearanceLandingPolicy.cards();
+
+        for (int i = 0;
+             i < cards.size();
+             i++) {
+
+            AppearanceLandingPolicy.Card card =
+                    cards.get(i);
+
+            int[] rect =
+                    AppearanceLandingPolicy.cardRect(
+                            i,
+                            contentLeft,
+                            listTop,
+                            gridWidth);
+
+            boolean hover =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            rect[0],
+                            rect[1],
+                            rect[2],
+                            rect[3]);
+
+            float hoverAmount =
+                    moduleCardHoverAmount(
+                            "appearance:"
+                                    + card.actionId(),
+                            hover);
+
+            RotClientUiDraw.drawInteractiveSurface(
                     graphics,
                     rect[0],
                     rect[1],
-                    rect[0] + rect[2],
-                    rect[1] + rect[3],
-                    hover ? RotClientTheme.HOVER_ROW : RotClientTheme.SURFACE_ALT,
+                    rect[2],
+                    rect[3],
+                    hoverAmount,
+                    false,
+                    accentColor(),
                     panelRadius());
-            RotClientUiDraw.roundedOutline(
-                    graphics,
-                    rect[0],
-                    rect[1],
-                    rect[0] + rect[2],
-                    rect[1] + rect[3],
-                    hover ? RotClientTheme.VIOLET : RotClientTheme.BORDER,
-                    panelRadius());
+
             graphics.fill(
-                    rect[0],
-                    rect[1] + 8,
+                    rect[0] + 1,
+                    rect[1] + 10,
                     rect[0] + 4,
-                    rect[1] + QolUtilityUiMath.CARD_HEIGHT - 8,
+                    rect[1] + rect[3] - 10,
                     accentColor());
+
+            String category =
+                    switch (
+                            AppearanceLandingPolicy.sectionId(
+                                    card.actionId())) {
+
+                        case "dashboard" ->
+                                "INTERFACE";
+
+                        case "colors" ->
+                                "THEME";
+
+                        case "background" ->
+                                "CANVAS";
+
+                        case "charts" ->
+                                "DATA";
+
+                        case "reset" ->
+                                "DEFAULTS";
+
+                        default ->
+                                "VISUALS";
+                    };
+
             RotClientUiDraw.text(
-                    graphics, font, card.title(),
-                    rect[0] + 16, rect[1] + 28, RotClientTheme.TEXT, true);
+                    graphics,
+                    font,
+                    category,
+                    rect[0] + 16,
+                    rect[1] + 11,
+                    RotClientTheme.VIOLET,
+                    true);
+
             RotClientUiDraw.text(
-                    graphics, font, card.subtitle(),
-                    rect[0] + 16, rect[1] + 48, RotClientTheme.TEXT_MUTED, false);
-            RotClientUiDraw.drawButton(
+                    graphics,
+                    font,
+                    card.title(),
+                    rect[0] + 16,
+                    rect[1] + 27,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsizeAndHover(
+                            font,
+                            card.subtitle(),
+                            Math.max(
+                                    20,
+                                    rect[2] - 32),
+                            rect[0] + 16,
+                            rect[1] + 41,
+                            12),
+                    rect[0] + 16,
+                    rect[1] + 43);
+
+            int buttonX =
+                    rect[0]
+                            + rect[2]
+                            - QolUtilityUiMath.SETTINGS_BUTTON_WIDTH
+                            - 14;
+
+            int buttonY =
+                    rect[1]
+                            + rect[3]
+                            - QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT
+                            - 12;
+
+            RotClientUiDraw.drawPremiumButton(
                     graphics,
                     font,
                     mouseX,
                     mouseY,
-                    rect[0] + rect[2] - QolUtilityUiMath.SETTINGS_BUTTON_WIDTH - 14,
-                    rect[1] + QolUtilityUiMath.CARD_HEIGHT
-                            - QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT - 12,
+                    buttonX,
+                    buttonY,
                     QolUtilityUiMath.SETTINGS_BUTTON_WIDTH,
                     QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT,
                     "Open",
@@ -3270,7 +3374,6 @@ final class QolUtilityDashboard {
                     true);
         }
     }
-
     private void drawHudLayoutLanding(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -3280,87 +3383,209 @@ final class QolUtilityDashboard {
             int listBottom,
             int mouseX,
             int mouseY) {
-        int listW = contentRight - contentLeft;
-        int gridWidth = Math.max(
-                1,
-                listW - RotClientUiDraw.SCROLLBAR_HIT_WIDTH - 4);
-        int headerBottom = listTop + HudLayoutLandingPolicy.headerHeight();
-        listContentHeight = HudLayoutLandingPolicy.contentHeight();
+
+        int listW =
+                contentRight - contentLeft;
+
+        int gridWidth =
+                Math.max(
+                        1,
+                        listW
+                                - RotClientUiDraw.SCROLLBAR_HIT_WIDTH
+                                - 4);
+
+        int headerBottom =
+                listTop
+                        + HudLayoutLandingPolicy.headerHeight();
+
+        listContentHeight =
+                HudLayoutLandingPolicy.contentHeight();
+
         listScroll.setBounds(
                 listContentHeight,
-                Math.max(0, listBottom - headerBottom));
-        listScroll.advanceSeconds(RotClientUiClock.seconds());
-        int scroll = listScroll.scrollPixels();
-        boolean backHover = AppearanceLandingPolicy.hitBack(
-                mouseX, mouseY, contentLeft, listTop);
+                Math.max(
+                        0,
+                        listBottom - headerBottom));
+
+        listScroll.advanceSeconds(
+                RotClientUiClock.seconds());
+
+        int scroll =
+                listScroll.scrollPixels();
+
+        boolean backHover =
+                AppearanceLandingPolicy.hitBack(
+                        mouseX,
+                        mouseY,
+                        contentLeft,
+                        listTop);
+
         RotClientUiDraw.text(
                 graphics,
                 font,
-                "← Back",
+                "\u2190 Back",
                 contentLeft,
                 listTop + 4,
-                backHover ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                backHover
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_MUTED,
                 backHover);
-        RotClientUiDraw.text(
+
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
                 HudLayoutLandingPolicy.TITLE,
                 contentLeft + 80,
-                listTop + 4,
-                RotClientTheme.TEXT,
-                true);
-        RotClientUiDraw.text(
+                listTop + 1);
+
+        RotClientUiDraw.helpText(
                 graphics,
                 font,
                 HudLayoutLandingPolicy.SUBTITLE,
-                contentLeft,
-                listTop + 16,
-                RotClientTheme.TEXT_MUTED,
-                false);
-        RotClientUiDraw.drawButton(
+                contentLeft + 80,
+                listTop + 16);
+
+        RotClientUiDraw.drawPremiumButton(
                 graphics,
                 font,
                 mouseX,
                 mouseY,
                 contentLeft,
-                listTop + HudLayoutLandingPolicy.EDITOR_TOP,
+                listTop
+                        + HudLayoutLandingPolicy.EDITOR_TOP,
                 168,
                 HudLayoutLandingPolicy.EDITOR_HEIGHT,
-                "Open editor",
+                "Open layout editor",
                 true,
                 true);
-        graphics.enableScissor(contentLeft, headerBottom, contentRight, listBottom);
-        RotClientUiMotion.pushFractionalScroll(graphics, listScroll);
+
+        java.util.List<HudLayoutLandingPolicy.Row> allRows =
+                HudLayoutLandingPolicy.rows();
+
+        int enabledRows = 0;
+
+        for (HudLayoutLandingPolicy.Row row
+                : allRows) {
+
+            if (hudLayoutRowOn(row)) {
+                enabledRows++;
+            }
+        }
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                enabledRows
+                        + " of "
+                        + allRows.size()
+                        + " elements enabled",
+                contentLeft + 180,
+                listTop
+                        + HudLayoutLandingPolicy.EDITOR_TOP
+                        + 9);
+
+        graphics.enableScissor(
+                contentLeft,
+                headerBottom,
+                contentRight,
+                listBottom);
+
+        RotClientUiMotion.pushFractionalScroll(
+                graphics,
+                listScroll);
+
         try {
-            int y = headerBottom + HudLayoutLandingPolicy.SECTION_GAP - scroll;
-            for (HudLayoutLandingPolicy.Section section : HudLayoutLandingPolicy.sections()) {
+            int y =
+                    headerBottom
+                            + HudLayoutLandingPolicy.SECTION_GAP
+                            - scroll;
+
+            for (HudLayoutLandingPolicy.Section section
+                    : HudLayoutLandingPolicy.sections()) {
+
+                String sectionTitle =
+                        section.title()
+                                + "  \u00B7  "
+                                + section.rows().size();
+
                 RotClientUiDraw.text(
-                        graphics, font, section.title(),
-                        contentLeft, y + 2, RotClientTheme.TEXT_DIM, true);
-                y += HudLayoutLandingPolicy.SECTION_LABEL_HEIGHT;
-                for (HudLayoutLandingPolicy.Row row : section.rows()) {
-                    boolean on = hudLayoutRowOn(row);
-                    boolean hover = RotClientUiDraw.inside(
-                            mouseX, mouseY, contentLeft, y, gridWidth,
-                            HudLayoutLandingPolicy.ROW_HEIGHT);
-                    RotClientUiDraw.roundedFill(
+                        graphics,
+                        font,
+                        sectionTitle,
+                        contentLeft + 2,
+                        y + 2,
+                        RotClientTheme.TEXT_DIM,
+                        true);
+
+                y +=
+                        HudLayoutLandingPolicy.SECTION_LABEL_HEIGHT;
+
+                for (HudLayoutLandingPolicy.Row row
+                        : section.rows()) {
+
+                    boolean on =
+                            hudLayoutRowOn(
+                                    row);
+
+                    boolean hover =
+                            RotClientUiDraw.inside(
+                                    mouseX,
+                                    mouseY,
+                                    contentLeft,
+                                    y,
+                                    gridWidth,
+                                    HudLayoutLandingPolicy.ROW_HEIGHT);
+
+                    float hoverAmount =
+                            moduleCardHoverAmount(
+                                    "hud:"
+                                            + row.settingId(),
+                                    hover);
+
+                    RotClientUiDraw.drawInteractiveSurface(
                             graphics,
                             contentLeft,
                             y,
-                            contentLeft + gridWidth,
-                            y + HudLayoutLandingPolicy.ROW_HEIGHT,
-                            hover ? RotClientTheme.HOVER_ROW : RotClientTheme.SURFACE_ALT,
+                            gridWidth,
+                            HudLayoutLandingPolicy.ROW_HEIGHT,
+                            hoverAmount,
+                            false,
+                            on
+                                    ? accentColor()
+                                    : RotClientTheme.BORDER_BRIGHT,
                             panelRadius());
+
+                    if (on) {
+                        graphics.fill(
+                                contentLeft + 1,
+                                y + 8,
+                                contentLeft + 4,
+                                y
+                                        + HudLayoutLandingPolicy.ROW_HEIGHT
+                                        - 8,
+                                accentColor());
+                    }
+
                     RotClientUiDraw.text(
-                            graphics, font, row.label(),
-                            contentLeft + 12, y + 8, RotClientTheme.TEXT, true);
+                            graphics,
+                            font,
+                            row.label(),
+                            contentLeft + 12,
+                            y + 8,
+                            on
+                                    ? RotClientTheme.TEXT
+                                    : RotClientTheme.TEXT_DIM,
+                            true);
+
                     RotClientUiDraw.text(
                             graphics,
                             font,
                             RotClientUiDraw.ellipsizeAndHover(
                                     font,
                                     row.description(),
-                                    gridWidth - 160,
+                                    Math.max(
+                                            40,
+                                            gridWidth - 170),
                                     contentLeft + 12,
                                     y + 24,
                                     12),
@@ -3368,11 +3593,21 @@ final class QolUtilityDashboard {
                             y + 26,
                             RotClientTheme.TEXT_MUTED,
                             false);
-                    int toggleX = contentLeft + gridWidth
-                            - HudLayoutLandingPolicy.TOGGLE_WIDTH - 12;
+
+                    int toggleX =
+                            contentLeft
+                                    + gridWidth
+                                    - HudLayoutLandingPolicy.TOGGLE_WIDTH
+                                    - 12;
+
                     if (row.hasSettings()) {
-                        int settingsX = toggleX - HudLayoutLandingPolicy.SETTINGS_WIDTH - 8;
-                        RotClientUiDraw.drawButton(
+
+                        int settingsX =
+                                toggleX
+                                        - HudLayoutLandingPolicy.SETTINGS_WIDTH
+                                        - 8;
+
+                        RotClientUiDraw.drawPremiumButton(
                                 graphics,
                                 font,
                                 mouseX,
@@ -3385,31 +3620,41 @@ final class QolUtilityDashboard {
                                 false,
                                 true);
                     }
+
                     RotClientUiDraw.drawToggle(
                             graphics,
                             toggleX,
                             y + 16,
                             on,
                             hover);
-                    y += HudLayoutLandingPolicy.ROW_HEIGHT + HudLayoutLandingPolicy.ROW_GAP;
+
+                    y +=
+                            HudLayoutLandingPolicy.ROW_HEIGHT
+                                    + HudLayoutLandingPolicy.ROW_GAP;
                 }
+
                 y += 8;
             }
+
         } finally {
-            RotClientUiMotion.pop(graphics);
+            RotClientUiMotion.pop(
+                    graphics);
+
             graphics.disableScissor();
         }
+
         if (listScroll.canScroll()) {
             RotClientUiDraw.drawScrollbar(
                     graphics,
-                    contentRight - RotClientUiDraw.SCROLLBAR_WIDTH - 2,
+                    contentRight
+                            - RotClientUiDraw.SCROLLBAR_WIDTH
+                            - 2,
                     headerBottom,
                     listBottom,
                     listContentHeight,
                     scroll);
         }
     }
-
     private boolean handleHudLayoutLandingClick(
             int mx,
             int my,
