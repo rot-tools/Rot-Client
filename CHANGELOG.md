@@ -18,6 +18,9 @@ and the project uses semantic versioning where practical.
   in `rotclient-plus.json`.
 
 ### Rot Client+ render
+* Fox also replaces large fixed item-display wall art locally, using the same
+  bundled image as maps and paintings, without altering the server entity.
+
 * Fox now also replaces local Minecraft paintings, stretching the bundled image
   across each painting's dimensions without altering the server entity.
 

@@ -43,10 +43,12 @@ settings; cheat children exist only in Plus.
 **Fox** (`qol.map_art_override`) is a local render replacement, default **off**. It uses
 the bundled map-art image, or an optional image path supplied in the dashboard,
 without modifying a map item, painting entity, map packet, or server state. A
-painting stretches the image to its own dimensions. Same-facing,
-unrotated horizontal map frames are grouped only when they form one contiguous
-rectangle; each frame receives its own UV region so the image stretches across
-the panel. Runtime playtest remains pending.
+painting stretches the image to its own dimensions. Large fixed item-display
+wall art (maps, paintings, or a large flat/culling box) is replaced the same
+way. Same-facing, unrotated horizontal map frames or matching item-display
+panels are grouped only when they form one contiguous rectangle; each tile
+receives its own UV region so the image stretches across the panel. Runtime
+playtest remains pending.
 | Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; No Cursor Reset; Click GUI. **Plus:** Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
 | Utilities | Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard. **Plus:** Hotkey Macros; Wardrobe Swapper; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
 

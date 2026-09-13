@@ -121,13 +121,13 @@ opt in separately. Those options are not present in the legit JAR.
 ### Fox (Rot Client+)
 
 **Fox** is a local visual module and is off by default. When
-enabled it draws the bundled image in place of rendered maps and paintings
-without changing map items, painting entities, packets, or any server state.
-Paintings stretch the image to their own dimensions. Contiguous,
-same-facing, unrotated horizontal item frames form one rectangular canvas, so
-the image stretches over a map wall instead of repeating in every frame. The
-dashboard can also use a custom local image path; leave it blank for the
-bundled image.
+enabled it draws the bundled image in place of rendered maps, paintings, and
+large fixed item-display wall art without changing map items, painting
+entities, packets, or any server state. Paintings stretch the image to their
+own dimensions. Contiguous, same-facing, unrotated horizontal item frames or
+matching item-display panels form one rectangular canvas, so the image
+stretches over a map wall instead of repeating in every frame. The dashboard
+can also use a custom local image path; leave it blank for the bundled image.
 
 ### Mining tracker and sessions
 

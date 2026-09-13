@@ -134,9 +134,14 @@ tasks.register('plusJar', Jar) {
 // must not carry its implementation classes or registered mixins.
 jar {
 
+    exclude 'fi/rotclient/MapArtOverridePolicy.class'
     exclude 'fi/rotclient/MapArtOverrideRuntime.class'
     exclude 'fi/rotclient/MapArtOverrideRuntime$*.class'
     exclude 'fi/rotclient/MapArtRenderStateAccess.class'
+    exclude 'fi/rotclient/FoxItemDisplayAccess.class'
+    exclude 'fi/rotclient/mixin/DisplayItemDisplayAccessor.class'
+    exclude 'fi/rotclient/mixin/ItemDisplayEntityRenderStateFoxMixin.class'
+    exclude 'fi/rotclient/mixin/ItemDisplayRendererFoxMixin.class'
     exclude 'fi/rotclient/mixin/ItemFrameRendererMapArtMixin.class'
     exclude 'fi/rotclient/mixin/MapRendererMapArtMixin.class'
     exclude 'fi/rotclient/mixin/MapRenderStateMapArtMixin.class'
@@ -157,9 +162,14 @@ tasks.register('verifyLegitJar') {
 				'FreecamRuntime.class',
 				'CameraFreecamMixin.class',
 				'rotclient.plus.mixins.json',
+				'MapArtOverridePolicy.class',
 				'MapArtOverrideRuntime.class',
 				'MapArtOverrideRuntime$',
 				'MapArtRenderStateAccess.class',
+				'FoxItemDisplayAccess.class',
+				'DisplayItemDisplayAccessor.class',
+				'ItemDisplayEntityRenderStateFoxMixin.class',
+				'ItemDisplayRendererFoxMixin.class',
 				'ItemFrameRendererMapArtMixin.class',
 				'MapRendererMapArtMixin.class',
 				'MapRenderStateMapArtMixin.class',

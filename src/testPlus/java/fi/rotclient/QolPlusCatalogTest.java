@@ -17,6 +17,8 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.farm_keys"));
         assertEquals("qol.map_art_override", QolUtilityCatalog.findById(
                 "qol.map_art_override.image_path").id());
+        assertTrue(QolUtilityCatalog.findById("qol.map_art_override").searchAliases()
+                .contains("painting"));
         assertTrue(QolUtilityCatalog.findById("qol.command_keybinds").settings().stream()
                 .anyMatch(setting -> "qol.command_keybinds.macros".equals(setting.id())));
         assertTrue(QolUtilityCatalog.findById("qol.dungeon_hud").settings().stream()

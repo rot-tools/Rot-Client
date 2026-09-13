@@ -15,7 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** Replaces only the local front rendering of paintings while Fox is enabled. */
 @Mixin(PaintingRenderer.class)
 abstract class PaintingRendererFoxMixin {
-    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
+    @Inject(
+            method = "submit(Lnet/minecraft/client/renderer/entity/state/PaintingRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
+            at = @At("HEAD"),
+            cancellable = true)
     private void rotclient$renderFoxPainting(
             PaintingRenderState state,
             PoseStack poseStack,
