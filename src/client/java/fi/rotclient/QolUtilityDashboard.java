@@ -653,12 +653,36 @@ final class QolUtilityDashboard {
                         || y > listBottom) {
                     continue;
                 }
-                RotClientUiDraw.text(graphics, font,
-                        header.title(),
-                        header.x(),
-                        y + 6,
-                        RotClientTheme.TEXT_MUTED,
-                        true);
+                String sectionTitle =
+                        header.title();
+
+                RotClientUiDraw.sectionLabel(
+                        graphics,
+                        font,
+                        sectionTitle,
+                        header.x() + 2,
+                        y + 6);
+
+                int dividerX =
+                        header.x()
+                                + font.width(
+                                sectionTitle)
+                                + 18;
+
+                if (dividerX
+                        < header.x()
+                        + header.width()
+                        - 8) {
+
+                    graphics.fill(
+                            dividerX,
+                            y + 11,
+                            header.x()
+                                    + header.width()
+                                    - 8,
+                            y + 12,
+                            RotClientTheme.DIVIDER);
+                }
             }
             for (QolUtilityUiMath.PlacedCard card : layout.cards()) {
                 int y = baseY + card.y();
@@ -753,22 +777,18 @@ final class QolUtilityDashboard {
             int mouseX,
             int mouseY) {
 
-        RotClientUiDraw.drawInteractiveSurface(
+        RotClientUiDraw.drawElevatedCard(
                 graphics,
                 x,
                 y,
                 width,
-                QolUtilityUiMath.PAGE_HEADER_HEIGHT,
-                0.0F,
-                false,
-                accentColor(),
-                panelRadius());
+                QolUtilityUiMath.PAGE_HEADER_HEIGHT);
 
         graphics.fill(
                 x + 1,
-                y + 10,
+                y + 9,
                 x + 4,
-                y + 40,
+                y + 42,
                 accentColor());
 
         RotClientUiDraw.pageTitle(
@@ -782,8 +802,11 @@ final class QolUtilityDashboard {
                 QolUtilityCatalog.modulesOnGroupPage(
                         activePage);
 
-        int enabledCount = 0;
-        int cheatCount = 0;
+        int enabledCount =
+                0;
+
+        int cheatCount =
+                0;
 
         for (QolUtilityCatalog.ModuleDef module
                 : pageModules) {
@@ -801,15 +824,12 @@ final class QolUtilityDashboard {
             }
         }
 
-        boolean overlayDrawer =
-                isDrawerOpen();
+        if (!isDrawerOpen()) {
 
-        if (!overlayDrawer) {
             String countLabel =
                     enabledCount
-                            + " / "
-                            + pageModules.size()
-                            + " on";
+                            + " ON  /  "
+                            + pageModules.size();
 
             RotClientUiDraw.drawStatusPill(
                     graphics,
@@ -827,23 +847,50 @@ final class QolUtilityDashboard {
 
         int descMax =
                 Math.max(
-                        40,
+                        80,
                         width - 28);
 
-        RotClientUiDraw.helpText(
-                graphics,
-                font,
+        String shownDesc =
                 RotClientUiDraw.ellipsizeAndHover(
                         font,
                         desc,
                         descMax,
                         x + 14,
-                        y + 22,
-                        12),
+                        y + 25,
+                        12);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                shownDesc,
                 x + 14,
                 y + 25);
 
-        this.headerHoverTip = null;
+        this.headerHoverTip =
+                null;
+
+        if (RotClientUiDraw.truncated(
+                font,
+                desc,
+                descMax)
+                && RotClientUiDraw.inside(
+                mouseX,
+                mouseY,
+                x + 14,
+                y + 22,
+                descMax,
+                14)) {
+
+            this.headerHoverTip =
+                    desc;
+        }
+
+        graphics.fill(
+                x + 12,
+                y + 45,
+                x + width - 12,
+                y + 46,
+                RotClientTheme.DIVIDER);
 
         for (QolUtilityUiMath.FilterChip chip
                 : QolUtilityUiMath.pageFilterChips(
@@ -876,12 +923,25 @@ final class QolUtilityDashboard {
                     accentColor(),
                     RotClientUiDraw.RADIUS_SM);
 
-            String chipLabel =
-                    chip.label();
+            String chipLabel;
 
             if (chip.filter()
-                    == QolUtilityUiMath.PageFilter.CHEAT) {
+                    == QolUtilityUiMath.PageFilter.ALL) {
 
+                chipLabel =
+                        "All ["
+                                + pageModules.size()
+                                + "]";
+
+            } else if (chip.filter()
+                    == QolUtilityUiMath.PageFilter.ENABLED) {
+
+                chipLabel =
+                        "On ["
+                                + enabledCount
+                                + "]";
+
+            } else {
                 chipLabel =
                         QolUtilityUiMath.cheatFilterLabel(cheatCount);
             }
@@ -980,6 +1040,97 @@ final class QolUtilityDashboard {
                 next);
     }
 
+    private static String[] moduleDescriptionLines(
+            Font font,
+            String value,
+            int maxWidth) {
+
+        String description =
+                value == null
+                        ? ""
+                        : value.trim();
+
+        if (description.isEmpty()) {
+            return new String[]{
+                    "",
+                    ""
+            };
+        }
+
+        int width =
+                Math.max(
+                        20,
+                        maxWidth);
+
+        if (font.width(description)
+                <= width) {
+
+            return new String[]{
+                    description,
+                    ""
+            };
+        }
+
+        StringBuilder first =
+                new StringBuilder();
+
+        StringBuilder second =
+                new StringBuilder();
+
+        boolean secondLine =
+                false;
+
+        for (String word
+                : description.split("\\s+")) {
+
+            if (word.isBlank()) {
+                continue;
+            }
+
+            if (!secondLine) {
+
+                String candidate =
+                        first.length() == 0
+                                ? word
+                                : first
+                                + " "
+                                + word;
+
+                if (font.width(candidate)
+                        <= width) {
+
+                    if (first.length() > 0) {
+                        first.append(' ');
+                    }
+
+                    first.append(word);
+                    continue;
+                }
+
+                secondLine =
+                        true;
+            }
+
+            if (second.length() > 0) {
+                second.append(' ');
+            }
+
+            second.append(word);
+        }
+
+        return new String[]{
+                RotClientUiDraw.ellipsize(
+                        font,
+                        first.toString(),
+                        width),
+
+                RotClientUiDraw.ellipsize(
+                        font,
+                        second.toString(),
+                        width)
+        };
+    }
+
     private String drawModuleCard(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -1046,20 +1197,20 @@ final class QolUtilityDashboard {
                 selected
                         || available && enabled
                         ? 0xFF
-                        : 0x70
-                        + Math.round(
-                        0x50 * hoverAmount);
+                        : Math.min(
+                                0xFF,
+                                0x70
+                                        + Math.round(
+                                        0x50 * hoverAmount));
 
         graphics.fill(
                 x + 1,
-                y + 9,
+                y + 10,
                 x + 4,
-                y + QolUtilityUiMath.CARD_HEIGHT - 9,
+                y + QolUtilityUiMath.CARD_HEIGHT - 10,
                 RotClientUiDraw.withAlpha(
                         railColor,
-                        Math.min(
-                                0xFF,
-                                railAlpha)));
+                        railAlpha));
 
         QolModuleEvidence.Status evidence =
                 module.evidenceStatus();
@@ -1071,150 +1222,153 @@ final class QolUtilityDashboard {
                 evidenceColor(
                         evidence);
 
-        int statusX =
-                x + QolUtilityUiMath.STATUS_BADGE_LEFT;
-
-        int statusY =
-                y + QolUtilityUiMath.STATUS_BADGE_TOP;
-
         int statusWidth =
                 QolUtilityUiMath.statusBadgeWidth(
                         font.width(
                                 statusLabel));
 
-        RotClientUiDraw.roundedFill(
-                graphics,
-                statusX,
-                statusY,
-                statusX + statusWidth,
-                statusY
-                        + QolUtilityUiMath.STATUS_BADGE_HEIGHT,
-                RotClientUiDraw.withAlpha(
-                        statusColor,
-                        selected || hover
-                                ? 0x42
-                                : 0x2E),
-                RotClientUiDraw.RADIUS_SM);
-
-        RotClientUiDraw.roundedOutline(
-                graphics,
-                statusX,
-                statusY,
-                statusX + statusWidth,
-                statusY
-                        + QolUtilityUiMath.STATUS_BADGE_HEIGHT,
-                RotClientUiDraw.withAlpha(
-                        statusColor,
-                        selected || hover
-                                ? 0xDD
-                                : 0xAA),
-                RotClientUiDraw.RADIUS_SM);
-
-        RotClientUiDraw.text(
-                graphics,
-                font,
-                statusLabel,
-                statusX
-                        + QolUtilityUiMath.STATUS_BADGE_PAD_X,
-                statusY + 3,
-                statusColor,
-                false);
+        int titleMax =
+                Math.max(
+                        70,
+                        width
+                                - statusWidth
+                                - 44);
 
         String title =
                 module.name();
-
-        boolean cheat =
-                QolFlavorSupport.isPlus()
-                        && QolUtilityCatalog.hasCheatTag(
-                        module);
-
-        int titleMax =
-                Math.max(
-                        40,
-                        width
-                                - (
-                                cheat
-                                        ? 88
-                                        : 36));
 
         String shownTitle =
                 RotClientUiDraw.ellipsizeAndHover(
                         font,
                         title,
                         titleMax,
-                        x + 16,
-                        y + 23,
-                        12);
+                        x + 14,
+                        y + 9,
+                        14);
 
         RotClientUiDraw.text(
                 graphics,
                 font,
                 shownTitle,
-                x + 16,
-                y + 25,
+                x + 14,
+                y + 12,
                 available
                         ? RotClientTheme.TEXT
                         : RotClientTheme.TEXT_MUTED,
                 true);
 
-        String hoverTip = null;
+        RotClientUiDraw.drawStatusPill(
+                graphics,
+                font,
+                x + width - 12,
+                y + 7,
+                statusLabel,
+                statusColor);
 
-        if (cheat) {
-            RotClientUiDraw.text(
-                    graphics,
-                    font,
-                    "CHEAT",
-                    x + 16
-                            + font.width(
-                            shownTitle)
-                            + QolUtilityUiMath.CHEAT_BADGE_GAP,
-                    y + 25,
-                    RotClientTheme.WARNING,
-                    true);
+        String hoverTip =
+                null;
+
+        if (RotClientUiDraw.truncated(
+                font,
+                title,
+                titleMax)
+                && RotClientUiDraw.inside(
+                mouseX,
+                mouseY,
+                x + 14,
+                y + 8,
+                titleMax,
+                16)) {
+
+            hoverTip =
+                    title;
         }
 
-        int descMax =
+        int descriptionWidth =
                 Math.max(
-                        40,
-                        width - 32);
+                        80,
+                        width - 28);
 
-        String explanation =
-                HudElementCatalog.explainedDescription(
+        String[] descriptionLines =
+                moduleDescriptionLines(
+                        font,
+                        module.description(),
+                        descriptionWidth);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                descriptionLines[0],
+                x + 14,
+                y + 31);
+
+        if (!descriptionLines[1].isBlank()) {
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    descriptionLines[1],
+                    x + 14,
+                    y + 44);
+        }
+
+        if (font.width(
+                module.description())
+                > descriptionWidth
+                && RotClientUiDraw.inside(
+                mouseX,
+                mouseY,
+                x + 14,
+                y + 28,
+                descriptionWidth,
+                30)) {
+
+            hoverTip =
+                    module.description();
+        }
+
+        java.util.List<HudElementCatalog.HudPiece> hudPieces =
+                HudElementCatalog.hudPieces(
                         module);
 
-        String shownDesc =
-                RotClientUiDraw.ellipsizeAndHover(
-                        font,
-                        explanation,
-                        descMax,
-                        x + 16,
-                        y + 43,
-                        12);
+        boolean cheat =
+                QolFlavorSupport.isPlus()
+                        && QolUtilityCatalog.hasCheatTag(
+                        module);
+
+        String metadata =
+                module.settings().isEmpty()
+                        ? "No settings"
+                        : module.settings().size()
+                        + (
+                        module.settings().size() == 1
+                                ? " setting"
+                                : " settings");
+
+        if (!hudPieces.isEmpty()) {
+            metadata +=
+                    " \u00B7 HUD";
+        }
+
+        if (cheat) {
+            metadata +=
+                    " \u00B7 CHEAT";
+        }
 
         RotClientUiDraw.text(
                 graphics,
                 font,
-                shownDesc,
-                x + 16,
-                y + 45,
-                RotClientTheme.TEXT_DIM,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        metadata,
+                        descriptionWidth),
+                x + 14,
+                y + 59,
+                cheat
+                        ? RotClientTheme.WARNING
+                        : enabled
+                        ? RotClientTheme.TEXT_DIM
+                        : RotClientTheme.TEXT_MUTED,
                 false);
-
-        if (RotClientUiDraw.truncated(
-                font,
-                explanation,
-                descMax)
-                && RotClientUiDraw.inside(
-                mouseX,
-                mouseY,
-                x + 16,
-                y + 43,
-                descMax,
-                12)) {
-
-            hoverTip =
-                    explanation;
-        }
 
         int footerY =
                 QolUtilityUiMath.cardFooterY(
@@ -1223,15 +1377,17 @@ final class QolUtilityDashboard {
 
         graphics.fill(
                 x + 12,
-                footerY - 2,
+                footerY - 5,
                 x + width - 12,
-                footerY - 1,
-                RotClientUiDraw.withAlpha(
-                        RotClientTheme.DIVIDER,
-                        0xC0));
+                footerY - 4,
+                selected
+                        ? RotClientUiDraw.withAlpha(
+                        cardAccent,
+                        0x70)
+                        : RotClientTheme.DIVIDER);
 
-        if (available
-                && module.toggleable()) {
+        if (module.toggleable()
+                && available) {
 
             int toggleX =
                     QolUtilityUiMath.moduleToggleX(
@@ -1243,21 +1399,13 @@ final class QolUtilityDashboard {
                             QolUtilityUiMath.CARD_HEIGHT);
 
             boolean toggleHover =
-                    QolUtilityUiMath.hitModuleToggle(
+                    RotClientUiDraw.inside(
                             mouseX,
                             mouseY,
-                            x,
-                            y,
-                            QolUtilityUiMath.CARD_HEIGHT);
-
-            RotClientUiDraw.text(
-                    graphics,
-                    font,
-                    "Module",
-                    toggleX,
-                    footerY - 12,
-                    RotClientTheme.TEXT_MUTED,
-                    false);
+                            toggleX,
+                            toggleY,
+                            QolUtilityUiMath.TOGGLE_WIDTH,
+                            QolUtilityUiMath.TOGGLE_HEIGHT);
 
             RotClientUiDraw.drawToggle(
                     graphics,
@@ -1266,15 +1414,12 @@ final class QolUtilityDashboard {
                     enabled,
                     toggleHover);
 
-            String onOff =
-                    enabled
-                            ? "ON"
-                            : "OFF";
-
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    onOff,
+                    enabled
+                            ? "ON"
+                            : "OFF",
                     toggleX
                             + QolUtilityUiMath.TOGGLE_WIDTH
                             + 6,
@@ -1289,27 +1434,23 @@ final class QolUtilityDashboard {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    "Coming later - preview only",
-                    x + 16,
+                    "COMING SOON",
+                    x + 14,
                     footerY + 6,
                     RotClientTheme.WARNING,
-                    false);
+                    true);
 
         } else if (!module.runtimeReady()) {
 
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    "Planned - preview only",
-                    x + 16,
+                    "PLANNED",
+                    x + 14,
                     footerY + 6,
                     RotClientTheme.WARNING,
-                    false);
+                    true);
         }
-
-        java.util.List<HudElementCatalog.HudPiece> hudPieces =
-                HudElementCatalog.hudPieces(
-                        module);
 
         if (!hudPieces.isEmpty()
                 && available) {
@@ -1333,7 +1474,8 @@ final class QolUtilityDashboard {
                     QolUtilityUiMath.HUD_CONTROL_WIDTH,
                     QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT,
                     "HUD",
-                    false,
+                    focusingHud(
+                            module.id()),
                     true);
         }
 
@@ -1346,9 +1488,7 @@ final class QolUtilityDashboard {
                             - QolUtilityUiMath.SETTINGS_BUTTON_WIDTH;
 
             int buttonY =
-                    QolUtilityUiMath.cardFooterY(
-                            y,
-                            QolUtilityUiMath.CARD_HEIGHT)
+                    footerY
                             + Math.max(
                             0,
                             (
@@ -1366,7 +1506,8 @@ final class QolUtilityDashboard {
                     QolUtilityUiMath.SETTINGS_BUTTON_WIDTH,
                     QolUtilityUiMath.SETTINGS_BUTTON_HEIGHT,
                     "Settings",
-                    false,
+                    focusingModule(
+                            module.id()),
                     true);
         }
 
@@ -1388,39 +1529,149 @@ final class QolUtilityDashboard {
             return;
         }
         tickDrawerExpand(module);
+
         if (overlay) {
-            graphics.fill(x - 8, y, x, y + height, 0x66000000);
+            graphics.fill(
+                    x - 8,
+                    y,
+                    x,
+                    y + height,
+                    0x66000000);
         }
+
         RotClientUiDraw.roundedFill(
-                graphics, x, y, x + width, y + height, RotClientTheme.SURFACE);
-        graphics.fill(x, y + 8, x + 3, y + 40, RotClientTheme.HUD_ACCENT);
-        String drawerTitle = hudDrawerTitle(module);
-        RotClientUiDraw.text(graphics, font, drawerTitle, x + 14, y + 12, RotClientTheme.TEXT, true);
-        if (QolFlavorSupport.isPlus() && QolUtilityCatalog.hasCheatTag(module) && !hudDrawerOpen()) {
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                RotClientTheme.SURFACE,
+                panelRadius());
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x + 7,
+                y + 6,
+                x + width - 7,
+                y + 46,
+                RotClientTheme.SURFACE_ALT,
+                RotClientUiDraw.RADIUS_SM);
+
+        graphics.fill(
+                x + 8,
+                y + 12,
+                x + 11,
+                y + 40,
+                accentColor());
+
+        String drawerTitle =
+                hudDrawerTitle(
+                        module);
+
+        int titleMax =
+                Math.max(
+                        80,
+                        width - 90);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        drawerTitle,
+                        titleMax),
+                x + 18,
+                y + 11,
+                RotClientTheme.TEXT,
+                true);
+
+        String evidenceLabel =
+                module.evidenceStatus()
+                        .label();
+
+        int evidenceColor =
+                evidenceColor(
+                        module.evidenceStatus());
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                evidenceLabel,
+                x + 18
+                        + Math.min(
+                        titleMax,
+                        font.width(
+                                drawerTitle))
+                        + 10,
+                y + 11,
+                evidenceColor,
+                false);
+
+        boolean cheat =
+                QolFlavorSupport.isPlus()
+                        && QolUtilityCatalog.hasCheatTag(
+                        module)
+                        && !hudDrawerOpen();
+
+        if (cheat) {
             RotClientUiDraw.text(
                     graphics,
                     font,
                     "CHEAT",
-                    x + 14 + font.width(drawerTitle) + QolUtilityUiMath.CHEAT_BADGE_GAP,
-                    y + 12,
+                    x + 18,
+                    y + 27,
                     RotClientTheme.WARNING,
                     true);
         }
-        int descMax = Math.max(40, width - 50);
-        String explanation = hudDrawerOpen()
-                ? "Turn this overlay on, change its look, and open layout edit to move it."
-                : HudElementCatalog.explainedDescription(module);
-        String shownDesc = RotClientUiDraw.ellipsizeAndHover(
-                font, explanation, descMax, x + 14, y + 26, 12);
-        RotClientUiDraw.text(graphics, font,
+
+        int descX =
+                cheat
+                        ? x + 60
+                        : x + 18;
+
+        int descMax =
+                Math.max(
+                        40,
+                        x + width - 48 - descX);
+
+        String explanation =
+                hudDrawerOpen()
+                        ? "Turn this overlay on, change its look, and open layout edit to move it."
+                        : HudElementCatalog.explainedDescription(
+                        module);
+
+        String shownDesc =
+                RotClientUiDraw.ellipsizeAndHover(
+                        font,
+                        explanation,
+                        descMax,
+                        descX,
+                        y + 25,
+                        12);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
                 shownDesc,
-                x + 14,
+                descX,
                 y + 28,
                 RotClientTheme.TEXT_DIM,
                 false);
-        if (RotClientUiDraw.truncated(font, explanation, descMax)
-                && RotClientUiDraw.inside(mouseX, mouseY, x + 14, y + 26, descMax, 12)) {
-            this.headerHoverTip = explanation;
+
+        if (RotClientUiDraw.truncated(
+                font,
+                explanation,
+                descMax)
+                && RotClientUiDraw.inside(
+                mouseX,
+                mouseY,
+                descX,
+                y + 25,
+                descMax,
+                14)) {
+
+            this.headerHoverTip =
+                    explanation;
         }
 
         boolean closeHover = QolUtilityUiMath.hitClose(mouseX, mouseY, x, y, width);
