@@ -28,91 +28,475 @@ final class ItemSearchScreen extends Screen {
 
     @Override
     public void extractRenderState(
-            GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        int x = panelX();
-        int y = panelY();
-        RotClientUiDraw.drawShadowedPanel(graphics, x, y, WIDTH, HEIGHT);
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            float delta) {
+
+        int x =
+                panelX();
+
+        int y =
+                panelY();
+
+        RotClientUiDraw.drawShadowedPanel(
+                graphics,
+                x,
+                y,
+                WIDTH,
+                HEIGHT);
+
         RotClientUiDraw.drawHeaderBar(
-                graphics, font, x, y, WIDTH, 40,
-                "Item Search", "Bundled offline recipes, sources and museum sets");
-        graphics.fill(x + 18, y + 54, x + 388, y + 80, RotClientTheme.FIELD_ACTIVE);
+                graphics,
+                font,
+                x,
+                y,
+                WIDTH,
+                40,
+                "Item Search",
+                "Search bundled SkyBlock item, recipe, source and museum data.");
+
+        /*
+         * Search/results workspace.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + 12,
+                y + 48,
+                382,
+                360);
+
+        /*
+         * Item detail workspace.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + 404,
+                y + 48,
+                404,
+                360);
+
+        /*
+         * Search remains keyboard-focused while this screen is open.
+         * Geometry intentionally matches the existing implementation.
+         */
+        RotClientTheme.drawInset(
+                graphics,
+                x + 18,
+                y + 54,
+                370,
+                26,
+                true);
+
+        String searchText =
+                query.isBlank()
+                        ? "Type an item name or ID..."
+                        : RotClientUiDraw.ellipsize(
+                                font,
+                                query,
+                                344);
+
         RotClientUiDraw.text(
-                graphics, font,
-                query.isBlank() ? "Type an item name or ID..." : query,
-                x + 28, y + 62,
-                query.isBlank() ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,
+                graphics,
+                font,
+                searchText,
+                x + 28,
+                y + 62,
+                query.isBlank()
+                        ? RotClientTheme.TEXT_MUTED
+                        : RotClientTheme.TEXT,
                 false);
+
+        List<RotItemIndex.ItemDef> results =
+                results();
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "SEARCH RESULTS",
+                x + 18,
+                y + 94);
+
+        String count =
+                results.size()
+                        + (results.size() == 1
+                        ? " result"
+                        : " results");
+
         RotClientUiDraw.text(
-                graphics, font, "Search results",
-                x + 18, y + 94, RotClientTheme.HUD_ACCENT, true);
-        List<RotItemIndex.ItemDef> results = results();
-        int rowY = y + 114;
-        for (RotItemIndex.ItemDef item : results) {
-            boolean selected = item.id().equals(selectedId);
-            graphics.fill(
-                    x + 18, rowY, x + 388, rowY + 30,
-                    selected ? RotClientTheme.SELECTED_ROW : RotClientTheme.SURFACE_ALT);
+                graphics,
+                font,
+                count,
+                x + 388 - font.width(count),
+                y + 94,
+                RotClientTheme.TEXT_MUTED,
+                false);
+
+        RotItemIndex.ItemDef visibleSelection =
+                selected(results);
+
+        int rowY =
+                y + 114;
+
+        for (RotItemIndex.ItemDef item
+                : results) {
+
+            boolean selected =
+                    visibleSelection != null
+                            && item.id().equals(
+                            visibleSelection.id());
+
+            boolean hover =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            x + 18,
+                            rowY,
+                            370,
+                            30);
+
+            RotClientUiDraw.drawInteractiveSurface(
+                    graphics,
+                    x + 18,
+                    rowY,
+                    370,
+                    30,
+                    hover
+                            ? 1.0F
+                            : 0.0F,
+                    selected,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
+
+            if (selected) {
+                graphics.fill(
+                        x + 19,
+                        rowY + 5,
+                        x + 22,
+                        rowY + 25,
+                        RotClientTheme.HUD_ACCENT);
+            }
+
             RotClientUiDraw.text(
-                    graphics, font, item.name(),
-                    x + 28, rowY + 5, RotClientTheme.TEXT, true);
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            item.name(),
+                            166),
+                    x + 28,
+                    rowY + 5,
+                    selected
+                            ? RotClientTheme.TEXT
+                            : RotClientTheme.TEXT_DIM,
+                    true);
+
             RotClientUiDraw.text(
-                    graphics, font, item.id(),
-                    x + 208, rowY + 5, RotClientTheme.TEXT_MUTED, false);
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            item.id(),
+                            164),
+                    x + 208,
+                    rowY + 5,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
             rowY += 34;
         }
-        drawDetails(graphics, x, y, selected(results));
-        RotClientUiDraw.drawButton(
-                graphics, font, mouseX, mouseY,
-                x + WIDTH - 126, y + HEIGHT - 36, 104,
-                "Done", false, true);
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-    }
 
+        if (results.isEmpty()) {
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    query.isBlank()
+                            ? "Start typing to search"
+                            : "No matching items",
+                    x + 125,
+                    y + 220,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    query.isBlank()
+                            ? "Search by item name or internal ID."
+                            : "Try a shorter name or a different ID.",
+                    x + 95,
+                    y + 238);
+        }
+
+        drawDetails(
+                graphics,
+                x,
+                y,
+                visibleSelection);
+
+        graphics.fill(
+                x + 12,
+                y + HEIGHT - 46,
+                x + WIDTH - 12,
+                y + HEIGHT - 45,
+                RotClientTheme.DIVIDER);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + WIDTH - 126,
+                y + HEIGHT - 36,
+                104,
+                24,
+                "Done",
+                true,
+                true);
+
+        super.extractRenderState(
+                graphics,
+                mouseX,
+                mouseY,
+                delta);
+    }
     private void drawDetails(
-            GuiGraphicsExtractor graphics, int x, int y, RotItemIndex.ItemDef item) {
-        int left = x + 414;
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            RotItemIndex.ItemDef item) {
+
+        int left =
+                x + 414;
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "ITEM DETAILS",
+                left,
+                y + 58);
+
         if (item == null) {
+
             RotClientUiDraw.text(
-                    graphics, font, "Select an item to inspect it.",
-                    left + 70, y + 210, RotClientTheme.TEXT_MUTED, true);
+                    graphics,
+                    font,
+                    "Nothing selected",
+                    left + 118,
+                    y + 208,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Choose an item from the search results.",
+                    left + 80,
+                    y + 226);
+
             return;
         }
-        RotClientUiDraw.text(graphics, font, item.name(), left, y + 58, RotClientTheme.TEXT, true);
-        RotClientUiDraw.text(graphics, font, item.id(), left, y + 76, RotClientTheme.TEXT_MUTED, false);
+
         RotClientUiDraw.text(
-                graphics, font, "Source: " + blank(item.source(), "Unknown"),
-                left, y + 106, RotClientTheme.TEXT_DIM, false);
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        item.name(),
+                        360),
+                left,
+                y + 78,
+                RotClientTheme.TEXT,
+                true);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        item.id(),
+                        360),
+                left,
+                y + 94);
+
+        /*
+         * Basic metadata gets its own visual group instead of being mixed
+         * into the recipe tree.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                left,
+                y + 112,
+                382,
+                52);
+
         RotClientUiDraw.text(
-                graphics, font, "Museum: " + blank(item.museumSet(), "Not indexed"),
-                left, y + 124, RotClientTheme.TEXT_DIM, false);
-        QolUtilityConfig config = RotClientClient.qolConfigPublic();
-        if (!config.isModuleEnabled("qol.storage_overlay")
-                || !config.extras().storageCraftHelper) {
+                graphics,
+                font,
+                "Source",
+                left + 10,
+                y + 121,
+                RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        blank(
+                                item.source(),
+                                "Unknown"),
+                        276),
+                left + 92,
+                y + 121,
+                RotClientTheme.TEXT,
+                false);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Museum",
+                left + 10,
+                y + 141,
+                RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        blank(
+                                item.museumSet(),
+                                "Not indexed"),
+                        276),
+                left + 92,
+                y + 141,
+                RotClientTheme.TEXT,
+                false);
+
+        QolUtilityConfig config =
+                RotClientClient.qolConfigPublic();
+
+        boolean craftHelper =
+                config.isModuleEnabled(
+                        "qol.storage_overlay")
+                        && config.extras().storageCraftHelper;
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "CRAFT TREE",
+                left,
+                y + 180);
+
+        if (!craftHelper) {
+
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    left,
+                    y + 198,
+                    382,
+                    62);
+
             RotClientUiDraw.text(
-                    graphics, font, "Craft helper disabled",
-                    left, y + 158, RotClientTheme.TEXT_MUTED, false);
+                    graphics,
+                    font,
+                    "Craft helper is disabled",
+                    left + 12,
+                    y + 211,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Enable Storage Overlay > Craft Helper to show recipes and owned materials.",
+                    left + 12,
+                    y + 229);
+
             return;
         }
-        RotClientUiDraw.text(graphics, font, "Craft tree", left, y + 158, RotClientTheme.HUD_ACCENT, true);
-        drawTree(graphics, RotItemIndex.recipeTree(item.id(), 1), left, y + 180, 0, new int[]{0});
-        Map<String, Integer> totals = RotItemIndex.aggregateIngredients(item.id(), 1);
-        int totalY = y + 326;
-        RotClientUiDraw.text(graphics, font, "Base ingredients", left, totalY, RotClientTheme.HUD_ACCENT, true);
-        int line = 0;
-        for (Map.Entry<String, Integer> entry : totals.entrySet()) {
+
+        drawTree(
+                graphics,
+                RotItemIndex.recipeTree(
+                        item.id(),
+                        1),
+                left,
+                y + 200,
+                0,
+                new int[]{0});
+
+        Map<String, Integer> totals =
+                RotItemIndex.aggregateIngredients(
+                        item.id(),
+                        1);
+
+        int totalY =
+                y + 326;
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "BASE INGREDIENTS",
+                left,
+                totalY);
+
+        int line =
+                0;
+
+        for (Map.Entry<String, Integer> entry
+                : totals.entrySet()) {
+
             if (line++ >= 4) {
                 break;
             }
+
+            int owned =
+                    ItemToolsRuntime.ownedCount(
+                            entry.getKey());
+
+            boolean complete =
+                    owned >= entry.getValue();
+
+            String text =
+                    entry.getKey()
+                            + ": "
+                            + owned
+                            + " / "
+                            + entry.getValue()
+                            + (complete
+                            ? "  owned"
+                            : "  missing");
+
             RotClientUiDraw.text(
-                    graphics, font,
-                    entry.getKey() + ": " + ItemToolsRuntime.ownedCount(entry.getKey())
-                            + " / " + entry.getValue()
-                            + (ItemToolsRuntime.ownedCount(entry.getKey()) >= entry.getValue()
-                                    ? " §aowned" : " §cmissing"),
-                    left, totalY + 18 * line, RotClientTheme.TEXT_DIM, false);
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            text,
+                            370),
+                    left,
+                    totalY + 18 * line,
+                    complete
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.TEXT_DIM,
+                    false);
+        }
+
+        if (totals.isEmpty()) {
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "No base ingredients indexed for this item.",
+                    left,
+                    totalY + 20);
         }
     }
-
     private void drawTree(
             GuiGraphicsExtractor graphics,
             RotItemIndex.RecipeNode node,

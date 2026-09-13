@@ -29,105 +29,562 @@ final class DungeonCarryManagerScreen extends Screen {
             int mouseX,
             int mouseY,
             float delta) {
-        int x = panelX();
-        int y = panelY();
-        RotClientUiDraw.drawShadowedPanel(graphics, x, y, PANEL_WIDTH, PANEL_HEIGHT);
-        RotClientUiDraw.drawHeaderBar(
-                graphics, font, x, y, PANEL_WIDTH, 38,
-                "Dungeon Carry Manager",
-                historyMode ? "Completed dungeon carries" : "Active dungeon carries");
-        graphics.fill(x + 1, y + 39, x + SIDEBAR_WIDTH, y + PANEL_HEIGHT - 1,
-                RotClientTheme.SURFACE_ALT);
-        drawSidebar(graphics, x, y);
-        drawCarries(graphics, x, y);
-        drawButton(graphics, mouseX, mouseY, x + SIDEBAR_WIDTH + 12, y + PANEL_HEIGHT - 38, 150,
-                "Delete", !selectedPlayer.isBlank());
-        drawButton(graphics, mouseX, mouseY, x + SIDEBAR_WIDTH + 172, y + PANEL_HEIGHT - 38, 100,
-                historyMode ? "Active" : "History", true);
-        drawButton(graphics, mouseX, mouseY, x + PANEL_WIDTH - 132, y + PANEL_HEIGHT - 38, 116,
-                "Done", true);
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-    }
 
-    private void drawSidebar(GuiGraphicsExtractor graphics, int x, int y) {
-        int rowY = y + 52;
-        drawFloor(graphics, x, rowY, "All", "");
+        int x =
+                panelX();
+
+        int y =
+                panelY();
+
+        RotClientUiDraw.drawShadowedPanel(
+                graphics,
+                x,
+                y,
+                PANEL_WIDTH,
+                PANEL_HEIGHT);
+
+        RotClientUiDraw.drawHeaderBar(
+                graphics,
+                font,
+                x,
+                y,
+                PANEL_WIDTH,
+                38,
+                "Dungeon Carries",
+                historyMode
+                        ? "Review completed carries by floor."
+                        : "Track active players, floors and remaining runs.");
+
+        /*
+         * Floor filter panel.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + 8,
+                y + 46,
+                SIDEBAR_WIDTH - 16,
+                PANEL_HEIGHT - 96);
+
+        /*
+         * Carry workspace.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + SIDEBAR_WIDTH + 6,
+                y + 46,
+                PANEL_WIDTH - SIDEBAR_WIDTH - 14,
+                PANEL_HEIGHT - 96);
+
+        drawSidebar(
+                graphics,
+                x,
+                y,
+                mouseX,
+                mouseY);
+
+        drawCarries(
+                graphics,
+                x,
+                y,
+                mouseX,
+                mouseY);
+
+        graphics.fill(
+                x + 10,
+                y + PANEL_HEIGHT - 49,
+                x + PANEL_WIDTH - 10,
+                y + PANEL_HEIGHT - 48,
+                RotClientTheme.DIVIDER);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + SIDEBAR_WIDTH + 12,
+                y + PANEL_HEIGHT - 38,
+                150,
+                RotClientUiDraw.BUTTON_HEIGHT,
+                "Delete selected",
+                false,
+                !selectedPlayer.isBlank()
+                        && !historyMode);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + SIDEBAR_WIDTH + 172,
+                y + PANEL_HEIGHT - 38,
+                100,
+                RotClientUiDraw.BUTTON_HEIGHT,
+                historyMode
+                        ? "Active"
+                        : "History",
+                historyMode,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + PANEL_WIDTH - 132,
+                y + PANEL_HEIGHT - 38,
+                116,
+                RotClientUiDraw.BUTTON_HEIGHT,
+                "Done",
+                true,
+                true);
+
+        super.extractRenderState(
+                graphics,
+                mouseX,
+                mouseY,
+                delta);
+    }
+    private void drawSidebar(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int mouseX,
+            int mouseY) {
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "FLOOR",
+                x + 16,
+                y + 48);
+
+        int rowY =
+                y + 52;
+
+        drawFloor(
+                graphics,
+                x,
+                rowY,
+                "All",
+                "",
+                mouseX,
+                mouseY);
+
         rowY += 22;
-        for (String floor : DungeonCarryPolicy.FLOORS) {
-            drawFloor(graphics, x, rowY, floor, floor);
+
+        for (String floor
+                : DungeonCarryPolicy.FLOORS) {
+
+            drawFloor(
+                    graphics,
+                    x,
+                    rowY,
+                    floor,
+                    floor,
+                    mouseX,
+                    mouseY);
+
             rowY += 22;
         }
     }
+    private void drawFloor(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int rowY,
+            String label,
+            String floor,
+            int mouseX,
+            int mouseY) {
 
-    private void drawFloor(GuiGraphicsExtractor graphics, int x, int rowY, String label, String floor) {
-        boolean selected = filterFloor.equalsIgnoreCase(floor);
+        boolean selected =
+                filterFloor.equalsIgnoreCase(
+                        floor);
+
+        boolean hover =
+                RotClientUiDraw.inside(
+                        mouseX,
+                        mouseY,
+                        x + 8,
+                        rowY - 3,
+                        SIDEBAR_WIDTH - 16,
+                        18);
+
+        RotClientUiDraw.drawInteractiveSurface(
+                graphics,
+                x + 8,
+                rowY - 3,
+                SIDEBAR_WIDTH - 16,
+                18,
+                hover
+                        ? 1.0F
+                        : 0.0F,
+                selected,
+                RotClientTheme.HUD_ACCENT,
+                RotClientUiDraw.RADIUS_SM);
+
         if (selected) {
-            graphics.fill(x + 8, rowY - 3, x + SIDEBAR_WIDTH - 8, rowY + 14,
-                    RotClientTheme.SELECTED_ROW);
-            graphics.fill(x + 8, rowY - 3, x + 11, rowY + 14, RotClientTheme.HUD_ACCENT);
+            graphics.fill(
+                    x + 9,
+                    rowY,
+                    x + 12,
+                    rowY + 11,
+                    RotClientTheme.HUD_ACCENT);
         }
-        RotClientUiDraw.text(graphics, font, label, x + 16, rowY, selected
-                ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED, true);
-    }
 
-    private void drawCarries(GuiGraphicsExtractor graphics, int x, int y) {
-        int left = x + SIDEBAR_WIDTH + 12;
-        int top = y + 52;
-        int width = PANEL_WIDTH - SIDEBAR_WIDTH - 28;
-        RotClientUiDraw.text(graphics, font, historyMode ? "Completed carries" : "Active carries",
-                left, top, RotClientTheme.HUD_ACCENT, true);
-        RotClientUiDraw.text(graphics, font,
-                "Add with /rot dcarry add <player> <count> <floor>",
-                left, top + 14, RotClientTheme.TEXT_MUTED, false);
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                label,
+                x + 16,
+                rowY,
+                selected
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_DIM,
+                true);
+    }
+    private void drawCarries(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int mouseX,
+            int mouseY) {
+
+        int left =
+                x + SIDEBAR_WIDTH + 12;
+
+        int top =
+                y + 52;
+
+        int width =
+                PANEL_WIDTH
+                        - SIDEBAR_WIDTH
+                        - 28;
+
+        List<DungeonCarryPolicy.TrackedCarry> carries =
+                filtered();
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                historyMode
+                        ? "COMPLETED CARRIES"
+                        : "ACTIVE CARRIES",
+                left,
+                top);
+
+        if (!historyMode) {
+
+            String count =
+                    carries.size()
+                            + (carries.size() == 1
+                            ? " active"
+                            : " active");
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    count,
+                    left + width - font.width(count),
+                    top,
+                    carries.isEmpty()
+                            ? RotClientTheme.TEXT_MUTED
+                            : RotClientTheme.HUD_ACCENT,
+                    true);
+        }
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                historyMode
+                        ? "Completed runs are kept here for quick reference."
+                        : "Add with /rot dcarry add <player> <count> <floor>",
+                left,
+                top + 14);
+
         if (historyMode) {
-            drawHistory(graphics, left, top, width);
+
+            drawHistory(
+                    graphics,
+                    left,
+                    top,
+                    width,
+                    mouseX,
+                    mouseY);
+
             return;
         }
-        List<DungeonCarryPolicy.TrackedCarry> carries = filtered();
+
         if (carries.isEmpty()) {
-            RotClientUiDraw.text(graphics, font, "No active carries", left + 170, top + 130,
-                    RotClientTheme.TEXT_MUTED, true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    filterFloor.isBlank()
+                            ? "No active carries"
+                            : "No active " + filterFloor + " carries",
+                    left + 180,
+                    top + 130,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "New carries will appear here as soon as they are tracked.",
+                    left + 112,
+                    top + 149);
+
             return;
         }
-        int rowY = top + 42;
-        for (DungeonCarryPolicy.TrackedCarry carry : carries) {
-            boolean selected = carry.player.equalsIgnoreCase(selectedPlayer);
-            graphics.fill(left, rowY, left + width, rowY + 38,
-                    selected ? RotClientTheme.SELECTED_ROW : RotClientTheme.SURFACE_ALT);
+
+        int rowY =
+                top + 42;
+
+        for (DungeonCarryPolicy.TrackedCarry carry
+                : carries) {
+
+            boolean selected =
+                    carry.player.equalsIgnoreCase(
+                            selectedPlayer);
+
+            boolean hover =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            left,
+                            rowY,
+                            width,
+                            38);
+
+            RotClientUiDraw.drawInteractiveSurface(
+                    graphics,
+                    left,
+                    rowY,
+                    width,
+                    38,
+                    hover
+                            ? 1.0F
+                            : 0.0F,
+                    selected,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
+
             if (selected) {
-                graphics.fill(left, rowY, left + 3, rowY + 38, RotClientTheme.HUD_ACCENT);
+                graphics.fill(
+                        left + 1,
+                        rowY + 7,
+                        left + 4,
+                        rowY + 31,
+                        RotClientTheme.HUD_ACCENT);
             }
-            RotClientUiDraw.text(graphics, font, carry.player, left + 10, rowY + 7,
-                    RotClientTheme.TEXT, true);
-            RotClientUiDraw.text(graphics, font, carry.floor, left + 170, rowY + 7,
-                    RotClientTheme.TEXT_MUTED, true);
-            RotClientUiDraw.text(graphics, font, carry.completed + " / " + carry.total,
-                    left + width - 70, rowY + 7,
-                    carry.done() ? RotClientTheme.SUCCESS : RotClientTheme.HUD_ACCENT, true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            carry.player,
+                            145),
+                    left + 10,
+                    rowY + 7,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    carry.floor,
+                    left + 170,
+                    rowY + 7,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            String progress =
+                    carry.completed
+                            + " / "
+                            + carry.total;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    progress,
+                    left + width - 10 - font.width(progress),
+                    rowY + 7,
+                    carry.done()
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT,
+                    true);
+
+            /*
+             * Small run-progress indicator.
+             */
+            int progressLeft =
+                    left + 10;
+
+            int progressRight =
+                    left + width - 10;
+
+            int progressWidth =
+                    Math.max(
+                            1,
+                            progressRight - progressLeft);
+
+            graphics.fill(
+                    progressLeft,
+                    rowY + 30,
+                    progressRight,
+                    rowY + 32,
+                    RotClientTheme.DIVIDER);
+
+            double ratio =
+                    carry.total <= 0
+                            ? 0.0D
+                            : Math.max(
+                                    0.0D,
+                                    Math.min(
+                                            1.0D,
+                                            carry.completed
+                                                    / (double) carry.total));
+
+            int filled =
+                    (int) Math.round(
+                            progressWidth * ratio);
+
+            if (filled > 0) {
+                graphics.fill(
+                        progressLeft,
+                        rowY + 30,
+                        progressLeft + filled,
+                        rowY + 32,
+                        carry.done()
+                                ? RotClientTheme.SUCCESS
+                                : RotClientTheme.HUD_ACCENT);
+            }
+
             rowY += 46;
         }
     }
+    private void drawHistory(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int top,
+            int width,
+            int mouseX,
+            int mouseY) {
 
-    private void drawHistory(GuiGraphicsExtractor graphics, int left, int top, int width) {
-        List<DungeonCarryPolicy.HistoryEntry> history = DungeonCarryRuntime.snapshot().history().stream()
-                .filter(entry -> filterFloor.isBlank() || filterFloor.equalsIgnoreCase(entry.floor))
-                .limit(7)
-                .toList();
+        List<DungeonCarryPolicy.HistoryEntry> history =
+                DungeonCarryRuntime.snapshot()
+                        .history()
+                        .stream()
+                        .filter(
+                                entry ->
+                                        filterFloor.isBlank()
+                                                || filterFloor.equalsIgnoreCase(
+                                                entry.floor))
+                        .limit(7)
+                        .toList();
+
+        String count =
+                history.size()
+                        + (history.size() == 1
+                        ? " shown"
+                        : " shown");
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                count,
+                left + width - font.width(count),
+                top,
+                history.isEmpty()
+                        ? RotClientTheme.TEXT_MUTED
+                        : RotClientTheme.HUD_ACCENT,
+                true);
+
         if (history.isEmpty()) {
-            RotClientUiDraw.text(graphics, font, "No completed carries yet", left + 170, top + 130,
-                    RotClientTheme.TEXT_MUTED, true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    filterFloor.isBlank()
+                            ? "No completed carries yet"
+                            : "No completed " + filterFloor + " carries",
+                    left + 160,
+                    top + 130,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Finished carry sessions will appear here.",
+                    left + 150,
+                    top + 149);
+
             return;
         }
-        int rowY = top + 36;
-        for (DungeonCarryPolicy.HistoryEntry entry : history) {
-            graphics.fill(left, rowY, left + width, rowY + 38, RotClientTheme.SURFACE_ALT);
-            RotClientUiDraw.text(graphics, font, entry.player, left + 10, rowY + 7, RotClientTheme.TEXT, true);
-            RotClientUiDraw.text(graphics, font, entry.floor + " x" + entry.total,
-                    left + 170, rowY + 7, RotClientTheme.TEXT_MUTED, true);
+
+        int rowY =
+                top + 36;
+
+        for (DungeonCarryPolicy.HistoryEntry entry
+                : history) {
+
+            /*
+             * History entries are informational rather than selectable.
+             */
+            RotClientUiDraw.drawElevatedCard(
+                    graphics,
+                    left,
+                    rowY,
+                    width,
+                    38);
+
+            graphics.fill(
+                    left + 1,
+                    rowY + 7,
+                    left + 4,
+                    rowY + 31,
+                    RotClientTheme.SUCCESS);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            entry.player,
+                            145),
+                    left + 10,
+                    rowY + 7,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    entry.floor
+                            + "  x"
+                            + entry.total,
+                    left + 170,
+                    rowY + 7,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            String done =
+                    "COMPLETED";
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    done,
+                    left + width - 10 - font.width(done),
+                    rowY + 7,
+                    RotClientTheme.SUCCESS,
+                    true);
+
             rowY += 44;
         }
     }
-
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) {
