@@ -16,6 +16,7 @@
     "ItemFrameRendererMapArtMixin",
     "MapRendererMapArtMixin",
     "MapRenderStateMapArtMixin",
+    "PaintingRendererFoxMixin",
     "MouseHandlerEtherwarpMixin",
     "MouseHandlerFarmKeysMixin",
     "MouseHandlerFreecamMixin",

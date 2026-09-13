@@ -18,6 +18,8 @@ and the project uses semantic versioning where practical.
   in `rotclient-plus.json`.
 
 ### Rot Client+ render
+* Fox now also replaces local Minecraft paintings, stretching the bundled image
+  across each painting's dimensions without altering the server entity.
 
 * Added **Map Art Override** (`qol.map_art_override`), off by default. It
   renders the bundled project-owner-supplied image on maps locally and can

@@ -140,6 +140,7 @@ jar {
     exclude 'fi/rotclient/mixin/ItemFrameRendererMapArtMixin.class'
     exclude 'fi/rotclient/mixin/MapRendererMapArtMixin.class'
     exclude 'fi/rotclient/mixin/MapRenderStateMapArtMixin.class'
+    exclude 'fi/rotclient/mixin/PaintingRendererFoxMixin.class'
 }
 
 assemble.dependsOn plusJar
@@ -162,6 +163,7 @@ tasks.register('verifyLegitJar') {
 				'ItemFrameRendererMapArtMixin.class',
 				'MapRendererMapArtMixin.class',
 				'MapRenderStateMapArtMixin.class',
+				'PaintingRendererFoxMixin.class',
 				'assets/rotclient/textures/map-art.jpg'
 		]
 		def forbiddenText = [

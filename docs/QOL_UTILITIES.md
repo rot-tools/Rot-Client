@@ -42,7 +42,8 @@ settings; cheat children exist only in Plus.
 
 **Fox** (`qol.map_art_override`) is a local render replacement, default **off**. It uses
 the bundled map-art image, or an optional image path supplied in the dashboard,
-without modifying a map item, map packet, or server state. Same-facing,
+without modifying a map item, painting entity, map packet, or server state. A
+painting stretches the image to its own dimensions. Same-facing,
 unrotated horizontal map frames are grouped only when they form one contiguous
 rectangle; each frame receives its own UV region so the image stretches across
 the panel. Runtime playtest remains pending.

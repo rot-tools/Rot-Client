@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.MapRenderState;
+import net.minecraft.client.renderer.entity.state.PaintingRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -57,6 +58,42 @@ public final class MapArtOverrideRuntime {
             buffer.addVertex(pose, 128.0F, 0.0F, -0.01F).setColor(-1).setUv(u1, v0).setLight(lightCoords);
             buffer.addVertex(pose, 0.0F, 0.0F, -0.01F).setColor(-1).setUv(u0, v0).setLight(lightCoords);
         });
+        return true;
+    }
+
+    /** Render the local image on a server painting without changing its entity data. */
+    public static boolean renderPainting(
+            PaintingRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector collector) {
+        if (!ensureTexture() || state == null || state.variant == null || state.direction == null) {
+            return false;
+        }
+        int width = state.variant.width();
+        int height = state.variant.height();
+        if (width < 1 || height < 1) {
+            return false;
+        }
+        int light = state.lightCoordsPerBlock.length == 0
+                ? 0
+                : state.lightCoordsPerBlock[state.lightCoordsPerBlock.length / 2];
+        poseStack.pushPose();
+        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(
+                180 - state.direction.get2DDataValue() * 90));
+        collector.submitCustomGeometry(
+                poseStack,
+                RenderTypes.entitySolidZOffsetForward(TEXTURE_ID),
+                (pose, buffer) -> {
+                    float left = -width / 2.0F;
+                    float right = width / 2.0F;
+                    float bottom = -height / 2.0F;
+                    float top = height / 2.0F;
+                    buffer.addVertex(pose, right, bottom, -0.03125F).setColor(-1).setUv(1.0F, 1.0F).setLight(light);
+                    buffer.addVertex(pose, left, bottom, -0.03125F).setColor(-1).setUv(0.0F, 1.0F).setLight(light);
+                    buffer.addVertex(pose, left, top, -0.03125F).setColor(-1).setUv(0.0F, 0.0F).setLight(light);
+                    buffer.addVertex(pose, right, top, -0.03125F).setColor(-1).setUv(1.0F, 0.0F).setLight(light);
+                });
+        poseStack.popPose();
         return true;
     }
 
