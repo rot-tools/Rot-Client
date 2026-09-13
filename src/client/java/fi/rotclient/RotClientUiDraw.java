@@ -1467,6 +1467,346 @@ public final class RotClientUiDraw {
                 knob / 2);
     }
 
+    /*
+     * Animated switch used by Rot Client module controls.
+     *
+     * drawToggle() intentionally stays untouched. Market Watch, Profit Finder,
+     * and other existing consumers therefore retain their existing rendering.
+     */
+    private static final java.util.Map<String, ToggleMotion>
+            TOGGLE_MOTION =
+            new java.util.HashMap<>();
+
+    private static final class ToggleMotion {
+        double position;
+        double hover;
+        long lastNanos;
+
+        ToggleMotion(
+                double position,
+                long lastNanos) {
+
+            this.position =
+                    position;
+
+            this.hover =
+                    0.0D;
+
+            this.lastNanos =
+                    lastNanos;
+        }
+    }
+
+    static void drawAnimatedToggle(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            boolean enabled,
+            boolean hovered,
+            String identity,
+            int accentColor) {
+
+        int width =
+                QolUtilityUiMath.TOGGLE_WIDTH;
+
+        int height =
+                QolUtilityUiMath.TOGGLE_HEIGHT;
+
+        String key =
+                identity == null
+                        ? ""
+                        : identity;
+
+        long now =
+                System.nanoTime();
+
+        ToggleMotion state =
+                TOGGLE_MOTION.get(
+                        key);
+
+        /*
+         * Initial render starts exactly in the real logical state.
+         */
+        if (state == null) {
+
+            state =
+                    new ToggleMotion(
+                            enabled
+                                    ? 1.0D
+                                    : 0.0D,
+                            now);
+
+            TOGGLE_MOTION.put(
+                    key,
+                    state);
+        }
+
+        double dt =
+                Math.max(
+                        0.001D,
+                        Math.min(
+                                0.05D,
+                                (
+                                        now
+                                                - state.lastNanos)
+                                        / 1_000_000_000.0D));
+
+        state.lastNanos =
+                now;
+
+
+        /*
+         * Slow enough that ON/OFF visibly travels instead of teleporting.
+         */
+        state.position =
+                RotClientEase.expToward(
+                        state.position,
+                        enabled
+                                ? 1.0D
+                                : 0.0D,
+                        dt,
+                        6.8D);
+
+        state.hover =
+                RotClientEase.expToward(
+                        state.hover,
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        dt,
+                        14.0D);
+
+        float position =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                state.position));
+
+        float hoverAmount =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                state.hover));
+
+        if (TOGGLE_MOTION.size() > 2048) {
+            TOGGLE_MOTION.clear();
+            TOGGLE_MOTION.put(
+                    key,
+                    state);
+        }
+
+        int accent =
+                accentColor == 0
+                        ? RotClientTheme.HUD_ACCENT
+                        : accentColor;
+
+
+        /*
+         * Very small button-like lift on hover.
+         */
+        int lift =
+                hoverAmount > 0.55F
+                        ? 1
+                        : 0;
+
+        int visualY =
+                y - lift;
+
+
+        /*
+         * Soft shadow.
+         */
+        int shadowAlpha =
+                0x20
+                        + Math.round(
+                        0x20
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                x + 1,
+                visualY + 2,
+                x + width + 1,
+                visualY + height + 2,
+                withAlpha(
+                        RotClientTheme.SHADOW,
+                        shadowAlpha),
+                height / 2);
+
+
+        /*
+         * OFF base.
+         */
+        roundedFill(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                RotClientTheme.TOGGLE_OFF,
+                height / 2);
+
+
+        /*
+         * Accent fades in/out together with the moving knob instead of
+         * switching color instantly.
+         */
+        int activeAlpha =
+                Math.round(
+                        0xD8
+                                * position);
+
+        if (activeAlpha > 0) {
+
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            accent,
+                            activeAlpha),
+                    height / 2);
+        }
+
+
+        /*
+         * Mild hover wash.
+         */
+        if (hoverAmount > 0.02F) {
+
+            int hoverAlpha =
+                    Math.round(
+                            0x24
+                                    * hoverAmount);
+
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            accent,
+                            hoverAlpha),
+                    height / 2);
+        }
+
+
+        /*
+         * Button-style outline.
+         */
+        int borderAlpha =
+                0x38
+                        + Math.round(
+                        0x50
+                                * position)
+                        + Math.round(
+                        0x40
+                                * hoverAmount);
+
+        roundedOutline(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                withAlpha(
+                        accent,
+                        Math.min(
+                                0xD0,
+                                borderAlpha)),
+                height / 2);
+
+
+        /*
+         * Smooth travelling knob.
+         */
+        int baseKnob =
+                height - 4;
+
+        int knobSize =
+                baseKnob
+                        + Math.round(
+                        hoverAmount);
+
+        int leftCenter =
+                x
+                        + 2
+                        + baseKnob / 2;
+
+        int rightCenter =
+                x
+                        + width
+                        - 2
+                        - baseKnob / 2;
+
+        int knobCenter =
+                leftCenter
+                        + Math.round(
+                        (
+                                rightCenter
+                                        - leftCenter)
+                                * position);
+
+        int knobX =
+                knobCenter
+                        - knobSize / 2;
+
+        int knobY =
+                visualY
+                        + height / 2
+                        - knobSize / 2;
+
+
+        /*
+         * Knob shadow.
+         */
+        roundedFill(
+                graphics,
+                knobX + 1,
+                knobY + 1,
+                knobX + knobSize + 1,
+                knobY + knobSize + 2,
+                withAlpha(
+                        RotClientTheme.SHADOW,
+                        0x38
+                                + Math.round(
+                                0x18
+                                        * hoverAmount)),
+                knobSize / 2);
+
+
+        roundedFill(
+                graphics,
+                knobX,
+                knobY,
+                knobX + knobSize,
+                knobY + knobSize,
+                RotClientTheme.TOGGLE_KNOB,
+                knobSize / 2);
+
+
+        /*
+         * Fine accent edge while hovering.
+         */
+        if (hoverAmount > 0.04F) {
+
+            roundedOutline(
+                    graphics,
+                    knobX,
+                    knobY,
+                    knobX + knobSize,
+                    knobY + knobSize,
+                    withAlpha(
+                            accent,
+                            0x48
+                                    + Math.round(
+                                    0x48
+                                            * hoverAmount)),
+                    knobSize / 2);
+        }
+    }
+
     static void drawSquareLatch(
             GuiGraphicsExtractor graphics, int x, int y, boolean enabled, boolean hover) {
         int size = QolUtilityUiMath.SQUARE_LATCH_SIZE;
