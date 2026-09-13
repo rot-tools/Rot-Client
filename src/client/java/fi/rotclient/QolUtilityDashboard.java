@@ -39,6 +39,20 @@ final class QolUtilityDashboard {
     private final java.util.HashMap<String, Double> moduleCardHoverAmounts =
             new java.util.HashMap<>();
 
+    /*
+     * Slider rendering deliberately has its own visual state.
+     *
+     * The underlying setting changes immediately so gameplay/config behavior
+     * remains precise. Only the rendered position eases toward that value.
+     * This removes the stepped/snappy appearance caused by number specs while
+     * retaining their exact min/max/step semantics.
+     */
+    private final java.util.HashMap<String, Double> sliderVisualFractions =
+            new java.util.HashMap<>();
+
+    private final java.util.HashMap<String, Double> sliderInteractionAmounts =
+            new java.util.HashMap<>();
+
     private static final double MODULE_ACCORDION_SECONDS = 0.22D;
     private double moduleAccordionProgress;
     private long moduleAccordionLastNanos;
@@ -2775,7 +2789,9 @@ final class QolUtilityDashboard {
                         width,
                         trailing,
                         setting.id(),
-                        disabled);
+                        disabled,
+                        mouseX,
+                        mouseY);
 
             } else {
                 drawNumberStepper(
@@ -2907,6 +2923,108 @@ final class QolUtilityDashboard {
                     false);
         }
     }
+    private double sliderVisualFraction(
+            String settingId,
+            double targetFraction) {
+
+        String key =
+                settingId == null
+                        ? ""
+                        : settingId;
+
+        double target =
+                RotClientEase.clamp01(
+                        targetFraction);
+
+        Double current =
+                sliderVisualFractions.get(
+                        key);
+
+        /*
+         * Do not animate a newly opened slider from zero. Its first frame
+         * starts at the real value; later changes ease smoothly.
+         */
+        if (current == null
+                || !Double.isFinite(
+                        current)) {
+
+            sliderVisualFractions.put(
+                    key,
+                    target);
+
+            return target;
+        }
+
+        double next =
+                RotClientEase.expToward(
+                        current,
+                        target,
+                        RotClientUiClock.seconds(),
+                        22.0D);
+
+        sliderVisualFractions.put(
+                key,
+                next);
+
+        if (sliderVisualFractions.size() > 256) {
+            sliderVisualFractions.clear();
+            sliderVisualFractions.put(
+                    key,
+                    next);
+        }
+
+        return RotClientEase.clamp01(
+                next);
+    }
+
+    private float sliderInteractionAmount(
+            String settingId,
+            boolean active) {
+
+        String key =
+                settingId == null
+                        ? ""
+                        : settingId;
+
+        double current =
+                sliderInteractionAmounts.getOrDefault(
+                        key,
+                        0.0D);
+
+        double next =
+                RotClientEase.expToward(
+                        current,
+                        active
+                                ? 1.0D
+                                : 0.0D,
+                        RotClientUiClock.seconds(),
+                        18.0D);
+
+        if (!active
+                && next <= 0.0005D) {
+
+            sliderInteractionAmounts.remove(
+                    key);
+
+            return 0.0F;
+        }
+
+        sliderInteractionAmounts.put(
+                key,
+                next);
+
+        if (sliderInteractionAmounts.size() > 256) {
+            sliderInteractionAmounts.clear();
+            sliderInteractionAmounts.put(
+                    key,
+                    next);
+        }
+
+        return (float) RotClientEase.smoothstep(
+                RotClientEase.clamp01(
+                        next));
+    }
+
     private void drawNumberSlider(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -2915,53 +3033,396 @@ final class QolUtilityDashboard {
             int width,
             String value,
             String settingId,
-            boolean disabled) {
-        int color = disabled ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT;
-        RotClientUiDraw.text(graphics, font,
+            boolean disabled,
+            int mouseX,
+            int mouseY) {
+
+        Double raw =
+                readDrawerNumber(
+                        settingId);
+
+        QolNumberSettings.Spec spec =
+                QolNumberSettings.spec(
+                        settingId);
+
+        double targetFraction =
+                spec == null
+                        || raw == null
+                        ? 0.0D
+                        : spec.fraction(
+                                raw);
+
+        boolean dragging =
+                !disabled
+                        && settingId != null
+                        && settingId.equals(
+                                draggingNumberSettingId);
+
+        boolean hovered =
+                !disabled
+                        && QolUtilityUiMath.hitSlider(
+                                mouseX,
+                                mouseY,
+                                x,
+                                y,
+                                width);
+
+        float interaction =
+                sliderInteractionAmount(
+                        settingId,
+                        hovered
+                                || dragging);
+
+        double visualFraction =
+                sliderVisualFraction(
+                        settingId,
+                        targetFraction);
+
+        int accent =
+                accentColor();
+
+
+        /*
+         * Value pill.
+         *
+         * Keeping the readout in a compact field gives the number a clear
+         * visual anchor without making the entire slider row look like a
+         * text input.
+         */
+        int valueWidth =
+                Math.max(
+                        38,
+                        font.width(
+                                value)
+                                + 14);
+
+        int valueHeight =
+                18;
+
+        int valueX =
+                x
+                        + width
+                        - valueWidth;
+
+        int valueY =
+                y + 2;
+
+        if (!disabled
+                && interaction > 0.01F) {
+
+            int shadowAlpha =
+                    0x18
+                            + Math.round(
+                            0x20 * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    valueX + 1,
+                    valueY + 2,
+                    valueX + valueWidth + 1,
+                    valueY + valueHeight + 2,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    RotClientUiDraw.RADIUS_SM);
+        }
+
+        int valueFill =
+                dragging
+                        ? RotClientTheme.BUTTON_HOVER
+                        : RotClientTheme.FIELD;
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                valueX,
+                valueY,
+                valueX + valueWidth,
+                valueY + valueHeight,
+                valueFill,
+                RotClientUiDraw.RADIUS_SM);
+
+        int valueBorder;
+
+        if (disabled) {
+            valueBorder =
+                    RotClientTheme.BORDER;
+
+        } else if (dragging) {
+            valueBorder =
+                    accent;
+
+        } else if (interaction > 0.01F) {
+            int borderAlpha =
+                    0x70
+                            + Math.round(
+                            0x70 * interaction);
+
+            valueBorder =
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            Math.min(
+                                    0xE0,
+                                    borderAlpha));
+
+        } else {
+            valueBorder =
+                    RotClientTheme.BORDER;
+        }
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                valueX,
+                valueY,
+                valueX + valueWidth,
+                valueY + valueHeight,
+                valueBorder,
+                RotClientUiDraw.RADIUS_SM);
+
+        int valueColor =
+                disabled
+                        ? RotClientTheme.TEXT_MUTED
+                        : dragging
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_DIM;
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
                 value,
-                x + width - 10 - font.width(value),
-                y + 6,
-                color,
-                false);
-        int trackX = x + QolUtilityUiMath.SLIDER_TRACK_INSET;
-        int trackW = Math.max(1, width - QolUtilityUiMath.SLIDER_TRACK_INSET * 2);
-        int trackY = y + 24;
-        int trackBottom = trackY + QolUtilityUiMath.SLIDER_TRACK_HEIGHT;
+                valueX
+                        + Math.max(
+                        4,
+                        (
+                                valueWidth
+                                        - font.width(
+                                        value))
+                                / 2),
+                valueY + 5,
+                valueColor,
+                dragging);
+
+
+        /*
+         * Rail.
+         *
+         * The input geometry remains unchanged; only the rendering becomes
+         * slimmer and animates on interaction.
+         */
+        int trackX =
+                x
+                        + QolUtilityUiMath.SLIDER_TRACK_INSET;
+
+        int trackW =
+                Math.max(
+                        1,
+                        width
+                                - QolUtilityUiMath.SLIDER_TRACK_INSET
+                                * 2);
+
+        int trackCenterY =
+                y + 29;
+
+        int trackHeight =
+                4
+                        + Math.round(
+                        2.0F
+                                * interaction);
+
+        int trackY =
+                trackCenterY
+                        - trackHeight / 2;
+
+        int trackBottom =
+                trackY
+                        + trackHeight;
+
         RotClientUiDraw.roundedFill(
                 graphics,
                 trackX,
                 trackY,
                 trackX + trackW,
                 trackBottom,
-                RotClientTheme.FIELD,
-                RotClientUiDraw.RADIUS_SM);
-        Double raw = readDrawerNumber(settingId);
-        QolNumberSettings.Spec spec = QolNumberSettings.spec(settingId);
-        double fraction = spec == null || raw == null ? 0.0D : spec.fraction(raw);
-        int fillW = Math.max(0, (int) Math.round(fraction * trackW));
+                disabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : RotClientTheme.FIELD,
+                trackHeight / 2);
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                trackX,
+                trackY,
+                trackX + trackW,
+                trackBottom,
+                interaction > 0.05F
+                        && !disabled
+                        ? RotClientTheme.BORDER_BRIGHT
+                        : RotClientTheme.BORDER,
+                trackHeight / 2);
+
+
+        /*
+         * The important change: fill and thumb use visualFraction rather than
+         * the raw setting fraction. Config values still update instantly,
+         * while the rendered control glides between quantized steps.
+         */
+        int fillW =
+                Math.max(
+                        0,
+                        Math.min(
+                                trackW,
+                                (int) Math.round(
+                                        visualFraction
+                                                * trackW)));
+
         if (fillW > 0) {
+
+            if (!disabled
+                    && interaction > 0.01F) {
+
+                int glowAlpha =
+                        0x12
+                                + Math.round(
+                                0x28
+                                        * interaction);
+
+                RotClientUiDraw.roundedFill(
+                        graphics,
+                        trackX,
+                        trackCenterY - 4,
+                        trackX + fillW,
+                        trackCenterY + 4,
+                        RotClientUiDraw.withAlpha(
+                                accent,
+                                glowAlpha),
+                        4);
+            }
+
+            int fillAlpha =
+                    disabled
+                            ? 0x70
+                            : 0xC8
+                            + Math.round(
+                            0x37
+                                    * interaction);
+
             RotClientUiDraw.roundedFill(
                     graphics,
                     trackX,
                     trackY,
                     trackX + fillW,
                     trackBottom,
-                    disabled ? RotClientTheme.BUTTON_DISABLED : RotClientTheme.HUD_ACCENT,
-                    RotClientUiDraw.RADIUS_SM);
+                    disabled
+                            ? RotClientTheme.BUTTON_DISABLED
+                            : RotClientUiDraw.withAlpha(
+                                    accent,
+                                    Math.min(
+                                            0xFF,
+                                            fillAlpha)),
+                    trackHeight / 2);
         }
-        int thumb = QolUtilityUiMath.SLIDER_THUMB_SIZE;
-        int thumbX = trackX + Math.max(0, Math.min(trackW, fillW)) - thumb / 2;
-        int thumbY = trackY + QolUtilityUiMath.SLIDER_TRACK_HEIGHT / 2 - thumb / 2;
+
+
+        /*
+         * Thumb.
+         *
+         * It expands gently on hover/drag, gains a shadow, and uses an
+         * accent ring around a bright center. No hit-box dimensions change.
+         */
+        int thumbSize =
+                QolUtilityUiMath.SLIDER_THUMB_SIZE
+                        + Math.round(
+                        4.0F
+                                * interaction);
+
+        int thumbCenterX =
+                trackX
+                        + fillW;
+
+        int thumbX =
+                thumbCenterX
+                        - thumbSize / 2;
+
+        int thumbY =
+                trackCenterY
+                        - thumbSize / 2;
+
+        if (!disabled) {
+
+            int thumbShadowAlpha =
+                    0x40
+                            + Math.round(
+                            0x30
+                                    * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    thumbX + 1,
+                    thumbY + 2,
+                    thumbX + thumbSize + 1,
+                    thumbY + thumbSize + 2,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SHADOW,
+                            thumbShadowAlpha),
+                    thumbSize / 2);
+        }
+
+        int thumbOuter =
+                disabled
+                        ? RotClientTheme.TEXT_MUTED
+                        : accent;
+
         RotClientUiDraw.roundedFill(
                 graphics,
                 thumbX,
                 thumbY,
-                thumbX + thumb,
-                thumbY + thumb,
-                disabled ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,
-                thumb / 2);
-    }
+                thumbX + thumbSize,
+                thumbY + thumbSize,
+                thumbOuter,
+                thumbSize / 2);
 
+        int coreInset =
+                interaction > 0.45F
+                        ? 3
+                        : 2;
+
+        int innerLeft =
+                thumbX
+                        + coreInset;
+
+        int innerTop =
+                thumbY
+                        + coreInset;
+
+        int innerRight =
+                thumbX
+                        + thumbSize
+                        - coreInset;
+
+        int innerBottom =
+                thumbY
+                        + thumbSize
+                        - coreInset;
+
+        if (innerRight > innerLeft
+                && innerBottom > innerTop) {
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    innerLeft,
+                    innerTop,
+                    innerRight,
+                    innerBottom,
+                    disabled
+                            ? RotClientTheme.BUTTON_DISABLED
+                            : RotClientTheme.TEXT,
+                    Math.max(
+                            1,
+                            (
+                                    innerRight
+                                            - innerLeft)
+                                    / 2));
+        }
+    }
     private void drawNumberStepper(
             GuiGraphicsExtractor graphics,
             Font font,
