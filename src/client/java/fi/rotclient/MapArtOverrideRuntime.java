@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.client.renderer.entity.state.PaintingRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
@@ -88,13 +89,29 @@ public final class MapArtOverrideRuntime {
                     float right = width / 2.0F;
                     float bottom = -height / 2.0F;
                     float top = height / 2.0F;
-                    buffer.addVertex(pose, right, bottom, -0.03125F).setColor(-1).setUv(1.0F, 1.0F).setLight(light);
-                    buffer.addVertex(pose, left, bottom, -0.03125F).setColor(-1).setUv(0.0F, 1.0F).setLight(light);
-                    buffer.addVertex(pose, left, top, -0.03125F).setColor(-1).setUv(0.0F, 0.0F).setLight(light);
-                    buffer.addVertex(pose, right, top, -0.03125F).setColor(-1).setUv(1.0F, 0.0F).setLight(light);
+                    paintingVertex(pose, buffer, right, bottom, 1.0F, 1.0F, light);
+                    paintingVertex(pose, buffer, left, bottom, 0.0F, 1.0F, light);
+                    paintingVertex(pose, buffer, left, top, 0.0F, 0.0F, light);
+                    paintingVertex(pose, buffer, right, top, 1.0F, 0.0F, light);
                 });
         poseStack.popPose();
         return true;
+    }
+
+    private static void paintingVertex(
+            PoseStack.Pose pose,
+            com.mojang.blaze3d.vertex.VertexConsumer buffer,
+            float x,
+            float y,
+            float u,
+            float v,
+            int light) {
+        buffer.addVertex(pose, x, y, -0.03125F)
+                .setColor(-1)
+                .setUv(u, v)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(light)
+                .setNormal(pose, 0, 0, -1);
     }
 
     /** Attach one image region to an item-frame map state. */
