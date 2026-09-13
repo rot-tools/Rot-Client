@@ -139,6 +139,7 @@ abstract class ClientPacketListenerMixin {
         }
         if (RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
                 || fi.rotclient.RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
+                || fi.rotclient.WardrobeAutoEquipRuntime.consumeOpenScreen(packet)
                 || fi.rotclient.QolClientFlavorSupport.hooks().consumeHiddenOpenScreen(packet)) {
 
             ci.cancel();
@@ -152,6 +153,7 @@ abstract class ClientPacketListenerMixin {
         }
         RotClientPetAutoEquipRuntime.onContainerClosed();
         fi.rotclient.RotClientEquipmentAutoEquipRuntime.onContainerClosed();
+        fi.rotclient.WardrobeAutoEquipRuntime.onContainerClosed();
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerClosed();
         ExperimentSolverRuntime.onScreenClosed();
     }

@@ -41,7 +41,7 @@ final class ColumnStyleQolWiringTest {
         assertTrue(commissionRuntime.contains("rotclient$getNameForDisplay"));
         assertTrue(client.contains("MobHighlightRuntime.tick"));
         assertTrue(client.contains("MenuKeybindRuntime.tick"));
-        assertTrue(plus.contains("WardrobeAutoEquipRuntime.tick"));
+        assertTrue(client.contains("WardrobeAutoEquipRuntime.tick"));
         assertTrue(plus.contains("WardrobeAutoEquipRuntime.onScreenOpened"));
         assertTrue(plus.contains("AutoHarpRuntime.tick"));
         assertTrue(plus.contains("AutoGfsRuntime.tick"));
@@ -147,7 +147,7 @@ final class ColumnStyleQolWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(packets.contains("QolClientFlavorSupport.hooks().consumeHiddenOpenScreen"));
         String autoEquip = Files.readString(Path.of(
-                "src/plusClient/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
+                "src/client/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(autoEquip.contains("sendCommand(WardrobeKeybindPolicy.OPEN_COMMAND)"));
         assertTrue(autoEquip.contains("packet.getType().create"));

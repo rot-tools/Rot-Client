@@ -101,7 +101,7 @@ final class RotClientLoadoutActivationCoordinator {
             return;
         }
 
-        if (QolClientFlavorSupport.hooks().wardrobeAutoEquipBusy()) {
+        if (WardrobeAutoEquipRuntime.busy()) {
             gearHandoffTicks = 1;
             return;
         }
@@ -169,8 +169,7 @@ final class RotClientLoadoutActivationCoordinator {
 
         if (target.wardrobeSlotNumber > 0) {
             boolean started =
-                    QolClientFlavorSupport.hooks()
-                            .beginWardrobeLoadoutEquip(
+                    WardrobeAutoEquipRuntime.beginLoadoutEquip(
                                     target.wardrobeSlotNumber);
 
             if (!started) {
@@ -226,7 +225,7 @@ final class RotClientLoadoutActivationCoordinator {
 
     private boolean gearActivationBusy() {
         return hasPendingGearStages()
-                || QolClientFlavorSupport.hooks().wardrobeAutoEquipBusy()
+                || WardrobeAutoEquipRuntime.busy()
                 || RotClientPetAutoEquipRuntime.busy()
                 || RotClientEquipmentAutoEquipRuntime.busy();
     }
