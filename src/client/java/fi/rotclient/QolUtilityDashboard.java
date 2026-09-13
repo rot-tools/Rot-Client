@@ -2941,8 +2941,9 @@ final class QolUtilityDashboard {
                         key);
 
         /*
-         * Do not animate a newly opened slider from zero. Its first frame
-         * starts at the real value; later changes ease smoothly.
+         * First appearance starts at the real value. We only animate changes
+         * after that, so opening a card never causes sliders to sweep in from
+         * zero.
          */
         if (current == null
                 || !Double.isFinite(
@@ -2955,12 +2956,19 @@ final class QolUtilityDashboard {
             return target;
         }
 
+        /*
+         * Intentionally much softer than button hover motion.
+         *
+         * The old slider used a very high stiffness and therefore visually
+         * settled almost immediately. 6.5 gives larger changes a noticeable
+         * glide while still catching the cursor naturally during a drag.
+         */
         double next =
                 RotClientEase.expToward(
                         current,
                         target,
                         RotClientUiClock.seconds(),
-                        22.0D);
+                        6.5D);
 
         sliderVisualFractions.put(
                 key,
@@ -2991,6 +2999,10 @@ final class QolUtilityDashboard {
                         key,
                         0.0D);
 
+        /*
+         * Slower than regular button hover motion so the slider surface rises
+         * and settles rather than flashing between states.
+         */
         double next =
                 RotClientEase.expToward(
                         current,
@@ -2998,7 +3010,7 @@ final class QolUtilityDashboard {
                                 ? 1.0D
                                 : 0.0D,
                         RotClientUiClock.seconds(),
-                        18.0D);
+                        9.0D);
 
         if (!active
                 && next <= 0.0005D) {
@@ -3083,18 +3095,428 @@ final class QolUtilityDashboard {
 
 
         /*
-         * Value pill.
+         * Same visual motion as the shared buttons:
          *
-         * Keeping the readout in a compact field gives the number a clear
-         * visual anchor without making the entire slider row look like a
-         * text input.
+         * - lift
+         * - growing shadow
+         * - dark BUTTON surface
+         * - accent wash
+         * - accent border
+         *
+         * Hit geometry never moves.
+         */
+        int lift =
+                disabled
+                        ? 0
+                        : Math.round(
+                                2.0F
+                                        * interaction);
+
+        int controlX =
+                x + 6;
+
+        int controlY =
+                y + 20
+                        - lift;
+
+        int controlWidth =
+                Math.max(
+                        28,
+                        width - 12);
+
+        int controlHeight =
+                19;
+
+
+        /*
+         * Animated button-style shadow.
+         */
+        if (!disabled) {
+
+            int shadowAlpha =
+                    0x20
+                            + Math.round(
+                            0x30
+                                    * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    controlX + 1,
+                    controlY + 2,
+                    controlX + controlWidth + 1,
+                    controlY + controlHeight + 3,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    RotClientUiDraw.RADIUS_SM);
+        }
+
+
+        /*
+         * Main slider surface.
+         */
+        RotClientUiDraw.roundedFill(
+                graphics,
+                controlX,
+                controlY,
+                controlX + controlWidth,
+                controlY + controlHeight,
+                disabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : RotClientTheme.BUTTON,
+                RotClientUiDraw.RADIUS_SM);
+
+
+        /*
+         * Same accent wash used by the buttons, but slightly stronger while
+         * actively dragging.
+         */
+        if (!disabled
+                && interaction > 0.001F) {
+
+            int washAlpha =
+                    dragging
+                            ? 0x28
+                                    + Math.round(
+                                    0x30
+                                            * interaction)
+                            : Math.round(
+                                    0x38
+                                            * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    controlX,
+                    controlY,
+                    controlX + controlWidth,
+                    controlY + controlHeight,
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            Math.min(
+                                    0x68,
+                                    washAlpha)),
+                    RotClientUiDraw.RADIUS_SM);
+        }
+
+
+        /*
+         * Animated border, closely matching the shared button treatment.
+         */
+        int controlBorder;
+
+        if (disabled) {
+            controlBorder =
+                    RotClientTheme.BORDER;
+
+        } else if (dragging) {
+            controlBorder =
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            0xE8);
+
+        } else if (interaction > 0.001F) {
+            controlBorder =
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            Math.min(
+                                    0xD8,
+                                    0x50
+                                            + Math.round(
+                                            0x78
+                                                    * interaction)));
+
+        } else {
+            controlBorder =
+                    RotClientTheme.BORDER;
+        }
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                controlX,
+                controlY,
+                controlX + controlWidth,
+                controlY + controlHeight,
+                controlBorder,
+                RotClientUiDraw.RADIUS_SM);
+
+
+        /*
+         * Thin top sheen appears as the surface rises, exactly like the small
+         * accent detail used on hovered premium buttons.
+         */
+        if (!disabled
+                && interaction > 0.03F
+                && controlWidth > 26) {
+
+            int sheenAlpha =
+                    Math.round(
+                            0x88
+                                    * interaction);
+
+            graphics.fill(
+                    controlX + 8,
+                    controlY + 1,
+                    controlX + controlWidth - 8,
+                    controlY + 2,
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            sheenAlpha));
+        }
+
+
+        /*
+         * Rail lives inside the raised button surface.
+         */
+        int trackX =
+                controlX + 10;
+
+        int trackWidth =
+                Math.max(
+                        1,
+                        controlWidth - 20);
+
+        int trackCenterY =
+                controlY
+                        + controlHeight / 2;
+
+        int trackHeight =
+                dragging
+                        ? 4
+                        : 3;
+
+        int trackY =
+                trackCenterY
+                        - trackHeight / 2;
+
+        int trackBottom =
+                trackY
+                        + trackHeight;
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                trackX,
+                trackY,
+                trackX + trackWidth,
+                trackBottom,
+                disabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : RotClientTheme.SURFACE_ALT,
+                Math.max(
+                        1,
+                        trackHeight / 2));
+
+
+        /*
+         * Slow visual fill. This is what removes the stepped/snappy look.
+         */
+        int fillWidth =
+                Math.max(
+                        0,
+                        Math.min(
+                                trackWidth,
+                                (int) Math.round(
+                                        visualFraction
+                                                * trackWidth)));
+
+        if (fillWidth > 0) {
+
+            /*
+             * Soft halo underneath the active rail.
+             */
+            if (!disabled
+                    && interaction > 0.02F) {
+
+                int glowAlpha =
+                        0x18
+                                + Math.round(
+                                0x30
+                                        * interaction);
+
+                RotClientUiDraw.roundedFill(
+                        graphics,
+                        trackX,
+                        trackCenterY - 3,
+                        trackX + fillWidth,
+                        trackCenterY + 4,
+                        RotClientUiDraw.withAlpha(
+                                accent,
+                                Math.min(
+                                        0x58,
+                                        glowAlpha)),
+                        3);
+            }
+
+            int railAlpha =
+                    disabled
+                            ? 0x60
+                            : 0xC0
+                                    + Math.round(
+                                    0x3F
+                                            * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    trackX,
+                    trackY,
+                    trackX + fillWidth,
+                    trackBottom,
+                    disabled
+                            ? RotClientTheme.BUTTON_DISABLED
+                            : RotClientUiDraw.withAlpha(
+                                    accent,
+                                    Math.min(
+                                            0xFF,
+                                            railAlpha)),
+                    Math.max(
+                            1,
+                            trackHeight / 2));
+        }
+
+
+        /*
+         * Button-like thumb rather than a plain dot.
+         *
+         * It has its own shadow, dark surface, accent wash, border and top
+         * highlight. It also grows slightly while hovered/dragged.
+         */
+        int thumbWidth =
+                10
+                        + Math.round(
+                        2.0F
+                                * interaction);
+
+        int thumbHeight =
+                14
+                        + Math.round(
+                        2.0F
+                                * interaction);
+
+        int thumbCenterX =
+                trackX
+                        + fillWidth;
+
+        int thumbX =
+                thumbCenterX
+                        - thumbWidth / 2;
+
+        int thumbY =
+                trackCenterY
+                        - thumbHeight / 2;
+
+
+        if (!disabled) {
+
+            int thumbShadowAlpha =
+                    0x38
+                            + Math.round(
+                            0x38
+                                    * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    thumbX + 1,
+                    thumbY + 2,
+                    thumbX + thumbWidth + 1,
+                    thumbY + thumbHeight + 2,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SHADOW,
+                            thumbShadowAlpha),
+                    4);
+        }
+
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                thumbX,
+                thumbY,
+                thumbX + thumbWidth,
+                thumbY + thumbHeight,
+                disabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : dragging
+                        ? RotClientTheme.BUTTON_HOVER
+                        : RotClientTheme.BUTTON,
+                4);
+
+
+        if (!disabled) {
+
+            int thumbWash =
+                    dragging
+                            ? 0x68
+                            : 0x28
+                                    + Math.round(
+                                    0x30
+                                            * interaction);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    thumbX,
+                    thumbY,
+                    thumbX + thumbWidth,
+                    thumbY + thumbHeight,
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            Math.min(
+                                    0x78,
+                                    thumbWash)),
+                    4);
+        }
+
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                thumbX,
+                thumbY,
+                thumbX + thumbWidth,
+                thumbY + thumbHeight,
+                disabled
+                        ? RotClientTheme.BORDER
+                        : RotClientUiDraw.withAlpha(
+                                accent,
+                                dragging
+                                        ? 0xFF
+                                        : 0xA8
+                                                + Math.round(
+                                                0x47
+                                                        * interaction)),
+                4);
+
+
+        if (!disabled
+                && thumbWidth > 6) {
+
+            int thumbHighlight =
+                    dragging
+                            ? 0xE8
+                            : 0x70
+                                    + Math.round(
+                                    0x60
+                                            * interaction);
+
+            graphics.fill(
+                    thumbX + 3,
+                    thumbY + 2,
+                    thumbX + thumbWidth - 3,
+                    thumbY + 3,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.TEXT,
+                            Math.min(
+                                    0xF0,
+                                    thumbHighlight)));
+        }
+
+
+        /*
+         * Value pill gets the same lift and accent treatment rather than
+         * remaining detached/static while the slider animates.
          */
         int valueWidth =
                 Math.max(
-                        38,
+                        40,
                         font.width(
                                 value)
-                                + 14);
+                                + 16);
 
         int valueHeight =
                 18;
@@ -3105,15 +3527,12 @@ final class QolUtilityDashboard {
                         - valueWidth;
 
         int valueY =
-                y + 2;
+                y + 1
+                        - lift;
+
 
         if (!disabled
                 && interaction > 0.01F) {
-
-            int shadowAlpha =
-                    0x18
-                            + Math.round(
-                            0x20 * interaction);
 
             RotClientUiDraw.roundedFill(
                     graphics,
@@ -3123,14 +3542,13 @@ final class QolUtilityDashboard {
                     valueY + valueHeight + 2,
                     RotClientUiDraw.withAlpha(
                             RotClientTheme.SHADOW,
-                            shadowAlpha),
+                            0x20
+                                    + Math.round(
+                                    0x28
+                                            * interaction)),
                     RotClientUiDraw.RADIUS_SM);
         }
 
-        int valueFill =
-                dragging
-                        ? RotClientTheme.BUTTON_HOVER
-                        : RotClientTheme.FIELD;
 
         RotClientUiDraw.roundedFill(
                 graphics,
@@ -3138,8 +3556,31 @@ final class QolUtilityDashboard {
                 valueY,
                 valueX + valueWidth,
                 valueY + valueHeight,
-                valueFill,
+                disabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : RotClientTheme.BUTTON,
                 RotClientUiDraw.RADIUS_SM);
+
+
+        if (!disabled
+                && interaction > 0.001F) {
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    valueX,
+                    valueY,
+                    valueX + valueWidth,
+                    valueY + valueHeight,
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            dragging
+                                    ? 0x48
+                                    : Math.round(
+                                    0x30
+                                            * interaction)),
+                    RotClientUiDraw.RADIUS_SM);
+        }
+
 
         int valueBorder;
 
@@ -3149,25 +3590,24 @@ final class QolUtilityDashboard {
 
         } else if (dragging) {
             valueBorder =
-                    accent;
+                    RotClientUiDraw.withAlpha(
+                            accent,
+                            0xE8);
 
-        } else if (interaction > 0.01F) {
-            int borderAlpha =
-                    0x70
-                            + Math.round(
-                            0x70 * interaction);
-
+        } else if (interaction > 0.001F) {
             valueBorder =
                     RotClientUiDraw.withAlpha(
                             accent,
-                            Math.min(
-                                    0xE0,
-                                    borderAlpha));
+                            0x50
+                                    + Math.round(
+                                    0x60
+                                            * interaction));
 
         } else {
             valueBorder =
                     RotClientTheme.BORDER;
         }
+
 
         RotClientUiDraw.roundedOutline(
                 graphics,
@@ -3178,12 +3618,6 @@ final class QolUtilityDashboard {
                 valueBorder,
                 RotClientUiDraw.RADIUS_SM);
 
-        int valueColor =
-                disabled
-                        ? RotClientTheme.TEXT_MUTED
-                        : dragging
-                        ? RotClientTheme.TEXT
-                        : RotClientTheme.TEXT_DIM;
 
         RotClientUiDraw.text(
                 graphics,
@@ -3198,230 +3632,10 @@ final class QolUtilityDashboard {
                                         value))
                                 / 2),
                 valueY + 5,
-                valueColor,
-                dragging);
-
-
-        /*
-         * Rail.
-         *
-         * The input geometry remains unchanged; only the rendering becomes
-         * slimmer and animates on interaction.
-         */
-        int trackX =
-                x
-                        + QolUtilityUiMath.SLIDER_TRACK_INSET;
-
-        int trackW =
-                Math.max(
-                        1,
-                        width
-                                - QolUtilityUiMath.SLIDER_TRACK_INSET
-                                * 2);
-
-        int trackCenterY =
-                y + 29;
-
-        int trackHeight =
-                4
-                        + Math.round(
-                        2.0F
-                                * interaction);
-
-        int trackY =
-                trackCenterY
-                        - trackHeight / 2;
-
-        int trackBottom =
-                trackY
-                        + trackHeight;
-
-        RotClientUiDraw.roundedFill(
-                graphics,
-                trackX,
-                trackY,
-                trackX + trackW,
-                trackBottom,
-                disabled
-                        ? RotClientTheme.BUTTON_DISABLED
-                        : RotClientTheme.FIELD,
-                trackHeight / 2);
-
-        RotClientUiDraw.roundedOutline(
-                graphics,
-                trackX,
-                trackY,
-                trackX + trackW,
-                trackBottom,
-                interaction > 0.05F
-                        && !disabled
-                        ? RotClientTheme.BORDER_BRIGHT
-                        : RotClientTheme.BORDER,
-                trackHeight / 2);
-
-
-        /*
-         * The important change: fill and thumb use visualFraction rather than
-         * the raw setting fraction. Config values still update instantly,
-         * while the rendered control glides between quantized steps.
-         */
-        int fillW =
-                Math.max(
-                        0,
-                        Math.min(
-                                trackW,
-                                (int) Math.round(
-                                        visualFraction
-                                                * trackW)));
-
-        if (fillW > 0) {
-
-            if (!disabled
-                    && interaction > 0.01F) {
-
-                int glowAlpha =
-                        0x12
-                                + Math.round(
-                                0x28
-                                        * interaction);
-
-                RotClientUiDraw.roundedFill(
-                        graphics,
-                        trackX,
-                        trackCenterY - 4,
-                        trackX + fillW,
-                        trackCenterY + 4,
-                        RotClientUiDraw.withAlpha(
-                                accent,
-                                glowAlpha),
-                        4);
-            }
-
-            int fillAlpha =
-                    disabled
-                            ? 0x70
-                            : 0xC8
-                            + Math.round(
-                            0x37
-                                    * interaction);
-
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    trackX,
-                    trackY,
-                    trackX + fillW,
-                    trackBottom,
-                    disabled
-                            ? RotClientTheme.BUTTON_DISABLED
-                            : RotClientUiDraw.withAlpha(
-                                    accent,
-                                    Math.min(
-                                            0xFF,
-                                            fillAlpha)),
-                    trackHeight / 2);
-        }
-
-
-        /*
-         * Thumb.
-         *
-         * It expands gently on hover/drag, gains a shadow, and uses an
-         * accent ring around a bright center. No hit-box dimensions change.
-         */
-        int thumbSize =
-                QolUtilityUiMath.SLIDER_THUMB_SIZE
-                        + Math.round(
-                        4.0F
-                                * interaction);
-
-        int thumbCenterX =
-                trackX
-                        + fillW;
-
-        int thumbX =
-                thumbCenterX
-                        - thumbSize / 2;
-
-        int thumbY =
-                trackCenterY
-                        - thumbSize / 2;
-
-        if (!disabled) {
-
-            int thumbShadowAlpha =
-                    0x40
-                            + Math.round(
-                            0x30
-                                    * interaction);
-
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    thumbX + 1,
-                    thumbY + 2,
-                    thumbX + thumbSize + 1,
-                    thumbY + thumbSize + 2,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.SHADOW,
-                            thumbShadowAlpha),
-                    thumbSize / 2);
-        }
-
-        int thumbOuter =
                 disabled
                         ? RotClientTheme.TEXT_MUTED
-                        : accent;
-
-        RotClientUiDraw.roundedFill(
-                graphics,
-                thumbX,
-                thumbY,
-                thumbX + thumbSize,
-                thumbY + thumbSize,
-                thumbOuter,
-                thumbSize / 2);
-
-        int coreInset =
-                interaction > 0.45F
-                        ? 3
-                        : 2;
-
-        int innerLeft =
-                thumbX
-                        + coreInset;
-
-        int innerTop =
-                thumbY
-                        + coreInset;
-
-        int innerRight =
-                thumbX
-                        + thumbSize
-                        - coreInset;
-
-        int innerBottom =
-                thumbY
-                        + thumbSize
-                        - coreInset;
-
-        if (innerRight > innerLeft
-                && innerBottom > innerTop) {
-
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    innerLeft,
-                    innerTop,
-                    innerRight,
-                    innerBottom,
-                    disabled
-                            ? RotClientTheme.BUTTON_DISABLED
-                            : RotClientTheme.TEXT,
-                    Math.max(
-                            1,
-                            (
-                                    innerRight
-                                            - innerLeft)
-                                    / 2));
-        }
+                        : RotClientTheme.TEXT,
+                dragging);
     }
     private void drawNumberStepper(
             GuiGraphicsExtractor graphics,
