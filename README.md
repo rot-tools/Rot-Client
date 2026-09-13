@@ -93,7 +93,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 ## Features
 
 **Rot Client** ships **110** quality-of-life parents. **Rot Client+** ships
-**131** (the previous full catalog). Wired means a catalog entry, saved
+**133**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 [QoL Utilities](docs/QOL_UTILITIES.md).
@@ -105,7 +105,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Menu keybinds, wardrobe/pet keybinds, chat commands, auto sprint, market guard. Inventory Walk and custom macros are Rot Client+ |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
-| **Render** | Fullbright, viewmodel, player size, eye-height fix, legacy textures. Free Camera and clip camera are Rot Client+ |
+| **Render** | Fullbright, viewmodel, player size, eye-height fix, legacy textures. **Plus:** Map Art Override, Free Camera, and clip camera |
 | **Combat** | Trajectories, etherwarp helper, mob highlight. Auto clicker / Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
 | **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Secret hitboxes, auto terms, and hover-terms are Rot Client+ |
@@ -117,6 +117,16 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you
 opt in separately. Those options are not present in the legit JAR.
+
+### Map Art Override (Rot Client+)
+
+**Map Art Override** is a local visual module and is off by default. When
+enabled it draws the bundled map-art image in place of rendered maps without
+changing map items, map data, packets, or any server state. Contiguous,
+same-facing, unrotated horizontal item frames form one rectangular canvas, so
+the image stretches over a map wall instead of repeating in every frame. The
+dashboard can also use a custom local image path; leave it blank for the
+bundled image.
 
 ### Mining tracker and sessions
 

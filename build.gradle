@@ -129,6 +129,19 @@ tasks.register('plusJar', Jar) {
 	from("THIRD_PARTY.md")
 }
 
+// Map Art Override is a Rot Client+ render module. Shared source compilation
+// keeps its hooks available to the Plus assembly, while the legit artifact
+// must not carry its implementation classes or registered mixins.
+jar {
+
+    exclude 'fi/rotclient/MapArtOverrideRuntime.class'
+    exclude 'fi/rotclient/MapArtOverrideRuntime$*.class'
+    exclude 'fi/rotclient/MapArtRenderStateAccess.class'
+    exclude 'fi/rotclient/mixin/ItemFrameRendererMapArtMixin.class'
+    exclude 'fi/rotclient/mixin/MapRendererMapArtMixin.class'
+    exclude 'fi/rotclient/mixin/MapRenderStateMapArtMixin.class'
+}
+
 assemble.dependsOn plusJar
 check.dependsOn plusJar
 
@@ -142,7 +155,14 @@ tasks.register('verifyLegitJar') {
 				'AutoClickerRuntime.class',
 				'FreecamRuntime.class',
 				'CameraFreecamMixin.class',
-				'rotclient.plus.mixins.json'
+				'rotclient.plus.mixins.json',
+				'MapArtOverrideRuntime.class',
+				'MapArtOverrideRuntime$',
+				'MapArtRenderStateAccess.class',
+				'ItemFrameRendererMapArtMixin.class',
+				'MapRendererMapArtMixin.class',
+				'MapRenderStateMapArtMixin.class',
+				'assets/rotclient/textures/map-art.jpg'
 		]
 		def forbiddenText = [
 				'qol.auto_clicker',

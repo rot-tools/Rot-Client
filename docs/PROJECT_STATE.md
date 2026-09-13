@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (110 HUD/QoL parents, no automation bytecode) and **Rot Client+** (131 parents, previous full client). Closing the dashboard now keeps the last page and any open module Settings or HUD drawer (`rotclient-workspace.json`); Right Shift / inventory R reopen that view instead of Overview. Custom Scoreboard now reads tab widgets (Gems, unclaimed bits, Magical Power/tunings, mayor/minister/election, events), uses a computed SkyBlock clock for Exact Minutes, caches sidebar capture ~120ms, applies background opacity to the panel fill, and opens a list editor for Appearance / Event Priority / Chunked Stats (Reset opens that editor). Party still needs a separate playtest. Visuals → **Profiles** (comedy01) is merged into `development` with the dungeon/GUI/lighting checkpoint. Extra Stats requeue is the Hypixel header only (not party chat, not live `Team Score:`); compact reprint waits until the dump finishes. Simon Says records the ordered sea-lantern sequence each round. Custom Leap overlay labels **DEAD** vs **OFFLINE** from Spirit Leap skull lore. Maxor crystal spawn HUD is **34 ticks** after beam / YOU TRICKED ME. **Fullbright and Night** remains Ready for Runtime Test. New **GUI** group with Custom Scoreboard as the first card. Dashboard chrome is **Rot Client** / **Rot Client+** in accent red on the by-line, with red GitHub and Discord logos in the omnibox header. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (111 HUD/QoL parents, no automation bytecode) and **Rot Client+** (133 parents). Map Art Override is Plus-only, off by default, and renders the owner-supplied bundled image locally on maps; contiguous same-facing, unrotated horizontal item-frame rectangles can share one stretched image. It never changes map data or sends anything to a server; runtime playtest remains pending. comedy01 PRs #12 **Market Watch** and #13 **Profit Finder market opportunity scanner** are merged after isolated compatibility builds: Bazaar/Auction House watches, local alerts, persistence, search, local opportunity evaluation, watchlist, pinned deals, HUD and dashboard navigation coexist with Loadouts. Closing the dashboard keeps the last page and any open module Settings or HUD drawer (`rotclient-workspace.json`); Right Shift / inventory R reopen that view instead of Overview. Custom Scoreboard now reads tab widgets (Gems, unclaimed bits, Magical Power/tunings, mayor/minister/election, events), uses a computed SkyBlock clock for Exact Minutes, caches sidebar capture ~120ms, applies background opacity to the panel fill, and opens a board editor for Appearance / Event Priority / Chunked Stats. Party still needs a separate playtest. All new slices remain Ready for Runtime Test. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
@@ -21,8 +21,8 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,144** shared tests (311 suites) plus **100** Plus tests (18 suites); 0 failures, 0 errors, 0 skipped. Client compilation and dual JAR build passed. `verifyLegitJar` passed. Playable SHA-256 Rot Client `18F891A5E13B2BCFE9FBC1ED29DBDBBC939B345271A30BD8706ECDEB01FBAAF3`, Rot Client+ `0634A5D97371EBAEE4F97F7FBC9777E44885FD29BCC02767763DCAC7E73E8617`. |
-| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dual catalog: legit **110** / Plus **131** parents across 14 groups (Garden empty on legit). Click GUI last-page restore, settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
+| Automated baseline | Current working tree: **2,237** shared tests plus **100** Plus tests; 0 failures, errors, or skipped tests. Client compilation and clean dual-JAR build passed. Playable SHA-256 Rot Client `0DC8929AE33106684329A829D3C5EA68A08CC44BF83A37BB51C90D38435DFE79`, Rot Client+ `F3C4976FF2840850B7B933BD773CD540E8FA484C75CB4B7881C9F22E477A84DC`. Market Watch and Profit Finder are automated-tested; Minecraft runtime validation is pending. |
+| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dual catalog: legit **111** / Plus **133** parents across 14 groups. Map Art Override is Plus-only, off by default, and locally renders the bundled image over maps and rectangular unrotated item-frame panels; runtime validation is pending. Market Watch with its Profit Finder opportunity scanner, Click GUI last-page restore, settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
@@ -108,7 +108,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The catalog lock (110 parents on legit, 131 on Plus), evidence-state guards, status-badge layout, and
+- The catalog lock (111 parents on legit, 133 on Plus), evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -176,14 +176,15 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 110 legit / 131 Plus modules across GUI, Utilities, Render, HUD & Display,
+- QoL catalog wiring for 111 legit / 133 Plus modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
 - Explicit numeric ranges for the current settings sliders, including Auto
   Experiments Serum Count, click delay, and delay variety.
 - Price Tooltip remote quote polling stays inactive while the module is
-  disabled.
+  disabled. While enabled, Estimated Value sums ExtraAttributes (enchants,
+  gemstones, stars, reforge, upgrades) and BIN maps unwrap nested public JSON.
 - One shared Slayer foundation engine now owns live quest, entity, statistic,
   drop, and carry state for the six boss families. Slayer HUDs and the carry
   manager project that engine. Cocoon Alert/Timer, delayed NBT-aware Inferno
@@ -289,7 +290,11 @@ For a class-by-class briefing of the shipped JAR (what to open first, Policy vs 
 
 Use this order for the next checkpoint:
 
-1. Playtest the Serveri dungeon checklist (close and relaunch Prism): Extra
+1. Immediate Plus relaunch: Custom Scoreboard Purse/Bank live amounts (Hide
+   Empty on), auction chest listing highlights (VAL-075, no
+   `StallMarketRuntime$1` crash), and Dark SkyBlock Pack. Do not mark QOL-024,
+   QOL-008, or ECON-001 runtime Complete from automated tests.
+2. Playtest the Serveri dungeon checklist (close and relaunch Prism): Extra
    Stats requeue after a real run (header only, not party chat); Simon order;
    Spirit Leap 1-4; 128 Magical Map paper (layout, names, no lag); Entrance HUD
    Floor Entrance; Door Highlight world boxes with Depth Check off vs on;
@@ -297,21 +302,21 @@ Use this order for the next checkpoint:
    alerts; F7 P3 other players’ terminal chat plus Melody 3 / Numbers 10. Also
    click the red GitHub and Discord header icons on the dashboard. Do
    not mark DUNG-001 / DUNG-009 / UI-003 runtime Complete.
-2. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
+3. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
    and the expanded Slayer foundation are automated-tested, including
    Cocoon/Dagger/Laser behavior, Attunement, Auto Soulcry, Vengeance, sound
    filtering, configurable carry prices/webhooks, persistent history, RNG
    projection, and per-drop Big Drops filters. Storage Overlay and editable
    Inventory Buttons are implemented and automated-tested.
-3. Runtime-test the accumulated QoL batch later in one controlled pass, covering
+4. Runtime-test the accumulated QoL batch later in one controlled pass, covering
    dashboard persistence, UI/window behavior, Wardrobe Swapper, Slayer
    Cocoon/Dagger/Laser behavior, inventory
    overlay, tooltips/viewmodel/render helpers, Experiments, Harp, GFS, Sell, and
    Ghosts.
-4. Return to mining M1, Gemstone tracking, and Powder Chest Tracker after the QoL
+5. Return to mining M1, Gemstone tracking, and Powder Chest Tracker after the QoL
    batch. Their current checkpoint is preserved; the remaining material/area
    controls, tool swaps, and Gemstone Spread case are deliberately deferred.
-5. Validate Session History 2.0 in a controlled session:
+6. Validate Session History 2.0 in a controlled session:
 
    - Current Session item rows and valuation remain unchanged when History is
      opened or copied.
@@ -348,7 +353,9 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: **110** wired parents in Rot Client and **131** in Rot Client+
+- QoL dashboard: **111** wired parents in Rot Client and **133** in Rot Client+
   across fourteen task-oriented groups, with automation-style development
   features disabled by default and scoped to the local Serveri / Plus JAR. No
   separate server-detection branch is planned.
+- Stall AH listing highlight crash contained (VAL-075): if/else ARGB mapping,
+  no `StallMarketRuntime$1`, `ClientBoundaryGuard` around stall/menu highlights.

@@ -920,6 +920,12 @@ final class QolSkyblockExtras {
     boolean storageMuseumArmor = true;
     String storageItemSearchKeybind = "";
 
+    // Local image only. The relative default resolves below Minecraft's config directory.
+    boolean mapArtOverrideEnabled;
+    boolean mapArtStretchFrames = true;
+    /** Blank uses the Plus JAR's bundled map-art.jpg. */
+    String mapArtImagePath = "";
+
     boolean inventoryButtonsEnabled;
     boolean inventoryButtonsHoverTooltip = true;
     boolean inventoryButtonsInventoryOnly;
@@ -1171,6 +1177,7 @@ final class QolSkyblockExtras {
             case "qol.slayer_vengeance_damage" -> slayerVengeanceDamageEnabled;
             case "qol.slayer_big_drops" -> slayerBigDropsEnabled;
             case "qol.storage_overlay" -> storageOverlayEnabled;
+            case "qol.map_art_override" -> mapArtOverrideEnabled;
             case "qol.inventory_buttons" -> inventoryButtonsEnabled;
             case "qol.reward_claim" -> rewardClaimEnabled;
             case "qol.freecam" -> freecamEnabled;
@@ -1266,6 +1273,7 @@ final class QolSkyblockExtras {
             case "qol.slayer_vengeance_damage" -> slayerVengeanceDamageEnabled = enabled;
             case "qol.slayer_big_drops" -> slayerBigDropsEnabled = enabled;
             case "qol.storage_overlay" -> storageOverlayEnabled = enabled;
+            case "qol.map_art_override" -> mapArtOverrideEnabled = enabled;
             case "qol.inventory_buttons" -> inventoryButtonsEnabled = enabled;
             case "qol.reward_claim" -> rewardClaimEnabled = enabled;
             case "qol.freecam" -> freecamEnabled = enabled;
@@ -1863,6 +1871,7 @@ final class QolSkyblockExtras {
             case "qol.storage_overlay.item_search" -> storageItemSearch;
             case "qol.storage_overlay.craft_helper" -> storageCraftHelper;
             case "qol.storage_overlay.museum_armor" -> storageMuseumArmor;
+            case "qol.map_art_override.stretch_frames" -> mapArtStretchFrames;
             case "qol.inventory_buttons.hover_tooltip" -> inventoryButtonsHoverTooltip;
             case "qol.inventory_buttons.inventory_only" -> inventoryButtonsInventoryOnly;
             case "qol.reward_claim.hide_chat_link" -> rewardClaimMuteChatLink;
@@ -2524,6 +2533,7 @@ final class QolSkyblockExtras {
             case "qol.storage_overlay.item_search" -> storageItemSearch = value;
             case "qol.storage_overlay.craft_helper" -> storageCraftHelper = value;
             case "qol.storage_overlay.museum_armor" -> storageMuseumArmor = value;
+            case "qol.map_art_override.stretch_frames" -> mapArtStretchFrames = value;
             case "qol.inventory_buttons.hover_tooltip" -> inventoryButtonsHoverTooltip = value;
             case "qol.inventory_buttons.inventory_only" -> inventoryButtonsInventoryOnly = value;
             case "qol.reward_claim.hide_chat_link" -> rewardClaimMuteChatLink = value;
@@ -4259,6 +4269,11 @@ final class QolSkyblockExtras {
                 storageOverlayCardActiveColor = d.storageOverlayCardActiveColor;
                 storageOverlayPlayerColor = d.storageOverlayPlayerColor;
             }
+            case "qol.map_art_override" -> {
+                mapArtOverrideEnabled = d.mapArtOverrideEnabled;
+                mapArtStretchFrames = d.mapArtStretchFrames;
+                mapArtImagePath = d.mapArtImagePath;
+            }
             case "qol.inventory_buttons" -> {
                 inventoryButtonsEnabled = d.inventoryButtonsEnabled;
                 inventoryButtonsHoverTooltip = d.inventoryButtonsHoverTooltip;
@@ -4492,6 +4507,7 @@ final class QolSkyblockExtras {
         if ("qol.slayer_carry.inferno_t3_prices".equals(settingId)) return safe(slayerCarryInfernoT3Prices);
         if ("qol.slayer_carry.inferno_t4_prices".equals(settingId)) return safe(slayerCarryInfernoT4Prices);
         if ("qol.storage_overlay.search_query".equals(settingId)) return safe(storageOverlaySearchQuery);
+        if ("qol.map_art_override.image_path".equals(settingId)) return safe(mapArtImagePath);
         return athen().readText(settingId);
     }
 
@@ -4569,6 +4585,7 @@ final class QolSkyblockExtras {
         if ("qol.slayer_carry.inferno_t3_prices".equals(settingId)) { slayerCarryInfernoT3Prices = stored; return true; }
         if ("qol.slayer_carry.inferno_t4_prices".equals(settingId)) { slayerCarryInfernoT4Prices = stored; return true; }
         if ("qol.storage_overlay.search_query".equals(settingId)) { storageOverlaySearchQuery = stored; return true; }
+        if ("qol.map_art_override.image_path".equals(settingId)) { mapArtImagePath = stored; return true; }
         return athen().writeText(settingId, value);
     }
 

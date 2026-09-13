@@ -8,13 +8,15 @@ import org.junit.jupiter.api.Test;
 
 final class QolPlusCatalogTest {
     @Test
-    void plusCatalogKeepsOneHundredThirtyTwoParents() {
+    void plusCatalogIncludesMapArtOverride() {
         assertTrue(QolFlavorSupport.isPlus());
-        assertEquals(132, QolUtilityCatalog.modules().size());
+        assertEquals(133, QolUtilityCatalog.modules().size());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));
         assertNotNull(QolUtilityCatalog.findById("qol.freecam"));
         assertNotNull(QolUtilityCatalog.findById("qol.farm_keys"));
+        assertEquals("qol.map_art_override", QolUtilityCatalog.findById(
+                "qol.map_art_override.image_path").id());
         assertTrue(QolUtilityCatalog.findById("qol.command_keybinds").settings().stream()
                 .anyMatch(setting -> "qol.command_keybinds.macros".equals(setting.id())));
         assertTrue(QolUtilityCatalog.findById("qol.dungeon_hud").settings().stream()

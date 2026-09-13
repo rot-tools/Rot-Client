@@ -17,6 +17,15 @@ and the project uses semantic versioning where practical.
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
   in `rotclient-plus.json`.
 
+### Rot Client+ render
+
+* Added **Map Art Override** (`qol.map_art_override`), off by default. It
+  renders the bundled project-owner-supplied image on maps locally and can
+  stretch it across contiguous, same-facing, unrotated horizontal item-frame
+  panels. A dashboard text setting accepts an optional local replacement path.
+  Map data, packets, and server state are untouched. Automated packaging and
+  compile validation pass; Minecraft runtime validation is pending.
+
 ### Dungeons
 
 * Auto Requeue no longer treats live Catacombs `Team Score:` scoreboard/chat

@@ -13,7 +13,7 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **131** Rot Client+ catalog entries (and the **110** legit subset) are wired
+All **133** Rot Client+ catalog entries (and the **111** legit subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
@@ -36,7 +36,16 @@ settings; cheat children exist only in Plus.
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Map Art Override; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+
+## Map Art Override (Plus)
+
+`qol.map_art_override` is a local render replacement, default **off**. It uses
+the bundled map-art image, or an optional image path supplied in the dashboard,
+without modifying a map item, map packet, or server state. Same-facing,
+unrotated horizontal map frames are grouped only when they form one contiguous
+rectangle; each frame receives its own UV region so the image stretches across
+the panel. Runtime playtest remains pending.
 | Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; No Cursor Reset; Click GUI. **Plus:** Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
 | Utilities | Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard. **Plus:** Hotkey Macros; Wardrobe Swapper; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
 

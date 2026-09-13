@@ -9,6 +9,14 @@ repository or the playable JAR. Quality-of-life modules are Rot-owned
 implementations (`fi.rotclient`). Feature overlap with community clients is
 behavior-level only.
 
+## Bundled Map Art (project-owner supplied)
+
+`src/plusClient/resources/assets/rotclient/textures/map-art.jpg` is supplied
+by the project owner for inclusion in Rot Client+ and public GitHub releases.
+The owner confirmed permission to publish and bundle this specific image. It is
+not asserted to be Rot Tools original artwork and must not be reused outside
+this repository/release without checking the underlying rights.
+
 ## Magical Map layout (CC0)
 
 Dungeon HUD map scan, 128×128 paper layout, floor start corners, and default
