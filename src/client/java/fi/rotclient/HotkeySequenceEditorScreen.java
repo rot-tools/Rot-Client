@@ -36,108 +36,458 @@ final class HotkeySequenceEditorScreen extends Screen {
 
     @Override
     public void extractRenderState(
-            GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            float delta) {
+
         int x = panelX();
         int y = panelY();
-        RotClientUiDraw.drawShadowedPanel(graphics, x, y, WIDTH, HEIGHT);
+
+        RotClientUiDraw.drawShadowedPanel(
+                graphics,
+                x,
+                y,
+                WIDTH,
+                HEIGHT);
+
         RotClientUiDraw.drawHeaderBar(
-                graphics, font, x, y, WIDTH, 40,
+                graphics,
+                font,
+                x,
+                y,
+                WIDTH,
+                40,
                 "Hotkey Sequences",
-                "Ordered commands run locally through the existing rate limiter");
-        graphics.fill(x + 1, y + 41, x + 248, y + HEIGHT - 1, RotClientTheme.SURFACE_ALT);
-        drawList(graphics, x, y);
-        drawEditor(graphics, x, y);
-        drawButton(graphics, mouseX, mouseY, x + 14, y + HEIGHT - 36, 104, "Add", true);
-        drawButton(graphics, mouseX, mouseY, x + 126, y + HEIGHT - 36, 104,
-                "Delete", selected >= 0);
-        String error = firstError();
-        drawButton(graphics, mouseX, mouseY, x + WIDTH - 238, y + HEIGHT - 36, 104,
-                "Save", error.isEmpty());
-        drawButton(graphics, mouseX, mouseY, x + WIDTH - 126, y + HEIGHT - 36, 104,
-                "Cancel", true);
+                "Create ordered command sequences and bind them to a key.");
+
+        /*
+         * Consistent list/detail editor layout.
+         */
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + 8,
+                y + 48,
+                240,
+                350);
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                x + 258,
+                y + 48,
+                WIDTH - 272,
+                350);
+
+        drawList(
+                graphics,
+                x,
+                y,
+                mouseX,
+                mouseY);
+
+        drawEditor(
+                graphics,
+                x,
+                y,
+                mouseX,
+                mouseY);
+
+        /*
+         * Footer separation keeps actions distinct from editor content.
+         */
+        graphics.fill(
+                x + 10,
+                y + HEIGHT - 46,
+                x + WIDTH - 10,
+                y + HEIGHT - 45,
+                RotClientTheme.DIVIDER);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 14,
+                y + HEIGHT - 36,
+                104,
+                24,
+                "Add",
+                false,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 126,
+                y + HEIGHT - 36,
+                104,
+                24,
+                "Delete",
+                false,
+                selected >= 0);
+
+        String error =
+                firstError();
+
         if (!error.isEmpty()) {
             RotClientUiDraw.text(
-                    graphics, font, error,
-                    x + 264, y + HEIGHT - 31,
-                    RotClientTheme.ERROR, false);
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            error,
+                            250),
+                    x + 264,
+                    y + HEIGHT - 29,
+                    RotClientTheme.ERROR,
+                    false);
         }
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-    }
 
-    private void drawList(GuiGraphicsExtractor graphics, int x, int y) {
-        int rowY = y + 54;
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + WIDTH - 238,
+                y + HEIGHT - 36,
+                104,
+                24,
+                "Save",
+                true,
+                error.isEmpty());
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + WIDTH - 126,
+                y + HEIGHT - 36,
+                104,
+                24,
+                "Cancel",
+                false,
+                true);
+
+        super.extractRenderState(
+                graphics,
+                mouseX,
+                mouseY,
+                delta);
+    }
+    private void drawList(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int mouseX,
+            int mouseY) {
+
+        int rowY =
+                y + 54;
+
         if (drafts.isEmpty()) {
+
             RotClientUiDraw.text(
-                    graphics, font, "No custom sequences",
-                    x + 50, rowY + 120, RotClientTheme.TEXT_MUTED, true);
+                    graphics,
+                    font,
+                    "No sequences yet",
+                    x + 69,
+                    y + 180,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Use Add below to create one.",
+                    x + 45,
+                    y + 197);
+
             return;
         }
-        for (int i = 0; i < Math.min(drafts.size(), 11); i++) {
-            RingPolicy.MacroDef macro = drafts.get(i);
-            int fill = i == selected ? RotClientTheme.SELECTED_ROW : RotClientTheme.SURFACE;
-            graphics.fill(x + 10, rowY, x + 238, rowY + 28, fill);
-            if (i == selected) {
-                graphics.fill(x + 10, rowY, x + 13, rowY + 28, RotClientTheme.HUD_ACCENT);
+
+        for (int i = 0;
+             i < Math.min(
+                     drafts.size(),
+                     11);
+             i++) {
+
+            RingPolicy.MacroDef macro =
+                    drafts.get(i);
+
+            boolean active =
+                    i == selected;
+
+            boolean hover =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            x + 10,
+                            rowY,
+                            228,
+                            28);
+
+            RotClientUiDraw.drawInteractiveSurface(
+                    graphics,
+                    x + 10,
+                    rowY,
+                    228,
+                    28,
+                    hover
+                            ? 1.0F
+                            : 0.0F,
+                    active,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
+
+            if (active) {
+                graphics.fill(
+                        x + 11,
+                        rowY + 5,
+                        x + 14,
+                        rowY + 23,
+                        RotClientTheme.HUD_ACCENT);
             }
-            String label = macro.key().isBlank() ? "Unbound" : macro.key();
-            RotClientUiDraw.text(graphics, font, label, x + 20, rowY + 6,
-                    RotClientTheme.TEXT, true);
+
+            String label =
+                    macro.key().isBlank()
+                            ? "Unbound"
+                            : macro.key();
+
             RotClientUiDraw.text(
-                    graphics, font, macro.messages().size() + " steps",
-                    x + 164, rowY + 6, RotClientTheme.TEXT_MUTED, false);
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            label,
+                            128),
+                    x + 20,
+                    rowY + 6,
+                    active
+                            ? RotClientTheme.TEXT
+                            : RotClientTheme.TEXT_DIM,
+                    true);
+
+            String steps =
+                    macro.messages().size()
+                            + " step"
+                            + (macro.messages().size() == 1
+                            ? ""
+                            : "s");
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    steps,
+                    x + 228 - font.width(steps),
+                    rowY + 6,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
             rowY += 32;
         }
     }
+    private void drawEditor(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int mouseX,
+            int mouseY) {
 
-    private void drawEditor(GuiGraphicsExtractor graphics, int x, int y) {
-        int left = x + 270;
+        int left =
+                x + 270;
+
         if (selected < 0) {
+
             RotClientUiDraw.text(
-                    graphics, font, "Add or select a sequence to edit it.",
-                    left + 120, y + 190, RotClientTheme.TEXT_MUTED, true);
+                    graphics,
+                    font,
+                    "Select a sequence",
+                    left + 154,
+                    y + 180,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    graphics,
+                    font,
+                    "Choose one from the list or create a new sequence.",
+                    left + 88,
+                    y + 198);
+
             return;
         }
-        RingPolicy.MacroDef macro = drafts.get(selected);
-        drawField(graphics, left, y + 66, 470, "Key", macro.key(), field == 1);
-        drawField(graphics, left, y + 124, 470, "Ordered actions", RingPolicy.formatMessageSequence(macro.messages()), field == 2);
-        RotClientUiDraw.text(
-                graphics, font,
-                "Separate steps with  ,,  and add @ticks for per-step delay",
-                left, y + 166, RotClientTheme.TEXT_MUTED, false);
-        drawField(graphics, left, y + 196, 220, "Delay between activations (ticks)",
-                Integer.toString(macro.spaceTicks()), field == 3);
-        drawButton(graphics, -1, -1, left + 244, y + 218, 226,
-                "Rate limit: " + (macro.useRatelimit() ? "On" : "Off"), true);
-        RotClientUiDraw.text(
-                graphics, font,
-                "Examples: /pets,, /warp hub@20,, hello",
-                left, y + 284, RotClientTheme.TEXT_DIM, false);
-        RotClientUiDraw.text(
-                graphics, font,
-                "Key capture accepts keyboard keys. Existing preset binds are unchanged.",
-                left, y + 302, RotClientTheme.TEXT_MUTED, false);
-    }
 
+        RingPolicy.MacroDef macro =
+                drafts.get(selected);
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "SEQUENCE DETAILS",
+                left,
+                y + 53);
+
+        drawField(
+                graphics,
+                left,
+                y + 66,
+                470,
+                "Key",
+                macro.key(),
+                field == 1);
+
+        drawField(
+                graphics,
+                left,
+                y + 124,
+                470,
+                "Ordered actions",
+                RingPolicy.formatMessageSequence(
+                        macro.messages()),
+                field == 2);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "Separate steps with ,, and use @ticks for a per-step delay.",
+                left,
+                y + 166);
+
+        drawField(
+                graphics,
+                left,
+                y + 196,
+                220,
+                "Delay between activations (ticks)",
+                Integer.toString(
+                        macro.spaceTicks()),
+                field == 3);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                left + 244,
+                y + 218,
+                226,
+                24,
+                macro.useRatelimit()
+                        ? "Rate limit: On"
+                        : "Rate limit: Off",
+                macro.useRatelimit(),
+                true);
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                left,
+                y + 270,
+                470,
+                54);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Example",
+                left + 10,
+                y + 279,
+                RotClientTheme.TEXT_DIM,
+                true);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "/pets,, /warp hub@20,, hello",
+                left + 10,
+                y + 294);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "Key capture accepts keyboard keys. Preset binds remain unchanged.",
+                left + 10,
+                y + 308);
+    }
     private void drawField(
-            GuiGraphicsExtractor graphics, int x, int y, int width,
-            String label, String value, boolean focused) {
-        RotClientUiDraw.text(graphics, font, label, x, y, RotClientTheme.TEXT_DIM, true);
-        graphics.fill(
-                x, y + 18, x + width, y + 42,
-                focused ? RotClientTheme.FIELD_ACTIVE : RotClientTheme.FIELD);
-        String shown = value == null || value.isEmpty()
-                ? (focused && field == 1 ? "Press a key..." : "")
-                : value;
-        RotClientUiDraw.text(
-                graphics, font,
-                RotClientUiDraw.ellipsize(font, shown, width - 16),
-                x + 8, y + 25,
-                value == null || value.isEmpty()
-                        ? RotClientTheme.TEXT_MUTED
-                        : RotClientTheme.TEXT,
-                false);
-    }
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            String label,
+            String value,
+            boolean focused) {
 
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                label,
+                x,
+                y,
+                focused
+                        ? RotClientTheme.HUD_ACCENT
+                        : RotClientTheme.TEXT_DIM,
+                true);
+
+        RotClientTheme.drawInset(
+                graphics,
+                x,
+                y + 18,
+                width,
+                24,
+                focused);
+
+        boolean empty =
+                value == null
+                        || value.isEmpty();
+
+        String shown =
+                empty
+                        ? (focused && field == 1
+                        ? "Press a key..."
+                        : "")
+                        : RotClientUiDraw.ellipsize(
+                                font,
+                                value,
+                                width - 16);
+
+        if (!shown.isEmpty()) {
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    shown,
+                    x + 8,
+                    y + 25,
+                    empty
+                            ? RotClientTheme.TEXT_MUTED
+                            : RotClientTheme.TEXT,
+                    false);
+        }
+
+        if (focused) {
+
+            int cursorX =
+                    x + 8
+                            + (shown.isEmpty()
+                            ? 0
+                            : font.width(shown));
+
+            cursorX =
+                    Math.min(
+                            x + width - 6,
+                            cursorX);
+
+            graphics.fill(
+                    cursorX,
+                    y + 23,
+                    cursorX + 1,
+                    y + 37,
+                    RotClientTheme.TEXT);
+        }
+    }
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) {
