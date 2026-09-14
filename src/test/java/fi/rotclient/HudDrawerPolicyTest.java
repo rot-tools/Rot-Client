@@ -46,6 +46,8 @@ final class HudDrawerPolicyTest {
                 setting -> "qol.player_display.health_hud".equals(setting.id())));
         assertTrue(rows.stream().anyMatch(
                 setting -> "qol.player_display.show_icons".equals(setting.id())));
+        assertTrue(rows.stream().anyMatch(
+                setting -> "qol.player_display.show_background".equals(setting.id())));
         assertFalse(rows.stream().anyMatch(
                 setting -> "qol.player_display.mana_hud".equals(setting.id())));
         assertFalse(HudDrawerPolicy.hudVisibilityUsesModuleEnable(health));
@@ -154,6 +156,8 @@ final class HudDrawerPolicyTest {
                 setting -> "qol.player_display.health_hud".equals(setting.id())));
         assertTrue(hud.stream().anyMatch(
                 setting -> "qol.player_display.mana_hud".equals(setting.id())));
+        assertTrue(hud.stream().anyMatch(
+                setting -> "qol.player_display.show_background".equals(setting.id())));
         assertEquals("", HudDrawerPolicy.uniqueStyleFocus(module));
         assertFalse(HudDrawerPolicy.hudDrawerShowsModuleEnableRow(module));
     }

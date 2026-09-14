@@ -330,6 +330,7 @@ final class QolUtilityConfig {
     String noCursorKeybind = "";
 
     // Player display
+    boolean playerDisplayShowBackground = true;
     boolean playerDisplayShowIcons = true;
     boolean playerDisplayShowLabels = true;
     boolean playerDisplayShowMax = true;
@@ -628,6 +629,7 @@ final class QolUtilityConfig {
             case "qol.waypoints.from_party" -> waypointsFromParty;
             case "qol.waypoints.from_all" -> waypointsFromAll;
             case "qol.waypoints.personal" -> waypointsPersonal;
+            case "qol.player_display.show_background" -> playerDisplayShowBackground;
             case "qol.player_display.show_icons" -> playerDisplayShowIcons;
             case "qol.player_display.show_labels" -> playerDisplayShowLabels;
             case "qol.player_display.show_max" -> playerDisplayShowMax;
@@ -793,6 +795,7 @@ final class QolUtilityConfig {
             case "qol.waypoints.from_party" -> waypointsFromParty = value;
             case "qol.waypoints.from_all" -> waypointsFromAll = value;
             case "qol.waypoints.personal" -> waypointsPersonal = value;
+            case "qol.player_display.show_background" -> playerDisplayShowBackground = value;
             case "qol.player_display.show_icons" -> playerDisplayShowIcons = value;
             case "qol.player_display.show_labels" -> playerDisplayShowLabels = value;
             case "qol.player_display.show_max" -> playerDisplayShowMax = value;
@@ -1784,6 +1787,7 @@ final class QolUtilityConfig {
             }
             case "qol.player_display" -> {
                 playerDisplayEnabled = d.playerDisplayEnabled;
+                playerDisplayShowBackground = d.playerDisplayShowBackground;
                 playerDisplayShowIcons = d.playerDisplayShowIcons;
                 playerDisplayShowLabels = d.playerDisplayShowLabels;
                 playerDisplayShowMax = d.playerDisplayShowMax;
