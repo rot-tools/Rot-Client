@@ -176,53 +176,122 @@ final class QolOverlayHud {
             Font font,
             QolUtilityConfig qol,
             PerformanceHudLayout.Snapshot snapshot) {
-        List<String> lines = PerformanceHudLayout.renderLines(
-                snapshot,
-                qol.performanceShowFps,
-                qol.performanceShowTps,
-                qol.performanceShowPing,
-                PerformanceHudLayout.Direction.fromConfig(qol.performanceDirection));
-        if (lines.isEmpty() && !editorOpen) {
+
+        List<String> lines =
+                PerformanceHudLayout.renderLines(
+                        snapshot,
+                        qol.performanceShowFps,
+                        qol.performanceShowTps,
+                        qol.performanceShowPing,
+                        PerformanceHudLayout.Direction
+                                .fromConfig(
+                                        qol.performanceDirection));
+
+        if (lines.isEmpty()
+                && !editorOpen) {
+
             return;
         }
-        float[] pose = qol.pose("performance");
-        int x = Math.round(pose[0]);
-        int y = Math.round(pose[1]);
-        int width = Math.max(80, PerformanceHudLayout.estimateWidth(lines, 6) + 8);
-        int height = Math.max(18, PerformanceHudLayout.estimateHeight(lines, 10));
-        pushHudScale(graphics, "performance", x, y);
-        fillHudPanel(graphics, "performance", x, y, width, height);
+
+        float[] pose =
+                qol.pose(
+                        "performance");
+
+        int x =
+                Math.round(
+                        pose[0]);
+
+        int y =
+                Math.round(
+                        pose[1]);
+
+        int width =
+                Math.max(
+                        PERFORMANCE_EDITOR_WIDTH,
+                        PerformanceHudLayout
+                                .estimateWidth(
+                                        lines,
+                                        6)
+                                + 16);
+
+        int height =
+                Math.max(
+                        PERFORMANCE_EDITOR_HEIGHT,
+                        6
+                                + Math.max(
+                                1,
+                                lines.size())
+                                * 10);
+
+        pushHudScale(
+                graphics,
+                "performance",
+                x,
+                y);
+
+        fillHudPanel(
+                graphics,
+                "performance",
+                x,
+                y,
+                width,
+                height);
+
+        if (panelOn(
+                "performance")) {
+
+            graphics.fill(
+                    x,
+                    y + 5,
+                    x + 3,
+                    y + height - 5,
+                    accentPaint(
+                            "performance"));
+        }
+
         if (editorOpen) {
             drawEditorFrame(
                     graphics,
                     font,
                     x,
                     y,
-                    Math.max(PERFORMANCE_EDITOR_WIDTH, width),
-                    Math.max(PERFORMANCE_EDITOR_HEIGHT, height),
+                    width,
+                    height,
                     "performance");
-            RotClientUiDraw.text(graphics, font, "Performance HUD", x + 4, y + 2, RotClientTheme.TEXT_MUTED, false);
-            y += 12;
         }
-        int rowY = y + 4;
+
+        int rowY =
+                y + 5;
+
         for (String line : lines) {
             drawNamedValueLine(
                     graphics,
                     font,
-                    x + 4,
+                    x + 8,
                     rowY,
                     line,
                     qol.performanceNameColor,
                     qol.performanceValueColor);
+
             rowY += 10;
         }
-        if (lines.isEmpty() && editorOpen) {
-            RotClientUiDraw.text(graphics, font, "(no metrics enabled)", x + 4, rowY,
-                    RotClientTheme.TEXT_MUTED, false);
-        }
-        graphics.pose().popMatrix();
-    }
 
+        if (lines.isEmpty()
+                && editorOpen) {
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "(no metrics enabled)",
+                    x + 8,
+                    rowY,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+        }
+
+        graphics.pose()
+                .popMatrix();
+    }
     private void renderPlayerDisplay(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -270,7 +339,9 @@ final class QolOverlayHud {
                             y - 1,
                             x,
                             y + STAT_EDITOR_HEIGHT + 1,
-                            RotClientTheme.HUD_ACCENT);
+                            colorFor(
+                                    line.kind(),
+                                    qol));
                 }
             }
             String value = PlayerDisplayMath.withMax(line.value(), qol.playerDisplayShowMax);
@@ -639,23 +710,92 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        String text = QolClientFlavorSupport.hooks().wardrobeHudText(editorOpen);
-        if (text.isEmpty() && !editorOpen) {
+
+        String text =
+                QolClientFlavorSupport
+                        .hooks()
+                        .wardrobeHudText(
+                                editorOpen);
+
+        if (text.isEmpty()
+                && !editorOpen) {
+
             return;
         }
-        float[] pose = qol.pose("wardrobe");
-        int x = Math.round(pose[0]);
-        int y = Math.round(pose[1]);
-        int width = Math.max(110, font.width(text) + 10);
-        int height = 16;
-        pushHudScale(graphics, "wardrobe", x, y);
-        if (editorOpen) {
-            drawEditorFrame(graphics, font, x, y, width, height, "wardrobe");
-        }
-        RotClientUiDraw.text(graphics, font, text, x + 4, y + 4, textPaint("wardrobe", RotClientTheme.TEXT), true);
-        graphics.pose().popMatrix();
-    }
 
+        float[] pose =
+                qol.pose(
+                        "wardrobe");
+
+        int x =
+                Math.round(
+                        pose[0]);
+
+        int y =
+                Math.round(
+                        pose[1]);
+
+        int width =
+                Math.max(
+                        110,
+                        font.width(
+                                text)
+                                + 16);
+
+        int height =
+                16;
+
+        pushHudScale(
+                graphics,
+                "wardrobe",
+                x,
+                y);
+
+        fillHudPanel(
+                graphics,
+                "wardrobe",
+                x,
+                y,
+                width,
+                height);
+
+        if (panelOn(
+                "wardrobe")) {
+
+            graphics.fill(
+                    x,
+                    y + 4,
+                    x + 3,
+                    y + height - 4,
+                    accentPaint(
+                            "wardrobe"));
+        }
+
+        if (editorOpen) {
+            drawEditorFrame(
+                    graphics,
+                    font,
+                    x,
+                    y,
+                    width,
+                    height,
+                    "wardrobe");
+        }
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                text,
+                x + 8,
+                y + 4,
+                textPaint(
+                        "wardrobe",
+                        RotClientTheme.TEXT),
+                true);
+
+        graphics.pose()
+                .popMatrix();
+    }
     private void renderAutoClickerHud(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -1100,17 +1240,79 @@ final class QolOverlayHud {
         return true;
     }
 
-    boolean dragTo(double mouseX, double mouseY) {
+    boolean dragTo(
+            double mouseX,
+            double mouseY) {
+
         if (draggingId.isEmpty()) {
             return false;
         }
+
+        Minecraft client =
+                Minecraft.getInstance();
+
+        double nextX =
+                mouseX
+                        - dragOffsetX;
+
+        double nextY =
+                mouseY
+                        - dragOffsetY;
+
+        if (client != null
+                && client.getWindow()
+                != null) {
+
+            float scale =
+                    styleScale(
+                            draggingId);
+
+            double width =
+                    elementWidth(
+                            draggingId)
+                            * scale;
+
+            double height =
+                    elementHeight(
+                            draggingId)
+                            * scale;
+
+            double maxX =
+                    Math.max(
+                            0.0D,
+                            client.getWindow()
+                                    .getGuiScaledWidth()
+                                    - width);
+
+            double maxY =
+                    Math.max(
+                            0.0D,
+                            client.getWindow()
+                                    .getGuiScaledHeight()
+                                    - height);
+
+            nextX =
+                    Math.max(
+                            0.0D,
+                            Math.min(
+                                    maxX,
+                                    nextX));
+
+            nextY =
+                    Math.max(
+                            0.0D,
+                            Math.min(
+                                    maxY,
+                                    nextY));
+        }
+
         qol().setPose(
                 draggingId,
-                (float) (mouseX - dragOffsetX),
-                (float) (mouseY - dragOffsetY));
+                (float) nextX,
+                (float) nextY);
+
         return true;
     }
-
     boolean endDrag() {
         if (draggingId.isEmpty()) {
             return false;
@@ -1188,36 +1390,86 @@ final class QolOverlayHud {
         return labelFor(selectedId);
     }
 
-    boolean centerSelectedHorizontally(int screenWidth) {
-        if (!isVisibleElement(selectedId) || screenWidth <= 0) {
+    boolean centerSelectedHorizontally(
+            int screenWidth) {
+
+        if (!isVisibleElement(
+                selectedId)
+                || screenWidth <= 0) {
+
             return false;
         }
-        if (CustomScoreboardPolicy.POSE_ID.equals(selectedId)) {
-            CustomScoreboardRuntime.disableAutoAlign(qol());
+
+        if (CustomScoreboardPolicy.POSE_ID
+                .equals(
+                        selectedId)) {
+
+            CustomScoreboardRuntime
+                    .disableAutoAlign(
+                            qol());
         }
-        float[] pose = qol().pose(selectedId);
+
+        float[] pose =
+                qol().pose(
+                        selectedId);
+
+        float scaledWidth =
+                elementWidth(
+                        selectedId)
+                        * styleScale(
+                        selectedId);
+
         qol().setPose(
                 selectedId,
-                Math.max(0.0F, (screenWidth - elementWidth(selectedId)) * 0.5F),
+                Math.max(
+                        0.0F,
+                        (screenWidth
+                                - scaledWidth)
+                                * 0.5F),
                 pose[1]);
+
         return true;
     }
+    boolean centerSelectedVertically(
+            int screenHeight) {
 
-    boolean centerSelectedVertically(int screenHeight) {
-        if (!isVisibleElement(selectedId) || screenHeight <= 0) {
+        if (!isVisibleElement(
+                selectedId)
+                || screenHeight <= 0) {
+
             return false;
         }
-        if (CustomScoreboardPolicy.POSE_ID.equals(selectedId)) {
-            CustomScoreboardRuntime.disableAutoAlign(qol());
+
+        if (CustomScoreboardPolicy.POSE_ID
+                .equals(
+                        selectedId)) {
+
+            CustomScoreboardRuntime
+                    .disableAutoAlign(
+                            qol());
         }
-        float[] pose = qol().pose(selectedId);
+
+        float[] pose =
+                qol().pose(
+                        selectedId);
+
+        float scaledHeight =
+                elementHeight(
+                        selectedId)
+                        * styleScale(
+                        selectedId);
+
         qol().setPose(
                 selectedId,
                 pose[0],
-                Math.max(0.0F, (screenHeight - elementHeight(selectedId)) * 0.5F));
+                Math.max(
+                        0.0F,
+                        (screenHeight
+                                - scaledHeight)
+                                * 0.5F));
+
         return true;
     }
-
     boolean resetSelectedPosition() {
         if (!isVisibleElement(selectedId)) {
             return false;
@@ -1383,55 +1635,110 @@ final class QolOverlayHud {
             int width,
             int height,
             String id) {
-        boolean selected = id.equals(selectedId);
-        boolean focused = HudStylePolicy.isFocused(id, focusId);
-        HudStyleState style = qol().extras().resolvedHudStyle(id);
-        int color = selected
-                ? RotClientTheme.HUD_ACCENT
-                : HudStylePolicy.dim(
-                        RotClientTheme.BORDER_BRIGHT,
-                        focused,
-                        qol().extras().hudLayoutDimUnfocused);
+
+        boolean selected =
+                id.equals(
+                        selectedId);
+
+        boolean focused =
+                HudStylePolicy
+                        .isFocused(
+                                id,
+                                focusId);
+
+        int color =
+                selected
+                        ? RotClientTheme.HUD_ACCENT
+                        : focused
+                        ? RotClientUiDraw.withAlpha(
+                                RotClientTheme.BORDER_BRIGHT,
+                                0x72)
+                        : RotClientUiDraw.withAlpha(
+                                RotClientTheme.BORDER,
+                                0x48);
+
         RotClientUiDraw.roundedOutline(
                 graphics,
-                x - 3,
-                y - 3,
-                x + width + 3,
-                y + height + 3,
-                color);
-        graphics.fill(x - 3, y - 3, x + 1, y + height + 3, color);
+                x - 2,
+                y - 2,
+                x + width + 2,
+                y + height + 2,
+                color,
+                4);
+
         if (selected) {
-            String caption = "Selected: " + labelFor(id) + "  -  drag to move";
-            if (!focused && !focusId.isBlank()) {
-                caption = labelFor(id) + "  (faded, still draggable)";
-            }
-            RotClientUiDraw.text(graphics, font,
-                    caption,
+            String label =
+                    RotClientUiDraw
+                            .ellipsize(
+                                    font,
+                                    labelFor(
+                                            id),
+                                    Math.max(
+                                            48,
+                                            width - 8));
+
+            int labelWidth =
+                    Math.min(
+                            width,
+                            font.width(
+                                    label)
+                                    + 12);
+
+            int tagTop =
+                    Math.max(
+                            2,
+                            y - 12);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
                     x,
-                    Math.max(2, y - 13),
-                    focused ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                    tagTop,
+                    x + labelWidth,
+                    tagTop + 10,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SURFACE,
+                            0xEE),
+                    3);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    label,
+                    x + 5,
+                    tagTop + 1,
+                    RotClientTheme.TEXT,
                     true);
-        } else if (!focused && editorOpen && qol().extras().hudLayoutDimUnfocused) {
-            graphics.fill(
+
+            /*
+             * Small corner grip: the editor remains wheel/button scaled, but
+             * the visual affordance makes scaling discoverable.
+             */
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x + width - 2,
+                    y + height - 2,
+                    x + width + 3,
+                    y + height + 3,
+                    RotClientTheme.HUD_ACCENT,
+                    2);
+        } else if (!focused
+                && editorOpen
+                && qol()
+                .extras()
+                .hudLayoutDimUnfocused) {
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
                     x,
                     y,
                     x + width,
                     y + height,
-                    HudStylePolicy.withAlpha(0xFF000000, 0x55));
-        }
-        if (style.showBackground && !editorOpen) {
-            graphics.fill(
-                    x,
-                    y,
-                    x + width,
-                    y + height,
-                    HudStylePolicy.dim(
-                            style.backgroundColor,
-                            true,
-                            false));
+                    HudStylePolicy.withAlpha(
+                            0xFF000000,
+                            0x38),
+                    4);
         }
     }
-
     private boolean panelOn(String id) {
         return qol().extras().resolvedHudStyle(id).showBackground;
     }
@@ -1536,41 +1843,165 @@ final class QolOverlayHud {
             String id,
             List<String> lines,
             int minWidth) {
-        float[] pose = qol().pose(id);
-        int x = Math.round(pose[0]);
-        int y = Math.round(pose[1]);
-        float scale = styleScale(id);
-        int width = minWidth;
-        int height = Math.max(28, 8 + Math.max(1, lines.size()) * 10);
-        for (String line : lines) {
-            width = Math.max(width, font.width(line) + 10);
+
+        float[] pose =
+                qol().pose(
+                        id);
+
+        int x =
+                Math.round(
+                        pose[0]);
+
+        int y =
+                Math.round(
+                        pose[1]);
+
+        float scale =
+                styleScale(
+                        id);
+
+        List<String> visible =
+                visibleHudLines(
+                        id,
+                        lines);
+
+        HudStyleState style =
+                qol()
+                        .extras()
+                        .resolvedHudStyle(
+                                id);
+
+        boolean title =
+                HudStylePolicy
+                        .titleVisible(
+                                style)
+                        && visible.size()
+                        > 1;
+
+        int width =
+                minWidth;
+
+        for (String line : visible) {
+            width =
+                    Math.max(
+                            width,
+                            font.width(
+                                    line)
+                                    + 18);
         }
+
+        int height =
+                Math.max(
+                        30,
+                        12
+                                + Math.max(
+                                1,
+                                visible.size())
+                                * 11
+                                + (title
+                                ? 5
+                                : 0));
+
         if (editorOpen) {
             drawEditorFrame(
                     graphics,
                     font,
                     x,
                     y,
-                    Math.round(width * scale),
-                    Math.round(height * scale),
+                    Math.round(
+                            width * scale),
+                    Math.round(
+                            height * scale),
                     id);
         }
-        if (lines.isEmpty()) {
+
+        if (lines == null
+                || lines.isEmpty()) {
+
             return;
         }
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(scale, scale);
-        fillHudPanel(graphics, id, 0, 0, width, height);
-        int rowY = 4;
-        int color = textPaint(id, RotClientTheme.TEXT);
-        for (String line : visibleHudLines(id, lines)) {
-            RotClientUiDraw.text(graphics, font, line, 4, rowY, color, true);
-            rowY += 10;
-        }
-        graphics.pose().popMatrix();
-    }
 
+        graphics.pose()
+                .pushMatrix();
+
+        graphics.pose()
+                .translate(
+                        x,
+                        y);
+
+        graphics.pose()
+                .scale(
+                        scale,
+                        scale);
+
+        fillHudPanel(
+                graphics,
+                id,
+                0,
+                0,
+                width,
+                height);
+
+        if (panelOn(
+                id)) {
+
+            graphics.fill(
+                    0,
+                    5,
+                    3,
+                    height - 5,
+                    accentPaint(
+                            id));
+        }
+
+        int rowY =
+                6;
+
+        for (int i = 0;
+             i < visible.size();
+             i++) {
+
+            boolean titleRow =
+                    title
+                            && i == 0;
+
+            int color =
+                    titleRow
+                            ? accentPaint(
+                            id)
+                            : textPaint(
+                            id,
+                            RotClientTheme.TEXT);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    visible.get(
+                            i),
+                    8,
+                    rowY,
+                    color,
+                    true);
+
+            if (titleRow) {
+                graphics.fill(
+                        8,
+                        rowY + 11,
+                        width - 8,
+                        rowY + 12,
+                        RotClientUiDraw.withAlpha(
+                                RotClientTheme.DIVIDER,
+                                0xB0));
+
+                rowY += 16;
+            } else {
+                rowY += 11;
+            }
+        }
+
+        graphics.pose()
+                .popMatrix();
+    }
     private float styleScale(String id) {
         return qol().extras().resolvedHudStyle(id).scale;
     }
@@ -1582,13 +2013,64 @@ final class QolOverlayHud {
             int y,
             int width,
             int height) {
-        int fill = panelFill(id, RotClientTheme.SURFACE, 0xC0);
-        if (((fill >>> 24) & 0xFF) == 0) {
+
+        int fill =
+                panelFill(
+                        id,
+                        RotClientTheme.SURFACE,
+                        0xC0);
+
+        if (((fill >>> 24)
+                & 0xFF)
+                == 0) {
+
             return;
         }
-        graphics.fill(x, y, x + width, y + height, fill);
-    }
 
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x + 2,
+                y + 3,
+                x + width + 2,
+                y + height + 3,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.SHADOW,
+                        editorOpen
+                                ? 0x38
+                                : 0x50),
+                5);
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                fill,
+                5);
+
+        int border =
+                HudStylePolicy.dim(
+                        RotClientUiDraw.withAlpha(
+                                RotClientTheme.BORDER,
+                                0xA8),
+                        HudStylePolicy.isFocused(
+                                id,
+                                focusId),
+                        editorOpen
+                                && qol()
+                                .extras()
+                                .hudLayoutDimUnfocused);
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                border,
+                5);
+    }
     String selectedId() {
         return selectedId;
     }

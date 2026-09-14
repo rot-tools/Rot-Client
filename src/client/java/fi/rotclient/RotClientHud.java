@@ -1194,18 +1194,57 @@ final class RotClientHud {
         if (filled > 0) roundedFill(graphics, left, top, left + filled, bottom, RotClientTheme.HUD_ACCENT);
     }
 
-    private void drawCard(GuiGraphicsExtractor graphics, int left, int top, int right, int bottom) {
+    private void drawCard(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int top,
+            int right,
+            int bottom) {
+
         if (!config.hudShowBackground) {
             if (editorOpen) {
-                roundedOutline(graphics, left, top, right, bottom, RotClientTheme.HUD_ACCENT);
+                roundedOutline(
+                        graphics,
+                        left,
+                        top,
+                        right,
+                        bottom,
+                        RotClientUiDraw.withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0xB8));
             }
+
             return;
         }
-        roundedFill(graphics, left + 3, top + 4, right + 3, bottom + 4, RotClientTheme.SHADOW);
-        roundedFill(graphics, left, top, right, bottom, RotClientTheme.HUD_BACKGROUND);
-        roundedOutline(graphics, left, top, right, bottom, RotClientTheme.HUD_BORDER);
-    }
 
+        roundedFill(
+                graphics,
+                left + 2,
+                top + 3,
+                right + 2,
+                bottom + 3,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.SHADOW,
+                        0x50));
+
+        roundedFill(
+                graphics,
+                left,
+                top,
+                right,
+                bottom,
+                RotClientTheme.HUD_BACKGROUND);
+
+        roundedOutline(
+                graphics,
+                left,
+                top,
+                right,
+                bottom,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.HUD_BORDER,
+                        0xD0));
+    }
     private void sampleMiningRate(
             long sessionBlocks,
             long now,
