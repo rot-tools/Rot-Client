@@ -41,10 +41,14 @@ final class MapArtOverrideWiringTest {
         assertTrue(runtime.contains("renderItemDisplay"));
         assertTrue(runtime.contains("renderFramedMap"));
         assertTrue(runtime.contains("mapFrameZDegrees"));
+        assertTrue(runtime.contains("MAP_QUAD_CENTER"));
+        assertTrue(runtime.contains("itemFrameZDegrees"));
         assertTrue(runtime.contains("HUB_MAP_SEARCH_RADIUS"));
+        assertTrue(runtime.contains("HUB_MAP_NEIGHBOR_REACH"));
         assertTrue(runtime.contains("tileUvContain"));
         assertTrue(runtime.contains("GlowItemFrame"));
         assertTrue(runtime.contains("isMapWallFrame"));
+        assertTrue(runtime.contains("isWallFrameItem"));
         assertTrue(runtime.contains("submitContainedMapQuad"));
         assertFalse(runtime.contains("getRotation() == rotation"));
         assertTrue(runtime.contains("configureBlockDisplay"));
@@ -81,6 +85,6 @@ final class MapArtOverrideWiringTest {
         assertTrue(module.description().toLowerCase().contains("painting"));
         assertTrue(module.description().toLowerCase().contains("item-display"));
         assertTrue(module.description().toLowerCase().contains("block-display"));
-        assertTrue(module.description().toLowerCase().contains("13x7"));
+        assertTrue(module.description().toLowerCase().contains("14x7"));
     }
 }

@@ -101,8 +101,11 @@ public final class MapArtOverrideRuntime {
         }
         int light = MapArtOverridePolicy.packedLight(lightCoords, 0);
         poseStack.pushPose();
+        float pivot = MapArtOverridePolicy.MAP_QUAD_CENTER;
+        poseStack.translate(pivot, pivot, 0.0F);
         poseStack.mulPose(Axis.ZP.rotationDegrees(
                 -MapArtOverridePolicy.mapFrameZDegrees(frameRotation)));
+        poseStack.translate(-pivot, -pivot, 0.0F);
         submitContainedMapQuad(
                 poseStack,
                 collector,
@@ -274,6 +277,9 @@ public final class MapArtOverrideRuntime {
             return false;
         }
         int light = MapArtOverridePolicy.packedLight(lightCoords, state.lightCoords);
+        poseStack.pushPose();
+        poseStack.mulPose(Axis.ZP.rotationDegrees(
+                -MapArtOverridePolicy.itemFrameZDegrees(state.rotation)));
         submitContainedTextQuad(
                 poseStack,
                 collector,
@@ -288,6 +294,7 @@ public final class MapArtOverrideRuntime {
                 access.rotclient$foxV1(),
                 light,
                 true);
+        poseStack.popPose();
         return true;
     }
 
@@ -307,16 +314,15 @@ public final class MapArtOverrideRuntime {
         boolean stretch = config.extras().mapArtStretchFrames
                 && frame.getDirection().getAxis().isHorizontal();
         try {
-            Panel mapPanel = stretch ? findPanel(frame, true, 2) : null;
-            if (mapPanel != null && state.mapRenderState instanceof MapArtRenderStateAccess mapAccess) {
-                mapAccess.rotclient$setMapArtUv(
-                        mapPanel.u0(), mapPanel.v0(), mapPanel.u1(), mapPanel.v1());
+            Panel wall = stretch ? findPanel(frame, false, 2) : null;
+            if (wall == null && stretch) {
+                wall = findPanel(frame, true, 2);
+            }
+            if (wall != null && state.mapRenderState instanceof MapArtRenderStateAccess mapAccess) {
+                mapAccess.rotclient$setMapArtUv(wall.u0(), wall.v0(), wall.u1(), wall.v1());
             }
             if (state instanceof FoxItemFrameAccess frameAccess && state.mapId == null) {
                 boolean paintingOrMap = isMapOrPaintingItem(frame.getItem());
-                Panel wall = mapPanel != null
-                        ? mapPanel
-                        : (stretch ? findPanel(frame, false, 4) : null);
                 if (paintingOrMap || wall != null) {
                     frameAccess.rotclient$setFoxReplaceItem(true);
                     if (wall != null) {
@@ -647,11 +653,11 @@ public final class MapArtOverrideRuntime {
     private static boolean isMapWallFrame(ItemFrame frame) {
         ItemStack stack = frame.getItem();
         boolean glowOrNormal = frame instanceof GlowItemFrame || frame instanceof ItemFrame;
-        return glowOrNormal
-                && MapArtOverridePolicy.isMapWallItem(
-                        stack.is(Items.FILLED_MAP),
-                        stack.is(Items.MAP),
-                        stack.has(DataComponents.MAP_ID) || frame.getFramedMapId(stack) != null);
+        boolean mapItem = MapArtOverridePolicy.isMapWallItem(
+                stack.is(Items.FILLED_MAP),
+                stack.is(Items.MAP),
+                stack.has(DataComponents.MAP_ID) || frame.getFramedMapId(stack) != null);
+        return glowOrNormal && MapArtOverridePolicy.isWallFrameItem(mapItem, !stack.isEmpty());
     }
 
     private static AABB searchBox(BlockPos originPos) {
@@ -751,8 +757,8 @@ public final class MapArtOverrideRuntime {
             minY = Math.min(minY, position.getY());
             maxY = Math.max(maxY, position.getY());
         }
-        return (maxColumn - minColumn + 1) == MapArtOverridePolicy.HUB_MAP_COLUMNS
-                && (maxY - minY + 1) == MapArtOverridePolicy.HUB_MAP_ROWS;
+        return MapArtOverridePolicy.isHubSizedBounds(
+                maxColumn - minColumn + 1, maxY - minY + 1);
     }
 
     private static Panel panelAt(
@@ -786,26 +792,25 @@ public final class MapArtOverrideRuntime {
 
     private static Set<BlockPos> neighbours(BlockPos position, Direction direction) {
         Set<BlockPos> out = new HashSet<>();
-        out.add(position.above());
-        out.add(position.below());
-        if (direction.getAxis() == Direction.Axis.Z) {
-            out.add(position.east());
-            out.add(position.west());
-        } else {
-            out.add(position.north());
-            out.add(position.south());
+        int reach = MapArtOverridePolicy.HUB_MAP_NEIGHBOR_REACH;
+        for (int along = -reach; along <= reach; along++) {
+            for (int up = -reach; up <= reach; up++) {
+                if (along == 0 && up == 0) {
+                    continue;
+                }
+                if (direction.getAxis() == Direction.Axis.Z) {
+                    out.add(position.offset(along, up, 0));
+                } else {
+                    out.add(position.offset(0, up, along));
+                }
+            }
         }
         return out;
     }
 
     private static int column(BlockPos position, Direction direction) {
-        return switch (direction) {
-            case NORTH -> position.getX();
-            case SOUTH -> -position.getX();
-            case WEST -> position.getZ();
-            case EAST -> -position.getZ();
-            default -> position.getX();
-        };
+        return MapArtOverridePolicy.wallColumn(
+                position.getX(), position.getZ(), direction.get2DDataValue());
     }
 
     private record Panel(float u0, float v0, float u1, float v1) {

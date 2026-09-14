@@ -9,17 +9,29 @@ public final class MapArtOverridePolicy {
     public static final float THIN_SCALE = 0.35F;
     public static final float LARGE_FACE_AREA = 2.0F;
     public static final float LARGE_MAX_SCALE = 3.0F;
-    /** Hypixel Hub spawn map wall, counted from the owner's screenshot. */
-    public static final int HUB_MAP_COLUMNS = 13;
+    /**
+     * Hypixel Hub spawn map wall from the owner's latest screenshot: inner Fox
+     * tiles plus the vanilla empty-map right column and bottom row (14x7).
+     * Nearby 13-16 x 6-8 grids still count as the same canvas.
+     */
+    public static final int HUB_MAP_COLUMNS = 14;
     public static final int HUB_MAP_ROWS = 7;
+    public static final int HUB_MAP_MIN_COLUMNS = 8;
+    public static final int HUB_MAP_MAX_COLUMNS = 16;
+    public static final int HUB_MAP_MIN_ROWS = 4;
+    public static final int HUB_MAP_MAX_ROWS = 10;
     public static final int HUB_MAP_TILES = HUB_MAP_COLUMNS * HUB_MAP_ROWS;
     /**
-     * Chebyshev reach from a corner tile of the 13x7 Hub wall to the opposite
-     * edge, plus slack so glow frames and chunk-edge AABBs still join.
+     * Chebyshev reach from a corner tile of the Hub wall to the opposite edge,
+     * plus slack so glow frames, empty maps, and chunk-edge AABBs still join.
      */
-    public static final int HUB_MAP_SEARCH_RADIUS = HUB_MAP_COLUMNS + 3;
-    /** Bundled Fox photo is square; do not stretch it to fill 13x7. */
+    public static final int HUB_MAP_SEARCH_RADIUS = HUB_MAP_COLUMNS + 4;
+    /** Plane Chebyshev reach used to jump a one-block hole in the frame grid. */
+    public static final int HUB_MAP_NEIGHBOR_REACH = 2;
+    /** Bundled Fox photo is square; do not stretch it to fill the wall. */
     public static final float FOX_IMAGE_ASPECT = 1.0F;
+    /** Vanilla map quad is 128x128; item-frame pose origin after translate is a corner. */
+    public static final float MAP_QUAD_CENTER = 64.0F;
     static final int PACKED_FULL_BRIGHT = 0xF000F0;
 
     private MapArtOverridePolicy() {
@@ -81,6 +93,33 @@ public final class MapArtOverridePolicy {
     public static float mapFrameZDegrees(int itemFrameRotation) {
         int rotation = Math.floorMod(itemFrameRotation, 8);
         return (rotation % 4) * 90.0F + 180.0F;
+    }
+
+    /**
+     * Z rotation vanilla applies to a non-map item in an item frame (45° steps).
+     */
+    public static float itemFrameZDegrees(int itemFrameRotation) {
+        return Math.floorMod(itemFrameRotation, 8) * 45.0F;
+    }
+
+    /**
+     * Wall column increasing toward the viewer's right. {@code facing2d} is
+     * vanilla horizontal 2D: 0 south, 1 west, 2 north, 3 east.
+     */
+    public static int wallColumn(int x, int z, int facing2d) {
+        return switch (Math.floorMod(facing2d, 4)) {
+            case 0 -> x;
+            case 1 -> z;
+            case 2 -> -x;
+            default -> -z;
+        };
+    }
+
+    public static boolean isHubSizedBounds(int width, int height) {
+        return width >= HUB_MAP_MIN_COLUMNS
+                && width <= HUB_MAP_MAX_COLUMNS
+                && height >= HUB_MAP_MIN_ROWS
+                && height <= HUB_MAP_MAX_ROWS;
     }
 
     /** UV region for one tile in a contiguous width x height rectangle. */
@@ -175,17 +214,17 @@ public final class MapArtOverridePolicy {
     }
 
     /**
-     * Hub 13x7 walls still get one canvas when a few interior tiles are missing.
-     * Callers paint only the frames they found; holes stay vanilla.
+     * Hub-sized walls still get one canvas when a few interior tiles are missing.
+     * Callers paint only the frames they found.
      */
     public static boolean isMapPanelLayout(int tileCount, int width, int height) {
+        if (width < 1 || height < 1 || tileCount < 2 || tileCount > width * height) {
+            return false;
+        }
         if (isFilledRectangle(tileCount, width, height)) {
             return true;
         }
-        return width == HUB_MAP_COLUMNS
-                && height == HUB_MAP_ROWS
-                && tileCount >= 2
-                && tileCount <= HUB_MAP_TILES;
+        return isHubSizedBounds(width, height) && tileCount * 2 >= width * height;
     }
 
     public static boolean isHubMapGrid(int tileCount, int width, int height) {
@@ -197,5 +236,13 @@ public final class MapArtOverridePolicy {
     /** Filled maps, empty maps, and map-id stacks all belong on the Hub wall. */
     public static boolean isMapWallItem(boolean filledMap, boolean emptyMap, boolean hasMapId) {
         return filledMap || emptyMap || hasMapId;
+    }
+
+    /**
+     * Hub edge tiles may be custom / empty-looking items in frames. Any non-empty
+     * framed item on the same facing still belongs on the wall canvas.
+     */
+    public static boolean isWallFrameItem(boolean mapWallItem, boolean hasItem) {
+        return hasItem || mapWallItem;
     }
 }
