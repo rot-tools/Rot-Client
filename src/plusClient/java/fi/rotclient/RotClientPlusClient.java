@@ -6,5 +6,7 @@ import net.fabricmc.api.ClientModInitializer;
 public final class RotClientPlusClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        QolFlavorSupport.install(new RotClientPlusExtension());
+        QolClientFlavorSupport.install(new RotClientPlusHooks());
     }
 }

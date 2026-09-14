@@ -23,5 +23,7 @@ final class QolPlusCatalogTest {
                 .anyMatch(setting -> "qol.command_keybinds.macros".equals(setting.id())));
         assertTrue(QolUtilityCatalog.findById("qol.dungeon_hud").settings().stream()
                 .anyMatch(setting -> "qol.dungeon_hud.map_mode".equals(setting.id())));
+        assertNotNull(QolUtilityCatalog.findById("qol.ghosts"));
+        assertEquals("Fox", QolUtilityCatalog.findById("qol.map_art_override").name());
     }
 }

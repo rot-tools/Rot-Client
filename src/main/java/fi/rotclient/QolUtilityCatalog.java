@@ -145,9 +145,13 @@ public final class QolUtilityCatalog {
         }
     }
 
-    private static final List<ModuleDef> MODULES = buildModules();
+    private static volatile List<ModuleDef> MODULES = buildModules();
 
     private QolUtilityCatalog() {
+    }
+
+    static void reloadFlavorModules() {
+        MODULES = buildModules();
     }
 
     public static List<ModuleDef> modules() {

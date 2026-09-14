@@ -16,6 +16,9 @@ and the project uses semantic versioning where practical.
   legit JAR does not. Playtest and versioned GitHub Releases upload both
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
   in `rotclient-plus.json`.
+* Plus now registers builtin dark packs from the `rotclientplus` container and
+  installs the Plus catalog/hooks from the Plus client entrypoint, so Fox,
+  Ghosts, and other Plus cards stay visible after the Lite split.
 * Completed the Modrinth-oriented Lite boundary: wardrobe execution, Ghosts,
   Escrow Fix, Slayer/Diana/mining/fishing/foraging/dungeon automation, Fox,
   their policies, runtimes, mixins, service providers, and assets now compile

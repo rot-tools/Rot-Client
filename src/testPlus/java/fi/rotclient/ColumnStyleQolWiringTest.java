@@ -187,4 +187,17 @@ final class ColumnStyleQolWiringTest {
         assertTrue(source.contains("billboardTextOverBlock"));
         assertTrue(source.contains("maybeHas"));
     }
+
+    @Test
+    void plusRegistersPacksAndInstallsFlavorHooks() throws Exception {
+        String packs = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/CustomResourcePackRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(packs.contains("rotclientplus"));
+        String plusClient = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/RotClientPlusClient.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(plusClient.contains("QolFlavorSupport.install"));
+        assertTrue(plusClient.contains("QolClientFlavorSupport.install"));
+    }
 }

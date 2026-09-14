@@ -30,7 +30,9 @@ public final class CustomResourcePackRuntime {
             return;
         }
         FabricLoader.getInstance()
-                .getModContainer("rotclient")
+                .getModContainer(QolFlavorSupport.modId())
+                .or(() -> FabricLoader.getInstance().getModContainer("rotclientplus"))
+                .or(() -> FabricLoader.getInstance().getModContainer("rotclient"))
                 .ifPresent(CustomResourcePackRuntime::registerPacks);
         registered = true;
     }

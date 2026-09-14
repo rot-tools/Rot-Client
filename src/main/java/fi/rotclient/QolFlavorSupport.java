@@ -10,19 +10,39 @@ import java.util.ServiceLoader;
  * classpath, so {@link QolFlavorExtension#NONE} is used.
  */
 public final class QolFlavorSupport {
-    private static final QolFlavorExtension EXTENSION = load();
+    private static volatile QolFlavorExtension EXTENSION = load();
 
     private QolFlavorSupport() {
     }
 
     private static QolFlavorExtension load() {
-        ServiceLoader<QolFlavorExtension> loader =
+        ClassLoader loader = QolFlavorExtension.class.getClassLoader();
+        ServiceLoader<QolFlavorExtension> services = loader == null
+                ? ServiceLoader.load(QolFlavorExtension.class)
+                : ServiceLoader.load(QolFlavorExtension.class, loader);
+        Iterator<QolFlavorExtension> iterator = services.iterator();
+        if (iterator.hasNext()) {
+            return iterator.next();
+        }
+        ServiceLoader<QolFlavorExtension> context =
                 ServiceLoader.load(QolFlavorExtension.class);
-        Iterator<QolFlavorExtension> iterator = loader.iterator();
+        iterator = context.iterator();
         if (iterator.hasNext()) {
             return iterator.next();
         }
         return QolFlavorExtension.NONE;
+    }
+
+    /**
+     * Plus client entrypoint installs the real extension after the shared
+     * initializer may have already cached a Lite catalog snapshot.
+     */
+    public static void install(QolFlavorExtension extension) {
+        if (extension == null) {
+            return;
+        }
+        EXTENSION = extension;
+        QolUtilityCatalog.reloadFlavorModules();
     }
 
     public static QolFlavorExtension extension() {
