@@ -2,10 +2,13 @@ package fi.rotclient;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.mojang.math.Transformation;
 import fi.rotclient.mixin.DisplayItemDisplayAccessor;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -15,39 +18,49 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.imageio.ImageIO;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.state.BlockDisplayEntityRenderState;
+import net.minecraft.client.renderer.entity.state.DisplayEntityRenderState;
 import net.minecraft.client.renderer.entity.state.ItemDisplayEntityRenderState;
+import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
 import net.minecraft.client.renderer.entity.state.PaintingRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.decoration.GlowItemFrame;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import org.joml.Vector3fc;
 
 /**
- * Local-only map, painting, and item-display presentation. This never changes
- * map data, packets, items, or the server-visible entity layout.
+ * Local-only map, painting, item-frame, and display presentation. This never
+ * changes map data, packets, items, or the server-visible entity layout.
  */
 public final class MapArtOverrideRuntime {
-    private static final Identifier TEXTURE_ID =
+    private static final Identifier CUSTOM_TEXTURE_ID =
             Identifier.fromNamespaceAndPath("rotclient", "dynamic/map_art_override");
-    private static final Identifier EMBEDDED_IMAGE =
-            Identifier.fromNamespaceAndPath("rotclient", "textures/map-art.jpg");
-    private static final int SEARCH_RADIUS = 16;
+    private static final Identifier BUNDLED_TEXTURE =
+            Identifier.fromNamespaceAndPath("rotclient", "textures/map-art.png");
+    private static final String BUNDLED_KEY = "bundled:" + BUNDLED_TEXTURE;
+    private static final int SEARCH_RADIUS = MapArtOverridePolicy.HUB_MAP_SEARCH_RADIUS;
+    private static final long CUSTOM_RETRY_MS = 2000L;
 
     private static String loadedPath = "";
     private static long loadedModified = Long.MIN_VALUE;
+    private static long nextCustomAttemptAt;
     private static boolean unavailable;
+    private static Identifier boundTexture = BUNDLED_TEXTURE;
+    private static float imageAspect = MapArtOverridePolicy.FOX_IMAGE_ASPECT;
 
     private MapArtOverrideRuntime() {
     }
@@ -60,17 +73,45 @@ public final class MapArtOverrideRuntime {
         if (!ensureTexture() || !(state instanceof MapArtRenderStateAccess access)) {
             return false;
         }
-        float u0 = access.rotclient$mapArtU0();
-        float v0 = access.rotclient$mapArtV0();
-        float u1 = access.rotclient$mapArtU1();
-        float v1 = access.rotclient$mapArtV1();
         int light = MapArtOverridePolicy.packedLight(lightCoords, 0);
-        collector.submitCustomGeometry(poseStack, RenderTypes.text(TEXTURE_ID), (pose, buffer) -> {
-            buffer.addVertex(pose, 0.0F, 128.0F, -0.01F).setColor(-1).setUv(u0, v1).setLight(light);
-            buffer.addVertex(pose, 128.0F, 128.0F, -0.01F).setColor(-1).setUv(u1, v1).setLight(light);
-            buffer.addVertex(pose, 128.0F, 0.0F, -0.01F).setColor(-1).setUv(u1, v0).setLight(light);
-            buffer.addVertex(pose, 0.0F, 0.0F, -0.01F).setColor(-1).setUv(u0, v0).setLight(light);
-        });
+        submitContainedMapQuad(
+                poseStack,
+                collector,
+                access.rotclient$mapArtU0(),
+                access.rotclient$mapArtV0(),
+                access.rotclient$mapArtU1(),
+                access.rotclient$mapArtV1(),
+                light);
+        return true;
+    }
+
+    /**
+     * Item-frame maps. Vanilla already rotated the pose by
+     * {@link MapArtOverridePolicy#mapFrameZDegrees(int)}; undo that so tiled UVs
+     * stay wall-aligned when Hub frames alternate 0/2 rotation.
+     */
+    public static boolean renderFramedMap(
+            MapRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            int lightCoords,
+            int frameRotation) {
+        if (!ensureTexture() || !(state instanceof MapArtRenderStateAccess access)) {
+            return false;
+        }
+        int light = MapArtOverridePolicy.packedLight(lightCoords, 0);
+        poseStack.pushPose();
+        poseStack.mulPose(Axis.ZP.rotationDegrees(
+                -MapArtOverridePolicy.mapFrameZDegrees(frameRotation)));
+        submitContainedMapQuad(
+                poseStack,
+                collector,
+                access.rotclient$mapArtU0(),
+                access.rotclient$mapArtV0(),
+                access.rotclient$mapArtU1(),
+                access.rotclient$mapArtV1(),
+                light);
+        poseStack.popPose();
         return true;
     }
 
@@ -79,10 +120,11 @@ public final class MapArtOverrideRuntime {
             PaintingRenderState state,
             PoseStack poseStack,
             SubmitNodeCollector collector) {
-        if (!ensureTexture()
-                || state == null
-                || state.direction == null
-                || !MapArtOverridePolicy.shouldReplacePainting(true, state.direction.getAxis().isHorizontal())) {
+        if (!ensureTexture() || state == null) {
+            return false;
+        }
+        Direction direction = state.direction == null ? Direction.SOUTH : state.direction;
+        if (!MapArtOverridePolicy.shouldReplacePainting(true, direction.getAxis().isHorizontal())) {
             return false;
         }
         float width;
@@ -103,25 +145,21 @@ public final class MapArtOverrideRuntime {
         }
         int light = MapArtOverridePolicy.packedLight(preferred, state.lightCoords);
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - state.direction.get2DDataValue() * 90.0F));
-        float left = -width / 2.0F;
-        float right = width / 2.0F;
-        float bottom = -height / 2.0F;
-        float top = height / 2.0F;
-        float z = -0.03125F;
-        collector.submitCustomGeometry(
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - direction.get2DDataValue() * 90.0F));
+        submitTextQuad(
                 poseStack,
-                RenderTypes.entitySolidZOffsetForward(TEXTURE_ID),
-                (pose, buffer) -> {
-                    foxVertex(pose, buffer, right, bottom, 1.0F, 1.0F, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, left, bottom, 0.0F, 1.0F, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, left, top, 0.0F, 0.0F, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, right, top, 1.0F, 0.0F, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, left, bottom, 0.0F, 1.0F, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, right, bottom, 1.0F, 1.0F, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, right, top, 1.0F, 0.0F, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, left, top, 0.0F, 0.0F, z, light, 0, 0, 1);
-                });
+                collector,
+                -width / 2.0F,
+                -height / 2.0F,
+                width / 2.0F,
+                height / 2.0F,
+                -0.03125F,
+                0.0F,
+                0.0F,
+                1.0F,
+                1.0F,
+                light,
+                true);
         poseStack.popPose();
         return true;
     }
@@ -166,8 +204,31 @@ public final class MapArtOverrideRuntime {
         }
     }
 
-    public static boolean renderItemDisplay(
-            ItemDisplayEntityRenderState state,
+    public static void configureBlockDisplay(
+            Display.BlockDisplay display,
+            BlockDisplayEntityRenderState state,
+            float tickProgress) {
+        if (!(state instanceof FoxItemDisplayAccess access) || display == null) {
+            return;
+        }
+        access.rotclient$setFoxUv(0.0F, 0.0F, 1.0F, 1.0F);
+        access.rotclient$setFoxReplace(false);
+        if (!isEnabled()) {
+            return;
+        }
+        access.rotclient$setFoxReplace(MapArtOverridePolicy.shouldReplaceItemDisplay(
+                true,
+                false,
+                isFixedBillboard(display),
+                scale(display, tickProgress, 0),
+                scale(display, tickProgress, 1),
+                scale(display, tickProgress, 2),
+                display.getBbWidth(),
+                display.getBbHeight()));
+    }
+
+    public static boolean renderDisplay(
+            DisplayEntityRenderState state,
             PoseStack poseStack,
             SubmitNodeCollector collector,
             int lightCoords) {
@@ -176,76 +237,240 @@ public final class MapArtOverrideRuntime {
                 || !access.rotclient$foxReplace()) {
             return false;
         }
-        float u0 = access.rotclient$foxU0();
-        float v0 = access.rotclient$foxV0();
-        float u1 = access.rotclient$foxU1();
-        float v1 = access.rotclient$foxV1();
         int light = MapArtOverridePolicy.packedLight(lightCoords, state.lightCoords);
-        float z = 0.03125F;
-        collector.submitCustomGeometry(
+        submitContainedTextQuad(
                 poseStack,
-                RenderTypes.entitySolidZOffsetForward(TEXTURE_ID),
-                (pose, buffer) -> {
-                    foxVertex(pose, buffer, 0.5F, -0.5F, u1, v1, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, -0.5F, -0.5F, u0, v1, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, -0.5F, 0.5F, u0, v0, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, 0.5F, 0.5F, u1, v0, z, light, 0, 0, -1);
-                    foxVertex(pose, buffer, -0.5F, -0.5F, u0, v1, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, 0.5F, -0.5F, u1, v1, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, 0.5F, 0.5F, u1, v0, z, light, 0, 0, 1);
-                    foxVertex(pose, buffer, -0.5F, 0.5F, u0, v0, z, light, 0, 0, 1);
-                });
+                collector,
+                -0.5F,
+                -0.5F,
+                0.5F,
+                0.5F,
+                0.03125F,
+                access.rotclient$foxU0(),
+                access.rotclient$foxV0(),
+                access.rotclient$foxU1(),
+                access.rotclient$foxV1(),
+                light,
+                true);
         return true;
     }
 
-    private static void foxVertex(
-            PoseStack.Pose pose,
-            VertexConsumer buffer,
-            float x,
-            float y,
-            float u,
-            float v,
-            float z,
-            int light,
-            int nx,
-            int ny,
-            int nz) {
-        buffer.addVertex(pose, x, y, z)
-                .setColor(-1)
-                .setUv(u, v)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
-                .setNormal(pose, nx, ny, nz);
+    public static boolean renderItemDisplay(
+            ItemDisplayEntityRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            int lightCoords) {
+        return renderDisplay(state, poseStack, collector, lightCoords);
     }
 
-    /** Attach one image region to an item-frame map state. */
-    public static void configureItemFrame(MapRenderState state, ItemFrame frame) {
-        if (!(state instanceof MapArtRenderStateAccess access)) {
-            return;
+    public static boolean renderItemFrameItem(
+            ItemFrameRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            int lightCoords) {
+        if (!ensureTexture()
+                || !(state instanceof FoxItemFrameAccess access)
+                || !access.rotclient$foxReplaceItem()) {
+            return false;
         }
-        access.rotclient$setMapArtUv(0.0F, 0.0F, 1.0F, 1.0F);
+        int light = MapArtOverridePolicy.packedLight(lightCoords, state.lightCoords);
+        submitContainedTextQuad(
+                poseStack,
+                collector,
+                -0.5F,
+                -0.5F,
+                0.5F,
+                0.5F,
+                0.03125F,
+                access.rotclient$foxU0(),
+                access.rotclient$foxV0(),
+                access.rotclient$foxU1(),
+                access.rotclient$foxV1(),
+                light,
+                true);
+        return true;
+    }
+
+    /** Attach one image region to an item-frame map or custom wall tile. */
+    public static void configureItemFrame(ItemFrameRenderState state, ItemFrame frame) {
+        if (state != null && state.mapRenderState instanceof MapArtRenderStateAccess mapAccess) {
+            mapAccess.rotclient$setMapArtUv(0.0F, 0.0F, 1.0F, 1.0F);
+        }
+        if (state instanceof FoxItemFrameAccess frameAccess) {
+            frameAccess.rotclient$setFoxUv(0.0F, 0.0F, 1.0F, 1.0F);
+            frameAccess.rotclient$setFoxReplaceItem(false);
+        }
         QolUtilityConfig config = RotClientClient.qolConfigPublic();
-        if (!isEnabled()
-                || config == null
-                || !config.extras().mapArtStretchFrames
-                || frame == null
-                || frame.getDirection().getAxis().isVertical()) {
+        if (!isEnabled() || config == null || frame == null || state == null) {
             return;
         }
+        boolean stretch = config.extras().mapArtStretchFrames
+                && frame.getDirection().getAxis().isHorizontal();
         try {
-            Panel panel = findPanel(frame);
-            if (panel != null) {
-                access.rotclient$setMapArtUv(panel.u0(), panel.v0(), panel.u1(), panel.v1());
+            Panel mapPanel = stretch ? findPanel(frame, true, 2) : null;
+            if (mapPanel != null && state.mapRenderState instanceof MapArtRenderStateAccess mapAccess) {
+                mapAccess.rotclient$setMapArtUv(
+                        mapPanel.u0(), mapPanel.v0(), mapPanel.u1(), mapPanel.v1());
+            }
+            if (state instanceof FoxItemFrameAccess frameAccess && state.mapId == null) {
+                boolean paintingOrMap = isMapOrPaintingItem(frame.getItem());
+                Panel wall = mapPanel != null
+                        ? mapPanel
+                        : (stretch ? findPanel(frame, false, 4) : null);
+                if (paintingOrMap || wall != null) {
+                    frameAccess.rotclient$setFoxReplaceItem(true);
+                    if (wall != null) {
+                        frameAccess.rotclient$setFoxUv(wall.u0(), wall.v0(), wall.u1(), wall.v1());
+                    }
+                }
             }
         } catch (RuntimeException ignored) {
-            // A stale entity during a chunk transition must leave this map as a single image.
+            // A stale entity during a chunk transition must leave this frame as a single image.
         }
     }
 
     public static void reset() {
         loadedPath = "";
         loadedModified = Long.MIN_VALUE;
+        nextCustomAttemptAt = 0L;
         unavailable = false;
+        boundTexture = BUNDLED_TEXTURE;
+        imageAspect = MapArtOverridePolicy.FOX_IMAGE_ASPECT;
+    }
+
+    private static void submitContainedMapQuad(
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int light) {
+        submitMapQuad(poseStack, collector, 0.0F, 128.0F, 128.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, light, 0xFF000000);
+        float[] image = MapArtOverridePolicy.containedTileImageQuad(u0, v0, u1, v1);
+        if (image == null) {
+            return;
+        }
+        submitMapQuad(
+                poseStack,
+                collector,
+                image[0] * 128.0F,
+                image[3] * 128.0F,
+                image[2] * 128.0F,
+                image[1] * 128.0F,
+                image[4],
+                image[5],
+                image[6],
+                image[7],
+                light,
+                -1);
+    }
+
+    private static void submitContainedTextQuad(
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float z,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int light,
+            boolean doubleSided) {
+        submitTextQuad(poseStack, collector, x0, y0, x1, y1, z, 0.0F, 0.0F, 1.0F, 1.0F, light, doubleSided, 0xFF000000);
+        float[] image = MapArtOverridePolicy.containedTileImageQuad(u0, v0, u1, v1);
+        if (image == null) {
+            return;
+        }
+        float subX0 = x0 + (x1 - x0) * image[0];
+        float subX1 = x0 + (x1 - x0) * image[2];
+        float subTop = y1 + (y0 - y1) * image[1];
+        float subBottom = y1 + (y0 - y1) * image[3];
+        submitTextQuad(
+                poseStack,
+                collector,
+                subX0,
+                subBottom,
+                subX1,
+                subTop,
+                z,
+                image[4],
+                image[5],
+                image[6],
+                image[7],
+                light,
+                doubleSided,
+                -1);
+    }
+
+    private static void submitMapQuad(
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int light,
+            int color) {
+        collector.submitCustomGeometry(poseStack, RenderTypes.text(boundTexture), (pose, buffer) -> {
+            buffer.addVertex(pose, x0, y0, -0.01F).setColor(color).setUv(u0, v1).setLight(light);
+            buffer.addVertex(pose, x1, y0, -0.01F).setColor(color).setUv(u1, v1).setLight(light);
+            buffer.addVertex(pose, x1, y1, -0.01F).setColor(color).setUv(u1, v0).setLight(light);
+            buffer.addVertex(pose, x0, y1, -0.01F).setColor(color).setUv(u0, v0).setLight(light);
+        });
+    }
+
+    private static void submitTextQuad(
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float z,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int light,
+            boolean doubleSided) {
+        submitTextQuad(poseStack, collector, x0, y0, x1, y1, z, u0, v0, u1, v1, light, doubleSided, -1);
+    }
+
+    private static void submitTextQuad(
+            PoseStack poseStack,
+            SubmitNodeCollector collector,
+            float x0,
+            float y0,
+            float x1,
+            float y1,
+            float z,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int light,
+            boolean doubleSided,
+            int color) {
+        collector.submitCustomGeometry(poseStack, RenderTypes.text(boundTexture), (pose, buffer) -> {
+            buffer.addVertex(pose, x1, y0, z).setColor(color).setUv(u1, v1).setLight(light);
+            buffer.addVertex(pose, x0, y0, z).setColor(color).setUv(u0, v1).setLight(light);
+            buffer.addVertex(pose, x0, y1, z).setColor(color).setUv(u0, v0).setLight(light);
+            buffer.addVertex(pose, x1, y1, z).setColor(color).setUv(u1, v0).setLight(light);
+            if (doubleSided) {
+                buffer.addVertex(pose, x0, y0, -z).setColor(color).setUv(u0, v1).setLight(light);
+                buffer.addVertex(pose, x1, y0, -z).setColor(color).setUv(u1, v1).setLight(light);
+                buffer.addVertex(pose, x1, y1, -z).setColor(color).setUv(u1, v0).setLight(light);
+                buffer.addVertex(pose, x0, y1, -z).setColor(color).setUv(u0, v0).setLight(light);
+            }
+        });
     }
 
     private static boolean isEnabled() {
@@ -260,11 +485,21 @@ public final class MapArtOverrideRuntime {
         QolUtilityConfig config = RotClientClient.qolConfigPublic();
         String configured = config == null ? "" : config.readText("qol.map_art_override.image_path");
         if (configured == null || configured.isBlank()) {
-            return loadEmbeddedTexture();
+            loadedPath = BUNDLED_KEY;
+            loadedModified = Long.MIN_VALUE;
+            unavailable = false;
+            boundTexture = BUNDLED_TEXTURE;
+            imageAspect = MapArtOverridePolicy.FOX_IMAGE_ASPECT;
+            return true;
         }
         Path image = resolveImage(configured);
         if (image == null || !Files.isRegularFile(image)) {
-            return loadEmbeddedTexture();
+            loadedPath = BUNDLED_KEY;
+            loadedModified = Long.MIN_VALUE;
+            unavailable = false;
+            boundTexture = BUNDLED_TEXTURE;
+            imageAspect = MapArtOverridePolicy.FOX_IMAGE_ASPECT;
+            return true;
         }
         long modified;
         try {
@@ -274,49 +509,62 @@ public final class MapArtOverrideRuntime {
         }
         String absolute = image.toAbsolutePath().normalize().toString();
         if (absolute.equals(loadedPath) && modified == loadedModified && !unavailable) {
+            boundTexture = CUSTOM_TEXTURE_ID;
             return true;
+        }
+        long now = System.currentTimeMillis();
+        if (unavailable && now < nextCustomAttemptAt) {
+            return false;
         }
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.getTextureManager() == null) {
             return false;
         }
         try (InputStream stream = Files.newInputStream(image)) {
-            NativeImage pixels = NativeImage.read(stream);
+            NativeImage pixels = decodeToRgba(stream);
             client.getTextureManager().register(
-                    TEXTURE_ID,
+                    CUSTOM_TEXTURE_ID,
                     new DynamicTexture(() -> "Rot Client local map art", pixels));
             loadedPath = absolute;
             loadedModified = modified;
             unavailable = false;
+            boundTexture = CUSTOM_TEXTURE_ID;
+            imageAspect = pixels.getHeight() > 0
+                    ? pixels.getWidth() / (float) pixels.getHeight()
+                    : MapArtOverridePolicy.FOX_IMAGE_ASPECT;
             return true;
         } catch (IOException | RuntimeException ignored) {
             unavailable = true;
+            nextCustomAttemptAt = now + CUSTOM_RETRY_MS;
             return false;
         }
     }
 
-    private static boolean loadEmbeddedTexture() {
-        final String embeddedKey = "embedded:" + EMBEDDED_IMAGE;
-        if (embeddedKey.equals(loadedPath) && !unavailable) {
-            return true;
-        }
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.getTextureManager() == null) {
-            return false;
-        }
-        try (InputStream stream = client.getResourceManager().open(EMBEDDED_IMAGE)) {
-            NativeImage pixels = NativeImage.read(stream);
-            client.getTextureManager().register(
-                    TEXTURE_ID,
-                    new DynamicTexture(() -> "Rot Client bundled map art", pixels));
-            loadedPath = embeddedKey;
-            loadedModified = Long.MIN_VALUE;
-            unavailable = false;
-            return true;
+    private static NativeImage decodeToRgba(InputStream stream) throws IOException {
+        byte[] data = stream.readAllBytes();
+        try {
+            NativeImage image = NativeImage.read(data);
+            if (image.format() == NativeImage.Format.RGBA) {
+                return image;
+            }
+            image.close();
         } catch (IOException | RuntimeException ignored) {
-            unavailable = true;
-            return false;
+            // Fall through to ImageIO so JPEG / GIF files still become GPU-safe RGBA.
         }
+        BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(data));
+        if (buffered == null) {
+            throw new IOException("Could not decode local Fox image");
+        }
+        BufferedImage argb = new BufferedImage(
+                buffered.getWidth(), buffered.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = argb.createGraphics();
+        graphics.drawImage(buffered, 0, 0, null);
+        graphics.dispose();
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        if (!ImageIO.write(argb, "png", png)) {
+            throw new IOException("Could not encode local Fox image as PNG");
+        }
+        return NativeImage.read(png.toByteArray());
     }
 
     private static Path resolveImage(String configured) {
@@ -348,13 +596,13 @@ public final class MapArtOverrideRuntime {
                 || stack.has(DataComponents.MAP_ID));
     }
 
-    private static boolean isFixedBillboard(Display.ItemDisplay display) {
+    private static boolean isFixedBillboard(Display display) {
         Display.RenderState renderState = display.renderState();
         return renderState != null
                 && renderState.billboardConstraints() == Display.BillboardConstraints.FIXED;
     }
 
-    private static float scale(Display.ItemDisplay display, float tickProgress, int axis) {
+    private static float scale(Display display, float tickProgress, int axis) {
         Display.RenderState renderState = display.renderState();
         if (renderState == null) {
             return 1.0F;
@@ -396,6 +644,26 @@ public final class MapArtOverrideRuntime {
                 candidate.getBbHeight());
     }
 
+    private static boolean isMapWallFrame(ItemFrame frame) {
+        ItemStack stack = frame.getItem();
+        boolean glowOrNormal = frame instanceof GlowItemFrame || frame instanceof ItemFrame;
+        return glowOrNormal
+                && MapArtOverridePolicy.isMapWallItem(
+                        stack.is(Items.FILLED_MAP),
+                        stack.is(Items.MAP),
+                        stack.has(DataComponents.MAP_ID) || frame.getFramedMapId(stack) != null);
+    }
+
+    private static AABB searchBox(BlockPos originPos) {
+        return new AABB(
+                originPos.getX() - SEARCH_RADIUS,
+                originPos.getY() - SEARCH_RADIUS,
+                originPos.getZ() - SEARCH_RADIUS,
+                originPos.getX() + SEARCH_RADIUS + 1,
+                originPos.getY() + SEARCH_RADIUS + 1,
+                originPos.getZ() + SEARCH_RADIUS + 1);
+    }
+
     private static Panel findItemDisplayPanel(Display.ItemDisplay origin) {
         Direction direction = Direction.fromYRot(origin.getYRot());
         if (direction.getAxis().isVertical()) {
@@ -409,7 +677,7 @@ public final class MapArtOverrideRuntime {
 
         Map<BlockPos, Display.ItemDisplay> displays = new HashMap<>();
         for (Display.ItemDisplay candidate : origin.level().getEntitiesOfClass(
-                Display.ItemDisplay.class, origin.getBoundingBox().inflate(SEARCH_RADIUS),
+                Display.ItemDisplay.class, searchBox(originPos),
                 candidate -> matchesItemDisplayPanel(origin, candidate))) {
             displays.put(candidate.blockPosition(), candidate);
         }
@@ -422,34 +690,12 @@ public final class MapArtOverrideRuntime {
                 }
             }
         }
-        if (positions.size() < 2) {
-            return null;
-        }
-        int minColumn = Integer.MAX_VALUE;
-        int maxColumn = Integer.MIN_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        for (BlockPos position : positions) {
-            int column = column(position, direction);
-            minColumn = Math.min(minColumn, column);
-            maxColumn = Math.max(maxColumn, column);
-            minY = Math.min(minY, position.getY());
-            maxY = Math.max(maxY, position.getY());
-        }
-        int width = maxColumn - minColumn + 1;
-        int height = maxY - minY + 1;
-        if (!MapArtOverridePolicy.isFilledRectangle(positions.size(), width, height)) {
-            return null;
-        }
-        int currentColumn = column(originPos, direction) - minColumn;
-        int currentRow = maxY - originPos.getY();
-        float[] uv = MapArtOverridePolicy.tileUv(currentColumn, currentRow, width, height);
-        return new Panel(uv[0], uv[1], uv[2], uv[3]);
+        Panel flooded = panelAt(originPos, direction, positions, 2);
+        return preferHubPanel(originPos, direction, displays.keySet(), flooded, 2);
     }
 
-    private static Panel findPanel(ItemFrame origin) {
+    private static Panel findPanel(ItemFrame origin, boolean mapsOnly, int minTiles) {
         Direction direction = origin.getDirection();
-        int rotation = origin.getRotation();
         Set<BlockPos> positions = new HashSet<>();
         ArrayDeque<BlockPos> pending = new ArrayDeque<>();
         BlockPos originPos = origin.blockPosition();
@@ -458,10 +704,10 @@ public final class MapArtOverrideRuntime {
 
         Map<BlockPos, ItemFrame> frames = new HashMap<>();
         for (ItemFrame candidate : origin.level().getEntitiesOfClass(
-                ItemFrame.class, origin.getBoundingBox().inflate(SEARCH_RADIUS),
+                ItemFrame.class, searchBox(originPos),
                 candidate -> candidate.getDirection() == direction
-                        && candidate.getRotation() == rotation
-                        && candidate.getFramedMapId(candidate.getItem()) != null)) {
+                        && !candidate.getItem().isEmpty()
+                        && (!mapsOnly || isMapWallFrame(candidate)))) {
             frames.put(candidate.blockPosition(), candidate);
         }
         frames.put(originPos, origin);
@@ -473,7 +719,45 @@ public final class MapArtOverrideRuntime {
                 }
             }
         }
-        if (positions.size() < 2) {
+        Panel flooded = panelAt(originPos, direction, positions, minTiles);
+        return preferHubPanel(originPos, direction, frames.keySet(), flooded, minTiles);
+    }
+
+    private static Panel preferHubPanel(
+            BlockPos originPos,
+            Direction direction,
+            Set<BlockPos> nearby,
+            Panel flooded,
+            int minTiles) {
+        Panel boxed = panelAt(originPos, direction, nearby, minTiles);
+        if (boxed != null && hubSized(nearby, direction)) {
+            return boxed;
+        }
+        return flooded;
+    }
+
+    private static boolean hubSized(Set<BlockPos> positions, Direction direction) {
+        if (positions.isEmpty()) {
+            return false;
+        }
+        int minColumn = Integer.MAX_VALUE;
+        int maxColumn = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        for (BlockPos position : positions) {
+            int column = column(position, direction);
+            minColumn = Math.min(minColumn, column);
+            maxColumn = Math.max(maxColumn, column);
+            minY = Math.min(minY, position.getY());
+            maxY = Math.max(maxY, position.getY());
+        }
+        return (maxColumn - minColumn + 1) == MapArtOverridePolicy.HUB_MAP_COLUMNS
+                && (maxY - minY + 1) == MapArtOverridePolicy.HUB_MAP_ROWS;
+    }
+
+    private static Panel panelAt(
+            BlockPos originPos, Direction direction, Set<BlockPos> positions, int minTiles) {
+        if (positions.size() < minTiles) {
             return null;
         }
         int minColumn = Integer.MAX_VALUE;
@@ -489,12 +773,14 @@ public final class MapArtOverrideRuntime {
         }
         int width = maxColumn - minColumn + 1;
         int height = maxY - minY + 1;
-        if (!MapArtOverridePolicy.isFilledRectangle(positions.size(), width, height)) {
+        if (!MapArtOverridePolicy.isMapPanelLayout(positions.size(), width, height)
+                || positions.size() < minTiles) {
             return null;
         }
         int currentColumn = column(originPos, direction) - minColumn;
         int currentRow = maxY - originPos.getY();
-        float[] uv = MapArtOverridePolicy.tileUv(currentColumn, currentRow, width, height);
+        float[] uv = MapArtOverridePolicy.tileUvContain(
+                currentColumn, currentRow, width, height, imageAspect);
         return new Panel(uv[0], uv[1], uv[2], uv[3]);
     }
 

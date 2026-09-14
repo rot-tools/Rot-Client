@@ -16,14 +16,20 @@ final class MapArtOverrideWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(json.contains("PaintingRendererFoxMixin"));
         assertTrue(json.contains("ItemDisplayRendererFoxMixin"));
-        assertTrue(json.contains("ItemDisplayEntityRenderStateFoxMixin"));
+        assertTrue(json.contains("BlockDisplayRendererFoxMixin"));
+        assertTrue(json.contains("DisplayEntityRenderStateFoxMixin"));
+        assertTrue(json.contains("ItemFrameRenderStateFoxMixin"));
         assertTrue(json.contains("DisplayItemDisplayAccessor"));
         assertTrue(json.contains("MapRendererMapArtMixin"));
+        assertTrue(json.contains("WrapOperation") || Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
+                StandardCharsets.UTF_8).contains("WrapOperation"));
         String shared = Files.readString(Path.of(
                 "src/client/resources/rotclient.client.mixins.json"),
                 StandardCharsets.UTF_8);
         assertFalse(shared.contains("PaintingRendererFoxMixin"));
         assertFalse(shared.contains("ItemDisplayRendererFoxMixin"));
+        assertFalse(shared.contains("BlockDisplayRendererFoxMixin"));
     }
 
     @Test
@@ -33,8 +39,17 @@ final class MapArtOverrideWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(runtime.contains("renderPainting"));
         assertTrue(runtime.contains("renderItemDisplay"));
-        assertTrue(runtime.contains("configureItemDisplay"));
-        assertTrue(runtime.contains("entitySolidZOffsetForward"));
+        assertTrue(runtime.contains("renderFramedMap"));
+        assertTrue(runtime.contains("mapFrameZDegrees"));
+        assertTrue(runtime.contains("HUB_MAP_SEARCH_RADIUS"));
+        assertTrue(runtime.contains("tileUvContain"));
+        assertTrue(runtime.contains("GlowItemFrame"));
+        assertTrue(runtime.contains("isMapWallFrame"));
+        assertTrue(runtime.contains("submitContainedMapQuad"));
+        assertFalse(runtime.contains("getRotation() == rotation"));
+        assertTrue(runtime.contains("configureBlockDisplay"));
+        assertTrue(runtime.contains("textures/map-art.png"));
+        assertTrue(runtime.contains("RenderTypes.text"));
         assertTrue(runtime.contains("ItemDisplayEntityRenderState"));
         String painting = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/PaintingRendererFoxMixin.java"),
@@ -45,7 +60,14 @@ final class MapArtOverrideWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(itemDisplay.contains("method = \"submitInner\""));
         assertTrue(itemDisplay.contains("DisplayRenderer.ItemDisplayRenderer"));
+        String itemFrame = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(itemFrame.contains("WrapOperation"));
+        assertTrue(itemFrame.contains("renderFramedMap"));
         assertTrue(Files.isRegularFile(Path.of(
+                "src/plusClient/resources/assets/rotclient/textures/map-art.png")));
+        assertFalse(Files.isRegularFile(Path.of(
                 "src/plusClient/resources/assets/rotclient/textures/map-art.jpg")));
     }
 
@@ -55,7 +77,10 @@ final class MapArtOverrideWiringTest {
         assertTrue(module != null);
         assertTrue(module.searchAliases().contains("painting"));
         assertTrue(module.searchAliases().contains("fox"));
+        assertTrue(module.searchAliases().contains("block display"));
         assertTrue(module.description().toLowerCase().contains("painting"));
         assertTrue(module.description().toLowerCase().contains("item-display"));
+        assertTrue(module.description().toLowerCase().contains("block-display"));
+        assertTrue(module.description().toLowerCase().contains("13x7"));
     }
 }

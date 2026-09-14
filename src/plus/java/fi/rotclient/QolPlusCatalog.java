@@ -22,15 +22,15 @@ public final class QolPlusCatalog {
         modules.add(module(
                 "qol.map_art_override",
                 "Fox",
-                "Locally replace maps, paintings, and large fixed item-display wall art with the bundled image or your own local image. Supports contiguous, unrotated horizontal item-frame and item-display panels. Never changes map data, painting entities, or anything sent to a server.",
+                "Locally replace maps, paintings, item-frame pictures, and large fixed item-display or block-display wall art with the bundled image or your own local image. Supports contiguous same-facing horizontal item-frame and item-display panels, including the Hypixel Hub 13x7 map wall whose frames use mixed rotation. Never changes map data, painting entities, or anything sent to a server.",
                 Group.RENDER,
                 "Local Visuals",
                 false,
                 true,
                 true,
-                List.of("map", "image", "item frame", "art", "local", "painting", "fox", "hub"),
+                List.of("map", "image", "item frame", "art", "local", "painting", "fox", "hub", "block display"),
                 setting("qol.map_art_override.image_path", "Custom Local Image Path", "Optional path relative to .minecraft/config, or an absolute local path. Leave blank to use the image bundled with Rot Client+.", SettingType.TEXT, "bundled image"),
-                setting("qol.map_art_override.stretch_frames", "Stretch Item-Frame Panels", "Stretch one image over contiguous, same-facing, unrotated horizontal map frames or matching item-display panels. Single maps always use the full image.", SettingType.TOGGLE)));
+                setting("qol.map_art_override.stretch_frames", "Stretch Item-Frame Panels", "Fit one image over a contiguous same-facing horizontal map wall (contain, centered). The Hub spawn map is 13x7; leftover tiles and edges stay black. Mixed item-frame rotations stay one canvas. Single maps always use the full image.", SettingType.TOGGLE)));
         modules.add(module(
                 "qol.auto_clicker",
                 "Auto Clicker",
