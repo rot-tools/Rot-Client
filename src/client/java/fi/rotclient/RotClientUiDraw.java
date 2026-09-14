@@ -1525,7 +1525,8 @@ public final class RotClientUiDraw {
                         key);
 
         /*
-         * Initial render starts exactly in the real logical state.
+         * Start directly in the real logical state so opening the UI does not
+         * animate every switch from OFF.
          */
         if (state == null) {
 
@@ -1554,9 +1555,9 @@ public final class RotClientUiDraw {
         state.lastNanos =
                 now;
 
-
         /*
-         * Slow enough that ON/OFF visibly travels instead of teleporting.
+         * Keep the deliberately visible ON/OFF travel from the previous
+         * version. Only the rendering around it is simplified.
          */
         state.position =
                 RotClientEase.expToward(
@@ -1588,6 +1589,7 @@ public final class RotClientUiDraw {
 
         if (TOGGLE_MOTION.size() > 2048) {
             TOGGLE_MOTION.clear();
+
             TOGGLE_MOTION.put(
                     key,
                     state);
@@ -1598,60 +1600,48 @@ public final class RotClientUiDraw {
                         ? RotClientTheme.HUD_ACCENT
                         : accentColor;
 
-
         /*
-         * Very small button-like lift on hover.
+         * Keep the 44x20 interaction geometry unchanged, but render a slightly
+         * slimmer capsule inside it. This removes the heavy, blocky appearance
+         * without changing any hit testing or surrounding layout.
          */
-        int lift =
-                hoverAmount > 0.55F
-                        ? 1
-                        : 0;
-
         int visualY =
-                y - lift;
+                y + 1;
 
+        int visualHeight =
+                Math.max(
+                        1,
+                        height - 2);
 
-        /*
-         * Soft shadow.
-         */
-        int shadowAlpha =
-                0x20
-                        + Math.round(
-                        0x20
-                                * hoverAmount);
-
-        roundedFill(
-                graphics,
-                x + 1,
-                visualY + 2,
-                x + width + 1,
-                visualY + height + 2,
-                withAlpha(
-                        RotClientTheme.SHADOW,
-                        shadowAlpha),
-                height / 2);
-
+        int radius =
+                visualHeight / 2;
 
         /*
-         * OFF base.
+         * Neutral OFF surface.
+         *
+         * There is intentionally no outer outline, top sheen, raised lift, or
+         * full-track shadow here. Small outlined pills rasterize harshly in the
+         * Minecraft GUI and were responsible for the visible horizontal bars.
          */
         roundedFill(
                 graphics,
                 x,
                 visualY,
                 x + width,
-                visualY + height,
+                visualY + visualHeight,
                 RotClientTheme.TOGGLE_OFF,
-                height / 2);
-
+                radius);
 
         /*
-         * Accent fades in/out together with the moving knob instead of
-         * switching color instantly.
+         * Fade the accent surface with the travelling knob so the state change
+         * feels continuous instead of changing color instantaneously.
          */
         int activeAlpha =
                 Math.round(
-                        0xD8
+                        (
+                                0xD8
+                                        + 0x10
+                                        * hoverAmount)
                                 * position);
 
         if (activeAlpha > 0) {
@@ -1661,120 +1651,90 @@ public final class RotClientUiDraw {
                     x,
                     visualY,
                     x + width,
-                    visualY + height,
+                    visualY + visualHeight,
                     withAlpha(
                             accent,
                             activeAlpha),
-                    height / 2);
+                    radius);
         }
 
-
         /*
-         * Mild hover wash.
+         * A restrained hover brightening is enough feedback for a switch.
          */
-        if (hoverAmount > 0.02F) {
+        int hoverAlpha =
+                Math.round(
+                        0x0C
+                                * hoverAmount);
 
-            int hoverAlpha =
-                    Math.round(
-                            0x24
-                                    * hoverAmount);
+        if (hoverAlpha > 0) {
 
             roundedFill(
                     graphics,
                     x,
                     visualY,
                     x + width,
-                    visualY + height,
+                    visualY + visualHeight,
                     withAlpha(
-                            accent,
+                            0xFFFFFFFF,
                             hoverAlpha),
-                    height / 2);
+                    radius);
         }
 
-
         /*
-         * Button-style outline.
+         * Clean circular knob with fixed size. No hover growth means the knob
+         * keeps a stable circular silhouette throughout the animation.
          */
-        int borderAlpha =
-                0x38
-                        + Math.round(
-                        0x50
-                                * position)
-                        + Math.round(
-                        0x40
-                                * hoverAmount);
-
-        roundedOutline(
-                graphics,
-                x,
-                visualY,
-                x + width,
-                visualY + height,
-                withAlpha(
-                        accent,
-                        Math.min(
-                                0xD0,
-                                borderAlpha)),
-                height / 2);
-
-
-        /*
-         * Smooth travelling knob.
-         */
-        int baseKnob =
-                height - 4;
-
         int knobSize =
-                baseKnob
-                        + Math.round(
-                        hoverAmount);
-
-        int leftCenter =
-                x
-                        + 2
-                        + baseKnob / 2;
-
-        int rightCenter =
-                x
-                        + width
-                        - 2
-                        - baseKnob / 2;
-
-        int knobCenter =
-                leftCenter
-                        + Math.round(
-                        (
-                                rightCenter
-                                        - leftCenter)
-                                * position);
-
-        int knobX =
-                knobCenter
-                        - knobSize / 2;
+                Math.max(
+                        1,
+                        visualHeight - 4);
 
         int knobY =
                 visualY
-                        + height / 2
-                        - knobSize / 2;
+                        + (
+                                visualHeight
+                                        - knobSize)
+                        / 2;
 
+        int knobLeft =
+                x + 2;
+
+        int knobRight =
+                x
+                        + width
+                        - knobSize
+                        - 2;
+
+        int knobX =
+                knobLeft
+                        + Math.round(
+                        (
+                                knobRight
+                                        - knobLeft)
+                                * position);
+
+        int knobRadius =
+                knobSize / 2;
 
         /*
-         * Knob shadow.
+         * Only the knob receives depth, and even that stays deliberately soft.
          */
+        int knobShadowAlpha =
+                0x22
+                        + Math.round(
+                        0x10
+                                * hoverAmount);
+
         roundedFill(
                 graphics,
-                knobX + 1,
+                knobX,
                 knobY + 1,
-                knobX + knobSize + 1,
-                knobY + knobSize + 2,
+                knobX + knobSize,
+                knobY + knobSize + 1,
                 withAlpha(
                         RotClientTheme.SHADOW,
-                        0x38
-                                + Math.round(
-                                0x18
-                                        * hoverAmount)),
-                knobSize / 2);
-
+                        knobShadowAlpha),
+                knobRadius);
 
         roundedFill(
                 graphics,
@@ -1783,28 +1743,7 @@ public final class RotClientUiDraw {
                 knobX + knobSize,
                 knobY + knobSize,
                 RotClientTheme.TOGGLE_KNOB,
-                knobSize / 2);
-
-
-        /*
-         * Fine accent edge while hovering.
-         */
-        if (hoverAmount > 0.04F) {
-
-            roundedOutline(
-                    graphics,
-                    knobX,
-                    knobY,
-                    knobX + knobSize,
-                    knobY + knobSize,
-                    withAlpha(
-                            accent,
-                            0x48
-                                    + Math.round(
-                                    0x48
-                                            * hoverAmount)),
-                    knobSize / 2);
-        }
+                knobRadius);
     }
 
     static void drawSquareLatch(
