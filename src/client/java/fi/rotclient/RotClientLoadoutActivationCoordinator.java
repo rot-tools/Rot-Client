@@ -3,15 +3,15 @@ package fi.rotclient;
 /**
  * Coordinates activation of a Rot Client loadout.
  *
- * Activation order:
+ * Shared activation always:
  *
- * 1. Select/persist the target loadout.
- * 2. Switch the optional linked Settings Profile.
- * 3. Equip the configured Wardrobe set.
- * 4. Equip the configured Pet.
- * 5. Equip the configured Equipment Set.
+ * 1. Selects/persists the target loadout.
+ * 2. Switches the optional linked Settings Profile.
  *
- * Hotbar / inventory stages can be appended later.
+ * Automatic Wardrobe -> Pet -> Equipment execution is flavor-gated.
+ * The regular/legal client leaves those gear changes manual.
+ * Rot Client Plus explicitly enables the automated gear stages through
+ * {@link QolClientFlavorHooks}.
  */
 final class RotClientLoadoutActivationCoordinator {
     private final RotClientLoadoutManager loadouts;
@@ -63,8 +63,12 @@ final class RotClientLoadoutActivationCoordinator {
             return false;
         }
 
+        boolean automateGear =
+                gearAutomationEnabled();
+
         if (!target.hasLinkedSettingsProfile()) {
-            if (startGearActivation(target)) {
+            if (!automateGear
+                    || startGearActivation(target)) {
                 return true;
             }
 
@@ -78,7 +82,8 @@ final class RotClientLoadoutActivationCoordinator {
         if (profiles.switchTo(
                 target.settingsProfileId)) {
 
-            if (startGearActivation(target)) {
+            if (!automateGear
+                    || startGearActivation(target)) {
                 return true;
             }
 
@@ -97,21 +102,29 @@ final class RotClientLoadoutActivationCoordinator {
     }
 
     void tick() {
+        if (!gearAutomationEnabled()) {
+            clearPendingGear();
+            return;
+        }
+
         if (!hasPendingGearStages()) {
             return;
         }
 
-        if (WardrobeAutoEquipRuntime.busy()) {
+        QolClientFlavorHooks hooks =
+                QolClientFlavorSupport.hooks();
+
+        if (hooks.wardrobeAutoEquipBusy()) {
             gearHandoffTicks = 1;
             return;
         }
 
-        if (RotClientPetAutoEquipRuntime.busy()) {
+        if (hooks.loadoutPetAutoEquipBusy()) {
             gearHandoffTicks = 1;
             return;
         }
 
-        if (RotClientEquipmentAutoEquipRuntime.busy()) {
+        if (hooks.loadoutEquipmentAutoEquipBusy()) {
             return;
         }
 
@@ -126,8 +139,8 @@ final class RotClientLoadoutActivationCoordinator {
             String petUuid =
                     pendingPetUuid;
 
-            if (RotClientPetAutoEquipRuntime
-                    .begin(petUuid)) {
+            if (hooks.beginLoadoutPetEquip(
+                    petUuid)) {
 
                 pendingPetUuid = "";
                 gearHandoffTicks = 1;
@@ -140,8 +153,8 @@ final class RotClientLoadoutActivationCoordinator {
             int equipmentSetNumber =
                     pendingEquipmentSetNumber;
 
-            if (RotClientEquipmentAutoEquipRuntime
-                    .begin(equipmentSetNumber)) {
+            if (hooks.beginLoadoutEquipmentEquip(
+                    equipmentSetNumber)) {
 
                 pendingEquipmentSetNumber = 0;
             }
@@ -155,7 +168,14 @@ final class RotClientLoadoutActivationCoordinator {
             return false;
         }
 
+        if (!gearAutomationEnabled()) {
+            return true;
+        }
+
         clearPendingGear();
+
+        QolClientFlavorHooks hooks =
+                QolClientFlavorSupport.hooks();
 
         String petUuid =
                 target.petUuid == null
@@ -169,8 +189,8 @@ final class RotClientLoadoutActivationCoordinator {
 
         if (target.wardrobeSlotNumber > 0) {
             boolean started =
-                    WardrobeAutoEquipRuntime.beginLoadoutEquip(
-                                    target.wardrobeSlotNumber);
+                    hooks.beginWardrobeLoadoutEquip(
+                            target.wardrobeSlotNumber);
 
             if (!started) {
                 return false;
@@ -197,8 +217,8 @@ final class RotClientLoadoutActivationCoordinator {
             }
 
             boolean started =
-                    RotClientPetAutoEquipRuntime
-                            .begin(petUuid);
+                    hooks.beginLoadoutPetEquip(
+                            petUuid);
 
             if (!started) {
                 clearPendingGear();
@@ -210,8 +230,8 @@ final class RotClientLoadoutActivationCoordinator {
         }
 
         if (equipmentSetNumber > 0) {
-            return RotClientEquipmentAutoEquipRuntime
-                    .begin(equipmentSetNumber);
+            return hooks.beginLoadoutEquipmentEquip(
+                    equipmentSetNumber);
         }
 
         return true;
@@ -224,10 +244,23 @@ final class RotClientLoadoutActivationCoordinator {
     }
 
     private boolean gearActivationBusy() {
+        if (!gearAutomationEnabled()) {
+            return false;
+        }
+
+        QolClientFlavorHooks hooks =
+                QolClientFlavorSupport.hooks();
+
         return hasPendingGearStages()
-                || WardrobeAutoEquipRuntime.busy()
-                || RotClientPetAutoEquipRuntime.busy()
-                || RotClientEquipmentAutoEquipRuntime.busy();
+                || hooks.wardrobeAutoEquipBusy()
+                || hooks.loadoutPetAutoEquipBusy()
+                || hooks.loadoutEquipmentAutoEquipBusy();
+    }
+
+    private boolean gearAutomationEnabled() {
+        return QolClientFlavorSupport
+                .hooks()
+                .loadoutsEnabled();
     }
 
     private void clearPendingGear() {

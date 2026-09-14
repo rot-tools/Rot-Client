@@ -303,12 +303,18 @@ public final class RotClientPetPickerRuntime {
         finishAndReturn();
 
         /*
-         * Editing the currently active loadout should update the live player
-         * immediately. Inactive loadouts remain configuration-only.
+         * Only Plus applies an edited active loadout to the live player.
+         * The regular/legal client stores the pet without auto-equipping it.
          */
-        if (updateLive) {
-            RotClientPetAutoEquipRuntime
-                    .begin(petUuid);
+        if (updateLive
+                && QolClientFlavorSupport
+                .hooks()
+                .loadoutsEnabled()) {
+
+            QolClientFlavorSupport
+                    .hooks()
+                    .beginLoadoutPetEquip(
+                            petUuid);
         }
 
         return true;

@@ -77,6 +77,31 @@ public interface QolClientFlavorHooks {
         return false;
     }
 
+        /**
+     * Loadouts are a Plus-only product feature.
+     *
+     * The regular/legal client has no Loadouts navigation or activation UI.
+     */
+    default boolean loadoutsEnabled() {
+        return false;
+    }
+
+    default boolean loadoutPetAutoEquipBusy() {
+        return false;
+    }
+
+    default boolean beginLoadoutPetEquip(String petUuid) {
+        return false;
+    }
+
+    default boolean loadoutEquipmentAutoEquipBusy() {
+        return false;
+    }
+
+    default boolean beginLoadoutEquipmentEquip(int equipmentSetNumber) {
+        return false;
+    }
+
     default String wardrobeHudText(boolean editorOpen) {
         return "";
     }

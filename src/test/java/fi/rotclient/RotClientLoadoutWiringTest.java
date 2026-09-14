@@ -140,77 +140,115 @@ final class RotClientLoadoutWiringTest {
     }
 
     @Test
-    void regularLoadoutsOwnWardrobeActivationPath() throws Exception {
+    void loadoutAutomationStaysBehindPlusFlavor() throws Exception {
+        String hooks =
+                Files.readString(
+                        Path.of(
+                                "src/client/java/fi/rotclient/QolClientFlavorHooks.java"));
+
         String coordinator =
                 Files.readString(
                         Path.of(
                                 "src/client/java/fi/rotclient/RotClientLoadoutActivationCoordinator.java"));
 
-        String client =
-                Files.readString(
-                        Path.of(
-                                "src/client/java/fi/rotclient/RotClientClient.java"));
-
-        String mixin =
-                Files.readString(
-                        Path.of(
-                                "src/client/java/fi/rotclient/mixin/ClientPacketListenerMixin.java"));
-
-        String picker =
+        String wardrobePicker =
                 Files.readString(
                         Path.of(
                                 "src/client/java/fi/rotclient/RotClientWardrobePickerRuntime.java"));
+
+        String petPicker =
+                Files.readString(
+                        Path.of(
+                                "src/client/java/fi/rotclient/RotClientPetPickerRuntime.java"));
+
+        String equipmentPicker =
+                Files.readString(
+                        Path.of(
+                                "src/client/java/fi/rotclient/RotClientEquipmentPickerRuntime.java"));
 
         String plusHooks =
                 Files.readString(
                         Path.of(
                                 "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"));
 
+        /*
+         * Legit has no provider and therefore inherits the false/default
+         * flavor implementation. Plus explicitly opts into loadout automation.
+         */
         assertTrue(
-                Files.exists(
-                        Path.of(
-                                "src/client/java/fi/rotclient/WardrobeAutoEquipRuntime.java")));
-
-        assertTrue(
-                !Files.exists(
-                        Path.of(
-                                "src/plusClient/java/fi/rotclient/WardrobeAutoEquipRuntime.java")));
-
-        assertTrue(
-                coordinator.contains(
-                        "WardrobeAutoEquipRuntime.beginLoadoutEquip("));
+                hooks.contains(
+                        "default boolean loadoutsEnabled()"));
 
         assertTrue(
                 coordinator.contains(
-                        "WardrobeAutoEquipRuntime.busy()"));
+                        "loadoutsEnabled()"));
 
         assertTrue(
-                !coordinator.contains(
+                coordinator.contains(
                         ".beginWardrobeLoadoutEquip("));
 
         assertTrue(
-                client.contains(
-                        "WardrobeAutoEquipRuntime.tick(client)"));
+                coordinator.contains(
+                        ".beginLoadoutPetEquip("));
 
         assertTrue(
-                mixin.contains(
-                        "WardrobeAutoEquipRuntime.consumeOpenScreen(packet)"));
-
-        assertTrue(
-                mixin.contains(
-                        "WardrobeAutoEquipRuntime.onContainerClosed()"));
-
-        assertTrue(
-                picker.contains(
-                        "WardrobeAutoEquipRuntime"));
-
-        assertTrue(
-                picker.contains(
-                        ".beginLoadoutEquip("));
+                coordinator.contains(
+                        ".beginLoadoutEquipmentEquip("));
 
         /*
-         * The runtime is shared for Loadouts, but standalone Wardrobe
-         * automation controls remain Plus entry points.
+         * Shared coordination must go through the flavor boundary instead of
+         * directly initiating the automatic gear runtimes.
+         */
+        assertTrue(
+                !coordinator.contains(
+                        "WardrobeAutoEquipRuntime.beginLoadoutEquip("));
+
+        assertTrue(
+                !coordinator.contains(
+                        "RotClientPetAutoEquipRuntime"));
+
+        assertTrue(
+                !coordinator.contains(
+                        "RotClientEquipmentAutoEquipRuntime"));
+
+        assertTrue(
+                wardrobePicker.contains(
+                        "loadoutsEnabled()"));
+
+        assertTrue(
+                petPicker.contains(
+                        "loadoutsEnabled()"));
+
+        assertTrue(
+                equipmentPicker.contains(
+                        "loadoutsEnabled()"));
+
+        assertTrue(
+                !wardrobePicker.contains(
+                        "WardrobeAutoEquipRuntime.beginLoadoutEquip("));
+
+        assertTrue(
+                !petPicker.contains(
+                        "RotClientPetAutoEquipRuntime"));
+
+        assertTrue(
+                !equipmentPicker.contains(
+                        "RotClientEquipmentAutoEquipRuntime"));
+
+        assertTrue(
+                plusHooks.contains(
+                        "public boolean loadoutsEnabled()"));
+
+        assertTrue(
+                plusHooks.contains(
+                        "beginLoadoutPetEquip("));
+
+        assertTrue(
+                plusHooks.contains(
+                        "beginLoadoutEquipmentEquip("));
+
+        /*
+         * Plus standalone Wardrobe Swapper behavior remains present too.
          */
         assertTrue(
                 plusHooks.contains(
@@ -219,13 +257,64 @@ final class RotClientLoadoutWiringTest {
         assertTrue(
                 plusHooks.contains(
                         "wardrobeHudText("));
+    }
 
-        /*
-         * Shared RotClientClient owns the runtime tick now, so Plus must not
-         * tick the same Wardrobe state machine a second time.
-         */
+    @Test
+    void regularUiHidesPlusOnlyLoadouts() throws Exception {
+        String hooks =
+                Files.readString(
+                        Path.of(
+                                "src/client/java/fi/rotclient/QolClientFlavorHooks.java"));
+
+        String plusHooks =
+                Files.readString(
+                        Path.of(
+                                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"));
+
+        String screen =
+                Files.readString(
+                        Path.of(
+                                "src/client/java/fi/rotclient/MiningUiScreen.java"));
+
+        String sidebar =
+                Files.readString(
+                        Path.of(
+                                "src/main/java/fi/rotclient/RotClientSidebarNav.java"));
+
         assertTrue(
-                !plusHooks.contains(
-                        "\"WARDROBE_AUTO_EQUIP\""));
+                hooks.contains(
+                        "default boolean loadoutsEnabled()"));
+
+        assertTrue(
+                plusHooks.contains(
+                        "public boolean loadoutsEnabled()"));
+
+        assertTrue(
+                screen.contains(
+                        "pruneUnavailableLoadoutTabs(workspace)"));
+
+        assertTrue(
+                screen.contains(
+                        "if (!loadoutsEnabled())"));
+
+        assertTrue(
+                screen.contains(
+                        "loadoutsEnabled()"));
+
+        assertTrue(
+                screen.contains(
+                        "&& layout.loadoutsVisible()"));
+
+        assertTrue(
+                sidebar.contains(
+                        "loadoutsEnabled"));
+
+        assertTrue(
+                sidebar.contains(
+                        "? 4"));
+
+        assertTrue(
+                sidebar.contains(
+                        ": 3"));
     }
 }

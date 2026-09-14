@@ -149,7 +149,10 @@ final class RotClientSidebarNav {
 
         int settingsClipHeight() {
             return RotClientEase.shownPixels(
-                    childStackHeight(4),
+                    childStackHeight(
+                            loadoutsY >= 0
+                                    ? 4
+                                    : 3),
                     settingsOpen);
         }
 
@@ -385,13 +388,39 @@ final class RotClientSidebarNav {
         return layout(
                 originY,
                 expanded,
-                null);
+                null,
+                true);
+    }
+
+    static Layout layout(
+            int originY,
+            Collection<String> expanded,
+            boolean loadoutsEnabled) {
+
+        return layout(
+                originY,
+                expanded,
+                null,
+                loadoutsEnabled);
     }
 
     static Layout layout(
             int originY,
             Collection<String> expanded,
             ToDoubleFunction<String> openAmounts) {
+
+        return layout(
+                originY,
+                expanded,
+                openAmounts,
+                true);
+    }
+
+    static Layout layout(
+            int originY,
+            Collection<String> expanded,
+            ToDoubleFunction<String> openAmounts,
+            boolean loadoutsEnabled) {
 
         boolean mining = false;
         boolean sessions = false;
@@ -465,10 +494,15 @@ final class RotClientSidebarNav {
                 y + (ITEM_HEIGHT + ITEM_GAP) * 2;
 
         int loadoutsY =
-                y + (ITEM_HEIGHT + ITEM_GAP) * 3;
+                loadoutsEnabled
+                        ? y + (ITEM_HEIGHT + ITEM_GAP) * 3
+                        : -1;
 
         y += RotClientEase.shownPixels(
-                childStackHeight(4),
+                childStackHeight(
+                        loadoutsEnabled
+                                ? 4
+                                : 3),
                 settingsOpen);
 
         /*
