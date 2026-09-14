@@ -1525,8 +1525,8 @@ public final class RotClientUiDraw {
                         key);
 
         /*
-         * Start directly in the real logical state so opening the UI does not
-         * animate every switch from OFF.
+         * Opening the UI starts the switch in its real logical state rather
+         * than animating every control from OFF.
          */
         if (state == null) {
 
@@ -1556,8 +1556,8 @@ public final class RotClientUiDraw {
                 now;
 
         /*
-         * Keep the deliberately visible ON/OFF travel from the previous
-         * version. Only the rendering around it is simplified.
+         * Preserve the current smooth travel. This is deliberately slower than
+         * ordinary button hover motion so the switch visibly slides.
          */
         state.position =
                 RotClientEase.expToward(
@@ -1601,27 +1601,44 @@ public final class RotClientUiDraw {
                         : accentColor;
 
         /*
-         * Keep the 44x20 interaction geometry unchanged, but render a slightly
-         * slimmer capsule inside it. This removes the heavy, blocky appearance
-         * without changing any hit testing or surrounding layout.
+         * Keep the complete 44x20 area for rendering as well as interaction.
+         * The larger capsule and larger knob produce cleaner curves than the
+         * previous smaller 18px/14px geometry.
          */
         int visualY =
-                y + 1;
+                y;
 
         int visualHeight =
-                Math.max(
-                        1,
-                        height - 2);
+                height;
 
         int radius =
                 visualHeight / 2;
 
         /*
-         * Neutral OFF surface.
+         * Button-inspired ambient shadow.
          *
-         * There is intentionally no outer outline, top sheen, raised lift, or
-         * full-track shadow here. Small outlined pills rasterize harshly in the
-         * Minecraft GUI and were responsible for the visible horizontal bars.
+         * It is a filled capsule rather than an outline, so it adds depth
+         * without creating the hard top/bottom rails from the earlier design.
+         */
+        int trackShadowAlpha =
+                0x22
+                        + Math.round(
+                        0x16
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                x,
+                visualY + 2,
+                x + width,
+                visualY + visualHeight + 2,
+                withAlpha(
+                        RotClientTheme.SHADOW,
+                        trackShadowAlpha),
+                radius);
+
+        /*
+         * Main OFF surface.
          */
         roundedFill(
                 graphics,
@@ -1633,14 +1650,13 @@ public final class RotClientUiDraw {
                 radius);
 
         /*
-         * Fade the accent surface with the travelling knob so the state change
-         * feels continuous instead of changing color instantaneously.
+         * ON colour follows the same interpolation as the knob.
          */
         int activeAlpha =
                 Math.round(
                         (
-                                0xDC
-                                        + 0x14
+                                0xE2
+                                        + 0x12
                                         * hoverAmount)
                                 * position);
 
@@ -1659,11 +1675,11 @@ public final class RotClientUiDraw {
         }
 
         /*
-         * A restrained hover brightening is enough feedback for a switch.
+         * Soft interaction brightness. No border or outline is drawn.
          */
         int hoverAlpha =
                 Math.round(
-                        0x18
+                        0x14
                                 * hoverAmount);
 
         if (hoverAlpha > 0) {
@@ -1681,20 +1697,17 @@ public final class RotClientUiDraw {
         }
 
         /*
-         * Clean circular knob with fixed size. No hover growth means the knob
-         * keeps a stable circular silhouette throughout the animation.
+         * A 16px knob inside the 20px track gives two pixels of spacing on all
+         * sides and produces a visibly cleaner circular silhouette.
          */
         int knobSize =
-                Math.max(
-                        1,
-                        visualHeight - 4);
+                height - 4;
+
+        int knobRadius =
+                knobSize / 2;
 
         int knobY =
-                visualY
-                        + (
-                                visualHeight
-                                        - knobSize)
-                        / 2;
+                visualY + 2;
 
         int knobLeft =
                 x + 2;
@@ -1713,20 +1726,13 @@ public final class RotClientUiDraw {
                                         - knobLeft)
                                 * position);
 
-        int knobRadius =
-                knobSize / 2;
-
         /*
-         * Give the knob a little of the tactile response used by the larger
-         * buttons without turning the switch back into a miniature button.
-         *
-         * The faint halo only appears during hover and uses a filled circle
-         * rather than an outline, avoiding the hard rasterized edges that the
-         * previous toggle design suffered from.
+         * Very soft outer knob depth. It fades in on hover and helps visually
+         * soften the rasterized circle without adding a hard ring.
          */
         int knobHaloAlpha =
                 Math.round(
-                        0x12
+                        0x18
                                 * hoverAmount);
 
         if (knobHaloAlpha > 0) {
@@ -1738,13 +1744,16 @@ public final class RotClientUiDraw {
                     knobX + knobSize + 1,
                     knobY + knobSize + 1,
                     withAlpha(
-                            0xFFFFFFFF,
+                            RotClientTheme.SHADOW,
                             knobHaloAlpha),
                     knobRadius + 1);
         }
 
+        /*
+         * Slightly deeper drop shadow similar to the larger UI buttons.
+         */
         int knobShadowAlpha =
-                0x28
+                0x38
                         + Math.round(
                         0x18
                                 * hoverAmount);
@@ -1752,7 +1761,7 @@ public final class RotClientUiDraw {
         roundedFill(
                 graphics,
                 knobX,
-                knobY + 1,
+                knobY + 2,
                 knobX + knobSize,
                 knobY + knobSize + 2,
                 withAlpha(
@@ -1760,6 +1769,9 @@ public final class RotClientUiDraw {
                         knobShadowAlpha),
                 knobRadius);
 
+        /*
+         * Clean white knob.
+         */
         roundedFill(
                 graphics,
                 knobX,
@@ -1768,6 +1780,29 @@ public final class RotClientUiDraw {
                 knobY + knobSize,
                 RotClientTheme.TOGGLE_KNOB,
                 knobRadius);
+
+        /*
+         * Tiny soft highlight gives the knob some dimensionality while keeping
+         * the silhouette free of outlines.
+         */
+        int knobHighlightAlpha =
+                0x10
+                        + Math.round(
+                        0x0C
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                knobX + 2,
+                knobY + 1,
+                knobX + knobSize - 2,
+                knobY + knobSize - 5,
+                withAlpha(
+                        0xFFFFFFFF,
+                        knobHighlightAlpha),
+                Math.max(
+                        1,
+                        knobRadius - 2));
     }
 
     static void drawSquareLatch(
