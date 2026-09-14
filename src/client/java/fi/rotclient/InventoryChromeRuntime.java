@@ -52,7 +52,18 @@ public final class  InventoryChromeRuntime {
     private static final long PET_GUI_AUTHORITY_MS =
             2_000L;
 
+    /*
+     * A Pets-menu click is known immediately, while Hypixel may take a few
+     * frames to update which menu stack contains the "equipped" lore.
+     *
+     * During this short confirmation window we keep the clicked pet instead
+     * of allowing the stale menu snapshot to restore the previous pet.
+     */
+    private static final long PET_SELECTION_CONFIRMATION_MS =
+            2_000L;
+
     private static long petGuiAuthoritativeUntilMs;
+    private static long petSelectionPendingUntilMs;
     private static int tickCounter;
     private static boolean draggingPet;
     private static boolean consumeNextRelease;
@@ -106,6 +117,7 @@ public final class  InventoryChromeRuntime {
         colorEditorOpen = false;
         draggingColorChannel = -1;
         petGuiAuthoritativeUntilMs = 0L;
+        petSelectionPendingUntilMs = 0L;
     }
 
     public static void flushForShutdown() {
@@ -235,6 +247,19 @@ public final class  InventoryChromeRuntime {
 
         noteEquippedPet(
                 stack);
+
+        /*
+         * Do not immediately let the still-stale Pets GUI replace this
+         * optimistic result with the previously equipped pet.
+         */
+        petSelectionPendingUntilMs =
+                System.currentTimeMillis()
+                        + PET_SELECTION_CONFIRMATION_MS;
+    }
+
+    private static boolean petSelectionPending() {
+        return System.currentTimeMillis()
+                < petSelectionPendingUntilMs;
     }
 
     public static PetHudPolicy.Snapshot petHudSnapshot() {
@@ -575,6 +600,7 @@ public final class  InventoryChromeRuntime {
             snapshotEquipmentSets(slots);
         }
         if (MenuKeybindPolicy.parsePetsTitle(title) != null
+                && !petSelectionPending()
                 && !InventoryOverlayPolicy.shouldKeepExistingCache(
                         hasEquippedPet() || !equippedPet.isEmpty() || petHud != null,
                         containerLooksUnpopulated(slots))) {
