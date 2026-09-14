@@ -146,10 +146,10 @@ final class RotClientLayoutResetSafetyTest {
                 StandardCharsets.UTF_8);
         assertTrue(editor.contains("CLIENT_UI"));
         assertTrue(editor.contains("clientUiNorm"));
-        assertTrue(editor.contains("How to edit"));
-        assertTrue(editor.contains("HUD ELEMENTS EDITOR"));
+        assertTrue(editor.contains("HUD EDITOR"));
+        assertTrue(editor.contains("Drag directly  -  wheel scales"));
         assertFalse(editor.contains("LAYOUT EDITOR"));
-        assertTrue(editor.contains("beginChromeDrag"));
+        assertTrue(editor.contains("handleEditorPanelClick"));
 
         String home = Files.readString(
                 Path.of("src/client/java/fi/rotclient/RotClientHomeScreen.java"),

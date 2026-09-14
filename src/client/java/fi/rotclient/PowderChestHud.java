@@ -44,6 +44,17 @@ final class PowderChestHud {
         if (config.powderChestHudShowBackground) {
             RotClientUiDraw.roundedFill(
                     graphics,
+                    2,
+                    3,
+                    WIDTH + 2,
+                    height + 3,
+                    RotClientUiDraw.withAlpha(
+                            RotClientTheme.SHADOW,
+                            0x50),
+                    5);
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
                     0,
                     0,
                     WIDTH,
