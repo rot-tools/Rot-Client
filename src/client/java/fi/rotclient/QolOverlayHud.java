@@ -19,7 +19,7 @@ final class QolOverlayHud {
     private static final int STAT_EDITOR_WIDTH = 110;
     private static final int STAT_EDITOR_HEIGHT = 14;
     private static final int PET_EDITOR_WIDTH = 180;
-    private static final int PET_EDITOR_HEIGHT = 36;
+    private static final int PET_EDITOR_HEIGHT = 48;
     private static final int SLAYER_EDITOR_WIDTH = 156;
 
     private final TrackerConfig config;
@@ -294,40 +294,211 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        float[] pose = qol.pose("pet");
-        int x = Math.round(pose[0]);
-        int y = Math.round(pose[1]);
-        pushHudScale(graphics, "pet", x, y);
+
+        float[] pose =
+                qol.pose("pet");
+
+        int x =
+                Math.round(
+                        pose[0]);
+
+        int y =
+                Math.round(
+                        pose[1]);
+
+        pushHudScale(
+                graphics,
+                "pet",
+                x,
+                y);
+
         if (editorOpen) {
-            drawEditorFrame(graphics, font, x, y, PET_EDITOR_WIDTH, PET_EDITOR_HEIGHT, "pet");
+            drawEditorFrame(
+                    graphics,
+                    font,
+                    x,
+                    y,
+                    PET_EDITOR_WIDTH,
+                    PET_EDITOR_HEIGHT,
+                    "pet");
         }
-        fillHudPanel(graphics, "pet", x, y, PET_EDITOR_WIDTH, PET_EDITOR_HEIGHT);
-        ItemStack icon = InventoryChromeRuntime.equippedPet();
+
+        fillHudPanel(
+                graphics,
+                "pet",
+                x,
+                y,
+                PET_EDITOR_WIDTH,
+                PET_EDITOR_HEIGHT);
+
+        ItemStack icon =
+                InventoryChromeRuntime
+                        .equippedPet();
+
         if (!icon.isEmpty()) {
-            graphics.item(icon, x + 2, y + 10);
+            graphics.item(
+                    icon,
+                    x + 2,
+                    y + 16);
         }
-        PetHudPolicy.Snapshot snapshot = InventoryChromeRuntime.petHudSnapshot();
-        int textX = x + 22;
+
+        PetHudPolicy.Snapshot snapshot =
+                InventoryChromeRuntime
+                        .petHudSnapshot();
+
+        int textX =
+                x + 22;
+
         if (snapshot == null) {
-            RotClientUiDraw.text(graphics, font, "No pet equipped", textX, y + 12, RotClientTheme.TEXT_MUTED, true);
-            graphics.pose().popMatrix();
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "No pet equipped",
+                    textX,
+                    y + 18,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+
+            graphics.pose()
+                    .popMatrix();
+
             return;
         }
-        String level = snapshot.levelLabel();
-        int nameX = textX;
+
+        String level =
+                snapshot.levelLabel();
+
+        int nameX =
+                textX;
+
         if (!level.isEmpty()) {
-            RotClientUiDraw.text(graphics, font, level, textX, y + 4, PetHudPolicy.LEVEL_COLOR, true);
-            nameX = textX + font.width(level) + 4;
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    level,
+                    textX,
+                    y + 4,
+                    PetHudPolicy.LEVEL_COLOR,
+                    true);
+
+            nameX =
+                    textX
+                            + font.width(
+                                    level)
+                            + 4;
         }
-        RotClientUiDraw.text(graphics, font, snapshot.name(), nameX, y + 4, PetHudPolicy.NAME_COLOR, true);
-        String held = snapshot.heldItem().isEmpty() ? "None" : snapshot.heldItem();
-        RotClientUiDraw.text(graphics, font,
-                "Held Item: " + held,
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                snapshot.name(),
+                nameX,
+                y + 4,
+                snapshot.petColor(),
+                true);
+
+        String heldLabel =
+                "Held Item: ";
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                heldLabel,
                 textX,
                 y + 16,
-                PetHudPolicy.NAME_COLOR,
+                PetHudPolicy.HELD_LABEL_COLOR,
                 true);
-        graphics.pose().popMatrix();
+
+        int heldX =
+                textX
+                        + font.width(
+                                heldLabel);
+
+        if (snapshot.heldItem().isEmpty()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "None",
+                    heldX,
+                    y + 16,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+        } else {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    snapshot.heldItem(),
+                    heldX,
+                    y + 16,
+                    snapshot.heldItemColor(),
+                    true);
+        }
+
+        String progressLabel =
+                snapshot.progressLabel();
+
+        if (snapshot.maxLevel()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    progressLabel,
+                    textX,
+                    y + 31,
+                    snapshot.petColor(),
+                    true);
+        } else if (snapshot.hasProgress()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    progressLabel,
+                    textX,
+                    y + 27,
+                    PetHudPolicy.PROGRESS_TEXT_COLOR,
+                    true);
+
+            int barX =
+                    textX;
+
+            int barY =
+                    y + 39;
+
+            int barWidth =
+                    PET_EDITOR_WIDTH
+                            - 28;
+
+            int barHeight =
+                    5;
+
+            graphics.fill(
+                    barX,
+                    barY,
+                    barX + barWidth,
+                    barY + barHeight,
+                    0x66333333);
+
+            int filled =
+                    Math.max(
+                            0,
+                            Math.min(
+                                    barWidth,
+                                    (int) Math.round(
+                                            barWidth
+                                                    * snapshot
+                                                    .progressPercent()
+                                                    / 100.0D)));
+
+            if (filled > 0) {
+                graphics.fill(
+                        barX,
+                        barY,
+                        barX + filled,
+                        barY + barHeight,
+                        snapshot.petColor());
+            }
+        }
+
+        graphics.pose()
+                .popMatrix();
     }
 
     private void renderCommission(

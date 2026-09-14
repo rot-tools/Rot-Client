@@ -269,7 +269,13 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
         if (hoveredSlot != null) {
             MissingEnchantsRuntime.noteCtrlClick(
                     hoveredSlot.getItem(), event.hasControlDown(), event.button());
+
+            InventoryChromeRuntime.notePetMenuSelection(
+                    (AbstractContainerScreen<?>) (Object) this,
+                    hoveredSlot,
+                    event.button());
         }
+
         if (QolClientFlavorSupport.hooks().autoExperimentsBlockMouse()) {
             cir.setReturnValue(true);
             return;
