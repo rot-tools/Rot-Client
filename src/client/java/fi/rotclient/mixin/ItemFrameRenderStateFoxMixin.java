@@ -1,26 +1,26 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.FoxItemDisplayAccess;
-import net.minecraft.client.renderer.entity.state.ItemDisplayEntityRenderState;
+import fi.rotclient.FoxItemFrameAccess;
+import net.minecraft.client.renderer.entity.state.ItemFrameRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(ItemDisplayEntityRenderState.class)
-abstract class ItemDisplayEntityRenderStateFoxMixin implements FoxItemDisplayAccess {
-    @Unique private boolean rotclient$foxReplace;
+@Mixin(ItemFrameRenderState.class)
+abstract class ItemFrameRenderStateFoxMixin implements FoxItemFrameAccess {
+    @Unique private boolean rotclient$foxReplaceItem;
     @Unique private float rotclient$foxU0;
     @Unique private float rotclient$foxV0;
     @Unique private float rotclient$foxU1 = 1.0F;
     @Unique private float rotclient$foxV1 = 1.0F;
 
     @Override
-    public boolean rotclient$foxReplace() {
-        return rotclient$foxReplace;
+    public boolean rotclient$foxReplaceItem() {
+        return rotclient$foxReplaceItem;
     }
 
     @Override
-    public void rotclient$setFoxReplace(boolean replace) {
-        rotclient$foxReplace = replace;
+    public void rotclient$setFoxReplaceItem(boolean replace) {
+        rotclient$foxReplaceItem = replace;
     }
 
     @Override
