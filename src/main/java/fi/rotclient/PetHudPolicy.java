@@ -7,13 +7,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses an equipped SkyBlock pet hover name and lore into HUD fields.
+ * Parses equipped SkyBlock pet data into Pet HUD fields.
  */
 public final class PetHudPolicy {
     public static final int LEVEL_COLOR = 0xFFAAAAAA;
-    public static final int NAME_COLOR = 0xFFFFAA00;
     public static final int HELD_LABEL_COLOR = 0xFFAAAAAA;
-    public static final int XP_COLOR = 0xFFAAAAAA;
+    public static final int PROGRESS_TEXT_COLOR = 0xFFAAAAAA;
+    public static final int PET_FALLBACK_COLOR = 0xFFDDDDDD;
     public static final int HELD_ITEM_FALLBACK_COLOR = 0xFFDDDDDD;
 
     private static final Pattern LVL_NAME =
@@ -26,10 +26,6 @@ public final class PetHudPolicy {
                     "^(?:Active\\s+)?Pet:\\s*(.+)$",
                     Pattern.CASE_INSENSITIVE);
 
-    /*
-     * Hypixel stores the pet's total experience inside ExtraAttributes
-     * petInfo JSON. Keep the parser deliberately narrow: only read exp.
-     */
     private static final Pattern PET_EXPERIENCE =
             Pattern.compile(
                     "\"exp\"\\s*:\\s*"
@@ -37,12 +33,28 @@ public final class PetHudPolicy {
                             + "(?:[eE][-+]?\\d+)?)",
                     Pattern.CASE_INSENSITIVE);
 
+    private static final Pattern PET_TIER =
+            Pattern.compile(
+                    "\"tier\"\\s*:\\s*\"([A-Z_]+)\"",
+                    Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern PROGRESS_TO_LEVEL =
+            Pattern.compile(
+                    "Progress\\s+to\\s+Level\\s+(\\d+)"
+                            + "\\s*:\\s*"
+                            + "(\\d+(?:\\.\\d+)?)%",
+                    Pattern.CASE_INSENSITIVE);
+
     public record Snapshot(
             int level,
             String name,
             String heldItem,
             double experience,
-            int heldItemColor) {
+            int petColor,
+            int heldItemColor,
+            double progressPercent,
+            int nextLevel,
+            boolean maxLevel) {
 
         public Snapshot {
             name =
@@ -61,9 +73,32 @@ public final class PetHudPolicy {
                 experience = -1.0D;
             }
 
+            petColor =
+                    normalizeRarityColor(
+                            petColor,
+                            PET_FALLBACK_COLOR);
+
             heldItemColor =
                     normalizeRarityColor(
-                            heldItemColor);
+                            heldItemColor,
+                            HELD_ITEM_FALLBACK_COLOR);
+
+            if (maxLevel) {
+                progressPercent = 100.0D;
+                nextLevel = -1;
+            } else if (!Double.isFinite(progressPercent)
+                    || progressPercent < 0.0D) {
+
+                progressPercent = -1.0D;
+                nextLevel = -1;
+            } else {
+                progressPercent =
+                        Math.max(
+                                0.0D,
+                                Math.min(
+                                        100.0D,
+                                        progressPercent));
+            }
         }
 
         public Snapshot(
@@ -76,7 +111,33 @@ public final class PetHudPolicy {
                     name,
                     heldItem,
                     -1.0D,
-                    HELD_ITEM_FALLBACK_COLOR);
+                    PET_FALLBACK_COLOR,
+                    HELD_ITEM_FALLBACK_COLOR,
+                    -1.0D,
+                    -1,
+                    false);
+        }
+
+        /*
+         * Compatibility constructor for the V1 Pet HUD cache/runtime shape.
+         */
+        public Snapshot(
+                int level,
+                String name,
+                String heldItem,
+                double experience,
+                int heldItemColor) {
+
+            this(
+                    level,
+                    name,
+                    heldItem,
+                    experience,
+                    PET_FALLBACK_COLOR,
+                    heldItemColor,
+                    -1.0D,
+                    -1,
+                    false);
         }
 
         public String levelLabel() {
@@ -87,24 +148,33 @@ public final class PetHudPolicy {
             return "[Lvl " + level + "]";
         }
 
-        public String experienceLabel() {
-            if (experience < 0.0D
-                    || !Double.isFinite(experience)) {
+        public boolean hasProgress() {
+            return !maxLevel
+                    && progressPercent >= 0.0D
+                    && nextLevel > 0;
+        }
 
+        public String progressLabel() {
+            if (maxLevel) {
+                return "MAX LEVEL";
+            }
+
+            if (!hasProgress()) {
                 return "";
             }
 
-            long rounded =
-                    Math.max(
-                            0L,
-                            Math.round(experience));
-
-            return "XP: "
-                    + String.format(
+            return String.format(
                     Locale.ROOT,
-                    "%,d",
-                    rounded);
+                    "%.1f%% to Lv %d",
+                    progressPercent,
+                    nextLevel);
         }
+    }
+
+    private record Progress(
+            double percent,
+            int nextLevel,
+            boolean maxLevel) {
     }
 
     private PetHudPolicy() {
@@ -149,7 +219,9 @@ public final class PetHudPolicy {
                                 .stripGuiText(
                                         raw);
 
-                if (text.toLowerCase(Locale.ROOT)
+                if (text
+                        .toLowerCase(
+                                Locale.ROOT)
                         .startsWith(
                                 "held item:")) {
 
@@ -161,7 +233,8 @@ public final class PetHudPolicy {
 
                     if (held.equalsIgnoreCase(
                             "none")
-                            || held.equals("✖")
+                            || held.equals(
+                            "\u2716")
                             || held.equals("-")) {
 
                         held = "";
@@ -176,21 +249,29 @@ public final class PetHudPolicy {
             return Optional.empty();
         }
 
+        Progress progress =
+                parseLevelProgress(
+                        loreLines);
+
         return Optional.of(
                 new Snapshot(
                         level,
                         name,
-                        held));
+                        held,
+                        -1.0D,
+                        PET_FALLBACK_COLOR,
+                        HELD_ITEM_FALLBACK_COLOR,
+                        progress.percent(),
+                        progress.nextLevel(),
+                        progress.maxLevel()));
     }
 
-    /**
-     * Add runtime-only details that are not available from flattened lore:
-     * total pet XP from petInfo and the held item's styled rarity color.
-     */
     public static Snapshot withRuntimeDetails(
             Snapshot snapshot,
             String petInfo,
-            int heldItemTextColor) {
+            int petTextColor,
+            int heldItemTextColor,
+            List<String> loreLines) {
 
         if (snapshot == null) {
             return null;
@@ -205,17 +286,74 @@ public final class PetHudPolicy {
                         ? parsedExperience
                         : snapshot.experience();
 
+        int petColor =
+                petRarityColor(
+                        petInfo,
+                        petTextColor);
+
         int heldColor =
                 heldItemTextColor == 0
                         ? snapshot.heldItemColor()
-                        : heldItemTextColor;
+                        : normalizeRarityColor(
+                                heldItemTextColor,
+                                snapshot.heldItemColor());
+
+        Progress parsedProgress =
+                parseLevelProgress(
+                        loreLines);
+
+        boolean maxLevel =
+                parsedProgress.maxLevel()
+                        || snapshot.maxLevel();
+
+        double progressPercent =
+                parsedProgress.percent() >= 0.0D
+                        ? parsedProgress.percent()
+                        : snapshot.progressPercent();
+
+        int nextLevel =
+                parsedProgress.nextLevel() > 0
+                        ? parsedProgress.nextLevel()
+                        : snapshot.nextLevel();
 
         return new Snapshot(
                 snapshot.level(),
                 snapshot.name(),
                 snapshot.heldItem(),
                 experience,
-                heldColor);
+                petColor,
+                heldColor,
+                progressPercent,
+                nextLevel,
+                maxLevel);
+    }
+
+    public static Snapshot mergeTabSnapshot(
+            Snapshot existing,
+            Snapshot tab) {
+
+        if (existing == null) {
+            return tab;
+        }
+
+        if (tab == null) {
+            return existing;
+        }
+
+        return new Snapshot(
+                tab.level() >= 0
+                        ? tab.level()
+                        : existing.level(),
+                tab.name().isEmpty()
+                        ? existing.name()
+                        : tab.name(),
+                existing.heldItem(),
+                existing.experience(),
+                existing.petColor(),
+                existing.heldItemColor(),
+                existing.progressPercent(),
+                existing.nextLevel(),
+                existing.maxLevel());
     }
 
     static double parseExperience(
@@ -250,12 +388,73 @@ public final class PetHudPolicy {
         }
     }
 
-    /**
-     * Convert the actual styled lore color to the existing Rot/SkyBlock
-     * rarity palette. Unknown/non-rarity colors fall back to neutral text.
-     */
+    static int petRarityColor(
+            String petInfo,
+            int rawNameColor) {
+
+        if (petInfo != null
+                && !petInfo.isBlank()) {
+
+            Matcher matcher =
+                    PET_TIER.matcher(
+                            petInfo);
+
+            if (matcher.find()) {
+                String tier =
+                        matcher.group(1)
+                                .toUpperCase(
+                                        Locale.ROOT);
+
+                return switch (tier) {
+                    case "COMMON" ->
+                            ItemRarityPolicy.DEFAULT_COMMON;
+
+                    case "UNCOMMON" ->
+                            ItemRarityPolicy.DEFAULT_UNCOMMON;
+
+                    case "RARE" ->
+                            ItemRarityPolicy.DEFAULT_RARE;
+
+                    case "EPIC" ->
+                            ItemRarityPolicy.DEFAULT_EPIC;
+
+                    case "LEGENDARY" ->
+                            ItemRarityPolicy.DEFAULT_LEGENDARY;
+
+                    case "MYTHIC" ->
+                            ItemRarityPolicy.DEFAULT_MYTHIC;
+
+                    case "DIVINE" ->
+                            ItemRarityPolicy.DEFAULT_DIVINE;
+
+                    case "SPECIAL",
+                         "VERY_SPECIAL" ->
+                            ItemRarityPolicy.DEFAULT_SPECIAL;
+
+                    default ->
+                            normalizeRarityColor(
+                                    rawNameColor,
+                                    PET_FALLBACK_COLOR);
+                };
+            }
+        }
+
+        return normalizeRarityColor(
+                rawNameColor,
+                PET_FALLBACK_COLOR);
+    }
+
     static int normalizeRarityColor(
             int rawColor) {
+
+        return normalizeRarityColor(
+                rawColor,
+                HELD_ITEM_FALLBACK_COLOR);
+    }
+
+    private static int normalizeRarityColor(
+            int rawColor,
+            int fallback) {
 
         int rgb =
                 rawColor
@@ -263,58 +462,124 @@ public final class PetHudPolicy {
 
         if (rgb == (ItemRarityPolicy.DEFAULT_COMMON
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_COMMON;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_UNCOMMON
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_UNCOMMON;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_RARE
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_RARE;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_EPIC
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_EPIC;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_LEGENDARY
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_LEGENDARY;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_MYTHIC
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_MYTHIC;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_DIVINE
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_DIVINE;
         }
 
         if (rgb == (ItemRarityPolicy.DEFAULT_SPECIAL
                 & 0x00FFFFFF)) {
-
             return ItemRarityPolicy.DEFAULT_SPECIAL;
         }
 
-        return HELD_ITEM_FALLBACK_COLOR;
+        return fallback;
     }
 
-    /**
-     * Reads an equipped pet from tab-list header/footer/widget text.
-     */
+    private static Progress parseLevelProgress(
+            List<String> loreLines) {
+
+        if (loreLines == null
+                || loreLines.isEmpty()) {
+
+            return new Progress(
+                    -1.0D,
+                    -1,
+                    false);
+        }
+
+        for (String raw : loreLines) {
+            String text =
+                    MenuKeybindPolicy
+                            .stripGuiText(
+                                    raw)
+                            .trim();
+
+            if (text.isEmpty()) {
+                continue;
+            }
+
+            String upper =
+                    text.toUpperCase(
+                            Locale.ROOT);
+
+            if (upper.equals("MAX LEVEL")
+                    || upper.equals("MAX LEVEL!")
+                    || upper.contains(
+                            "MAX LEVEL REACHED")
+                    || (upper.startsWith(
+                            "PROGRESS TO LEVEL")
+                            && upper.contains(
+                            "MAXED"))) {
+
+                return new Progress(
+                        100.0D,
+                        -1,
+                        true);
+            }
+
+            Matcher progress =
+                    PROGRESS_TO_LEVEL
+                            .matcher(
+                                    text);
+
+            if (progress.find()) {
+                try {
+                    int nextLevel =
+                            Integer.parseInt(
+                                    progress.group(1));
+
+                    double percent =
+                            Double.parseDouble(
+                                    progress.group(2));
+
+                    return new Progress(
+                            Math.max(
+                                    0.0D,
+                                    Math.min(
+                                            100.0D,
+                                            percent)),
+                            nextLevel,
+                            false);
+                } catch (NumberFormatException ignored) {
+                    // Ignore malformed server text.
+                }
+            }
+        }
+
+        return new Progress(
+                -1.0D,
+                -1,
+                false);
+    }
+
     public static Optional<Snapshot> parseTabText(
             String text) {
 
@@ -351,7 +616,8 @@ public final class PetHudPolicy {
                 if (rest.equalsIgnoreCase(
                         "none")
                         || rest.equals("-")
-                        || rest.equals("✖")
+                        || rest.equals(
+                        "\u2716")
                         || rest.isEmpty()) {
 
                     continue;

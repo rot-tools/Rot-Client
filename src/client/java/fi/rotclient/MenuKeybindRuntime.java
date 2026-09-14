@@ -113,7 +113,29 @@ public final class MenuKeybindRuntime {
         if (slot.isEmpty()) {
             return false;
         }
-        return clickSlot(screen, slot.getAsInt());
+
+        int slotIndex =
+                slot.getAsInt();
+
+        if (MenuKeybindPolicy
+                .parsePetsTitle(title) != null
+                && slotIndex >= 0
+                && slotIndex
+                < screen.getMenu()
+                .slots.size()) {
+
+            InventoryChromeRuntime
+                    .notePetMenuSelection(
+                            screen,
+                            screen.getMenu()
+                                    .slots
+                                    .get(slotIndex),
+                            0);
+        }
+
+        return clickSlot(
+                screen,
+                slotIndex);
     }
 
     private static boolean handleWardrobeInput(

@@ -383,7 +383,8 @@ final class QolOverlayHud {
 
             nameX =
                     textX
-                            + font.width(level)
+                            + font.width(
+                                    level)
                             + 4;
         }
 
@@ -393,7 +394,7 @@ final class QolOverlayHud {
                 snapshot.name(),
                 nameX,
                 y + 4,
-                PetHudPolicy.NAME_COLOR,
+                snapshot.petColor(),
                 true);
 
         String heldLabel =
@@ -433,18 +434,67 @@ final class QolOverlayHud {
                     true);
         }
 
-        String experience =
-                snapshot.experienceLabel();
+        String progressLabel =
+                snapshot.progressLabel();
 
-        if (!experience.isEmpty()) {
+        if (snapshot.maxLevel()) {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    experience,
+                    progressLabel,
                     textX,
-                    y + 28,
-                    PetHudPolicy.XP_COLOR,
+                    y + 31,
+                    snapshot.petColor(),
                     true);
+        } else if (snapshot.hasProgress()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    progressLabel,
+                    textX,
+                    y + 27,
+                    PetHudPolicy.PROGRESS_TEXT_COLOR,
+                    true);
+
+            int barX =
+                    textX;
+
+            int barY =
+                    y + 39;
+
+            int barWidth =
+                    PET_EDITOR_WIDTH
+                            - 28;
+
+            int barHeight =
+                    5;
+
+            graphics.fill(
+                    barX,
+                    barY,
+                    barX + barWidth,
+                    barY + barHeight,
+                    0x66333333);
+
+            int filled =
+                    Math.max(
+                            0,
+                            Math.min(
+                                    barWidth,
+                                    (int) Math.round(
+                                            barWidth
+                                                    * snapshot
+                                                    .progressPercent()
+                                                    / 100.0D)));
+
+            if (filled > 0) {
+                graphics.fill(
+                        barX,
+                        barY,
+                        barX + filled,
+                        barY + barHeight,
+                        snapshot.petColor());
+            }
         }
 
         graphics.pose()

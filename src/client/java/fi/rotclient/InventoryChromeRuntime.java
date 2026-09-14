@@ -159,6 +159,84 @@ public final class  InventoryChromeRuntime {
         persistObserved();
     }
 
+    /**
+     * Optimistically refresh the Pet HUD from the exact Pets-menu stack the
+     * player is selecting. The later server/menu snapshot remains authoritative
+     * and can correct this if the click did not complete.
+     *
+     * Loadout pet picking is excluded because that UI intentionally intercepts
+     * the click without spawning the selected pet.
+     */
+    public static void notePetMenuSelection(
+            AbstractContainerScreen<?> screen,
+            Slot hovered,
+            int mouseButton) {
+
+        if (screen == null
+                || hovered == null
+                || mouseButton != 0
+                || RotClientPetPickerRuntime.active()) {
+
+            return;
+        }
+
+        String title =
+                screen.getTitle() == null
+                        ? ""
+                        : screen.getTitle()
+                        .getString();
+
+        if (MenuKeybindPolicy
+                .parsePetsTitle(title) == null) {
+
+            return;
+        }
+
+        boolean petSlot = false;
+
+        for (int slot
+                : MenuKeybindPolicy.PET_SLOTS) {
+
+            if (slot == hovered.index) {
+                petSlot = true;
+                break;
+            }
+        }
+
+        if (!petSlot) {
+            return;
+        }
+
+        ItemStack stack =
+                hovered.getItem();
+
+        if (stack == null
+                || stack.isEmpty()
+                || InventoryOverlayPolicy
+                .isPlaceholder(
+                        stack.getHoverName()
+                                .getString(),
+                        itemPath(stack))) {
+
+            return;
+        }
+
+        /*
+         * Clicking the already-active pet means "despawn", not switching to a
+         * new pet. Let the confirmed Pets-menu snapshot clear that state.
+         */
+        if (PetHudPolicy
+                .loreMeansEquipped(
+                        loreLines(
+                                stack))) {
+
+            return;
+        }
+
+        noteEquippedPet(
+                stack);
+    }
+
     public static PetHudPolicy.Snapshot petHudSnapshot() {
         return petHud;
     }
@@ -889,28 +967,36 @@ public final class  InventoryChromeRuntime {
 
             return;
         }
-        PetHudPolicy.Snapshot snapshot = tabPet.get();
-        if (petCachedFromGui && petHud != null) {
-            petHud = new PetHudPolicy.Snapshot(
-                    snapshot.level() >= 0 ? snapshot.level() : petHud.level(),
-                    snapshot.name().isEmpty() ? petHud.name() : snapshot.name(),
-                    petHud.heldItem(),
-                    petHud.experience(),
-                    petHud.heldItemColor());
+        PetHudPolicy.Snapshot snapshot =
+                tabPet.get();
+
+        if (petCachedFromGui
+                && petHud != null) {
+
+            petHud =
+                    PetHudPolicy
+                            .mergeTabSnapshot(
+                                    petHud,
+                                    snapshot);
+
             persistObserved();
             return;
         }
-        petHud = petHud == null
-                ? snapshot
-                : new PetHudPolicy.Snapshot(
-                        snapshot.level() >= 0 ? snapshot.level() : petHud.level(),
-                        snapshot.name().isEmpty() ? petHud.name() : snapshot.name(),
-                        petHud.heldItem(),
-                        petHud.experience(),
-                        petHud.heldItemColor());
+
+        petHud =
+                petHud == null
+                        ? snapshot
+                        : PetHudPolicy
+                        .mergeTabSnapshot(
+                                petHud,
+                                snapshot);
+
         if (equippedPet.isEmpty()) {
-            equippedPet = new ItemStack(Items.PLAYER_HEAD);
+            equippedPet =
+                    new ItemStack(
+                            Items.PLAYER_HEAD);
         }
+
         petKnownEmpty = false;
         persistObserved();
     }
@@ -1456,14 +1542,22 @@ public final class  InventoryChromeRuntime {
                                                                 .getString()),
                                         ""));
 
+        int petTextColor =
+                componentColorForText(
+                        pet.getHoverName(),
+                        base.name());
+
         return PetHudPolicy
                 .withRuntimeDetails(
                         base,
                         SkyBlockItemData.petInfo(
                                 pet),
+                        petTextColor,
                         heldItemRarityColor(
                                 pet,
-                                base.heldItem()));
+                                base.heldItem()),
+                        loreLines(
+                                pet));
     }
 
     private static int heldItemRarityColor(
@@ -1676,10 +1770,30 @@ public final class  InventoryChromeRuntime {
                             hud.has("experience")
                                     ? hud.get("experience").getAsDouble()
                                     : -1.0D;
+
+                    int petColor =
+                            hud.has("petColor")
+                                    ? hud.get("petColor").getAsInt()
+                                    : PetHudPolicy.PET_FALLBACK_COLOR;
+
                     int heldItemColor =
                             hud.has("heldItemColor")
                                     ? hud.get("heldItemColor").getAsInt()
                                     : PetHudPolicy.HELD_ITEM_FALLBACK_COLOR;
+
+                    double progressPercent =
+                            hud.has("progressPercent")
+                                    ? hud.get("progressPercent").getAsDouble()
+                                    : -1.0D;
+
+                    int nextLevel =
+                            hud.has("nextLevel")
+                                    ? hud.get("nextLevel").getAsInt()
+                                    : -1;
+
+                    boolean maxLevel =
+                            hud.has("maxLevel")
+                                    && hud.get("maxLevel").getAsBoolean();
 
                     petHud =
                             new PetHudPolicy.Snapshot(
@@ -1689,7 +1803,11 @@ public final class  InventoryChromeRuntime {
                                             ? ""
                                             : held,
                                     experience,
-                                    heldItemColor);
+                                    petColor,
+                                    heldItemColor,
+                                    progressPercent,
+                                    nextLevel,
+                                    maxLevel);
                 }
             }
             if (petKnownEmpty) {
@@ -1700,12 +1818,17 @@ public final class  InventoryChromeRuntime {
         } catch (Exception ignored) {
         }
         if (!petKnownEmpty
-                && petHud == null
                 && equippedPet != null
                 && !equippedPet.isEmpty()) {
-            petHud =
+
+            PetHudPolicy.Snapshot cachedSnapshot =
                     petSnapshot(
                             equippedPet);
+
+            if (cachedSnapshot != null) {
+                petHud =
+                        cachedSnapshot;
+            }
         }
         if (!petKnownEmpty
                 && petHud != null
@@ -1803,7 +1926,11 @@ public final class  InventoryChromeRuntime {
             hud.addProperty("name", petHud.name());
             hud.addProperty("heldItem", petHud.heldItem() == null ? "" : petHud.heldItem());
             hud.addProperty("experience", petHud.experience());
+            hud.addProperty("petColor", petHud.petColor());
             hud.addProperty("heldItemColor", petHud.heldItemColor());
+            hud.addProperty("progressPercent", petHud.progressPercent());
+            hud.addProperty("nextLevel", petHud.nextLevel());
+            hud.addProperty("maxLevel", petHud.maxLevel());
             root.add("petHud", hud);
         }
         return CACHE_GSON.toJson(root);
@@ -1822,7 +1949,11 @@ public final class  InventoryChromeRuntime {
             builder.append('|').append(petHud.name());
             builder.append('|').append(petHud.heldItem());
             builder.append('|').append(petHud.experience());
+            builder.append('|').append(petHud.petColor());
             builder.append('|').append(petHud.heldItemColor());
+            builder.append('|').append(petHud.progressPercent());
+            builder.append('|').append(petHud.nextLevel());
+            builder.append('|').append(petHud.maxLevel());
         }
         return builder.toString();
     }
