@@ -1639,8 +1639,8 @@ public final class RotClientUiDraw {
         int activeAlpha =
                 Math.round(
                         (
-                                0xD8
-                                        + 0x10
+                                0xDC
+                                        + 0x14
                                         * hoverAmount)
                                 * position);
 
@@ -1663,7 +1663,7 @@ public final class RotClientUiDraw {
          */
         int hoverAlpha =
                 Math.round(
-                        0x0C
+                        0x18
                                 * hoverAmount);
 
         if (hoverAlpha > 0) {
@@ -1717,12 +1717,36 @@ public final class RotClientUiDraw {
                 knobSize / 2;
 
         /*
-         * Only the knob receives depth, and even that stays deliberately soft.
+         * Give the knob a little of the tactile response used by the larger
+         * buttons without turning the switch back into a miniature button.
+         *
+         * The faint halo only appears during hover and uses a filled circle
+         * rather than an outline, avoiding the hard rasterized edges that the
+         * previous toggle design suffered from.
          */
+        int knobHaloAlpha =
+                Math.round(
+                        0x12
+                                * hoverAmount);
+
+        if (knobHaloAlpha > 0) {
+
+            roundedFill(
+                    graphics,
+                    knobX - 1,
+                    knobY - 1,
+                    knobX + knobSize + 1,
+                    knobY + knobSize + 1,
+                    withAlpha(
+                            0xFFFFFFFF,
+                            knobHaloAlpha),
+                    knobRadius + 1);
+        }
+
         int knobShadowAlpha =
-                0x22
+                0x28
                         + Math.round(
-                        0x10
+                        0x18
                                 * hoverAmount);
 
         roundedFill(
@@ -1730,7 +1754,7 @@ public final class RotClientUiDraw {
                 knobX,
                 knobY + 1,
                 knobX + knobSize,
-                knobY + knobSize + 1,
+                knobY + knobSize + 2,
                 withAlpha(
                         RotClientTheme.SHADOW,
                         knobShadowAlpha),
