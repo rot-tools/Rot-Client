@@ -293,8 +293,7 @@ public final class RotClientWardrobePickerRuntime {
          * already the active one.
          */
         if (updateLive) {
-            QolClientFlavorSupport.hooks()
-                    .beginWardrobeLoadoutEquip(
+            WardrobeAutoEquipRuntime.beginLoadoutEquip(
                             globalWardrobeNumber);
         }
 

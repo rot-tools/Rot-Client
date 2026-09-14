@@ -561,6 +561,7 @@ public final class RotClientClient implements ClientModInitializer {
                     "WARDROBE_KEYBINDS",
                     () -> {
                         MenuKeybindRuntime.tick(client);
+                        WardrobeAutoEquipRuntime.tick(client);
                         RotClientPetAutoEquipRuntime.tick(client);
                         RotClientEquipmentAutoEquipRuntime.tick(client);
                         LOADOUT_ACTIVATION.tick();

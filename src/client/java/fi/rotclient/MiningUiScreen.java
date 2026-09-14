@@ -57,6 +57,8 @@ final class MiningUiScreen extends Screen {
     private final Screen parent;
     private final List<ToggleSetting> settings;
     private final float[] animations;
+    private final float[] overviewCardAnimations = new float[7];
+    private float overviewSessionAnimation;
     private float fullbrightAnimation;
     private float autoSprintAnimation;
     private float cameraAnimation;
@@ -152,6 +154,9 @@ final class MiningUiScreen extends Screen {
     private String loadoutEditNameInput = "";
     private boolean loadoutEditNameFocused;
     private String loadoutEditError = "";
+
+    private final java.util.HashMap<String, Double> collectionRowHoverAmounts =
+            new java.util.HashMap<>();
 
     private final DashboardNavStack navStack = new DashboardNavStack();
     private boolean restoringNav;
@@ -708,34 +713,48 @@ final class MiningUiScreen extends Screen {
             int y,
             String label,
             double openAmount) {
-        boolean hovered = mouseX >= x
-                && mouseX < x + MODULE_WIDTH
-                && mouseY >= y
-                && mouseY < y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2;
+
+        boolean hovered =
+                mouseX >= x
+                        && mouseX < x + MODULE_WIDTH
+                        && mouseY >= y
+                        && mouseY < y
+                        + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                        + 2;
+
         RotClientUiDraw.drawChevron(
                 graphics,
                 x,
                 y,
                 openAmount,
-                hovered ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED);
+                hovered
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_MUTED);
+
         RotClientUiDraw.glyph(
                 graphics,
                 font,
                 label,
                 x + 14,
                 y,
-                hovered ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                hovered
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_MUTED,
                 true);
+
         if (hovered) {
             graphics.fill(
                     x,
-                    y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 1,
+                    y
+                            + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                            + 1,
                     x + MODULE_WIDTH - 8,
-                    y + RotClientSidebarNav.SECTION_LABEL_HEIGHT + 2,
+                    y
+                            + RotClientSidebarNav.SECTION_LABEL_HEIGHT
+                            + 2,
                     RotClientTheme.VIOLET);
         }
     }
-
     private boolean profilePanelOpen() {
         return profileCreateOpen
                 || profileEditMode != ProfileEditMode.NONE
@@ -1746,90 +1765,580 @@ final class MiningUiScreen extends Screen {
         }
     }
 
-    private void drawModuleLanding(GuiGraphicsExtractor graphics, int panelX, int panelY,
-                                   int mouseX, int mouseY) {
-        int contentLeft = panelX + SIDEBAR_WIDTH + CONTENT_INSET;
-        int contentRight = panelX + panelW() - CONTENT_INSET;
-        int contentWidth = contentRight - contentLeft;
-        OverviewLandingPolicy.Model model = overviewLandingModel();
-        OverviewLandingPolicy.Layout layout = OverviewLandingPolicy.layout(
-                contentLeft, panelY + CHROME_HEIGHT, contentWidth, model.hasNotice());
+    private record OverviewHomeLayout(
+            OverviewLandingPolicy.Rect hero,
+            OverviewLandingPolicy.Rect session,
+            int workspaceLabelY,
 
-        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.TITLE,
-                contentLeft, panelY + CHROME_HEIGHT + OverviewLandingPolicy.TITLE_Y_OFFSET,
-                RotClientTheme.TEXT_DIM, true);
-        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.SUBTITLE,
-                contentLeft, panelY + CHROME_HEIGHT + OverviewLandingPolicy.SUBTITLE_Y_OFFSET,
-                RotClientTheme.TEXT_MUTED, false);
+            OverviewLandingPolicy.Rect modules,
+            OverviewLandingPolicy.Rect market,
+            OverviewLandingPolicy.Rect loadouts,
 
-        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.session(), model.session());
-        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.tracker(), model.tracker());
-        drawOverviewMetricChip(graphics, mouseX, mouseY, layout.powder(), model.powder());
+            OverviewLandingPolicy.Rect visuals,
+            OverviewLandingPolicy.Rect profiles,
+            OverviewLandingPolicy.Rect mining,
+            OverviewLandingPolicy.Rect events,
 
-        if (model.hasNotice()) {
-            OverviewLandingPolicy.Rect notice = layout.notice();
-            RotClientUiDraw.drawElevatedCard(
-                    graphics, notice.x(), notice.y(), notice.width(), notice.height());
-            RotClientUiDraw.sectionLabel(
-                    graphics, font, "NOTICE", notice.x() + 12, notice.y() + 8);
-            RotClientUiDraw.bodyText(
-                    graphics,
-                    font,
-                    RotClientUiDraw.ellipsizeAndHover(
-                            font,
-                            model.notice(),
-                            notice.width() - 24,
-                            notice.x() + 12,
-                            notice.y() + 20,
-                            12),
-                    notice.x() + 12,
-                    notice.y() + 22);
-        }
-
-        RotClientUiDraw.text(graphics, font, OverviewLandingPolicy.GOTO_LABEL,
-                contentLeft, layout.gotoY(), RotClientTheme.TEXT_DIM, false);
-        drawOverviewCard(graphics, mouseX, mouseY,
-                layout.modules().x(), layout.modules().y(), layout.modules().width(),
-                "Modules",
-                QolUtilityCatalog.modules().size() + " modules",
-                "Combat, dungeons, Kuudra, garden…",
-                true);
-        drawOverviewCard(graphics, mouseX, mouseY,
-                layout.look().x(), layout.look().y(), layout.look().width(),
-                "Visuals",
-                "Overlays",
-                "HUDs, layout, cursor",
-                false);
-        drawOverviewCard(graphics, mouseX, mouseY,
-                layout.mining().x(), layout.mining().y(), layout.mining().width(),
-                "Mining",
-                config.selectedSelection().displayName(),
-                (config.enabled ? "Tracker ON" : "Tracker OFF")
-                        + " · powder · session",
-                model.miningCardActive());
-        drawOverviewCard(graphics, mouseX, mouseY,
-                layout.events().x(), layout.events().y(), layout.events().width(),
-                "Events",
-                "Diana",
-                "Burrows, mobs, drops",
-                false);
-
-        int linkY = layout.communityY();
-        RotClientUiDraw.text(graphics, font, "Community", contentLeft, linkY, RotClientTheme.TEXT_DIM, false);
-        RotClientUiDraw.drawButton(
-                graphics, font, mouseX, mouseY,
-                contentLeft, linkY + 14, 148,
-                RotClientLinks.DISCORD_LABEL, true, true);
-        RotClientUiDraw.drawButton(
-                graphics, font, mouseX, mouseY,
-                contentLeft + 158, linkY + 14, 128,
-                RotClientLinks.HOMEPAGE_LABEL, false, true);
-        RotClientUiDraw.drawButton(
-                graphics, font, mouseX, mouseY,
-                contentLeft + 296, linkY + 14, 110,
-                RotClientLinks.ISSUES_LABEL, false, true);
+            int communityY) {
     }
 
+    private OverviewHomeLayout overviewHomeLayout(
+            int contentLeft,
+            int originY,
+            int contentWidth) {
+
+        int safeWidth =
+                Math.max(
+                        1,
+                        contentWidth);
+
+        int heroY =
+                originY + 46;
+
+        int heroHeight =
+                82;
+
+        OverviewLandingPolicy.Rect hero =
+                new OverviewLandingPolicy.Rect(
+                        contentLeft,
+                        heroY,
+                        safeWidth,
+                        heroHeight);
+
+        OverviewLandingPolicy.Rect session =
+                new OverviewLandingPolicy.Rect(
+                        contentLeft + 12,
+                        heroY + 50,
+                        Math.max(
+                                1,
+                                safeWidth - 24),
+                        22);
+
+        int workspaceLabelY =
+                heroY
+                        + heroHeight
+                        + 10;
+
+        int row1Y =
+                workspaceLabelY
+                        + 16;
+
+        int gap =
+                8;
+
+        int wideWidth =
+                Math.max(
+                        1,
+                        (safeWidth - gap * 2) / 3);
+
+        int wideSecondX =
+                contentLeft
+                        + wideWidth
+                        + gap;
+
+        int wideThirdX =
+                contentLeft
+                        + (wideWidth + gap) * 2;
+
+        int wideThirdWidth =
+                Math.max(
+                        1,
+                        contentLeft
+                                + safeWidth
+                                - wideThirdX);
+
+        int cardHeight =
+                64;
+
+        OverviewLandingPolicy.Rect modules =
+                new OverviewLandingPolicy.Rect(
+                        contentLeft,
+                        row1Y,
+                        wideWidth,
+                        cardHeight);
+
+        OverviewLandingPolicy.Rect market =
+                new OverviewLandingPolicy.Rect(
+                        wideSecondX,
+                        row1Y,
+                        wideWidth,
+                        cardHeight);
+
+        OverviewLandingPolicy.Rect loadouts =
+                new OverviewLandingPolicy.Rect(
+                        wideThirdX,
+                        row1Y,
+                        wideThirdWidth,
+                        cardHeight);
+
+        int row2Y =
+                row1Y
+                        + cardHeight
+                        + gap;
+
+        int compactWidth =
+                Math.max(
+                        1,
+                        (safeWidth - gap * 3) / 4);
+
+        int compactSecondX =
+                contentLeft
+                        + compactWidth
+                        + gap;
+
+        int compactThirdX =
+                contentLeft
+                        + (compactWidth + gap) * 2;
+
+        int compactFourthX =
+                contentLeft
+                        + (compactWidth + gap) * 3;
+
+        int compactFourthWidth =
+                Math.max(
+                        1,
+                        contentLeft
+                                + safeWidth
+                                - compactFourthX);
+
+        OverviewLandingPolicy.Rect visuals =
+                new OverviewLandingPolicy.Rect(
+                        contentLeft,
+                        row2Y,
+                        compactWidth,
+                        cardHeight);
+
+        OverviewLandingPolicy.Rect profiles =
+                new OverviewLandingPolicy.Rect(
+                        compactSecondX,
+                        row2Y,
+                        compactWidth,
+                        cardHeight);
+
+        OverviewLandingPolicy.Rect mining =
+                new OverviewLandingPolicy.Rect(
+                        compactThirdX,
+                        row2Y,
+                        compactWidth,
+                        cardHeight);
+
+        OverviewLandingPolicy.Rect events =
+                new OverviewLandingPolicy.Rect(
+                        compactFourthX,
+                        row2Y,
+                        compactFourthWidth,
+                        cardHeight);
+
+        int communityY =
+                row2Y
+                        + cardHeight
+                        + 10;
+
+        return new OverviewHomeLayout(
+                hero,
+                session,
+                workspaceLabelY,
+
+                modules,
+                market,
+                loadouts,
+
+                visuals,
+                profiles,
+                mining,
+                events,
+
+                communityY);
+    }
+
+    private void drawModuleLanding(
+            GuiGraphicsExtractor graphics,
+            int panelX,
+            int panelY,
+            int mouseX,
+            int mouseY) {
+
+        int contentLeft =
+                panelX
+                        + SIDEBAR_WIDTH
+                        + CONTENT_INSET;
+
+        int contentRight =
+                panelX
+                        + panelW()
+                        - CONTENT_INSET;
+
+        int contentWidth =
+                contentRight
+                        - contentLeft;
+
+        int originY =
+                panelY
+                        + CHROME_HEIGHT;
+
+        OverviewLandingPolicy.Model model =
+                overviewLandingModel();
+
+        OverviewHomeLayout layout =
+                overviewHomeLayout(
+                        contentLeft,
+                        originY,
+                        contentWidth);
+
+        /*
+         * Clear product-level hierarchy.
+         */
+        RotClientUiDraw.pageTitle(
+                graphics,
+                font,
+                "Overview",
+                contentLeft,
+                originY + 10);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                "Jump into a tool or keep configuring your client.",
+                contentLeft,
+                originY + 26);
+
+        /*
+         * Workspace hero.
+         */
+        OverviewLandingPolicy.Rect hero =
+                layout.hero();
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                hero.x(),
+                hero.y(),
+                hero.width(),
+                hero.height());
+
+        graphics.fill(
+                hero.x(),
+                hero.y() + 11,
+                hero.x() + 3,
+                hero.y()
+                        + hero.height()
+                        - 11,
+                RotClientTheme.HUD_ACCENT);
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                PRODUCT_HEADER + " WORKSPACE",
+                hero.x() + 14,
+                hero.y() + 9);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Everything in one place",
+                hero.x() + 14,
+                hero.y() + 25,
+                RotClientTheme.TEXT,
+                true);
+
+        String heroMessage =
+                model.hasNotice()
+                        ? model.notice()
+                        : "Open tools, manage setups, and move between workflows from one dashboard.";
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        heroMessage,
+                        hero.width() - 28),
+                hero.x() + 14,
+                hero.y() + 39);
+
+        /*
+         * Current Session stays useful without allowing Mining metrics to
+         * dominate the homepage.
+         */
+        OverviewLandingPolicy.Rect session =
+                layout.session();
+
+        boolean sessionHovered =
+                session.contains(
+                        mouseX,
+                        mouseY);
+
+        overviewSessionAnimation =
+                (float) RotClientEase.expToward(
+                        overviewSessionAnimation,
+                        sessionHovered
+                                ? 1.0D
+                                : 0.0D,
+                        RotClientUiClock.seconds(),
+                        16.0D);
+
+        boolean sessionActive =
+                model.session().tone()
+                        == OverviewLandingPolicy.Tone.GOOD;
+
+        int sessionVisualY =
+                RotClientUiDraw.drawAnimatedActionCard(
+                        graphics,
+                        session.x(),
+                        session.y(),
+                        session.width(),
+                        session.height(),
+                        overviewSessionAnimation,
+                        sessionActive);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "CURRENT SESSION",
+                session.x() + 10,
+                sessionVisualY + 6,
+                RotClientTheme.TEXT_DIM,
+                true);
+
+        String sessionStatus =
+                model.session().value();
+
+        if (!model.session().hint().isBlank()) {
+            sessionStatus =
+                    sessionStatus
+                            + " - "
+                            + model.session().hint();
+        }
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        sessionStatus,
+                        Math.max(
+                                40,
+                                session.width() - 142)),
+                session.x() + 128,
+                sessionVisualY + 6,
+                sessionActive
+                        ? RotClientTheme.HUD_ACCENT
+                        : RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Workspace",
+                contentLeft,
+                layout.workspaceLabelY(),
+                RotClientTheme.TEXT_DIM,
+                false);
+
+        /*
+         * Primary destinations.
+         */
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.modules(),
+                0,
+                "Modules",
+                "Client features",
+                "Combat, dungeons and utilities");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.market(),
+                1,
+                "Market Watch",
+                "AH + Bazaar",
+                "Prices, watchlists and opportunities");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.loadouts(),
+                2,
+                "Loadouts",
+                "Gear presets",
+                "Wardrobe, pets and equipment");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.visuals(),
+                3,
+                "Visuals",
+                "Theme + HUD",
+                "Appearance and overlay layout");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.profiles(),
+                4,
+                "Profiles",
+                "Client setups",
+                "Saved settings profiles");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.mining(),
+                5,
+                "Mining",
+                "Mining tools",
+                "Tracker, powder and sessions");
+
+        drawOverviewActionCard(
+                graphics,
+                mouseX,
+                mouseY,
+                layout.events(),
+                6,
+                "Events",
+                "SkyBlock tools",
+                "Diana and event utilities");
+
+        /*
+         * Community actions remain visually secondary.
+         */
+        int linkY =
+                layout.communityY();
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Community",
+                contentLeft,
+                linkY,
+                RotClientTheme.TEXT_DIM,
+                false);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                contentLeft,
+                linkY + 14,
+                148,
+                RotClientLinks.DISCORD_LABEL,
+                true,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                contentLeft + 158,
+                linkY + 14,
+                128,
+                RotClientLinks.HOMEPAGE_LABEL,
+                false,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                contentLeft + 296,
+                linkY + 14,
+                110,
+                RotClientLinks.ISSUES_LABEL,
+                false,
+                true);
+    }
+
+    private void drawOverviewActionCard(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            OverviewLandingPolicy.Rect rect,
+            int animationIndex,
+            String title,
+            String status,
+            String detail) {
+
+        boolean hovered =
+                rect.contains(
+                        mouseX,
+                        mouseY);
+
+        float next =
+                (float) RotClientEase.expToward(
+                        overviewCardAnimations[
+                                animationIndex],
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        RotClientUiClock.seconds(),
+                        16.0D);
+
+        overviewCardAnimations[
+                animationIndex] =
+                next;
+
+        int visualY =
+                RotClientUiDraw.drawAnimatedActionCard(
+                        graphics,
+                        rect.x(),
+                        rect.y(),
+                        rect.width(),
+                        rect.height(),
+                        next,
+                        false);
+
+        int textWidth =
+                Math.max(
+                        20,
+                        rect.width() - 20);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        title,
+                        textWidth),
+                rect.x() + 10,
+                visualY + 8,
+                RotClientTheme.TEXT,
+                true);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        status,
+                        textWidth),
+                rect.x() + 10,
+                visualY + 25,
+                hovered
+                        ? RotClientTheme.HUD_ACCENT
+                        : RotClientTheme.TEXT_DIM,
+                false);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        detail,
+                        textWidth),
+                rect.x() + 10,
+                visualY + 43);
+    }
     private boolean handleProfilesClick(
             double mouseX,
             double mouseY,
@@ -3485,6 +3994,118 @@ final class MiningUiScreen extends Screen {
         cancelLoadoutWizard();
     }
 
+    private float collectionRowHoverAmount(
+            String key,
+            boolean hovered) {
+
+        String safeKey =
+                key == null
+                        ? ""
+                        : key;
+
+        double current =
+                collectionRowHoverAmounts.getOrDefault(
+                        safeKey,
+                        0.0D);
+
+        double next =
+                RotClientEase.expToward(
+                        current,
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        RotClientUiClock.seconds(),
+                        16.0D);
+
+        if (!hovered
+                && next <= 0.0001D) {
+
+            collectionRowHoverAmounts.remove(
+                    safeKey);
+
+        } else {
+            collectionRowHoverAmounts.put(
+                    safeKey,
+                    next);
+        }
+
+        return (float) RotClientEase.smoothstep(
+                next);
+    }
+
+    private void drawLoadoutWizardProgress(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int right,
+            int y,
+            LoadoutWizardStep step) {
+
+        if (step == null) {
+            return;
+        }
+
+        int current =
+                switch (step) {
+                    case NAME -> 0;
+                    case WARDROBE -> 1;
+                    case PET -> 2;
+                    case EQUIPMENT -> 3;
+                    case SETTINGS -> 4;
+                    case REVIEW -> 5;
+                };
+
+        int gap = 4;
+
+        int available =
+                Math.max(
+                        1,
+                        right - left);
+
+        int width =
+                Math.max(
+                        8,
+                        (available - gap * 5) / 6);
+
+        for (int i = 0;
+             i < 6;
+             i++) {
+
+            int x =
+                    left
+                            + i * (width + gap);
+
+            int actualWidth =
+                    i == 5
+                            ? Math.max(
+                            1,
+                            right - x)
+                            : width;
+
+            int color;
+
+            if (i < current) {
+                color =
+                        RotClientTheme.SUCCESS;
+
+            } else if (i == current) {
+                color =
+                        RotClientTheme.HUD_ACCENT;
+
+            } else {
+                color =
+                        RotClientTheme.BORDER;
+            }
+
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + actualWidth,
+                    y + 3,
+                    color,
+                    1);
+        }
+    }
     private int drawLoadoutDeletePanel(
             GuiGraphicsExtractor graphics,
             int contentLeft,
@@ -3789,23 +4410,19 @@ final class MiningUiScreen extends Screen {
         RotClientLoadout active =
                 manager.activeLoadout();
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
-                "LOADOUTS",
+                "Loadouts",
                 contentLeft,
-                top,
-                RotClientTheme.TEXT,
-                true);
+                top);
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.helpText(
                 graphics,
                 font,
-                "Create SkyBlock gear setups and optionally link them to a settings profile.",
+                "Bundle wardrobe, pet, equipment and Rot Client settings into reusable setups.",
                 contentLeft,
-                top + 16,
-                RotClientTheme.TEXT_DIM,
-                false);
+                top + 16);
 
         if (!loadoutPageError.isBlank()) {
             RotClientUiDraw.text(
@@ -3837,6 +4454,15 @@ final class MiningUiScreen extends Screen {
                 true,
                 false,
                 !loadoutPanelOpen());
+
+        if (loadoutCreateOpen) {
+            drawLoadoutWizardProgress(
+                    graphics,
+                    contentLeft,
+                    contentRight,
+                    top + 34,
+                    loadoutWizardStep);
+        }
 
         int listY;
 
@@ -4657,7 +5283,7 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Create your first loadout. Gear configuration will be added next.",
+                    "Create your first loadout to bundle wardrobe, pet, equipment and settings.",
                     contentLeft + 14,
                     listY + 30);
 
@@ -4720,29 +5346,23 @@ final class MiningUiScreen extends Screen {
                             contentWidth,
                             40);
 
-            roundedFill(
-                    graphics,
-                    contentLeft,
-                    listY,
-                    contentRight,
-                    listY + 40,
-                    isActive
-                            ? RotClientTheme.SELECTED_ROW
-                            : rowHover
-                            ? RotClientTheme.HOVER_ROW
-                            : RotClientTheme.SURFACE_ALT);
+            float rowHoverAmount =
+                    collectionRowHoverAmount(
+                            "loadout:" + loadout.id,
+                            rowHover);
 
-            roundedOutline(
+            RotClientUiDraw.drawInteractiveSurface(
                     graphics,
                     contentLeft,
                     listY,
-                    contentRight,
-                    listY + 40,
+                    contentWidth,
+                    40,
+                    rowHoverAmount,
+                    isActive,
                     isActive
-                            ? RotClientTheme.HUD_ACCENT
-                            : rowHover
-                            ? RotClientTheme.BORDER_BRIGHT
-                            : RotClientTheme.BORDER);
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
 
             graphics.fill(
                     contentLeft,
@@ -4826,7 +5446,12 @@ final class MiningUiScreen extends Screen {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    loadoutDetail,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            loadoutDetail,
+                            Math.max(
+                                    40,
+                                    contentWidth - 162)),
                     contentLeft + 14,
                     listY + 22,
                     RotClientTheme.TEXT_MUTED,
@@ -5058,23 +5683,19 @@ final class MiningUiScreen extends Screen {
         RotClientProfile active =
                 controller.activeProfile();
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.pageTitle(
                 graphics,
                 font,
-                "PROFILES",
+                "Profiles",
                 contentLeft,
-                top,
-                RotClientTheme.TEXT,
-                true);
+                top);
 
-        RotClientUiDraw.text(
+        RotClientUiDraw.helpText(
                 graphics,
                 font,
                 "Save and switch between complete Rot Client setups.",
                 contentLeft,
-                top + 16,
-                RotClientTheme.TEXT_DIM,
-                false);
+                top + 16);
 
         int createButtonWidth = 126;
 
@@ -5478,45 +6099,23 @@ final class MiningUiScreen extends Screen {
                             contentWidth,
                             40);
 
-            /*
-             * Subtle shadow.
-             */
-            roundedFill(
-                    graphics,
-                    contentLeft + 1,
-                    listY + 2,
-                    contentRight + 1,
-                    listY + 42,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.SHADOW,
-                            0x45));
+            float rowHoverAmount =
+                    collectionRowHoverAmount(
+                            "profile:" + profile.id,
+                            rowHover);
 
-            int rowFill =
-                    isActive
-                            ? RotClientTheme.SELECTED_ROW
-                            : rowHover
-                            ? RotClientTheme.HOVER_ROW
-                            : RotClientTheme.SURFACE_ALT;
-
-            roundedFill(
+            RotClientUiDraw.drawInteractiveSurface(
                     graphics,
                     contentLeft,
                     listY,
-                    contentRight,
-                    listY + 40,
-                    rowFill);
-
-            roundedOutline(
-                    graphics,
-                    contentLeft,
-                    listY,
-                    contentRight,
-                    listY + 40,
+                    contentWidth,
+                    40,
+                    rowHoverAmount,
+                    isActive,
                     isActive
-                            ? RotClientTheme.HUD_ACCENT
-                            : rowHover
-                            ? RotClientTheme.BORDER_BRIGHT
-                            : RotClientTheme.BORDER);
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
 
             graphics.fill(
                     contentLeft,
@@ -5692,79 +6291,103 @@ final class MiningUiScreen extends Screen {
                         width,
                         height);
 
-        int fill;
+        boolean destructive =
+                label != null
+                        && (
+                        "DELETE".equals(label)
+                                || label.startsWith(
+                                "DELETE "));
+
+        int accent =
+                destructive
+                        ? RotClientTheme.WARNING
+                        : RotClientTheme.HUD_ACCENT;
+
+        RotClientUiDraw.drawInteractiveSurface(
+                graphics,
+                x,
+                y,
+                width,
+                height,
+                hover
+                        ? 1.0F
+                        : 0.0F,
+                selected,
+                accent,
+                RotClientUiDraw.RADIUS_SM);
 
         if (!enabled) {
-            fill =
-                    RotClientTheme.BUTTON_DISABLED;
-        } else if (selected) {
-            fill =
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.HUD_ACCENT,
-                            0x45);
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    RotClientTheme.BUTTON_DISABLED,
+                    RotClientUiDraw.RADIUS_SM);
+
+        } else if (destructive) {
+
+            if (hover) {
+                RotClientUiDraw.roundedFill(
+                        graphics,
+                        x,
+                        y,
+                        x + width,
+                        y + height,
+                        RotClientUiDraw.withAlpha(
+                                RotClientTheme.WARNING,
+                                0x28),
+                        RotClientUiDraw.RADIUS_SM);
+            }
+
+            RotClientUiDraw.roundedOutline(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    hover
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.BORDER,
+                    RotClientUiDraw.RADIUS_SM);
+
         } else if (primary) {
-            fill =
+            RotClientUiDraw.roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
                     RotClientUiDraw.withAlpha(
                             RotClientTheme.HUD_ACCENT,
                             hover
-                                    ? 0xEE
-                                    : 0xCE);
-        } else if (hover) {
-            fill =
-                    RotClientTheme.HOVER_ROW;
-        } else {
-            fill =
-                    RotClientTheme.SURFACE_ALT;
+                                    ? 0xED
+                                    : 0xCB),
+                    RotClientUiDraw.RADIUS_SM);
+
+            RotClientUiDraw.roundedOutline(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
         }
-
-        /*
-         * Small shadow gives these controls more depth than the generic
-         * dashboard button without changing button styling client-wide.
-         */
-        roundedFill(
-                graphics,
-                x + 1,
-                y + 2,
-                x + width + 1,
-                y + height + 2,
-                RotClientUiDraw.withAlpha(
-                        RotClientTheme.SHADOW,
-                        0x55));
-
-        roundedFill(
-                graphics,
-                x,
-                y,
-                x + width,
-                y + height,
-                fill);
-
-        int border =
-                !enabled
-                        ? RotClientTheme.BORDER
-                        : selected || primary || hover
-                        ? RotClientTheme.BORDER_BRIGHT
-                        : RotClientTheme.BORDER;
-
-        roundedOutline(
-                graphics,
-                x,
-                y,
-                x + width,
-                y + height,
-                border);
 
         if (selected) {
             graphics.fill(
-                    x,
+                    x + 1,
                     y + 5,
-                    x + 3,
+                    x + 4,
                     y + height - 5,
-                    RotClientTheme.HUD_ACCENT);
+                    accent);
         }
 
         if (font == null
                 || label == null) {
+
             return;
         }
 
@@ -5774,21 +6397,36 @@ final class MiningUiScreen extends Screen {
                         label,
                         width - 12);
 
-        int color =
-                !enabled
-                        ? RotClientTheme.TEXT_MUTED
-                        : RotClientTheme.TEXT;
+        int color;
+
+        if (!enabled) {
+            color =
+                    RotClientTheme.TEXT_MUTED;
+
+        } else if (destructive) {
+            color =
+                    hover
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.TEXT_DIM;
+
+        } else {
+            color =
+                    RotClientTheme.TEXT;
+        }
 
         RotClientUiDraw.text(
                 graphics,
                 font,
                 shown,
-                x + (width - font.width(shown)) / 2,
+                x
+                        + (
+                        width
+                                - font.width(shown))
+                        / 2,
                 y + 9,
                 color,
                 true);
     }
-
     private OverviewLandingPolicy.Model overviewLandingModel() {
         MiningSessionAnalyticsPresentation presentation =
                 RotClientClient.sessionAnalyticsPresentation();
@@ -8212,64 +8850,164 @@ int selectorY = masterY + 10;
             return super.mouseClicked(event, doubleClick);
         }
         if (selectedModule == DashboardModule.NONE) {
-            int contentWidth = contentRight - contentLeft;
-            OverviewLandingPolicy.Model model = overviewLandingModel();
-            OverviewLandingPolicy.Layout landingLayout = OverviewLandingPolicy.layout(
-                    contentLeft, panelY + CHROME_HEIGHT, contentWidth, model.hasNotice());
+            int contentWidth =
+                    contentRight - contentLeft;
+
+            int snappedOverviewMouseX =
+                    (int) Math.round(
+                            logicalMouseX);
+
+            int snappedOverviewMouseY =
+                    (int) Math.round(
+                            logicalMouseY);
+
+            OverviewHomeLayout overviewLayout =
+                    overviewHomeLayout(
+                            contentLeft,
+                            panelY + CHROME_HEIGHT,
+                            contentWidth);
+
             settingsSearchFocused = false;
-            OverviewLandingPolicy.Hit landingHit = OverviewLandingPolicy.hit(
-                    (int) Math.round(logicalMouseX),
-                    (int) Math.round(logicalMouseY),
-                    landingLayout);
-            switch (landingHit) {
-                case SESSION -> {
-                    openQolCatalogModule(MiningTrackerCatalogPolicy.SESSION);
-                    return true;
-                }
-                case TRACKER -> {
-                    openQolCatalogModule(MiningTrackerCatalogPolicy.TRACKER);
-                    return true;
-                }
-                case POWDER -> {
-                    openQolCatalogModule(MiningTrackerCatalogPolicy.POWDER);
-                    return true;
-                }
-                case MODULES -> {
-                    selectQolPageFromUser(QolUtilityCatalog.Group.COMBAT);
-                    return true;
-                }
-                case LOOK -> {
-                    selectQolPageFromUser(QolUtilityCatalog.Group.HUD_DISPLAY);
-                    return true;
-                }
-                case MINING -> {
-                    selectQolPageFromUser(QolUtilityCatalog.Group.MINING);
-                    return true;
-                }
-                case EVENTS -> {
-                    selectQolPageFromUser(QolUtilityCatalog.Group.EVENTS);
-                    return true;
-                }
-                case NONE -> {
-                }
-            }
-            int linkY = landingLayout.communityY();
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft, linkY + 14, 148, BUTTON_HEIGHT)) {
-                RotClientLinkOpener.openConfirmed(this, RotClientLinks.DISCORD);
+
+            if (overviewLayout
+                    .session()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                openQolCatalogModule(
+                        MiningTrackerCatalogPolicy.SESSION);
+
                 return true;
             }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 158, linkY + 14, 128, BUTTON_HEIGHT)) {
-                RotClientLinkOpener.openConfirmed(this, RotClientLinks.SOURCE);
+
+            if (overviewLayout
+                    .modules()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                selectQolPageFromUser(
+                        QolUtilityCatalog.Group.COMBAT);
+
                 return true;
             }
-            if (inside(logicalMouseX, logicalMouseY,
-                    contentLeft + 296, linkY + 14, 110, BUTTON_HEIGHT)) {
-                RotClientLinkOpener.openConfirmed(this, RotClientLinks.ISSUES);
+
+            if (overviewLayout
+                    .market()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                openMarketWatchPage();
                 return true;
             }
-            return super.mouseClicked(event, doubleClick);
+
+            if (overviewLayout
+                    .loadouts()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                openLoadoutsPage();
+                return true;
+            }
+
+            if (overviewLayout
+                    .visuals()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                openAppearanceLanding();
+                return true;
+            }
+
+            if (overviewLayout
+                    .profiles()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                openProfilesPage();
+                return true;
+            }
+
+            if (overviewLayout
+                    .mining()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                selectQolPageFromUser(
+                        QolUtilityCatalog.Group.MINING);
+
+                return true;
+            }
+
+            if (overviewLayout
+                    .events()
+                    .contains(
+                            snappedOverviewMouseX,
+                            snappedOverviewMouseY)) {
+
+                selectQolPageFromUser(
+                        QolUtilityCatalog.Group.EVENTS);
+
+                return true;
+            }
+
+            int linkY =
+                    overviewLayout.communityY();
+
+            if (inside(
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentLeft,
+                    linkY + 14,
+                    148,
+                    BUTTON_HEIGHT)) {
+
+                RotClientLinkOpener.openConfirmed(
+                        this,
+                        RotClientLinks.DISCORD);
+
+                return true;
+            }
+
+            if (inside(
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentLeft + 158,
+                    linkY + 14,
+                    128,
+                    BUTTON_HEIGHT)) {
+
+                RotClientLinkOpener.openConfirmed(
+                        this,
+                        RotClientLinks.SOURCE);
+
+                return true;
+            }
+
+            if (inside(
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentLeft + 296,
+                    linkY + 14,
+                    110,
+                    BUTTON_HEIGHT)) {
+
+                RotClientLinkOpener.openConfirmed(
+                        this,
+                        RotClientLinks.ISSUES);
+
+                return true;
+            }
+
+            return super.mouseClicked(
+                    event,
+                    doubleClick);
         }
         if (selectedModule == DashboardModule.QOL_SETTINGS) {
             // Handled at the top of mouseClicked (supports left + right).

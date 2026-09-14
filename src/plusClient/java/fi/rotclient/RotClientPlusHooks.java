@@ -31,7 +31,6 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
         ClientBoundaryGuard.run("CAMERA_ENFORCE", this::enforceCameraPerspective);
         ClientBoundaryGuard.run("FREECAM", () -> FreecamRuntime.tick(client));
         ClientBoundaryGuard.run("INVENTORY_WALK", () -> InventoryWalkRuntime.tick(client));
-        ClientBoundaryGuard.run("WARDROBE_AUTO_EQUIP", () -> WardrobeAutoEquipRuntime.tick(client));
         ClientBoundaryGuard.run("AUTO_CONVERSATION", () -> AutoConversationRuntime.tick(client));
         ClientBoundaryGuard.run("FARM_KEYS", () -> FarmKeysRuntime.tick(client));
         ClientBoundaryGuard.run("AUTO_DOJO", () -> AutoDojoRuntime.tick(client));
@@ -102,7 +101,6 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onContainerClosed() {
-        WardrobeAutoEquipRuntime.onContainerClosed();
         AutoExperimentsRuntime.reset();
         AutoHarpRuntime.reset();
     }

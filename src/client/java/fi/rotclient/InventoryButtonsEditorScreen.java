@@ -25,57 +25,375 @@ final class InventoryButtonsEditorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float delta) {
-        int x = Math.max(12, (width - PANEL_W) / 2);
-        int y = Math.max(12, (height - PANEL_H) / 2);
-        RotClientUiDraw.drawShadowedPanel(g, x, y, PANEL_W, PANEL_H);
-        RotClientUiDraw.drawHeaderBar(g, font, x, y, PANEL_W, 42,
+    public void extractRenderState(
+            GuiGraphicsExtractor g,
+            int mx,
+            int my,
+            float delta) {
+
+        int x =
+                Math.max(
+                        12,
+                        (width - PANEL_W) / 2);
+
+        int y =
+                Math.max(
+                        12,
+                        (height - PANEL_H) / 2);
+
+        RotClientUiDraw.drawShadowedPanel(
+                g,
+                x,
+                y,
+                PANEL_W,
+                PANEL_H);
+
+        RotClientUiDraw.drawHeaderBar(
+                g,
+                font,
+                x,
+                y,
+                PANEL_W,
+                42,
                 "Inventory Buttons",
-                "Left: pick a button. Right: edit it. Shift-drag in-game still moves the icon.");
-        var buttons = extras().inventoryButtons;
+                "Create inventory shortcuts, choose their icons and position them.");
 
-        RotClientUiDraw.roundedFill(g, x + 16, y + 56, x + 250, y + 360, RotClientTheme.SURFACE_ALT);
-        RotClientUiDraw.text(g, font, "BUTTONS", x + 28, y + 66, RotClientTheme.VIOLET, true);
+        var buttons =
+                extras().inventoryButtons;
+
+        RotClientUiDraw.drawElevatedCard(
+                g,
+                x + 16,
+                y + 56,
+                234,
+                304);
+
+        RotClientUiDraw.drawElevatedCard(
+                g,
+                x + 266,
+                y + 56,
+                PANEL_W - 282,
+                304);
+
+        RotClientUiDraw.text(
+                g,
+                font,
+                "BUTTONS",
+                x + 28,
+                y + 66,
+                RotClientTheme.VIOLET,
+                true);
+
+        String countText =
+                buttons.size()
+                        + " / 12";
+
+        RotClientUiDraw.text(
+                g,
+                font,
+                countText,
+                x + 238 - font.width(countText),
+                y + 66,
+                RotClientTheme.TEXT_MUTED,
+                false);
+
         if (buttons.isEmpty()) {
-            RotClientUiDraw.text(g, font, "No buttons yet.", x + 28, y + 92, RotClientTheme.TEXT_MUTED, false);
-        }
-        for (int i = 0; i < Math.min(12, buttons.size()); i++) {
-            int row = y + 88 + i * 22;
-            if (i == selected) {
-                g.fill(x + 22, row - 3, x + 244, row + 17, RotClientTheme.SELECTED_ROW);
+
+            RotClientUiDraw.text(
+                    g,
+                    font,
+                    "No buttons yet",
+                    x + 76,
+                    y + 180,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    g,
+                    font,
+                    "Add one or load a preset.",
+                    x + 60,
+                    y + 197);
+
+        } else {
+
+            for (int i = 0;
+                 i < Math.min(
+                         12,
+                         buttons.size());
+                 i++) {
+
+                int row =
+                        y + 88 + i * 22;
+
+                boolean active =
+                        i == selected;
+
+                boolean hover =
+                        RotClientUiDraw.inside(
+                                mx,
+                                my,
+                                x + 22,
+                                row - 3,
+                                222,
+                                20);
+
+                RotClientUiDraw.drawInteractiveSurface(
+                        g,
+                        x + 22,
+                        row - 3,
+                        222,
+                        20,
+                        hover
+                                ? 1.0F
+                                : 0.0F,
+                        active,
+                        RotClientTheme.HUD_ACCENT,
+                        RotClientUiDraw.RADIUS_SM);
+
+                if (active) {
+                    g.fill(
+                            x + 23,
+                            row + 1,
+                            x + 26,
+                            row + 13,
+                            RotClientTheme.HUD_ACCENT);
+                }
+
+                var b =
+                        buttons.get(i);
+
+                String label =
+                        (i + 1)
+                                + ".  /"
+                                + InventoryButtonsPolicy.normalizeCommand(
+                                b.command);
+
+                RotClientUiDraw.text(
+                        g,
+                        font,
+                        RotClientUiDraw.ellipsize(
+                                font,
+                                label,
+                                194),
+                        x + 30,
+                        row,
+                        active
+                                ? RotClientTheme.TEXT
+                                : RotClientTheme.TEXT_DIM,
+                        true);
             }
-            var b = buttons.get(i);
-            RotClientUiDraw.text(g, font,
-                    (i + 1) + ".  /" + InventoryButtonsPolicy.normalizeCommand(b.command),
-                    x + 30, row,
-                    i == selected ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED, true);
         }
 
-        RotClientUiDraw.roundedFill(g, x + 266, y + 56, x + PANEL_W - 16, y + 360, RotClientTheme.SURFACE_ALT);
-        RotClientUiDraw.text(g, font, "SELECTED", x + 280, y + 66, RotClientTheme.VIOLET, true);
+        RotClientUiDraw.text(
+                g,
+                font,
+                "SELECTED BUTTON",
+                x + 280,
+                y + 66,
+                RotClientTheme.VIOLET,
+                true);
+
         if (!buttons.isEmpty()) {
-            var b = current();
-            int rx = x + 280;
-            drawField(g, rx, y + 88, 400, "Command (without /)", b.command, field == 1);
-            drawField(g, rx, y + 140, 400, "Icon item id", b.icon, field == 2);
-            RotClientUiDraw.text(g, font, "Position", rx, y + 196, RotClientTheme.TEXT_MUTED, false);
-            drawStepper(g, mx, my, rx, y + 212, "X offset", b.x);
-            drawStepper(g, mx, my, rx + 210, y + 212, "Y offset", b.y);
-            RotClientUiDraw.text(g, font, "Size and anchors", rx, y + 252, RotClientTheme.TEXT_MUTED, false);
-            drawToggle(g, mx, my, rx, y + 270, "Large button", b.large);
-            drawToggle(g, mx, my, rx + 210, y + 270, "Anchor right", b.anchorRight);
-            drawToggle(g, mx, my, rx, y + 304, "Anchor bottom", b.anchorBottom);
+
+            var b =
+                    current();
+
+            int rx =
+                    x + 280;
+
+            drawField(
+                    g,
+                    rx,
+                    y + 88,
+                    400,
+                    "Command (without /)",
+                    b.command,
+                    field == 1);
+
+            drawField(
+                    g,
+                    rx,
+                    y + 140,
+                    400,
+                    "Icon item id",
+                    b.icon,
+                    field == 2);
+
+            RotClientUiDraw.text(
+                    g,
+                    font,
+                    "Position",
+                    rx,
+                    y + 196,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+
+            drawStepper(
+                    g,
+                    mx,
+                    my,
+                    rx,
+                    y + 212,
+                    "X offset",
+                    b.x);
+
+            drawStepper(
+                    g,
+                    mx,
+                    my,
+                    rx + 210,
+                    y + 212,
+                    "Y offset",
+                    b.y);
+
+            RotClientUiDraw.text(
+                    g,
+                    font,
+                    "Size and anchors",
+                    rx,
+                    y + 252,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+
+            drawToggle(
+                    g,
+                    mx,
+                    my,
+                    rx,
+                    y + 270,
+                    "Large button",
+                    b.large);
+
+            drawToggle(
+                    g,
+                    mx,
+                    my,
+                    rx + 210,
+                    y + 270,
+                    "Anchor right",
+                    b.anchorRight);
+
+            drawToggle(
+                    g,
+                    mx,
+                    my,
+                    rx,
+                    y + 304,
+                    "Anchor bottom",
+                    b.anchorBottom);
+
+        } else {
+
+            RotClientUiDraw.text(
+                    g,
+                    font,
+                    "Nothing selected",
+                    x + 410,
+                    y + 184,
+                    RotClientTheme.TEXT_DIM,
+                    true);
+
+            RotClientUiDraw.helpText(
+                    g,
+                    font,
+                    "Create a button or choose a preset below.",
+                    x + 362,
+                    y + 202);
         }
 
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 16, y + 376, 88, "Add", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 112, y + 376, 88, "Delete", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 208, y + 376, 110, "Duplicate", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 326, y + 376, 110, "Simple", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 444, y + 376, 110, "Warps", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 562, y + 376, 142, "Done", false, true);
-        super.extractRenderState(g, mx, my, delta);
-    }
+        g.fill(
+                x + 16,
+                y + 366,
+                x + PANEL_W - 16,
+                y + 367,
+                RotClientTheme.DIVIDER);
 
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 16,
+                y + 376,
+                88,
+                24,
+                "Add",
+                false,
+                buttons.size() < 12);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 112,
+                y + 376,
+                88,
+                24,
+                "Delete",
+                false,
+                !buttons.isEmpty());
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 208,
+                y + 376,
+                110,
+                24,
+                "Duplicate",
+                false,
+                !buttons.isEmpty()
+                        && buttons.size() < 12);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 326,
+                y + 376,
+                110,
+                24,
+                "Simple",
+                false,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 444,
+                y + 376,
+                110,
+                24,
+                "Warps",
+                false,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 562,
+                y + 376,
+                142,
+                24,
+                "Done",
+                true,
+                true);
+
+        super.extractRenderState(
+                g,
+                mx,
+                my,
+                delta);
+    }
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) {
@@ -227,18 +545,113 @@ final class InventoryButtonsEditorScreen extends Screen {
         return false;
     }
 
-    private void drawField(GuiGraphicsExtractor g, int x, int y, int w, String label, String value, boolean focused) {
-        RotClientUiDraw.text(g, font, label, x, y, RotClientTheme.TEXT_MUTED, false);
-        g.fill(x, y + 14, x + w, y + 38, focused ? RotClientTheme.SELECTED_ROW : RotClientTheme.FIELD);
-        RotClientUiDraw.text(g, font, value == null ? "" : value, x + 8, y + 22, RotClientTheme.TEXT, false);
-    }
+    private void drawField(
+            GuiGraphicsExtractor g,
+            int x,
+            int y,
+            int w,
+            String label,
+            String value,
+            boolean focused) {
 
-    private void drawStepper(GuiGraphicsExtractor g, int mx, int my, int x, int y, String label, int value) {
-        RotClientUiDraw.text(g, font, label + ":  " + value, x, y + 6, RotClientTheme.TEXT, false);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 130, y, 28, "−", false, true);
-        RotClientUiDraw.drawButton(g, font, mx, my, x + 162, y, 28, "+", false, true);
-    }
+        RotClientUiDraw.text(
+                g,
+                font,
+                label,
+                x,
+                y,
+                focused
+                        ? RotClientTheme.HUD_ACCENT
+                        : RotClientTheme.TEXT_MUTED,
+                focused);
 
+        RotClientTheme.drawInset(
+                g,
+                x,
+                y + 14,
+                w,
+                24,
+                focused);
+
+        String shown =
+                value == null
+                        ? ""
+                        : RotClientUiDraw.ellipsize(
+                                font,
+                                value,
+                                w - 16);
+
+        if (!shown.isEmpty()) {
+            RotClientUiDraw.text(
+                    g,
+                    font,
+                    shown,
+                    x + 8,
+                    y + 22,
+                    RotClientTheme.TEXT,
+                    false);
+        }
+
+        if (focused) {
+
+            int cursorX =
+                    Math.min(
+                            x + w - 6,
+                            x + 8
+                                    + font.width(shown));
+
+            g.fill(
+                    cursorX,
+                    y + 19,
+                    cursorX + 1,
+                    y + 33,
+                    RotClientTheme.TEXT);
+        }
+    }
+    private void drawStepper(
+            GuiGraphicsExtractor g,
+            int mx,
+            int my,
+            int x,
+            int y,
+            String label,
+            int value) {
+
+        RotClientUiDraw.text(
+                g,
+                font,
+                label + ":  " + value,
+                x,
+                y + 6,
+                RotClientTheme.TEXT,
+                false);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 130,
+                y,
+                28,
+                24,
+                "-",
+                false,
+                true);
+
+        RotClientUiDraw.drawPremiumButton(
+                g,
+                font,
+                mx,
+                my,
+                x + 162,
+                y,
+                28,
+                24,
+                "+",
+                false,
+                true);
+    }
     private static boolean hitStepperMinus(int mx, int my, int x, int y) {
         return inside(mx, my, x + 130, y, 28, 24);
     }
@@ -247,11 +660,57 @@ final class InventoryButtonsEditorScreen extends Screen {
         return inside(mx, my, x + 162, y, 28, 24);
     }
 
-    private void drawToggle(GuiGraphicsExtractor g, int mx, int my, int x, int y, String label, boolean value) {
-        RotClientUiDraw.text(g, font, label, x, y + 4, RotClientTheme.TEXT, false);
-        RotClientUiDraw.drawToggle(g, x + 150, y + 2, value, inside(mx, my, x, y, 190, 24));
-    }
+    private void drawToggle(
+            GuiGraphicsExtractor g,
+            int mx,
+            int my,
+            int x,
+            int y,
+            String label,
+            boolean value) {
 
+        boolean hover =
+                inside(
+                        mx,
+                        my,
+                        x,
+                        y,
+                        190,
+                        24);
+
+        RotClientUiDraw.drawInteractiveSurface(
+                g,
+                x,
+                y,
+                190,
+                24,
+                hover
+                        ? 1.0F
+                        : 0.0F,
+                false,
+                value
+                        ? RotClientTheme.HUD_ACCENT
+                        : RotClientTheme.BORDER_BRIGHT,
+                RotClientUiDraw.RADIUS_SM);
+
+        RotClientUiDraw.text(
+                g,
+                font,
+                label,
+                x + 8,
+                y + 7,
+                value
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.TEXT_DIM,
+                false);
+
+        RotClientUiDraw.drawToggle(
+                g,
+                x + 150,
+                y + 2,
+                value,
+                hover);
+    }
     private static boolean inside(int mx, int my, int x, int y, int w, int h) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }

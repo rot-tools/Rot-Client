@@ -18,6 +18,123 @@ public final class RotClientUiDraw {
     static final int SCROLLBAR_HIT_WIDTH = 12;
     static final int SCROLLBAR_MIN_THUMB_HEIGHT = 40;
 
+    /*
+     * Shared hover animation used by buttons and interactive surfaces.
+     *
+     * Hit boxes remain fixed. Only rendering eases toward the hover state.
+     * This gives the rest of Rot Client the responsive interaction language
+     * originally introduced by the Overview action cards.
+     */
+    private static final java.util.Map<String, InteractionMotion>
+            INTERACTION_MOTION =
+            new java.util.HashMap<>();
+
+    private static final class InteractionMotion {
+        double amount;
+        long lastNanos;
+
+        InteractionMotion(
+                double amount,
+                long lastNanos) {
+
+            this.amount = amount;
+            this.lastNanos = lastNanos;
+        }
+    }
+
+    private static String interactionKey(
+            String type,
+            int x,
+            int y,
+            int width,
+            int height,
+            String identity) {
+
+        return (type == null ? "" : type)
+                + ":"
+                + x
+                + ":"
+                + y
+                + ":"
+                + width
+                + ":"
+                + height
+                + ":"
+                + (identity == null ? "" : identity);
+    }
+
+    private static float interactionAmount(
+            String key,
+            boolean hovered) {
+
+        long now =
+                System.nanoTime();
+
+        InteractionMotion state =
+                INTERACTION_MOTION.get(key);
+
+        if (state == null) {
+            if (!hovered) {
+                return 0.0F;
+            }
+
+            state =
+                    new InteractionMotion(
+                            0.0D,
+                            now);
+
+            INTERACTION_MOTION.put(
+                    key,
+                    state);
+        }
+
+        long idle =
+                Math.max(
+                        0L,
+                        now - state.lastNanos);
+
+        if (idle > 500_000_000L) {
+            state.amount =
+                    0.0D;
+        }
+
+        double dt =
+                Math.max(
+                        1.0D / 1000.0D,
+                        Math.min(
+                                0.05D,
+                                idle <= 0L
+                                        ? 1.0D / 120.0D
+                                        : idle / 1_000_000_000.0D));
+
+        state.lastNanos =
+                now;
+
+        state.amount =
+                RotClientEase.expToward(
+                        state.amount,
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        dt,
+                        18.0D);
+
+        if (!hovered
+                && state.amount <= 0.0005D) {
+
+            INTERACTION_MOTION.remove(key);
+            return 0.0F;
+        }
+
+        if (INTERACTION_MOTION.size() > 4096) {
+            INTERACTION_MOTION.clear();
+        }
+
+        return (float) RotClientEase.smoothstep(
+                RotClientEase.clamp01(
+                        state.amount));
+    }
+
     private RotClientUiDraw() {
     }
 
@@ -367,35 +484,176 @@ public final class RotClientUiDraw {
             String label,
             boolean accent,
             boolean enabled) {
-        int safeHeight = Math.max(16, height);
-        boolean hover = enabled && inside(mouseX, mouseY, x, y, width, safeHeight);
-        int fill = !enabled
-                ? RotClientTheme.BUTTON_DISABLED
-                : (accent
-                        ? (hover
-                                ? RotClientTheme.HUD_ACCENT
-                                : RotClientTheme.BORDER_BRIGHT)
-                        : (hover
-                                ? RotClientTheme.BUTTON_HOVER
-                                : RotClientTheme.BUTTON));
-        roundedFill(graphics, x, y, x + width, y + safeHeight, fill, RADIUS_SM);
-        if (font != null && label != null) {
-            int text = !enabled
-                    ? RotClientTheme.TEXT_MUTED
-                    : (accent ? 0xFF111118 : RotClientTheme.BUTTON_TEXT);
-            String shown = ellipsize(font, label, width - 10);
-            int textY = y + Math.max(2, (safeHeight - 8) / 2);
-            glyph(
-                    graphics,
-                    font,
-                    ellipsizeAndHover(font, label, width - 10, x, y, safeHeight),
-                    x + (width - RotClientFonts.width(font, shown)) / 2,
-                    textY,
-                    text,
-                    true);
-        }
-    }
 
+        int safeWidth =
+                Math.max(
+                        1,
+                        width);
+
+        int safeHeight =
+                Math.max(
+                        16,
+                        height);
+
+        boolean hovered =
+                enabled
+                        && inside(
+                        mouseX,
+                        mouseY,
+                        x,
+                        y,
+                        safeWidth,
+                        safeHeight);
+
+        float hoverAmount =
+                interactionAmount(
+                        interactionKey(
+                                "button",
+                                x,
+                                y,
+                                safeWidth,
+                                safeHeight,
+                                label),
+                        hovered);
+
+        int lift =
+                enabled
+                        ? Math.round(
+                        2.0F * hoverAmount)
+                        : 0;
+
+        int visualY =
+                y - lift;
+
+        if (enabled) {
+            int shadowAlpha =
+                    0x20
+                            + Math.round(
+                            0x2C * hoverAmount);
+
+            roundedFill(
+                    graphics,
+                    x + 1,
+                    visualY + 2,
+                    x + safeWidth + 1,
+                    visualY + safeHeight + 3,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    RADIUS_SM);
+        }
+
+        int fill =
+                !enabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : accent
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0xD0)
+                        : RotClientTheme.BUTTON;
+
+        roundedFill(
+                graphics,
+                x,
+                visualY,
+                x + safeWidth,
+                visualY + safeHeight,
+                fill,
+                RADIUS_SM);
+
+        if (enabled
+                && hoverAmount > 0.001F) {
+
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + safeWidth,
+                    visualY + safeHeight,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            accent
+                                    ? 0x20
+                                    + Math.round(
+                                    0x28 * hoverAmount)
+                                    : Math.round(
+                                    0x32 * hoverAmount)),
+                    RADIUS_SM);
+        }
+
+        int border =
+                !enabled
+                        ? RotClientTheme.BORDER
+                        : accent
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0xD8)
+                        : hoverAmount > 0.001F
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0x48
+                                        + Math.round(
+                                        0x68 * hoverAmount))
+                        : RotClientTheme.BORDER;
+
+        roundedOutline(
+                graphics,
+                x,
+                visualY,
+                x + safeWidth,
+                visualY + safeHeight,
+                border,
+                RADIUS_SM);
+
+        if (font == null
+                || label == null) {
+            return;
+        }
+
+        String shown =
+                ellipsize(
+                        font,
+                        label,
+                        Math.max(
+                                1,
+                                safeWidth - 12));
+
+        int textX =
+                x
+                        + (
+                        safeWidth
+                                - RotClientFonts.width(
+                                font,
+                                shown))
+                        / 2;
+
+        int textY =
+                visualY
+                        + Math.max(
+                        2,
+                        (safeHeight - 8)
+                                / 2);
+
+        int textColor =
+                !enabled
+                        ? RotClientTheme.TEXT_MUTED
+                        : accent
+                        || hoverAmount > 0.20F
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.BUTTON_TEXT;
+
+        glyph(
+                graphics,
+                font,
+                shown,
+                textX,
+                textY,
+                textColor,
+                enabled
+                        && (
+                        accent
+                                || hoverAmount > 0.20F));
+    }
     static void drawPremiumButton(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -455,158 +713,128 @@ public final class RotClientUiDraw {
                         safeWidth,
                         safeHeight);
 
-        /*
-         * Subtle shadow underneath the control.
-         */
-        roundedFill(
-                graphics,
-                x + 1,
-                y + 2,
-                x + safeWidth + 1,
-                y + safeHeight + 2,
-                withAlpha(
-                        0xFF000000,
-                        hovered
-                                ? 0x44
-                                : 0x30),
-                RADIUS_SM);
+        float hoverAmount =
+                interactionAmount(
+                        interactionKey(
+                                "premium",
+                                x,
+                                y,
+                                safeWidth,
+                                safeHeight,
+                                label),
+                        hovered);
 
-        /*
-         * Base dark button surface.
-         */
+        int lift =
+                enabled
+                        ? Math.round(
+                        2.0F * hoverAmount)
+                        : 0;
+
+        int visualY =
+                y - lift;
+
+        if (enabled) {
+            int shadowAlpha =
+                    selected
+                            ? 0x3C
+                            + Math.round(
+                            0x20 * hoverAmount)
+                            : 0x24
+                            + Math.round(
+                            0x2C * hoverAmount);
+
+            roundedFill(
+                    graphics,
+                    x + 1,
+                    visualY + 2,
+                    x + safeWidth + 1,
+                    visualY + safeHeight + 3,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    RADIUS_SM);
+        }
+
         roundedFill(
                 graphics,
                 x,
-                y,
+                visualY,
                 x + safeWidth,
-                y + safeHeight,
-                enabled
-                        ? RotClientTheme.BUTTON
-                        : RotClientTheme.BUTTON_DISABLED,
+                visualY + safeHeight,
+                !enabled
+                        ? RotClientTheme.BUTTON_DISABLED
+                        : selected
+                        ? RotClientTheme.SELECTED_ROW
+                        : RotClientTheme.BUTTON,
                 RADIUS_SM);
 
-        /*
-         * Selected state: accent wash.
-         * Hover makes it slightly brighter rather than changing style.
-         */
         if (enabled
-                && selected) {
+                && (
+                selected
+                        || hoverAmount > 0.001F)) {
+
+            int washAlpha =
+                    selected
+                            ? 0x24
+                            + Math.round(
+                            0x18 * hoverAmount)
+                            : Math.round(
+                            0x34 * hoverAmount);
 
             roundedFill(
                     graphics,
                     x,
-                    y,
+                    visualY,
                     x + safeWidth,
-                    y + safeHeight,
+                    visualY + safeHeight,
                     withAlpha(
                             RotClientTheme.HUD_ACCENT,
-                            hovered
-                                    ? 0x52
-                                    : 0x36),
+                            washAlpha),
                     RADIUS_SM);
-
-        } else if (enabled
-                && hovered) {
-
-            roundedFill(
-                    graphics,
-                    x,
-                    y,
-                    x + safeWidth,
-                    y + safeHeight,
-                    RotClientTheme.BUTTON_HOVER,
-                    RADIUS_SM);
-
-            if (safeWidth > 18) {
-                graphics.fill(
-                        x + 7,
-                        y + 1,
-                        x + safeWidth - 7,
-                        y + 2,
-                        withAlpha(
-                                RotClientTheme.HUD_ACCENT,
-                                0x78));
-            }
         }
 
-        int borderColor =
+        int border =
                 !enabled
                         ? RotClientTheme.BORDER
                         : selected
-                        ? RotClientTheme.HUD_ACCENT
-                        : hovered
-                        ? RotClientTheme.BORDER_BRIGHT
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0xD8)
+                        : hoverAmount > 0.001F
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0x50
+                                        + Math.round(
+                                        0x68 * hoverAmount))
                         : RotClientTheme.BORDER;
 
         roundedOutline(
                 graphics,
                 x,
-                y,
+                visualY,
                 x + safeWidth,
-                y + safeHeight,
-                borderColor,
+                visualY + safeHeight,
+                border,
                 RADIUS_SM);
 
-        /*
-         * Matches the accent rail language already used by the
-         * premium filters and pinned-deal surfaces.
-         */
         if (enabled
                 && selected
                 && safeHeight > 10) {
 
             graphics.fill(
-                    x,
-                    y + 5,
-                    x + 3,
-                    y + safeHeight - 5,
+                    x + 1,
+                    visualY + 5,
+                    x + 4,
+                    visualY + safeHeight - 5,
                     RotClientTheme.HUD_ACCENT);
         }
 
         if (font == null
                 || label == null) {
-
             return;
         }
 
         String shown =
-                ellipsize(
-                        font,
-                        label,
-                        Math.max(
-                                1,
-                                safeWidth - 18));
-
-        int shownWidth =
-                RotClientFonts.width(
-                        font,
-                        shown);
-
-        int textX =
-                x
-                        + Math.max(
-                        7,
-                        (safeWidth - shownWidth)
-                                / 2);
-
-        int textY =
-                y
-                        + Math.max(
-                        3,
-                        (safeHeight - 8)
-                                / 2);
-
-        int textColor =
-                !enabled
-                        ? RotClientTheme.TEXT_MUTED
-                        : selected
-                        || hovered
-                        ? RotClientTheme.TEXT
-                        : RotClientTheme.BUTTON_TEXT;
-
-        glyph(
-                graphics,
-                font,
                 ellipsizeAndHover(
                         font,
                         label,
@@ -615,21 +843,234 @@ public final class RotClientUiDraw {
                                 safeWidth - 18),
                         x,
                         y,
-                        safeHeight),
+                        safeHeight);
+
+        int textX =
+                x
+                        + (
+                        safeWidth
+                                - RotClientFonts.width(
+                                font,
+                                shown))
+                        / 2;
+
+        int textY =
+                visualY
+                        + Math.max(
+                        3,
+                        (safeHeight - 8)
+                                / 2);
+
+        glyph(
+                graphics,
+                font,
+                shown,
                 textX,
                 textY,
-                textColor,
+                !enabled
+                        ? RotClientTheme.TEXT_MUTED
+                        : selected
+                        || hoverAmount > 0.20F
+                        ? RotClientTheme.TEXT
+                        : RotClientTheme.BUTTON_TEXT,
                 selected
-                        || hovered);
+                        || hoverAmount > 0.20F);
     }
+    static int drawAnimatedActionCard(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float hoverAmount,
+            boolean active) {
 
+        float t =
+                Math.max(
+                        0.0F,
+                        Math.min(
+                                1.0F,
+                                hoverAmount));
+
+        int lift =
+                Math.round(
+                        2.0F * t);
+
+        int visualY =
+                y - lift;
+
+        int shadowAlpha =
+                0x22
+                        + Math.round(
+                        0x24 * t);
+
+        roundedFill(
+                graphics,
+                x + 1,
+                visualY + 3,
+                x + width + 1,
+                visualY + height + 3,
+                withAlpha(
+                        0xFF000000,
+                        shadowAlpha),
+                RADIUS_SM);
+
+        roundedFill(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                RotClientTheme.SURFACE_ALT,
+                RADIUS_SM);
+
+        if (t > 0.001F) {
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            Math.round(
+                                    0x22 * t)),
+                    RADIUS_SM);
+        }
+
+        if (active) {
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0x1E),
+                    RADIUS_SM);
+        }
+
+        int borderColor;
+
+        if (active) {
+            borderColor =
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0xD0);
+
+        } else if (t > 0.001F) {
+            borderColor =
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            0x58
+                                    + Math.round(
+                                    0x68 * t));
+
+        } else {
+            borderColor =
+                    RotClientTheme.BORDER;
+        }
+
+        roundedOutline(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + height,
+                borderColor,
+                RADIUS_SM);
+
+        int railAlpha =
+                active
+                        ? 0xFF
+                        : 0x50
+                        + Math.round(
+                        0x70 * t);
+
+        graphics.fill(
+                x + 1,
+                visualY + 10,
+                x + 3,
+                visualY + height - 10,
+                withAlpha(
+                        RotClientTheme.HUD_ACCENT,
+                        railAlpha));
+
+        return visualY;
+    }
     static void drawCard(
-            GuiGraphicsExtractor graphics, int x, int y, int width, int height, boolean hover) {
-        int fill = hover ? RotClientTheme.HOVER_ROW : RotClientTheme.SURFACE_ALT;
-        roundedFill(graphics, x, y, x + width, y + height, fill, RADIUS_SM);
-        roundedOutline(graphics, x, y, x + width, y + height, RotClientTheme.BORDER, RADIUS_SM);
-    }
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            boolean hover) {
 
+        float hoverAmount =
+                interactionAmount(
+                        interactionKey(
+                                "card",
+                                x,
+                                y,
+                                width,
+                                height,
+                                ""),
+                        hover);
+
+        if (hoverAmount > 0.001F) {
+            roundedFill(
+                    graphics,
+                    x + 1,
+                    y + 2,
+                    x + width + 1,
+                    y + height + 3,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            0x1C
+                                    + Math.round(
+                                    0x2C * hoverAmount)),
+                    RADIUS_SM);
+        }
+
+        roundedFill(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                RotClientTheme.SURFACE_ALT,
+                RADIUS_SM);
+
+        if (hoverAmount > 0.001F) {
+            roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            Math.round(
+                                    0x2E * hoverAmount)),
+                    RADIUS_SM);
+        }
+
+        roundedOutline(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                hoverAmount > 0.001F
+                        ? withAlpha(
+                                RotClientTheme.HUD_ACCENT,
+                                0x48
+                                        + Math.round(
+                                        0x68 * hoverAmount))
+                        : RotClientTheme.BORDER,
+                RADIUS_SM);
+    }
     static void drawAccentCard(
             GuiGraphicsExtractor graphics, int x, int y, int width, int height, boolean active) {
         roundedFill(graphics, x, y, x + width, y + height, RotClientTheme.SURFACE_ALT, RADIUS_SM);
@@ -655,6 +1096,142 @@ public final class RotClientUiDraw {
         roundedOutline(graphics, x, y, x + width, y + height, RotClientTheme.BORDER, RADIUS_SM);
     }
 
+    static void drawInteractiveSurface(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            int width,
+            int height,
+            float hoverAmount,
+            boolean selected,
+            int accentColor,
+            int radius) {
+
+        int safeRadius =
+                Math.max(
+                        0,
+                        radius);
+
+        int safeAccent =
+                accentColor == 0
+                        ? RotClientTheme.HUD_ACCENT
+                        : accentColor;
+
+        float supplied =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                hoverAmount));
+
+        float t;
+
+        if (hoverAmount <= 0.0F
+                || hoverAmount >= 1.0F) {
+
+            t =
+                    interactionAmount(
+                            interactionKey(
+                                    "surface",
+                                    x,
+                                    y,
+                                    width,
+                                    height,
+                                    Integer.toString(
+                                            safeAccent)),
+                            hoverAmount >= 1.0F);
+
+        } else {
+            t =
+                    supplied;
+        }
+
+        if (selected
+                || t > 0.01F) {
+
+            int shadowAlpha =
+                    selected
+                            ? 0x40
+                            : 0x18
+                            + Math.round(
+                            0x20 * t);
+
+            roundedFill(
+                    graphics,
+                    x + 1,
+                    y + 2,
+                    x + width + 1,
+                    y + height + 3,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            shadowAlpha),
+                    safeRadius);
+        }
+
+        roundedFill(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                selected
+                        ? RotClientTheme.SELECTED_ROW
+                        : RotClientTheme.SURFACE_ALT,
+                safeRadius);
+
+        if (selected
+                || t > 0.001F) {
+
+            int wash =
+                    selected
+                            ? 0x1E
+                            + Math.round(
+                            0x14 * t)
+                            : Math.round(
+                            0x2A * t);
+
+            roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    withAlpha(
+                            safeAccent,
+                            wash),
+                    safeRadius);
+        }
+
+        int outline;
+
+        if (selected) {
+            outline =
+                    withAlpha(
+                            safeAccent,
+                            0xD0);
+
+        } else if (t > 0.001F) {
+            outline =
+                    withAlpha(
+                            safeAccent,
+                            Math.min(
+                                    0xB8,
+                                    0x48
+                                            + Math.round(
+                                            0x70 * t)));
+
+        } else {
+            outline =
+                    RotClientTheme.BORDER;
+        }
+
+        roundedOutline(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                outline,
+                safeRadius);
+    }
     static void drawNavItem(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -668,41 +1245,105 @@ public final class RotClientUiDraw {
             String subtitle,
             boolean selected,
             boolean active) {
-        boolean hover = inside(mouseX, mouseY, x, y, width, height);
-        int fill = selected
-                ? RotClientTheme.SELECTED_ROW
-                : (hover ? RotClientTheme.HOVER_ROW : RotClientTheme.DASHBOARD_SIDEBAR);
-        roundedFill(graphics, x, y, x + width, y + height, fill, RADIUS_SM);
-        if (selected) {
-            graphics.fill(x, y + 6, x + 3, y + height - 6, RotClientTheme.BORDER_BRIGHT);
+
+        boolean hover =
+                inside(
+                        mouseX,
+                        mouseY,
+                        x,
+                        y,
+                        width,
+                        height);
+
+        float hoverAmount =
+                interactionAmount(
+                        interactionKey(
+                                "nav",
+                                x,
+                                y,
+                                width,
+                                height,
+                                label),
+                        hover);
+
+        roundedFill(
+                graphics,
+                x,
+                y,
+                x + width,
+                y + height,
+                selected
+                        ? RotClientTheme.SELECTED_ROW
+                        : RotClientTheme.DASHBOARD_SIDEBAR,
+                RADIUS_SM);
+
+        if (!selected
+                && hoverAmount > 0.001F) {
+
+            roundedFill(
+                    graphics,
+                    x,
+                    y,
+                    x + width,
+                    y + height,
+                    withAlpha(
+                            RotClientTheme.HUD_ACCENT,
+                            Math.round(
+                                    0x20 * hoverAmount)),
+                    RADIUS_SM);
         }
+
+        if (selected) {
+            graphics.fill(
+                    x,
+                    y + 6,
+                    x + 3,
+                    y + height - 6,
+                    RotClientTheme.BORDER_BRIGHT);
+        }
+
         if (font == null) {
             return;
         }
-        glyph(
-                graphics,
-                font,
-                ellipsizeAndHover(font, label == null ? "" : label, width - 16, x + 10, y + 6, 12),
-                x + 10,
-                y + 8,
-                RotClientTheme.TEXT,
-                true);
+
         glyph(
                 graphics,
                 font,
                 ellipsizeAndHover(
                         font,
-                        subtitle == null ? "" : subtitle,
+                        label == null
+                                ? ""
+                                : label,
                         width - 16,
                         x + 10,
-                        y + 20,
+                        y + 6,
                         12),
                 x + 10,
-                y + 22,
-                active ? RotClientTheme.SUCCESS : RotClientTheme.TEXT_MUTED,
+                y + 8,
+                RotClientTheme.TEXT,
+                true);
+
+        glyph(
+                graphics,
+                font,
+                ellipsizeAndHover(
+                        font,
+                        subtitle == null
+                                ? ""
+                                : subtitle,
+                        width - 16,
+                        x + 10,
+                        y + 22,
+                        12),
+                x + 10,
+                y + 24,
+                active
+                        ? RotClientTheme.SUCCESS
+                        : hoverAmount > 0.25F
+                        ? RotClientTheme.TEXT_DIM
+                        : RotClientTheme.TEXT_MUTED,
                 false);
     }
-
     static void drawMetricCard(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -824,6 +1465,344 @@ public final class RotClientUiDraw {
                 y + 2 + knob,
                 RotClientTheme.TOGGLE_KNOB,
                 knob / 2);
+    }
+
+    /*
+     * Animated switch used by Rot Client module controls.
+     *
+     * drawToggle() intentionally stays untouched. Market Watch, Profit Finder,
+     * and other existing consumers therefore retain their existing rendering.
+     */
+    private static final java.util.Map<String, ToggleMotion>
+            TOGGLE_MOTION =
+            new java.util.HashMap<>();
+
+    private static final class ToggleMotion {
+        double position;
+        double hover;
+        long lastNanos;
+
+        ToggleMotion(
+                double position,
+                long lastNanos) {
+
+            this.position =
+                    position;
+
+            this.hover =
+                    0.0D;
+
+            this.lastNanos =
+                    lastNanos;
+        }
+    }
+
+    static void drawAnimatedToggle(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            boolean enabled,
+            boolean hovered,
+            String identity,
+            int accentColor) {
+
+        int width =
+                QolUtilityUiMath.TOGGLE_WIDTH;
+
+        int height =
+                QolUtilityUiMath.TOGGLE_HEIGHT;
+
+        String key =
+                identity == null
+                        ? ""
+                        : identity;
+
+        long now =
+                System.nanoTime();
+
+        ToggleMotion state =
+                TOGGLE_MOTION.get(
+                        key);
+
+        /*
+         * Opening the UI starts the switch in its real logical state rather
+         * than animating every control from OFF.
+         */
+        if (state == null) {
+
+            state =
+                    new ToggleMotion(
+                            enabled
+                                    ? 1.0D
+                                    : 0.0D,
+                            now);
+
+            TOGGLE_MOTION.put(
+                    key,
+                    state);
+        }
+
+        double dt =
+                Math.max(
+                        0.001D,
+                        Math.min(
+                                0.05D,
+                                (
+                                        now
+                                                - state.lastNanos)
+                                        / 1_000_000_000.0D));
+
+        state.lastNanos =
+                now;
+
+        /*
+         * Preserve the current smooth travel. This is deliberately slower than
+         * ordinary button hover motion so the switch visibly slides.
+         */
+        state.position =
+                RotClientEase.expToward(
+                        state.position,
+                        enabled
+                                ? 1.0D
+                                : 0.0D,
+                        dt,
+                        6.8D);
+
+        state.hover =
+                RotClientEase.expToward(
+                        state.hover,
+                        hovered
+                                ? 1.0D
+                                : 0.0D,
+                        dt,
+                        14.0D);
+
+        float position =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                state.position));
+
+        float hoverAmount =
+                (float) RotClientEase.smoothstep(
+                        RotClientEase.clamp01(
+                                state.hover));
+
+        if (TOGGLE_MOTION.size() > 2048) {
+            TOGGLE_MOTION.clear();
+
+            TOGGLE_MOTION.put(
+                    key,
+                    state);
+        }
+
+        int accent =
+                accentColor == 0
+                        ? RotClientTheme.HUD_ACCENT
+                        : accentColor;
+
+        /*
+         * Keep the complete 44x20 area for rendering as well as interaction.
+         * The larger capsule and larger knob produce cleaner curves than the
+         * previous smaller 18px/14px geometry.
+         */
+        int visualY =
+                y;
+
+        int visualHeight =
+                height;
+
+        int radius =
+                visualHeight / 2;
+
+        /*
+         * Button-inspired ambient shadow.
+         *
+         * It is a filled capsule rather than an outline, so it adds depth
+         * without creating the hard top/bottom rails from the earlier design.
+         */
+        int trackShadowAlpha =
+                0x22
+                        + Math.round(
+                        0x16
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                x,
+                visualY + 2,
+                x + width,
+                visualY + visualHeight + 2,
+                withAlpha(
+                        RotClientTheme.SHADOW,
+                        trackShadowAlpha),
+                radius);
+
+        /*
+         * Main OFF surface.
+         */
+        roundedFill(
+                graphics,
+                x,
+                visualY,
+                x + width,
+                visualY + visualHeight,
+                RotClientTheme.TOGGLE_OFF,
+                radius);
+
+        /*
+         * ON colour follows the same interpolation as the knob.
+         */
+        int activeAlpha =
+                Math.round(
+                        (
+                                0xE2
+                                        + 0x12
+                                        * hoverAmount)
+                                * position);
+
+        if (activeAlpha > 0) {
+
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + visualHeight,
+                    withAlpha(
+                            accent,
+                            activeAlpha),
+                    radius);
+        }
+
+        /*
+         * Soft interaction brightness. No border or outline is drawn.
+         */
+        int hoverAlpha =
+                Math.round(
+                        0x14
+                                * hoverAmount);
+
+        if (hoverAlpha > 0) {
+
+            roundedFill(
+                    graphics,
+                    x,
+                    visualY,
+                    x + width,
+                    visualY + visualHeight,
+                    withAlpha(
+                            0xFFFFFFFF,
+                            hoverAlpha),
+                    radius);
+        }
+
+        /*
+         * A 16px knob inside the 20px track gives two pixels of spacing on all
+         * sides and produces a visibly cleaner circular silhouette.
+         */
+        int knobSize =
+                height - 4;
+
+        int knobRadius =
+                knobSize / 2;
+
+        int knobY =
+                visualY + 2;
+
+        int knobLeft =
+                x + 2;
+
+        int knobRight =
+                x
+                        + width
+                        - knobSize
+                        - 2;
+
+        int knobX =
+                knobLeft
+                        + Math.round(
+                        (
+                                knobRight
+                                        - knobLeft)
+                                * position);
+
+        /*
+         * Very soft outer knob depth. It fades in on hover and helps visually
+         * soften the rasterized circle without adding a hard ring.
+         */
+        int knobHaloAlpha =
+                Math.round(
+                        0x18
+                                * hoverAmount);
+
+        if (knobHaloAlpha > 0) {
+
+            roundedFill(
+                    graphics,
+                    knobX - 1,
+                    knobY - 1,
+                    knobX + knobSize + 1,
+                    knobY + knobSize + 1,
+                    withAlpha(
+                            RotClientTheme.SHADOW,
+                            knobHaloAlpha),
+                    knobRadius + 1);
+        }
+
+        /*
+         * Slightly deeper drop shadow similar to the larger UI buttons.
+         */
+        int knobShadowAlpha =
+                0x38
+                        + Math.round(
+                        0x18
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                knobX,
+                knobY + 2,
+                knobX + knobSize,
+                knobY + knobSize + 2,
+                withAlpha(
+                        RotClientTheme.SHADOW,
+                        knobShadowAlpha),
+                knobRadius);
+
+        /*
+         * Clean white knob.
+         */
+        roundedFill(
+                graphics,
+                knobX,
+                knobY,
+                knobX + knobSize,
+                knobY + knobSize,
+                RotClientTheme.TOGGLE_KNOB,
+                knobRadius);
+
+        /*
+         * Tiny soft highlight gives the knob some dimensionality while keeping
+         * the silhouette free of outlines.
+         */
+        int knobHighlightAlpha =
+                0x10
+                        + Math.round(
+                        0x0C
+                                * hoverAmount);
+
+        roundedFill(
+                graphics,
+                knobX + 2,
+                knobY + 1,
+                knobX + knobSize - 2,
+                knobY + knobSize - 5,
+                withAlpha(
+                        0xFFFFFFFF,
+                        knobHighlightAlpha),
+                Math.max(
+                        1,
+                        knobRadius - 2));
     }
 
     static void drawSquareLatch(

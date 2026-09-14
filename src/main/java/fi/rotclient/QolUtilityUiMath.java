@@ -265,41 +265,188 @@ public final class QolUtilityUiMath {
             List<QolUtilityCatalog.ModuleDef> modules,
             int listLeft,
             int gridWidth) {
-        LinkedHashMap<String, List<QolUtilityCatalog.ModuleDef>> groups =
-                new LinkedHashMap<>();
-        if (modules != null) {
-            for (QolUtilityCatalog.ModuleDef module : modules) {
-                String key = module == null || module.section() == null
-                        ? ""
-                        : module.section().trim();
-                groups.computeIfAbsent(key, ignored -> new ArrayList<>()).add(module);
-            }
-        }
-        boolean named = groups.keySet().stream().anyMatch(key -> !key.isBlank());
-        int columns = gridColumns(gridWidth);
-        int cardW = cardWidth(gridWidth);
-        List<PlacedHeader> headers = new ArrayList<>();
-        List<PlacedCard> cards = new ArrayList<>();
-        int y = 0;
-        for (Map.Entry<String, List<QolUtilityCatalog.ModuleDef>> entry : groups.entrySet()) {
-            if (named) {
-                String title = entry.getKey().isBlank() ? "General" : entry.getKey();
-                headers.add(new PlacedHeader(title, listLeft, y, gridWidth));
-                y += GROUP_HEADER_HEIGHT;
-            }
-            List<QolUtilityCatalog.ModuleDef> list = entry.getValue();
-            for (int i = 0; i < list.size(); i++) {
-                int x = cardX(i, listLeft, gridWidth);
-                int cardY = y + cardRow(i, columns) * (CARD_HEIGHT + CARD_GAP);
-                cards.add(new PlacedCard(list.get(i), x, cardY, cardW));
-            }
-            int rows = (list.size() + Math.max(1, columns) - 1) / Math.max(1, columns);
-            y += rows * CARD_HEIGHT + Math.max(0, rows - 1) * CARD_GAP;
-            y += named ? 10 : 0;
-        }
-        return new PageLayout(List.copyOf(headers), List.copyOf(cards), Math.max(0, y));
+
+        return layoutPage(
+                modules,
+                listLeft,
+                gridWidth,
+                "",
+                0);
     }
 
+    public static PageLayout layoutPage(
+            List<QolUtilityCatalog.ModuleDef> modules,
+            int listLeft,
+            int gridWidth,
+            String expandedModuleId,
+            int expandedExtraHeight) {
+
+        LinkedHashMap<String, List<QolUtilityCatalog.ModuleDef>> groups =
+                new LinkedHashMap<>();
+
+        if (modules != null) {
+            for (QolUtilityCatalog.ModuleDef module : modules) {
+                String key =
+                        module == null
+                                || module.section() == null
+                                ? ""
+                                : module.section().trim();
+
+                groups.computeIfAbsent(
+                                key,
+                                ignored -> new ArrayList<>())
+                        .add(module);
+            }
+        }
+
+        boolean named =
+                groups.keySet()
+                        .stream()
+                        .anyMatch(
+                                key -> !key.isBlank());
+
+        int columns =
+                Math.max(
+                        1,
+                        gridColumns(
+                                gridWidth));
+
+        int cardW =
+                cardWidth(
+                        gridWidth);
+
+        String expandedId =
+                expandedModuleId == null
+                        ? ""
+                        : expandedModuleId;
+
+        int extraHeight =
+                Math.max(
+                        0,
+                        expandedExtraHeight);
+
+        List<PlacedHeader> headers =
+                new ArrayList<>();
+
+        List<PlacedCard> cards =
+                new ArrayList<>();
+
+        int y =
+                0;
+
+        for (Map.Entry<String, List<QolUtilityCatalog.ModuleDef>> entry
+                : groups.entrySet()) {
+
+            if (named) {
+                String title =
+                        entry.getKey().isBlank()
+                                ? "General"
+                                : entry.getKey();
+
+                headers.add(
+                        new PlacedHeader(
+                                title,
+                                listLeft,
+                                y,
+                                gridWidth));
+
+                y +=
+                        GROUP_HEADER_HEIGHT;
+            }
+
+            List<QolUtilityCatalog.ModuleDef> list =
+                    entry.getValue();
+
+            int[] nextY =
+                    new int[columns];
+
+            for (int column = 0;
+                    column < columns;
+                    column++) {
+
+                nextY[column] =
+                        y;
+            }
+
+            int usedColumns =
+                    Math.min(
+                            columns,
+                            list.size());
+
+            for (int i = 0;
+                    i < list.size();
+                    i++) {
+
+                QolUtilityCatalog.ModuleDef module =
+                        list.get(i);
+
+                int column =
+                        i % columns;
+
+                int x =
+                        listLeft
+                                + column
+                                * (
+                                cardW
+                                        + CARD_GAP);
+
+                int cardY =
+                        nextY[column];
+
+                cards.add(
+                        new PlacedCard(
+                                module,
+                                x,
+                                cardY,
+                                cardW));
+
+                int cardExtra =
+                        module != null
+                                && module.id()
+                                .equals(
+                                        expandedId)
+                                ? extraHeight
+                                : 0;
+
+                nextY[column] =
+                        cardY
+                                + CARD_HEIGHT
+                                + cardExtra
+                                + CARD_GAP;
+            }
+
+            int groupBottom =
+                    y;
+
+            for (int column = 0;
+                    column < usedColumns;
+                    column++) {
+
+                groupBottom =
+                        Math.max(
+                                groupBottom,
+                                nextY[column]
+                                        - CARD_GAP);
+            }
+
+            y =
+                    groupBottom;
+
+            if (named) {
+                y +=
+                        10;
+            }
+        }
+
+        return new PageLayout(
+                List.copyOf(
+                        headers),
+                List.copyOf(
+                        cards),
+                Math.max(
+                        0,
+                        y));
+    }
     public static boolean hitNumberDecrease(int mouseX, int rowX, int rowWidth) {
         int controlX = rowX + rowWidth - NUMBER_CONTROL_WIDTH;
         return mouseX >= controlX && mouseX < controlX + NUMBER_BUTTON_WIDTH;
