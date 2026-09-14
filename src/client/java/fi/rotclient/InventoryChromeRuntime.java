@@ -143,19 +143,8 @@ public final class  InventoryChromeRuntime {
                 pet.copy();
 
         petHud =
-                PetHudPolicy
-                        .parse(
-                                pet.getHoverName()
-                                        .getString(),
-                                loreLines(pet))
-                        .orElse(
-                                new PetHudPolicy.Snapshot(
-                                        -1,
-                                        MenuKeybindPolicy
-                                                .stripGuiText(
-                                                        pet.getHoverName()
-                                                                .getString()),
-                                        ""));
+                petSnapshot(
+                        pet);
 
         petKnownEmpty = false;
         petCachedFromGui = true;
@@ -519,8 +508,9 @@ public final class  InventoryChromeRuntime {
                 petCachedFromGui = false;
             } else {
                 equippedPet = pet.copy();
-                petHud = PetHudPolicy.parse(pet.getHoverName().getString(), loreLines(pet))
-                        .orElse(new PetHudPolicy.Snapshot(-1, pet.getHoverName().getString(), ""));
+                petHud =
+                        petSnapshot(
+                                pet);
                 petKnownEmpty = false;
                 petCachedFromGui = true;
             }
@@ -686,8 +676,9 @@ public final class  InventoryChromeRuntime {
             return;
         }
         equippedPet = pet.copy();
-        petHud = PetHudPolicy.parse(pet.getHoverName().getString(), loreLines(pet))
-                .orElse(new PetHudPolicy.Snapshot(-1, pet.getHoverName().getString(), ""));
+        petHud =
+                petSnapshot(
+                        pet);
         petKnownEmpty = false;
         petCachedFromGui = true;
     }
@@ -903,7 +894,9 @@ public final class  InventoryChromeRuntime {
             petHud = new PetHudPolicy.Snapshot(
                     snapshot.level() >= 0 ? snapshot.level() : petHud.level(),
                     snapshot.name().isEmpty() ? petHud.name() : snapshot.name(),
-                    petHud.heldItem());
+                    petHud.heldItem(),
+                    petHud.experience(),
+                    petHud.heldItemColor());
             persistObserved();
             return;
         }
@@ -912,7 +905,9 @@ public final class  InventoryChromeRuntime {
                 : new PetHudPolicy.Snapshot(
                         snapshot.level() >= 0 ? snapshot.level() : petHud.level(),
                         snapshot.name().isEmpty() ? petHud.name() : snapshot.name(),
-                        petHud.heldItem());
+                        petHud.heldItem(),
+                        petHud.experience(),
+                        petHud.heldItemColor());
         if (equippedPet.isEmpty()) {
             equippedPet = new ItemStack(Items.PLAYER_HEAD);
         }
@@ -1437,6 +1432,169 @@ public final class  InventoryChromeRuntime {
         units.putIfAbsent(priced, unit);
     }
 
+    private static PetHudPolicy.Snapshot petSnapshot(
+            ItemStack pet) {
+
+        if (pet == null
+                || pet.isEmpty()) {
+
+            return null;
+        }
+
+        PetHudPolicy.Snapshot base =
+                PetHudPolicy
+                        .parse(
+                                pet.getHoverName()
+                                        .getString(),
+                                loreLines(pet))
+                        .orElse(
+                                new PetHudPolicy.Snapshot(
+                                        -1,
+                                        MenuKeybindPolicy
+                                                .stripGuiText(
+                                                        pet.getHoverName()
+                                                                .getString()),
+                                        ""));
+
+        return PetHudPolicy
+                .withRuntimeDetails(
+                        base,
+                        SkyBlockItemData.petInfo(
+                                pet),
+                        heldItemRarityColor(
+                                pet,
+                                base.heldItem()));
+    }
+
+    private static int heldItemRarityColor(
+            ItemStack pet,
+            String heldItem) {
+
+        if (pet == null
+                || pet.isEmpty()
+                || heldItem == null
+                || heldItem.isBlank()) {
+
+            return 0;
+        }
+
+        ItemLore lore =
+                pet.getOrDefault(
+                        DataComponents.LORE,
+                        ItemLore.EMPTY);
+
+        int color =
+                heldItemRarityColor(
+                        lore.lines(),
+                        heldItem);
+
+        if (color != 0) {
+            return color;
+        }
+
+        return heldItemRarityColor(
+                lore.styledLines(),
+                heldItem);
+    }
+
+    private static int heldItemRarityColor(
+            List<Component> lines,
+            String heldItem) {
+
+        if (lines == null
+                || lines.isEmpty()) {
+
+            return 0;
+        }
+
+        for (Component line : lines) {
+            if (line == null) {
+                continue;
+            }
+
+            String plain =
+                    MenuKeybindPolicy
+                            .stripGuiText(
+                                    line.getString());
+
+            if (!plain
+                    .toLowerCase(
+                            java.util.Locale.ROOT)
+                    .startsWith(
+                            "held item:")) {
+
+                continue;
+            }
+
+            int color =
+                    componentColorForText(
+                            line,
+                            heldItem);
+
+            if (color != 0) {
+                return color;
+            }
+        }
+
+        return 0;
+    }
+
+    private static int componentColorForText(
+            Component component,
+            String needle) {
+
+        if (component == null
+                || needle == null
+                || needle.isBlank()) {
+
+            return 0;
+        }
+
+        /*
+         * Children are inspected first. Hypixel commonly renders
+         * "Held Item: " as the parent and the rarity-colored item name as a
+         * styled sibling.
+         */
+        for (Component sibling
+                : component.getSiblings()) {
+
+            int childColor =
+                    componentColorForText(
+                            sibling,
+                            needle);
+
+            if (childColor != 0) {
+                return childColor;
+            }
+        }
+
+        String plain =
+                MenuKeybindPolicy
+                        .stripGuiText(
+                                component.getString());
+
+        if (!plain
+                .toLowerCase(
+                        java.util.Locale.ROOT)
+                .contains(
+                        needle.toLowerCase(
+                                java.util.Locale.ROOT))) {
+
+            return 0;
+        }
+
+        var color =
+                component.getStyle()
+                        .getColor();
+
+        if (color == null) {
+            return 0;
+        }
+
+        return 0xFF000000
+                | color.getValue();
+    }
+
     private static boolean hasAnyEquipment() {
         return !allEmpty(EQUIPMENT);
     }
@@ -1514,7 +1672,24 @@ public final class  InventoryChromeRuntime {
                 if (name != null && !name.isBlank()) {
                     int level = hud.has("level") ? hud.get("level").getAsInt() : -1;
                     String held = hud.has("heldItem") ? hud.get("heldItem").getAsString() : "";
-                    petHud = new PetHudPolicy.Snapshot(level, name, held == null ? "" : held);
+                    double experience =
+                            hud.has("experience")
+                                    ? hud.get("experience").getAsDouble()
+                                    : -1.0D;
+                    int heldItemColor =
+                            hud.has("heldItemColor")
+                                    ? hud.get("heldItemColor").getAsInt()
+                                    : PetHudPolicy.HELD_ITEM_FALLBACK_COLOR;
+
+                    petHud =
+                            new PetHudPolicy.Snapshot(
+                                    level,
+                                    name,
+                                    held == null
+                                            ? ""
+                                            : held,
+                                    experience,
+                                    heldItemColor);
                 }
             }
             if (petKnownEmpty) {
@@ -1528,11 +1703,9 @@ public final class  InventoryChromeRuntime {
                 && petHud == null
                 && equippedPet != null
                 && !equippedPet.isEmpty()) {
-            petHud = PetHudPolicy.parse(
-                            equippedPet.getHoverName().getString(),
-                            loreLines(equippedPet))
-                    .orElse(new PetHudPolicy.Snapshot(
-                            -1, equippedPet.getHoverName().getString(), ""));
+            petHud =
+                    petSnapshot(
+                            equippedPet);
         }
         if (!petKnownEmpty
                 && petHud != null
@@ -1629,6 +1802,8 @@ public final class  InventoryChromeRuntime {
             hud.addProperty("level", petHud.level());
             hud.addProperty("name", petHud.name());
             hud.addProperty("heldItem", petHud.heldItem() == null ? "" : petHud.heldItem());
+            hud.addProperty("experience", petHud.experience());
+            hud.addProperty("heldItemColor", petHud.heldItemColor());
             root.add("petHud", hud);
         }
         return CACHE_GSON.toJson(root);
@@ -1646,6 +1821,8 @@ public final class  InventoryChromeRuntime {
             builder.append('|').append(petHud.level());
             builder.append('|').append(petHud.name());
             builder.append('|').append(petHud.heldItem());
+            builder.append('|').append(petHud.experience());
+            builder.append('|').append(petHud.heldItemColor());
         }
         return builder.toString();
     }

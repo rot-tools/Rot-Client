@@ -1210,7 +1210,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.pet_hud",
                 "Pet HUD",
-                "On-screen readout of the currently equipped pet. Reads Pets GUI lore and the tab list.",
+                "On-screen readout of the equipped pet with total XP and rarity-colored held item. Reads Pets GUI lore, pet metadata, and the tab list.",
                 Group.HUD_DISPLAY,
                 "Overlays",
                 false,
