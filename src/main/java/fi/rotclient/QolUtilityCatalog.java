@@ -538,6 +538,7 @@ public final class QolUtilityCatalog {
                 true,
                 List.of("health", "mana", "defense", "ehp", "speed", "vitality", "overflow"),
                 section("qol.player_display.section_general", "GENERAL"),
+                setting("qol.player_display.show_background", "Show Background", "Draw the panel behind Player Display stat HUDs. Turn this off for text-only stat displays.", SettingType.TOGGLE, "background", "panel"),
                 setting("qol.player_display.show_icons", "Show Icons", "Show supported stat icons.", SettingType.TOGGLE, "icons"),
                 setting("qol.player_display.hide_elements", "Hide Elements", "Hide selected vanilla HUD elements. Applies only while Player Display is enabled.", SettingType.SECTION),
                 setting("qol.player_display.hide_vanilla_health", "Hide Vanilla Health", "Local hide of vanilla health bar. Player Display must be on.", SettingType.TOGGLE),

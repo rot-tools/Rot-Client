@@ -227,6 +227,17 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
+
+        /*
+         * SkyBlock does not reliably send Speed as an action-bar field.
+         * Keep the Player Display speed value synced from the local player's
+         * movement speed instead.
+         */
+        if (SkyBlockAreaDetector.isInSkyblock()) {
+            stats.observeClientPlayer(
+                    Minecraft.getInstance());
+        }
+
         List<PlayerDisplayMath.HudLine> lines = PlayerDisplayMath.visibleLines(
                 stats.stats(),
                 qol.playerDisplayHealthHud,
@@ -243,15 +254,24 @@ final class QolOverlayHud {
             int y = Math.round(pose[1]);
             int textWidth;
             pushHudScale(graphics, id, x, y);
-            fillHudPanel(
-                    graphics,
-                    id,
-                    x - 3,
-                    y - 1,
-                    Math.max(STAT_EDITOR_WIDTH, 96),
-                    STAT_EDITOR_HEIGHT + 2);
-            if (panelOn(id)) {
-                graphics.fill(x - 3, y - 1, x, y + STAT_EDITOR_HEIGHT + 1, RotClientTheme.HUD_ACCENT);
+
+            if (qol.playerDisplayShowBackground) {
+                fillHudPanel(
+                        graphics,
+                        id,
+                        x - 3,
+                        y - 1,
+                        Math.max(STAT_EDITOR_WIDTH, 96),
+                        STAT_EDITOR_HEIGHT + 2);
+
+                if (panelOn(id)) {
+                    graphics.fill(
+                            x - 3,
+                            y - 1,
+                            x,
+                            y + STAT_EDITOR_HEIGHT + 1,
+                            RotClientTheme.HUD_ACCENT);
+                }
             }
             String value = PlayerDisplayMath.withMax(line.value(), qol.playerDisplayShowMax);
             String text = PlayerDisplayMath.composeLine(
@@ -259,7 +279,12 @@ final class QolOverlayHud {
                     value,
                     qol.playerDisplayShowIcons,
                     qol.playerDisplayShowLabels);
-            int color = textPaint(id, colorFor(line.kind(), qol));
+            int color =
+                    playerDisplayTextPaint(
+                            id,
+                            colorFor(
+                                    line.kind(),
+                                    qol));
             if (qol.playerDisplayShowIcons) {
                 String icon = PlayerDisplayMath.iconFor(line.kind());
                 String rest = text.startsWith(icon)
@@ -1421,6 +1446,26 @@ final class QolOverlayHud {
                 fill,
                 HudStylePolicy.isFocused(id, focusId),
                 editorOpen && qol().extras().hudLayoutDimUnfocused);
+    }
+
+    /**
+     * Player Display already has a dedicated configured color for every stat.
+     * Do not let the generic HUD-style default text color overwrite those
+     * values. The HUD editor dimming behavior is still preserved.
+     */
+    private int playerDisplayTextPaint(
+            String id,
+            int configuredColor) {
+
+        return HudStylePolicy.dim(
+                configuredColor,
+                HudStylePolicy.isFocused(
+                        id,
+                        focusId),
+                editorOpen
+                        && qol()
+                        .extras()
+                        .hudLayoutDimUnfocused);
     }
 
     private int textPaint(String id, int fallback) {

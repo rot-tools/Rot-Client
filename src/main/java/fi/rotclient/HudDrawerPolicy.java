@@ -345,6 +345,7 @@ public final class HudDrawerPolicy {
         return key.contains("show_icons")
                 || key.contains("show_labels")
                 || key.contains("show_max")
+                || key.equals("qol.player_display.show_background")
                 || key.endsWith(".dynamic_size")
                 || key.endsWith(".kill_time");
     }

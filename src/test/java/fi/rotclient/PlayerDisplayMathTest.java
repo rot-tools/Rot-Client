@@ -358,6 +358,102 @@ final class PlayerDisplayMathTest {
         assertTrue(stats.maxHealth().isEmpty());
     }
 
+    @Test
+    void positionalVitalityPairIsCapturedAfterMana() {
+        SkyBlockStatBarParser.Stats stats =
+                parsed(
+                        "5,224/4,849  998  2,782/2,782  115/115");
+
+        assertEquals(
+                5224.0D,
+                stats.health().orElse(-1),
+                0.001D);
+
+        assertEquals(
+                2782.0D,
+                stats.mana().orElse(-1),
+                0.001D);
+
+        assertEquals(
+                115.0D,
+                stats.vitality().orElse(-1),
+                0.001D);
+
+        /*
+         * No overflow fragment means zero overflow, rather than unavailable.
+         */
+        assertEquals(
+                0.0D,
+                stats.overflowMana().orElse(-1),
+                0.001D);
+    }
+
+    @Test
+    void overflowBeforeVitalityRemainsDistinct() {
+        SkyBlockStatBarParser.Stats stats =
+                parsed(
+                        "5,224/4,849  998  2,782/2,782  40  115/115");
+
+        assertEquals(
+                40.0D,
+                stats.overflowMana().orElse(-1),
+                0.001D);
+
+        assertEquals(
+                115.0D,
+                stats.vitality().orElse(-1),
+                0.001D);
+    }
+
+    @Test
+    void explicitVitalityPairUsesCurrentValue() {
+        SkyBlockStatBarParser.Stats stats =
+                parsed(
+                        "80/100♨");
+
+        assertEquals(
+                80.0D,
+                stats.vitality().orElse(-1),
+                0.001D);
+    }
+
+    @Test
+    void movementSpeedConvertsToSkyBlockSpeed() {
+        assertEquals(
+                100.0D,
+                SkyBlockStatTracker.skyBlockSpeed(
+                        0.1F,
+                        false),
+                0.001D);
+
+        assertEquals(
+                100.0D,
+                SkyBlockStatTracker.skyBlockSpeed(
+                        0.13F,
+                        true),
+                0.001D);
+    }
+
+    @Test
+    void playerDisplayBackgroundConfigRoundTrip() {
+        QolUtilityConfig config =
+                new QolUtilityConfig();
+
+        assertEquals(
+                Boolean.TRUE,
+                config.readBoolean(
+                        "qol.player_display.show_background"));
+
+        config.writeBoolean(
+                "qol.player_display.show_background",
+                false);
+
+        assertEquals(
+                Boolean.FALSE,
+                config.readBoolean(
+                        "qol.player_display.show_background"));
+    }
+
     private static SkyBlockStatBarParser.Stats parsed(String raw) {
         return SkyBlockStatBarParser.parse(raw);
     }

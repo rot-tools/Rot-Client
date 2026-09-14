@@ -41,6 +41,15 @@ public final class SkyBlockStatBarParser {
                     + "|([\\d,]+)\\s*(?:✦|⚡)"
                     + "|(?:Speed)[:\\s]+([\\d,]+)",
             Pattern.CASE_INSENSITIVE);
+    /*
+     * Current SkyBlock vitality is a resource pair, for example 85/100,
+     * rather than only a single standalone number.
+     */
+    private static final Pattern VITALITY_PAIR = Pattern.compile(
+            PAIR + "\\s*♨"
+                    + "|(?:Vitality)[:\\s]+" + PAIR,
+            Pattern.CASE_INSENSITIVE);
+
     private static final Pattern VITALITY = Pattern.compile(
             "(?:♨)\\s*([\\d,]+)"
                     + "|([\\d,]+)\\s*♨"
@@ -117,100 +126,316 @@ public final class SkyBlockStatBarParser {
         if (raw == null || raw.isBlank()) {
             return Stats.empty();
         }
-        String text = stripHudIconTokens(stripFormatting(raw));
-        Pair health = firstPair(HEALTH.matcher(text));
-        OptionalDouble defense = firstSingle(DEFENSE.matcher(text));
-        Pair mana = firstPair(MANA.matcher(text));
-        OptionalDouble overflow = firstSingle(OVERFLOW.matcher(text));
-        OptionalDouble speed = firstSingle(SPEED.matcher(text));
-        OptionalDouble vitality = firstSingle(VITALITY.matcher(text));
+
+        String text =
+                stripHudIconTokens(
+                        stripFormatting(
+                                raw));
+
+        Pair health =
+                firstPair(
+                        HEALTH.matcher(
+                                text));
+
+        OptionalDouble defense =
+                firstSingle(
+                        DEFENSE.matcher(
+                                text));
+
+        Pair mana =
+                firstPair(
+                        MANA.matcher(
+                                text));
+
+        OptionalDouble overflow =
+                firstSingle(
+                        OVERFLOW.matcher(
+                                text));
+
+        OptionalDouble speed =
+                firstSingle(
+                        SPEED.matcher(
+                                text));
+
+        Pair vitalityPair =
+                firstPair(
+                        VITALITY_PAIR.matcher(
+                                text));
+
+        OptionalDouble vitality =
+                vitalityPair.current();
+
+        if (vitality.isEmpty()) {
+            vitality =
+                    firstSingle(
+                            VITALITY.matcher(
+                                    text));
+        }
+
         if (positionalBar) {
-            PositionalStats positional = positionalStats(text, health, mana);
+            /*
+             * Skill gain messages may contain another current/max pair.
+             * Remove that fragment before interpreting positional resource
+             * pairs so skill XP cannot become Mana or Vitality.
+             */
+            String positionalText =
+                    SKILL_TICK
+                            .matcher(text)
+                            .replaceAll(" ");
+
+            PositionalStats positional =
+                    positionalStats(
+                            positionalText,
+                            health,
+                            mana);
+
             if (!health.present()) {
-                health = positional.health;
+                health =
+                        positional.health();
             }
+
             if (defense.isEmpty()) {
-                defense = positional.defense;
+                defense =
+                        positional.defense();
             }
+
             if (!mana.present()) {
-                mana = positional.mana;
+                mana =
+                        positional.mana();
             }
+
             if (overflow.isEmpty()) {
-                overflow = positional.overflow;
+                overflow =
+                        positional.overflow();
             }
+
             if (speed.isEmpty()) {
-                speed = positional.speed;
+                speed =
+                        positional.speed();
+            }
+
+            if (vitality.isEmpty()) {
+                vitality =
+                        positional.vitality();
+            }
+
+            /*
+             * Hypixel omits the overflow fragment when Overflow Mana is zero.
+             * A valid Mana status with no overflow therefore means 0, not an
+             * unavailable stat.
+             */
+            if (mana.present()
+                    && overflow.isEmpty()) {
+
+                overflow =
+                        OptionalDouble.of(
+                                0.0D);
             }
         }
+
         return new Stats(
-                health.current,
-                health.max,
+                health.current(),
+                health.max(),
                 defense,
-                mana.current,
-                mana.max,
+                mana.current(),
+                mana.max(),
                 overflow,
                 speed,
                 vitality);
     }
 
     /**
-     * Classic SkyBlock action bar after private-use icons are stripped:
-     * {@code health/max  defense  mana/max  [overflow]  [speed]}.
+     * Classic SkyBlock action bar after custom font icons are stripped:
+     *
+     * health/max  defense  mana/max  [overflow]  [speed]  [vitality/max]
+     *
+     * Speed still has a client-side live fallback because it is not guaranteed
+     * to be present in every action-bar form.
      */
-    private static PositionalStats positionalStats(String text, Pair knownHealth, Pair knownMana) {
-        List<Token> tokens = tokenize(text);
-        List<Integer> pairIndexes = new ArrayList<>();
+    private static PositionalStats positionalStats(
+            String text,
+            Pair knownHealth,
+            Pair knownMana) {
+
+        List<Token> tokens =
+                tokenize(
+                        text);
+
+        List<Integer> pairIndexes =
+                new ArrayList<>();
+
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).pair()) {
                 pairIndexes.add(i);
             }
         }
-        Pair health = Pair.empty();
-        Pair mana = Pair.empty();
-        OptionalDouble defense = OptionalDouble.empty();
-        OptionalDouble overflow = OptionalDouble.empty();
-        OptionalDouble speed = OptionalDouble.empty();
+
+        Pair health =
+                knownHealth != null
+                        && knownHealth.present()
+                        ? knownHealth
+                        : Pair.empty();
+
+        Pair mana =
+                knownMana != null
+                        && knownMana.present()
+                        ? knownMana
+                        : Pair.empty();
+
+        Pair vitality =
+                Pair.empty();
+
+        OptionalDouble defense =
+                OptionalDouble.empty();
+
+        OptionalDouble overflow =
+                OptionalDouble.empty();
+
+        OptionalDouble speed =
+                OptionalDouble.empty();
+
         int healthIndex = -1;
         int manaIndex = -1;
+        int vitalityIndex = -1;
+
         for (int index : pairIndexes) {
-            Token token = tokens.get(index);
-            Pair pair = new Pair(token.current(), token.max());
-            if (looksLikeVanillaHearts(pair) || samePair(pair, knownMana) || samePair(pair, knownHealth)) {
+            Token token =
+                    tokens.get(
+                            index);
+
+            Pair pair =
+                    new Pair(
+                            token.current(),
+                            token.max());
+
+            if (looksLikeVanillaHearts(
+                    pair)) {
+
                 continue;
             }
+
+            if (knownHealth != null
+                    && knownHealth.present()
+                    && samePair(
+                            pair,
+                            knownHealth)) {
+
+                healthIndex = index;
+                continue;
+            }
+
+            if (knownMana != null
+                    && knownMana.present()
+                    && samePair(
+                            pair,
+                            knownMana)) {
+
+                manaIndex = index;
+                continue;
+            }
+
             if (!health.present()) {
                 health = pair;
                 healthIndex = index;
-            } else if (!mana.present() && !samePair(pair, health)) {
+                continue;
+            }
+
+            if (!mana.present()
+                    && !samePair(
+                            pair,
+                            health)) {
+
                 mana = pair;
                 manaIndex = index;
+                continue;
+            }
+
+            if (manaIndex >= 0
+                    && index > manaIndex
+                    && !samePair(
+                            pair,
+                            health)
+                    && !samePair(
+                            pair,
+                            mana)) {
+
+                vitality = pair;
+                vitalityIndex = index;
+                break;
             }
         }
-        if (health.present() && mana.present() && healthIndex >= 0 && manaIndex > healthIndex) {
-            for (int i = healthIndex + 1; i < manaIndex; i++) {
-                Token token = tokens.get(i);
-                if (!token.pair() && token.current().isPresent()) {
-                    defense = token.current();
+
+        if (health.present()
+                && mana.present()
+                && healthIndex >= 0
+                && manaIndex > healthIndex) {
+
+            for (int i =
+                    healthIndex + 1;
+                    i < manaIndex;
+                    i++) {
+
+                Token token =
+                        tokens.get(i);
+
+                if (!token.pair()
+                        && token.current()
+                        .isPresent()) {
+
+                    defense =
+                            token.current();
+
                     break;
                 }
             }
         }
-        if (mana.present() && manaIndex >= 0) {
-            List<OptionalDouble> after = new ArrayList<>();
-            for (int i = manaIndex + 1; i < tokens.size(); i++) {
-                Token token = tokens.get(i);
-                if (!token.pair() && token.current().isPresent()) {
-                    after.add(token.current());
+
+        if (mana.present()
+                && manaIndex >= 0) {
+
+            int end =
+                    vitalityIndex > manaIndex
+                            ? vitalityIndex
+                            : tokens.size();
+
+            List<OptionalDouble> after =
+                    new ArrayList<>();
+
+            for (int i =
+                    manaIndex + 1;
+                    i < end;
+                    i++) {
+
+                Token token =
+                        tokens.get(i);
+
+                if (!token.pair()
+                        && token.current()
+                        .isPresent()) {
+
+                    after.add(
+                            token.current());
                 }
             }
+
             if (!after.isEmpty()) {
-                overflow = after.get(0);
+                overflow =
+                        after.get(0);
             }
+
             if (after.size() > 1) {
-                speed = after.get(1);
+                speed =
+                        after.get(1);
             }
         }
-        return new PositionalStats(health, mana, defense, overflow, speed);
+
+        return new PositionalStats(
+                health,
+                mana,
+                defense,
+                overflow,
+                speed,
+                vitality.current());
     }
 
     private record PositionalStats(
@@ -218,7 +443,8 @@ public final class SkyBlockStatBarParser {
             Pair mana,
             OptionalDouble defense,
             OptionalDouble overflow,
-            OptionalDouble speed) {
+            OptionalDouble speed,
+            OptionalDouble vitality) {
     }
 
     private static List<Token> tokenize(String text) {
@@ -293,6 +519,7 @@ public final class SkyBlockStatBarParser {
             text = SPEED.matcher(text).replaceAll("");
         }
         if (hideVitality) {
+            text = VITALITY_PAIR.matcher(text).replaceAll("");
             text = VITALITY.matcher(text).replaceAll("");
         }
         if (hideHealth || hideDefense || hideMana || hideOverflow || hideSpeed || hideVitality) {
