@@ -122,6 +122,31 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public boolean loadoutsEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean loadoutPetAutoEquipBusy() {
+        return RotClientPetAutoEquipRuntime.busy();
+    }
+
+    @Override
+    public boolean beginLoadoutPetEquip(String petUuid) {
+        return RotClientPetAutoEquipRuntime.begin(petUuid);
+    }
+
+    @Override
+    public boolean loadoutEquipmentAutoEquipBusy() {
+        return RotClientEquipmentAutoEquipRuntime.busy();
+    }
+
+    @Override
+    public boolean beginLoadoutEquipmentEquip(int equipmentSetNumber) {
+        return RotClientEquipmentAutoEquipRuntime.begin(equipmentSetNumber);
+    }
+
+    @Override
     public String wardrobeHudText(boolean editorOpen) {
         return WardrobeAutoEquipRuntime.hudText(editorOpen);
     }

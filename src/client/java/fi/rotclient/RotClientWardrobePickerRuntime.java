@@ -289,11 +289,17 @@ public final class RotClientWardrobePickerRuntime {
         finishAndReturn();
 
         /*
-         * Apply the changed Wardrobe immediately only when this loadout is
-         * already the active one.
+         * Only Plus applies an edited active loadout to the live player.
+         * The regular/legal client stores the choice without automating gear.
          */
-        if (updateLive) {
-            WardrobeAutoEquipRuntime.beginLoadoutEquip(
+        if (updateLive
+                && QolClientFlavorSupport
+                .hooks()
+                .loadoutsEnabled()) {
+
+            QolClientFlavorSupport
+                    .hooks()
+                    .beginWardrobeLoadoutEquip(
                             globalWardrobeNumber);
         }
 

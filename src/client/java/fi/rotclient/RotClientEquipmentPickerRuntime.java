@@ -250,12 +250,18 @@ public final class RotClientEquipmentPickerRuntime {
         finishAndReturn();
 
         /*
-         * Apply the changed Equipment Set immediately only when this loadout
-         * is already the active one.
+         * Only Plus applies an edited active loadout to the live player.
+         * The regular/legal client stores the set without auto-equipping it.
          */
-        if (updateLive) {
-            RotClientEquipmentAutoEquipRuntime
-                    .begin(equipmentSetNumber);
+        if (updateLive
+                && QolClientFlavorSupport
+                .hooks()
+                .loadoutsEnabled()) {
+
+            QolClientFlavorSupport
+                    .hooks()
+                    .beginLoadoutEquipmentEquip(
+                            equipmentSetNumber);
         }
 
         return true;
