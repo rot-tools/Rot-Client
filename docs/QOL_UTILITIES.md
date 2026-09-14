@@ -13,13 +13,14 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **133** Rot Client+ catalog entries (and the **111** legit subset) are wired
+All **133** Rot Client+ catalog entries (and the **108** legit subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
-Rot Client omits 21 automation parents (Auto Clicker, Free Camera, Farm Keys,
-and the rest listed in [Which JAR](WHICH_JAR.md)). Mixed parents keep visual
-settings; cheat children exist only in Plus.
+Rot Client omits 23 Plus-only parents (Auto Clicker, wardrobe automation,
+Ghosts, Escrow Fix, Free Camera, Farm Keys, and the rest listed in
+[Which JAR](WHICH_JAR.md)). Mixed parents keep passive visual settings; Plus
+children and their executable implementations exist only in Plus source sets.
 
 ## Catalog
 
@@ -36,7 +37,7 @@ settings; cheat children exist only in Plus.
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Ghosts; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Fox; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Fox; Ghosts; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
 
 ## Fox (Plus)
 
@@ -50,7 +51,7 @@ panels are grouped only when they form one contiguous rectangle; each tile
 receives its own UV region so the image stretches across the panel. Runtime
 playtest remains pending.
 | Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; No Cursor Reset; Click GUI. **Plus:** Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
-| Utilities | Wardrobe Keybinds; Loadout Keybinds; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Escrow Fix; Market Guard. **Plus:** Hotkey Macros; Wardrobe Swapper; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
+| Utilities | Loadout configuration; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Market Guard. **Plus:** Wardrobe Keybinds; Wardrobe Swapper; Escrow Fix; Hotkey Macros; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
 
 ## Fishing suite
 
@@ -189,8 +190,8 @@ configured key is held. It never changes the item or sends a command.
    persistence across restart.
 2. UI window move/resize/snap, inventory equipment overlay, and HUD positioning.
 3. Passive render/UI modules: Item Rarity, Custom/Info/Price Tooltips, Viewmodel,
-   Item Scale, No Render controls, Camera, and Ghosts.
-4. Serveri workflows: Experiments, Wardrobe, Harp, GFS, Sell, command
+   Item Scale, No Render controls, and Camera; then Plus-only Ghosts.
+4. Plus Serveri workflows: Experiments, Wardrobe, Harp, GFS, Sell, command
    keybinds, and input helpers.
 5. Cross-module regression pass: simultaneous passive HUD/render modules,
    persistence across restart, and no hidden activation while a switch is off.

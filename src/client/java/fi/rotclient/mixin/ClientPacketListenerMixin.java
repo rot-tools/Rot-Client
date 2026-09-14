@@ -36,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import fi.rotclient.RotClientPetAutoEquipRuntime;
 import java.util.List;
 
 @Mixin(ClientPacketListener.class)
@@ -137,10 +136,7 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) {
             return;
         }
-        if (RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
-                || fi.rotclient.RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
-                || fi.rotclient.WardrobeAutoEquipRuntime.consumeOpenScreen(packet)
-                || fi.rotclient.QolClientFlavorSupport.hooks().consumeHiddenOpenScreen(packet)) {
+        if (fi.rotclient.QolClientFlavorSupport.hooks().consumeHiddenOpenScreen(packet)) {
 
             ci.cancel();
         }
@@ -151,9 +147,6 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) {
             return;
         }
-        RotClientPetAutoEquipRuntime.onContainerClosed();
-        fi.rotclient.RotClientEquipmentAutoEquipRuntime.onContainerClosed();
-        fi.rotclient.WardrobeAutoEquipRuntime.onContainerClosed();
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerClosed();
         ExperimentSolverRuntime.onScreenClosed();
     }

@@ -26,9 +26,9 @@ final class DianaWiringTest {
         assertTrue(source.contains("public static void onSpadeUse()"));
         assertTrue(source.contains("public static boolean shouldMuteSound"));
         assertTrue(source.contains("Serveri"));
-        assertTrue(source.contains("pc "));
+        assertTrue(source.contains("dianaMaybePartyShare"));
         assertTrue(source.contains("flags.autoWarp"));
-        assertTrue(source.contains("shouldPartyShare(flags.share"));
+        assertFalse(source.contains("connection.sendCommand"));
         assertTrue(source.contains("dianaShareParty"));
         assertTrue(source.contains("dianaProfitHud"));
         int allowAt = source.indexOf("static boolean allowGameMessage");

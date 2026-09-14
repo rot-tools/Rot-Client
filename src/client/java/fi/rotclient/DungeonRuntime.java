@@ -72,7 +72,6 @@ public final class DungeonRuntime {
     static long terracottaUntil;
     static DungeonAssistPolicy.F7Timer f7Timer = DungeonAssistPolicy.F7Timer.NONE;
     static long f7TimerUntil;
-    static int requeueTicks = -1;
     static int terminalCooldown;
     static int simonCooldown;
     static int puzzleScanTicks;
@@ -324,14 +323,7 @@ public final class DungeonRuntime {
             f7TimerUntil = 0L;
             f7Timer = DungeonAssistPolicy.F7Timer.NONE;
         }
-        if (requeueTicks > 0) {
-            requeueTicks--;
-        } else if (requeueTicks == 0) {
-            requeueTicks = -1;
-            if (extras.dungeonRequeueEnabled && client.player.connection != null) {
-                client.player.connection.sendCommand("instancerequeue");
-            }
-        }
+        QolClientFlavorSupport.hooks().dungeonRequeueTick(client);
         if (terminalCooldown > 0) {
             terminalCooldown--;
         }
@@ -561,14 +553,9 @@ public final class DungeonRuntime {
                     .ifPresent(title -> showTitle(client, true, "§e" + title));
         }
         noteDungeonRunStart(raw);
-        if (DungeonPolicy.shouldArmRequeue(
-                extras.dungeonRequeueEnabled,
-                dungeonRunStarted,
-                extraStatsSeen,
-                dungeonWorldTicks,
-                raw)) {
+        if (QolClientFlavorSupport.hooks().dungeonRequeueOnChat(
+                dungeonRunStarted, extraStatsSeen, dungeonWorldTicks, raw)) {
             extraStatsSeen = true;
-            requeueTicks = Math.max(0, extras.dungeonRequeueDelay);
         }
         if (!chestRunCounted && DungeonPolicy.isDungeonEnd(raw)) {
             chestRunCounted = true;
@@ -894,7 +881,7 @@ public final class DungeonRuntime {
         terracottaUntil = 0L;
         f7Timer = DungeonAssistPolicy.F7Timer.NONE;
         f7TimerUntil = 0L;
-        requeueTicks = -1;
+        QolClientFlavorSupport.hooks().dungeonRequeueReset();
         terminalCooldown = 0;
         simonCooldown = 0;
         puzzleScanTicks = 0;
@@ -3466,7 +3453,7 @@ public final class DungeonRuntime {
         QolSkyblockExtras extras = extras();
         var stack = client.player.getMainHandItem();
         String name = stack.getHoverName().getString();
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         boolean holding = TempleDungeonPolicy.isDungeonBreakerItem(name, id);
         int charges = DungeonPolicy.breakerCharges(InventoryChromeRuntime.loreLines(stack)).orElse(0);
         boolean fatigue = client.player.hasEffect(MobEffects.MINING_FATIGUE);
@@ -3494,7 +3481,7 @@ public final class DungeonRuntime {
         }
         var stack = client.player.getMainHandItem();
         String name = stack.getHoverName().getString();
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         if (!TempleDungeonPolicy.isDungeonBreakerItem(name, id)) {
             return false;
         }
@@ -3535,7 +3522,7 @@ public final class DungeonRuntime {
             return;
         }
         DungeonPolicy.Invincibility kind =
-                DungeonPolicy.maskFromSkyBlockId(AutoClickerItemIdentity.skyBlockId(stack));
+                DungeonPolicy.maskFromSkyBlockId(SkyBlockItemIdentity.skyBlockId(stack));
         long now = System.currentTimeMillis();
         long remaining;
         long max;

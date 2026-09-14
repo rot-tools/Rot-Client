@@ -104,7 +104,7 @@ public final class RotClientWardrobePickerRuntime {
                 screenToReturnTo;
 
         player.connection.sendCommand(
-                WardrobeKeybindPolicy.OPEN_COMMAND);
+                "wd");
 
         return true;
     }
@@ -129,8 +129,7 @@ public final class RotClientWardrobePickerRuntime {
                         : screen.getTitle()
                         .getString();
 
-        if (!WardrobeKeybindPolicy
-                .isWardrobeTitle(title)) {
+        if (MenuKeybindPolicy.parseWardrobeTitle(title) == null) {
 
             return false;
         }
@@ -163,8 +162,7 @@ public final class RotClientWardrobePickerRuntime {
                         : screen.getTitle()
                         .getString();
 
-        if (!WardrobeKeybindPolicy
-                .isWardrobeTitle(title)) {
+        if (MenuKeybindPolicy.parseWardrobeTitle(title) == null) {
 
             return false;
         }
@@ -209,12 +207,7 @@ public final class RotClientWardrobePickerRuntime {
         if (stack == null
                 || stack.isEmpty()
                 || isLoadingPane(stack)
-                || WardrobeKeybindPolicy.isEmptyMarker(
-                isItemPath(
-                        stack,
-                        "gray_dye"),
-                stack.getHoverName()
-                        .getString())) {
+                || isEmptyMarker(stack)) {
 
             return true;
         }
@@ -374,5 +367,12 @@ public final class RotClientWardrobePickerRuntime {
         return id != null
                 && path.equals(
                 id.getPath());
+    }
+
+    private static boolean isEmptyMarker(ItemStack stack) {
+        return isItemPath(stack, "gray_dye")
+                && MenuKeybindPolicy.stripGuiText(stack.getHoverName().getString())
+                .toLowerCase(java.util.Locale.ROOT)
+                .contains("empty");
     }
 }

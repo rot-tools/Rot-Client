@@ -561,9 +561,6 @@ public final class RotClientClient implements ClientModInitializer {
                     "WARDROBE_KEYBINDS",
                     () -> {
                         MenuKeybindRuntime.tick(client);
-                        WardrobeAutoEquipRuntime.tick(client);
-                        RotClientPetAutoEquipRuntime.tick(client);
-                        RotClientEquipmentAutoEquipRuntime.tick(client);
                         LOADOUT_ACTIVATION.tick();
                     });
             ClientBoundaryGuard.run(
@@ -844,7 +841,7 @@ public final class RotClientClient implements ClientModInitializer {
                                 }
                                 WaypointRuntime.onGameMessage(message);
                                 RingKeybindsRuntime.rememberChat(message);
-                                EscrowFixRuntime.onChat(message);
+                                QolClientFlavorSupport.hooks().escrowFixOnChat(message);
                                 QolClientFlavorSupport.hooks().onChat(message);
                                 FishingSuiteRuntime.onChat(message);
                                 MiningLeftoverRuntime.onChat(message, overlay);

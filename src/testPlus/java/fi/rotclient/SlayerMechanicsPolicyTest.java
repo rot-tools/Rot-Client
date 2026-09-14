@@ -32,15 +32,15 @@ class SlayerMechanicsPolicyTest {
                 SlayerMechanicsPolicy.DaggerAttunement.CRYSTAL,
                 SlayerMechanicsPolicy.daggerAttunement("CRYSTAL ♨: 12M❤").orElseThrow());
 
-        assertTrue(SlayerMechanicsPolicy.supportsDagger(
+        assertTrue(SlayerAutomationPolicy.supportsDagger(
                 "FIREDUST_DAGGER", SlayerMechanicsPolicy.DaggerAttunement.ASHEN));
-        assertTrue(SlayerMechanicsPolicy.supportsDagger(
+        assertTrue(SlayerAutomationPolicy.supportsDagger(
                 "PYROCHAOS_DAGGER", SlayerMechanicsPolicy.DaggerAttunement.AURIC));
-        assertFalse(SlayerMechanicsPolicy.supportsDagger(
+        assertFalse(SlayerAutomationPolicy.supportsDagger(
                 "FIREDUST_DAGGER", SlayerMechanicsPolicy.DaggerAttunement.SPIRIT));
-        assertTrue(SlayerMechanicsPolicy.supportsDagger(
+        assertTrue(SlayerAutomationPolicy.supportsDagger(
                 "MAWDUST_DAGGER", SlayerMechanicsPolicy.DaggerAttunement.SPIRIT));
-        assertTrue(SlayerMechanicsPolicy.supportsDagger(
+        assertTrue(SlayerAutomationPolicy.supportsDagger(
                 "DEATHRIPPER_DAGGER", SlayerMechanicsPolicy.DaggerAttunement.CRYSTAL));
 
         assertEquals(0, SlayerMechanicsPolicy.DaggerAttunement.ASHEN.mode());
@@ -51,8 +51,8 @@ class SlayerMechanicsPolicyTest {
 
     @Test
     void daggerSwapStateSchedulesOnlyRealAttunementChangesAndRespectsDelay() {
-        SlayerMechanicsPolicy.DaggerSwapState state =
-                new SlayerMechanicsPolicy.DaggerSwapState();
+        SlayerAutomationPolicy.DaggerSwapState state =
+                new SlayerAutomationPolicy.DaggerSwapState();
 
         assertTrue(state.observe("ASHEN ♨: 12M❤", 1, 2));
         assertFalse(state.ready().isPresent());
@@ -95,21 +95,21 @@ class SlayerMechanicsPolicyTest {
 
     @Test
     void soulcrySupportsOnlyVoidgloomKatanasAndUsesTheRealManaCosts() {
-        assertTrue(SlayerMechanicsPolicy.isSoulcryKatana("VOIDEDGE_KATANA"));
-        assertTrue(SlayerMechanicsPolicy.isSoulcryKatana("VORPAL_KATANA"));
-        assertTrue(SlayerMechanicsPolicy.isSoulcryKatana("ATOMSPLIT_KATANA"));
-        assertFalse(SlayerMechanicsPolicy.isSoulcryKatana("GIANTS_SWORD"));
+        assertTrue(SlayerAutomationPolicy.isSoulcryKatana("VOIDEDGE_KATANA"));
+        assertTrue(SlayerAutomationPolicy.isSoulcryKatana("VORPAL_KATANA"));
+        assertTrue(SlayerAutomationPolicy.isSoulcryKatana("ATOMSPLIT_KATANA"));
+        assertFalse(SlayerAutomationPolicy.isSoulcryKatana("GIANTS_SWORD"));
 
-        assertEquals(200, SlayerMechanicsPolicy.soulcryManaCost(false));
-        assertEquals(100, SlayerMechanicsPolicy.soulcryManaCost(true));
-        assertTrue(SlayerMechanicsPolicy.hasSoulcryMana(200.0D, 0.0D, false));
-        assertTrue(SlayerMechanicsPolicy.hasSoulcryMana(60.0D, 40.0D, true));
-        assertFalse(SlayerMechanicsPolicy.hasSoulcryMana(99.0D, 0.0D, true));
+        assertEquals(200, SlayerAutomationPolicy.soulcryManaCost(false));
+        assertEquals(100, SlayerAutomationPolicy.soulcryManaCost(true));
+        assertTrue(SlayerAutomationPolicy.hasSoulcryMana(200.0D, 0.0D, false));
+        assertTrue(SlayerAutomationPolicy.hasSoulcryMana(60.0D, 40.0D, true));
+        assertFalse(SlayerAutomationPolicy.hasSoulcryMana(99.0D, 0.0D, true));
     }
 
     @Test
     void soulcryTickStateArmsOnceAndWaitsForTheConfiguredDelay() {
-        SlayerMechanicsPolicy.SoulcryState state = new SlayerMechanicsPolicy.SoulcryState();
+        SlayerAutomationPolicy.SoulcryState state = new SlayerAutomationPolicy.SoulcryState();
         assertTrue(state.arm(1, 3, 2));
         assertFalse(state.ready());
         state.tick();
@@ -129,13 +129,13 @@ class SlayerMechanicsPolicyTest {
 
     @Test
     void soulcryAbilityGateWaitsTheRealFourSecondCooldownAndHonorsItemCooldown() {
-        SlayerMechanicsPolicy.SoulcryAbilityGate gate =
-                new SlayerMechanicsPolicy.SoulcryAbilityGate();
+        SlayerAutomationPolicy.SoulcryAbilityGate gate =
+                new SlayerAutomationPolicy.SoulcryAbilityGate();
         assertTrue(gate.ready(false));
         assertFalse(gate.ready(true));
         gate.markUsed();
         assertFalse(gate.ready(false));
-        assertEquals(80, SlayerMechanicsPolicy.SOULCRY_ABILITY_COOLDOWN_TICKS);
+        assertEquals(80, SlayerAutomationPolicy.SOULCRY_ABILITY_COOLDOWN_TICKS);
         assertEquals(80, gate.remainingTicks());
         for (int i = 0; i < 79; i++) {
             gate.tick();
@@ -153,11 +153,11 @@ class SlayerMechanicsPolicyTest {
         gate.reset();
         assertTrue(gate.ready(false));
 
-        assertEquals(80, SlayerMechanicsPolicy.abilityCooldownTicks(
+        assertEquals(80, SlayerAutomationPolicy.abilityCooldownTicks(
                 "This ability is on cooldown for 4s").orElse(-1));
-        assertEquals(70, SlayerMechanicsPolicy.abilityCooldownTicks(
+        assertEquals(70, SlayerAutomationPolicy.abilityCooldownTicks(
                 "§cThis ability is on cooldown for 3.5s").orElse(-1));
-        assertTrue(SlayerMechanicsPolicy.abilityCooldownTicks("Boss spawned").isEmpty());
+        assertTrue(SlayerAutomationPolicy.abilityCooldownTicks("Boss spawned").isEmpty());
     }
 
     @Test

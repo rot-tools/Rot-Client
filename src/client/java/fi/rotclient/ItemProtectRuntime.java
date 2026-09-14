@@ -94,7 +94,7 @@ public final class ItemProtectRuntime {
         if (!extras.foragingHelpersEnabled || !extras.foragingHelpersHuntaxeLock) {
             return false;
         }
-        return ForagingPolicy.isHuntaxe(AutoClickerItemIdentity.skyBlockId(stack), name);
+        return ForagingPolicy.isHuntaxe(SkyBlockItemIdentity.skyBlockId(stack), name);
     }
 
     private static String screenTitle(Screen screen) {

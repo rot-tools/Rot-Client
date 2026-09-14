@@ -213,7 +213,7 @@ public final class MiningAssistRuntime {
     private static void tickCompass(LocalPlayer player) {
         boolean using = player.isUsingItem()
                 && "WISHING_COMPASS".equalsIgnoreCase(
-                        AutoClickerItemIdentity.skyBlockId(player.getUseItem()));
+                        SkyBlockItemIdentity.skyBlockId(player.getUseItem()));
         if (using && !compassWasUsing) {
             Vec3 eye = player.getEyePosition();
             Vec3 look = player.getViewVector(1.0F);

@@ -72,12 +72,12 @@ public final class QolUtilityCatalog {
 
         public String pageDescription() {
             return switch (this) {
-                case COMBAT -> "Auto clicker, trajectories, Etherwarp, and combat ESP.";
+                case COMBAT -> "Trajectories, Etherwarp preview, and combat highlights.";
                 case SLAYER -> "Shared Slayer engine: HUD, fight helpers, drops, and carry.";
                 case EVENTS -> "Griffin burrows, Diana mobs, profit HUD, and share helpers.";
-                case FISHING -> "Auto-pull, sea creatures, hotspots, trophy, and fishing HUD for the Serveri.";
+                case FISHING -> "Bite alerts, sea creatures, hotspots, trophy, and fishing HUD.";
                 case FORAGING -> "Galatea/Park/Torrhus tree HUD, audio mutes, temple/beacon helpers.";
-                case GARDEN -> "Garden farming key remaps. Cheat options stay off by default.";
+                case GARDEN -> "Garden information and visual helpers.";
                 case GUI -> "Custom SkyBlock sidebar, hide vanilla, and board placement.";
                 case DUNGEONS -> "Secrets, ESP, terminals, puzzles, and dungeon HUD.";
                 case KUUDRA -> "Kuudra waypoints, Fresh Tools, party commands, and fight HUDs.";
@@ -433,50 +433,6 @@ public final class QolUtilityCatalog {
                 setting("qol.command_keybinds.potion_bag", "Potion Bag", "Opens the potion bag when you press this key.", SettingType.KEYBIND, "potion")));
 
         modules.add(module(
-                "qol.wardrobe_keybinds",
-                "Wardrobe Keybinds",
-                "Hypixel wardrobe binds: 1-9, pages, hidden auto-equip via /wd.",
-                Group.UTILITIES,
-                "Keybinds",
-                false,
-                true,
-                true,
-                List.of("wardrobe", "unequip", "auto equip"),
-                setting("qol.wardrobe_keybinds.style", "Keybind Style", "Simple uses 1-9. Hotbar uses Minecraft hotbar keys. Custom uses the slot binds below.", SettingType.ENUM,
-                        List.of("Simple", "Hotbar", "Custom"), "style"),
-                setting("qol.wardrobe_keybinds.disable_unequip", "Prevent Unequip", "Do not click a slot that is already equipped.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.sound", "Sound Effect", "Play a local click sound when a wardrobe slot is used.", SettingType.TOGGLE, "sound"),
-                setting("qol.wardrobe_keybinds.cancel_all", "Cancel All Other Clicks", "While the wardrobe is open, swallow keys that are not wardrobe binds.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.override", "Key Override", "Hold this key to allow other clicks when cancel-all is on.", SettingType.KEYBIND, "left control"),
-                setting("qol.wardrobe_keybinds.cancel_render", "Cancel GUI Render", "Hide the wardrobe chest while it stays open for keybinds.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.ping", "Ping", "Minimum milliseconds between wardrobe clicks.", SettingType.NUMBER, "250", "ms"),
-                setting("qol.wardrobe_keybinds.use_hotbar", "Use Hotbar Binds", "1-9 follow Minecraft hotbar keys.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.swap", "Swap Key", "Click the unequipped slot of a configured pair.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.swap_key", "Swap Keybind", "Key that triggers the swap pair.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.swap_a", "Swap Slot 1", "First swap slot, 1-9.", SettingType.NUMBER, "1"),
-                setting("qol.wardrobe_keybinds.swap_b", "Swap Slot 2", "Second swap slot, 1-9.", SettingType.NUMBER, "2"),
-                setting("qol.wardrobe_keybinds.next", "Next Page", "Next wardrobe page.", SettingType.KEYBIND, "right arrow"),
-                setting("qol.wardrobe_keybinds.previous", "Previous Page", "Previous wardrobe page.", SettingType.KEYBIND, "left arrow"),
-                setting("qol.wardrobe_keybinds.unequip", "Unequip", "Unequip wardrobe set.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.auto_close", "Auto Close After Use", "Close the wardrobe after a successful slot click.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.auto_equip", "Auto Equip", "Equip a slot with /wd without showing the GUI. Use at your own risk.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.move_equip", "Equip While Moving", "Allow WASD while hidden auto-equip runs. Increases detection risk.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.reset_open", "Reset On GUI Open", "Cancel a pending auto-equip if you open another GUI.", SettingType.TOGGLE),
-                setting("qol.wardrobe_keybinds.click_delay", "Click Delay", "Ticks to wait after the hidden menu opens before clicking.", SettingType.NUMBER, "1", "ticks"),
-                setting("qol.wardrobe_keybinds.close_delay", "Close Delay", "Ticks to wait after the click before closing.", SettingType.NUMBER, "1", "ticks"),
-                setting("qol.wardrobe_keybinds.delay_variance", "Max Delay Variety", "Random extra ticks added to click and close delays.", SettingType.NUMBER, "1", "ticks"),
-                setting("qol.wardrobe_keybinds.open_hud_editor", "Display Text", "Move the Equipping HUD.", SettingType.ACTION, "position"),
-                setting("qol.wardrobe_keybinds.custom_1", "Custom Slot 1", "Custom key for wardrobe slot 1.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_2", "Custom Slot 2", "Custom key for wardrobe slot 2.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_3", "Custom Slot 3", "Custom key for wardrobe slot 3.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_4", "Custom Slot 4", "Custom key for wardrobe slot 4.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_5", "Custom Slot 5", "Custom key for wardrobe slot 5.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_6", "Custom Slot 6", "Custom key for wardrobe slot 6.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_7", "Custom Slot 7", "Custom key for wardrobe slot 7.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_8", "Custom Slot 8", "Custom key for wardrobe slot 8.", SettingType.KEYBIND),
-                setting("qol.wardrobe_keybinds.custom_9", "Custom Slot 9", "Custom key for wardrobe slot 9.", SettingType.KEYBIND)));
-
-        modules.add(module(
                 "qol.loadout_keybinds",
                 "Loadout Keybinds",
                 "Page and 1-9 / 0 / - / = slot binds while the Hypixel Loadout GUI is open.",
@@ -627,7 +583,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.fishing_creatures",
                 "Sea Creatures",
-                "Barn tracker: spawn chat, cap 10, 340s timer, rare ESP/announce, optional auto-attack on the Serveri.",
+                "Barn tracker: spawn chat, cap 10, 340s timer, and rare-creature highlights.",
                 Group.FISHING,
                 "Creatures",
                 false,
@@ -1147,7 +1103,7 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.mining_glacite",
                 "Glacite Mineshaft",
-                "Pity HUD, corpse tab/loot, cold overlay, and optional party share for the Glacite mineshaft.",
+                "Pity HUD, corpse tab/loot, and cold overlay for the Glacite mineshaft.",
                 Group.MINING,
                 "Glacite",
                 false,
@@ -1621,13 +1577,13 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.dungeon_termsim",
                 "Terminal Simulator",
-                "Local F7 terminal practice with Hypixel window titles. Auto Terms solves the sim and real chests.",
+                "Local F7 terminal practice with Hypixel-style window titles and personal-best times.",
                 Group.DUNGEONS,
                 "F7",
                 false,
                 true,
                 true,
-                List.of("termsim", "terminal sim", "practice", "cheat"),
+                List.of("termsim", "terminal sim", "practice"),
                 setting("qol.dungeon_termsim.open", "Open Hub", "Open the Terminal Simulator menu.", SettingType.ACTION),
                 setting("qol.dungeon_termsim.keybind", "Keybind", "Open the hub while in-game.", SettingType.KEYBIND),
                 setting("qol.dungeon_termsim.ping", "Ping", "Simulated round-trip delay in milliseconds.", SettingType.NUMBER),
@@ -1823,22 +1779,15 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.dungeon_party_join",
                 "Party Finder Join Stats",
-                "Print SkyCrypt stats when someone joins from Party Finder. Optional delayed auto-kick. Cheat, off.",
+                "Print cached SkyCrypt dungeon stats when someone joins from Party Finder.",
                 Group.DUNGEONS,
                 "Menus",
                 false,
                 true,
                 true,
-                List.of("party finder join", "auto kick", "join stats"),
+                List.of("party finder join", "join stats"),
                 setting("qol.dungeon_party_join.stats", "Print Stats", "Chat the cached SkyCrypt dungeon stats for the joining player.", SettingType.TOGGLE),
-                setting("qol.dungeon_party_join.detect_floor", "Detect Floor", "Use the current dungeon floor when comparing personal bests.", SettingType.TOGGLE),
-                setting("qol.dungeon_party_join.required_pb", "Required PB", "Kick if slower than this time, for example 5:30.", SettingType.TEXT),
-                setting("qol.dungeon_party_join.required_secrets", "Required Secrets", "Kick if secrets are below this count, for example 50k.", SettingType.TEXT),
-                setting("qol.dungeon_party_join.required_avg", "Required Secret Avg", "Kick if secret average is below this, for example 8.4.", SettingType.TEXT),
-                setting("qol.dungeon_party_join.required_mp", "Required MP", "Kick if magical power is below this, for example 800.", SettingType.TEXT),
-                setting("qol.dungeon_party_join.kick_message", "Kick Message", "Send a delayed party-chat kick reason.", SettingType.TOGGLE),
-                setting("qol.dungeon_party_join.send_party", "Send In Party", "Use /pc for the kick message.", SettingType.TOGGLE),
-                setting("qol.dungeon_party_join.message_delay", "Message Delay", "Ticks to wait before /p kick and the party message.", SettingType.NUMBER)));
+                setting("qol.dungeon_party_join.detect_floor", "Detect Floor", "Use the current dungeon floor when showing personal bests.", SettingType.TOGGLE)));
 
 
 
@@ -2654,16 +2603,6 @@ public final class QolUtilityCatalog {
                         "watches",
                         "alerts",
                         "market")));
-        modules.add(module(
-                "qol.escrow_fix",
-                "Escrow Fix",
-                "Reopen of AH/BZ after escrow chat closes the menu. Same chat lines on Serveri.",
-                Group.UTILITIES,
-                "Market",
-                false,
-                true,
-                true,
-                List.of("escrow", "auction house", "bazaar", "ah", "bz")));
 
 
 
@@ -2673,23 +2612,6 @@ public final class QolUtilityCatalog {
 
 
 
-        modules.add(module(
-                "qol.ghosts",
-                "Ghosts",
-                "Mist creepers in the Dwarven Mines. Highlight Style paints a fill/outline box; Show Powered Layer is off so the vanilla charged swirl does not cover it. Show Ghosts reveals the creeper body.",
-                Group.RENDER,
-                "Players",
-                false,
-                true,
-                true,
-                List.of("ghosts", "creeper", "dwarven mines", "powered", "mist", "highlight"),
-                setting("qol.ghosts.highlight_style", "Highlight Style", "Outline, filled, or both boxes around each Mist creeper.", SettingType.ENUM,
-                        GhostsPolicy.HIGHLIGHT_STYLES, "both"),
-                setting("qol.ghosts.fill_color", "Fill Color", "Filled-box color over each Mist creeper.", SettingType.COLOR),
-                setting("qol.ghosts.outline_color", "Outline Color", "Box-outline color around each Mist creeper.", SettingType.COLOR),
-                setting("qol.ghosts.show_ghosts", "Show Ghosts", "Show the creeper entities.", SettingType.TOGGLE),
-                setting("qol.ghosts.show_powered", "Show Powered Layer", "Keep the vanilla charged overlay. Off matches Ghost Vision: only the colored box.", SettingType.TOGGLE),
-                setting("qol.ghosts.keybind", "Keybind", "Toggle Ghosts.", SettingType.KEYBIND)));
 
 
 

@@ -54,7 +54,7 @@ final class TrajectoryRuntime {
         }
         LocalPlayer player = client.player;
         ItemStack held = player.getMainHandItem();
-        String skyBlockId = AutoClickerItemIdentity.skyBlockId(held);
+        String skyBlockId = SkyBlockItemIdentity.skyBlockId(held);
         boolean terminator = TrajectoryPredictor.isTerminatorId(skyBlockId);
         Optional<TrajectoryPredictor.ProjectileKind> kind =
                 TrajectoryPredictor.detectHeld(
@@ -245,7 +245,7 @@ final class TrajectoryRuntime {
             return "bow";
         }
         String hover = stack.getHoverName().getString();
-        String nbt = AutoClickerItemIdentity.identify(stack);
+        String nbt = SkyBlockItemIdentity.identify(stack);
         return (hover + " " + nbt).trim();
     }
 

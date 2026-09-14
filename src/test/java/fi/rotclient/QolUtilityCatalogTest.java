@@ -48,7 +48,6 @@ final class QolUtilityCatalogTest {
                 "qol.player_size",
                 "qol.etherwarp",
                 "qol.command_keybinds",
-                "qol.wardrobe_keybinds",
                 "qol.loadout_keybinds",
                 "qol.pet_keybinds",
                 "qol.trajectories",
@@ -98,8 +97,6 @@ final class QolUtilityCatalogTest {
                 "qol.anvil_helper",
                 "qol.calendar_date",
                 "qol.experiment_solver",
-                "qol.escrow_fix",
-                "qol.ghosts",
                 "qol.slayer_display",
                 "qol.slayer_time_messages",
                 "qol.slayer_progress",
@@ -274,7 +271,8 @@ final class QolUtilityCatalogTest {
         assertEquals("Market", QolUtilityCatalog.findById("qol.stall_market").section());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.RENDER)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.ghosts")));
+                .noneMatch(m -> m.id().equals("qol.ghosts")));
+        assertEquals(null, QolUtilityCatalog.findById("qol.escrow_fix"));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.mining_tracker")));
@@ -424,6 +422,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(111, moduleIds.size());
+        assertEquals(108, moduleIds.size());
     }
 }

@@ -266,7 +266,7 @@ public final class IotaRuntime {
             return false;
         }
         return IotaPolicy.isTerminatorId(
-                AutoClickerItemIdentity.skyBlockId(client.player.getMainHandItem()));
+                SkyBlockItemIdentity.skyBlockId(client.player.getMainHandItem()));
     }
 
     private static boolean holdingBow() {
@@ -280,7 +280,7 @@ public final class IotaRuntime {
         }
         var key = BuiltInRegistries.ITEM.getKey(stack.getItem());
         String path = key == null ? "" : key.getPath();
-        String id = AutoClickerItemIdentity.skyBlockId(stack).toLowerCase(Locale.ROOT);
+        String id = SkyBlockItemIdentity.skyBlockId(stack).toLowerCase(Locale.ROOT);
         return path.contains("bow")
                 || path.contains("crossbow")
                 || id.contains("bow")

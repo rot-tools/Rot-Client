@@ -15,6 +15,7 @@ final class FishingPlusRuntime {
     private static int pendingRecast;
     private static int recastCheckTicks;
     private static boolean busy;
+    private static int creatureAutoDelay;
 
     private FishingPlusRuntime() {
     }
@@ -24,6 +25,7 @@ final class FishingPlusRuntime {
         pendingRecast = 0;
         recastCheckTicks = 0;
         busy = false;
+        creatureAutoDelay = 0;
     }
 
     static void tick(Minecraft client) {
@@ -84,5 +86,40 @@ final class FishingPlusRuntime {
                 ClickPulseHelper.pulseUse(client);
             }
         }
+    }
+
+    static void tickCreatureAutoAttack(
+            Minecraft client, boolean lookingAtTrackedCreature, boolean screenOpen) {
+        if (creatureAutoDelay > 0) {
+            creatureAutoDelay--;
+        }
+        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        if (FishingAutomationPolicy.shouldAutoAttack(
+                extras.fishingCreaturesEnabled,
+                extras.fishingCreaturesAutoAttack,
+                lookingAtTrackedCreature,
+                screenOpen)
+                && creatureAutoDelay <= 0) {
+            ClickPulseHelper.pulseAttack(client);
+            creatureAutoDelay = FishingAutomationPolicy.clampAutoDelay(
+                    extras.fishingCreaturesAutoDelay);
+        }
+    }
+
+    static void onCreatureSpawned(
+            Minecraft client, FishingCreaturesPolicy.Creature creature) {
+        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        if (creature == null
+                || client == null
+                || client.player == null
+                || client.player.connection == null
+                || !FishingCreaturesPolicy.shouldPartyAnnounce(
+                extras.fishingCreaturesEnabled,
+                extras.fishingCreaturesRareParty,
+                creature,
+                extras.fishingCreaturesMinRarity)) {
+            return;
+        }
+        client.player.connection.sendCommand("pc " + creature.spawn());
     }
 }

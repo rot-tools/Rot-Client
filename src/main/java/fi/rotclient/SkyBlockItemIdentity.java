@@ -11,11 +11,11 @@ import java.util.Optional;
  * SkyBlock-style held-item identity for auto-clicker whitelists. Prefers NBT
  * {@code uuid} then {@code id}, then falls back to the item hover name.
  */
-public final class AutoClickerItemIdentity {
+public final class SkyBlockItemIdentity {
     public static final String TERMINATOR_ID = "TERMINATOR";
     public static final String DUNGEON_BREAKER_ID = "DUNGEONBREAKER";
 
-    private AutoClickerItemIdentity() {
+    private SkyBlockItemIdentity() {
     }
 
     public static String identify(ItemStack stack) {

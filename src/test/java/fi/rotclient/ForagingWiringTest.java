@@ -48,7 +48,7 @@ final class ForagingWiringTest {
         String policy = Files.readString(Path.of(
                 "src/main/java/fi/rotclient/ForagingPolicy.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(policy.contains("nextBeaconClick"));
+        assertFalse(policy.contains("nextBeaconClick"));
         assertTrue(policy.contains("forestTempleTurns"));
         assertTrue(policy.contains("colorClicks"));
         assertTrue(policy.contains("speedFromMoveTicks"));

@@ -9,7 +9,7 @@ client-only Fabric mod. Almost every class lives in the same Java package:
 `fi.rotclient`. Mixins that hook Minecraft live in `fi.rotclient.mixin`.
 
 Current checkpoint: **`2.0.1+mc26.2`**, Minecraft **26.2**, Java **25**, two
-JARs: **Rot Client** (**110** QoL parents) and **Rot Client+** (**131**). This
+JARs: **Rot Client** (**108** QoL parents) and **Rot Client+** (**133**). This
 is a public engineering checkpoint, not a finished 2.0 release. Rot Client is
 not affiliated with Hypixel.
 
@@ -27,7 +27,7 @@ Rot Client does four jobs in two edition JARs:
 | Job | What the player sees | Where it lives in code |
 | --- | --- | --- |
 | **Dashboard** | Right Shift / `/rot` Click GUI | `RotClientHomeScreen`, `QolUtilityDashboard` |
-| **QoL catalog** | 110 parents (legit) / 131 (Plus) in 14 groups | `QolUtilityCatalog` + `QolPlusCatalog` + `*Policy` + `*Runtime` |
+| **QoL catalog** | 108 parents (legit) / 133 (Plus) in 14 groups | `QolUtilityCatalog` + `QolPlusCatalog` + `*Policy` + `*Runtime` |
 | **Mining tracker** | Material / gemstone HUD and ledgers | `TrackerConfig`, detectors, `RotClientHud` |
 | **Current Session** | Pause / resume / start new, History | `RotClientCurrentSession`, History store |
 
@@ -155,7 +155,7 @@ Related UI classes they will hit next:
 | Class | Role |
 | --- | --- |
 | `RotClientHomeScreen` | Overview: Modules / Look & HUD / Mining / Events |
-| `QolUtilityDashboard` | Searchable 110/131-module catalog + settings drawer |
+| `QolUtilityDashboard` | Searchable 108/133-module catalog + settings drawer |
 | `MiningUiScreen` | Mining tracker selector, enable, reset, HUD edit |
 | `RotClientTheme` | Blue-slate palette. Do not hardcode random colors. |
 | `RotClientModMenuIntegration` | Optional Mod Menu config button |
@@ -164,7 +164,7 @@ Related UI classes they will hit next:
 
 ## 5. How the catalog modules actually exist
 
-There is **one shared catalog** plus a Plus SPI, not 131 independent mods.
+There is **one shared catalog** plus a Plus SPI, not 133 independent mods.
 
 `QolUtilityCatalog` is a static list of `ModuleDef` records. Rot Client+
 merges extra parents and cheat child settings through `QolFlavorExtension`.
@@ -350,7 +350,7 @@ a generic fallback range.
 
 | File | Why |
 | --- | --- |
-| `QolUtilityCatalog` | The 110 shared modules and their settings |
+| `QolUtilityCatalog` | The 108 shared modules and their settings |
 | `QolUtilityConfig` | Persisted toggles |
 | `QolSkyblockExtras` | Extra option blob |
 | `QolModuleEvidence` | Ready vs needs-testing vs upcoming |

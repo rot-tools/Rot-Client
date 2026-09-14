@@ -41,12 +41,14 @@ final class ColumnStyleQolWiringTest {
         assertTrue(commissionRuntime.contains("rotclient$getNameForDisplay"));
         assertTrue(client.contains("MobHighlightRuntime.tick"));
         assertTrue(client.contains("MenuKeybindRuntime.tick"));
-        assertTrue(client.contains("WardrobeAutoEquipRuntime.tick"));
+        assertFalse(client.contains("WardrobeAutoEquipRuntime.tick"));
+        assertTrue(plus.contains("WardrobeAutoEquipRuntime.tick"));
         assertTrue(plus.contains("WardrobeAutoEquipRuntime.onScreenOpened"));
         assertTrue(plus.contains("AutoHarpRuntime.tick"));
         assertTrue(plus.contains("AutoGfsRuntime.tick"));
         assertTrue(plus.contains("AutoSellRuntime.tick"));
-        assertTrue(client.contains("EscrowFixRuntime.onChat"));
+        assertFalse(client.contains("EscrowFixRuntime.onChat"));
+        assertTrue(plus.contains("EscrowFixRuntime.onChat"));
         assertTrue(client.contains("QolModuleKeybindRuntime.tick"));
         assertTrue(client.contains("SlayerRuntime.tick"));
         assertTrue(client.contains("SlayerRuntime.onChat"));
@@ -60,9 +62,13 @@ final class ColumnStyleQolWiringTest {
         String slayerRuntime = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/SlayerRuntime.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(slayerRuntime.contains("ClickPulseHelper.pulseUse"));
-        assertTrue(slayerRuntime.contains("SoulcryAbilityGate"));
-        assertTrue(slayerRuntime.contains("heldItemOnCooldown"));
+        String slayerAutomation = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/SlayerAutomationRuntime.java"),
+                StandardCharsets.UTF_8);
+        assertFalse(slayerRuntime.contains("ClickPulseHelper.pulseUse"));
+        assertFalse(slayerRuntime.contains("SoulcryAbilityGate"));
+        assertTrue(slayerAutomation.contains("ClickPulseHelper.pulseUse"));
+        assertTrue(slayerAutomation.contains("SoulcryAbilityGate"));
         assertTrue(!slayerRuntime.contains("soulcryUseCooldown"));
         assertTrue(slayerRuntime.contains("attachedAttunementLine"));
         assertTrue(slayerRuntime.contains("inflate(0.9D, 2.8D, 0.9D)"));
@@ -74,6 +80,8 @@ final class ColumnStyleQolWiringTest {
         assertTrue(slayerRuntime.contains("addTrackedMarker"));
         assertTrue(slayerRuntime.contains("isVengeanceStartTag"));
         assertFalse(slayerRuntime.contains("descriptor.role() != SlayerPolicy.EntityRole.DEMON"));
+        assertTrue(HudLayoutLandingPolicy.rows().stream()
+                .anyMatch(row -> "qol.wardrobe_keybinds".equals(row.settingId())));
     }
 
     @Test
@@ -96,9 +104,12 @@ final class ColumnStyleQolWiringTest {
         assertTrue(tooltipMixin.contains("positionTooltip(IIIIII)Lorg/joml/Vector2ic;"));
         assertTrue(!tooltipMixin.contains("setTooltipForNextFrame"));
         assertTrue(!tooltipMixin.contains("ModifyVariable"));
-        assertTrue(json.contains("CreeperRendererGhostsMixin"));
-        assertTrue(json.contains("CreeperPoweredGhostsMixin"));
-        assertTrue(json.contains("KeyboardHandlerWardrobeMixin"));
+        assertFalse(json.contains("CreeperRendererGhostsMixin"));
+        assertFalse(json.contains("CreeperPoweredGhostsMixin"));
+        assertTrue(plusJson.contains("CreeperRendererGhostsMixin"));
+        assertTrue(plusJson.contains("CreeperPoweredGhostsMixin"));
+        assertFalse(json.contains("KeyboardHandlerWardrobeMixin"));
+        assertTrue(plusJson.contains("KeyboardHandlerWardrobeMixin"));
         assertTrue(plusJson.contains("MouseHandlerEtherwarpMixin"));
         assertTrue(plusJson.contains("KeyboardInputEtherwarpMixin"));
         String mouse = Files.readString(Path.of(
@@ -107,7 +118,7 @@ final class ColumnStyleQolWiringTest {
         assertTrue(mouse.contains("method = \"onButton\""));
         assertTrue(mouse.contains("MouseButtonInfo"));
         String keyboard = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/KeyboardHandlerWardrobeMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/KeyboardHandlerWardrobeMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(keyboard.contains("method = \"keyPress\""));
         String overlay = Files.readString(Path.of(
@@ -147,7 +158,7 @@ final class ColumnStyleQolWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(packets.contains("QolClientFlavorSupport.hooks().consumeHiddenOpenScreen"));
         String autoEquip = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
+                "src/plusClient/java/fi/rotclient/WardrobeAutoEquipRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(autoEquip.contains("sendCommand(WardrobeKeybindPolicy.OPEN_COMMAND)"));
         assertTrue(autoEquip.contains("packet.getType().create"));
@@ -158,7 +169,7 @@ final class ColumnStyleQolWiringTest {
                 "src/client/java/fi/rotclient/mixin/LevelRendererEtherwarpMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(levelRenderer.contains("SlayerRuntime.renderGizmos"));
-        assertTrue(levelRenderer.contains("GhostsRuntime.renderGizmos"));
+        assertTrue(levelRenderer.contains("renderWorldGizmos"));
         String entitySuppress = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/QolVisualRuntime.java"),
                 StandardCharsets.UTF_8);

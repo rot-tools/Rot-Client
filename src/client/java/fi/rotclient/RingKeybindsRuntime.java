@@ -164,17 +164,7 @@ public final class RingKeybindsRuntime {
                 qol.commandBindConflict,
                 qol.commandBindActivation,
                 qol.commandBindUseRatelimit);
-        if (!QolFlavorSupport.isPlus()) {
-            return presets;
-        }
-        return RingPolicy.mergeMacros(
-                RingPolicy.parseMacroList(
-                        qol.commandBindMacros,
-                        qol.commandBindSendMode,
-                        qol.commandBindConflict,
-                        qol.commandBindActivation,
-                        qol.commandBindUseRatelimit),
-                presets);
+        return QolClientFlavorSupport.hooks().commandMacros(qol, presets);
     }
 
     private static void dispatch(Minecraft client, QolUtilityConfig qol, RingPolicy.DueSend send) {

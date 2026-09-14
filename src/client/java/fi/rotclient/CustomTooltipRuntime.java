@@ -112,7 +112,7 @@ public final class CustomTooltipRuntime {
             clear();
             return;
         }
-        String identity = AutoClickerItemIdentity.identify(hovered);
+        String identity = SkyBlockItemIdentity.identify(hovered);
         if (!identity.equals(lastIdentity)) {
             horizontal = 0;
             vertical = 0;

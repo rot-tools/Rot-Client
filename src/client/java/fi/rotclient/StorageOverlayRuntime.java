@@ -1281,7 +1281,7 @@ public final class StorageOverlayRuntime {
                 continue;
             }
             builder.append(itemId(stack)).append('*').append(stack.getCount()).append('*')
-                    .append(AutoClickerItemIdentity.skyBlockId(stack)).append('*')
+                    .append(SkyBlockItemIdentity.skyBlockId(stack)).append('*')
                     .append(SkyBlockItemData.uuid(stack)).append('*')
                     .append(stack.getHoverName().getString()).append('*')
                     .append(profileTexture(stack)).append('*')
@@ -1800,7 +1800,7 @@ public final class StorageOverlayRuntime {
         if (stack == null || stack.isEmpty() || json == null) {
             return;
         }
-        if (!AutoClickerItemIdentity.skyBlockId(stack).isBlank()) {
+        if (!SkyBlockItemIdentity.skyBlockId(stack).isBlank()) {
             return;
         }
         if (json.has("nbt")) {
@@ -1812,7 +1812,7 @@ public final class StorageOverlayRuntime {
             } catch (Exception ignored) {
             }
         }
-        if (!AutoClickerItemIdentity.skyBlockId(stack).isBlank()) {
+        if (!SkyBlockItemIdentity.skyBlockId(stack).isBlank()) {
             return;
         }
         String marketId = json.has("marketId") ? json.get("marketId").getAsString() : "";
@@ -1871,7 +1871,7 @@ public final class StorageOverlayRuntime {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
-        if (!AutoClickerItemIdentity.skyBlockId(stack).isBlank()) {
+        if (!SkyBlockItemIdentity.skyBlockId(stack).isBlank()) {
             return true;
         }
         if (!profileTexture(stack).isBlank()) {
@@ -1891,9 +1891,9 @@ public final class StorageOverlayRuntime {
         }
 
         String previousSkyBlockId =
-                AutoClickerItemIdentity.skyBlockId(previous);
+                SkyBlockItemIdentity.skyBlockId(previous);
         String liveSkyBlockId =
-                AutoClickerItemIdentity.skyBlockId(live);
+                SkyBlockItemIdentity.skyBlockId(live);
 
         if (previousSkyBlockId.isBlank()
                 || liveSkyBlockId.isBlank()

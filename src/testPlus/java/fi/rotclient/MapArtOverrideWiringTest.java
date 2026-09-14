@@ -22,7 +22,7 @@ final class MapArtOverrideWiringTest {
         assertTrue(json.contains("DisplayItemDisplayAccessor"));
         assertTrue(json.contains("MapRendererMapArtMixin"));
         assertTrue(json.contains("WrapOperation") || Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
                 StandardCharsets.UTF_8).contains("WrapOperation"));
         String shared = Files.readString(Path.of(
                 "src/client/resources/rotclient.client.mixins.json"),
@@ -30,12 +30,17 @@ final class MapArtOverrideWiringTest {
         assertFalse(shared.contains("PaintingRendererFoxMixin"));
         assertFalse(shared.contains("ItemDisplayRendererFoxMixin"));
         assertFalse(shared.contains("BlockDisplayRendererFoxMixin"));
+        assertFalse(shared.contains("DisplayItemDisplayAccessor"));
+        assertTrue(Files.isRegularFile(Path.of(
+                "src/plusClient/java/fi/rotclient/mixin/DisplayItemDisplayAccessor.java")));
+        assertFalse(Files.isRegularFile(Path.of(
+                "src/client/java/fi/rotclient/mixin/DisplayItemDisplayAccessor.java")));
     }
 
     @Test
     void runtimeReplacesPaintingsAndItemDisplaysLocally() throws Exception {
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/MapArtOverrideRuntime.java"),
+                "src/plusClient/java/fi/rotclient/MapArtOverrideRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(runtime.contains("renderPainting"));
         assertTrue(runtime.contains("renderItemDisplay"));
@@ -56,16 +61,16 @@ final class MapArtOverrideWiringTest {
         assertTrue(runtime.contains("RenderTypes.text"));
         assertTrue(runtime.contains("ItemDisplayEntityRenderState"));
         String painting = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/PaintingRendererFoxMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/PaintingRendererFoxMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(painting.contains("method = \"submit("));
         String itemDisplay = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/ItemDisplayRendererFoxMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/ItemDisplayRendererFoxMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(itemDisplay.contains("method = \"submitInner\""));
         assertTrue(itemDisplay.contains("DisplayRenderer.ItemDisplayRenderer"));
         String itemFrame = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/ItemFrameRendererMapArtMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(itemFrame.contains("WrapOperation"));
         assertTrue(itemFrame.contains("renderFramedMap"));

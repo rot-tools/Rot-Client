@@ -922,7 +922,7 @@ public final class IotaKuudraRuntime {
             return 0L;
         }
         String hover = stack.getHoverName() == null ? "" : stack.getHoverName().getString();
-        String id = IotaKuudraProfitPolicy.resolveItemId(AutoClickerItemIdentity.skyBlockId(stack), hover);
+        String id = IotaKuudraProfitPolicy.resolveItemId(SkyBlockItemIdentity.skyBlockId(stack), hover);
         return IotaKuudraProfitPolicy.itemValue(
                 id,
                 bookEnchantId(stack),

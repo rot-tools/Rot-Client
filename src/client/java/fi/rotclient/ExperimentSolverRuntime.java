@@ -118,16 +118,14 @@ public final class ExperimentSolverRuntime {
             return false;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (!QolFlavorSupport.isPlus() || !extras.experimentBlockWrongClicks) {
-            return false;
-        }
         if (experiment == ExperimentSolverPolicy.Experiment.CHRONOMATRON && !extras.experimentChronomatron) {
             return false;
         }
         if (experiment == ExperimentSolverPolicy.Experiment.ULTRASEQUENCER && !extras.experimentUltrasequencer) {
             return false;
         }
-        return POLICY.shouldBlockClick(experiment, slotIndex);
+        return QolClientFlavorSupport.hooks().experimentShouldBlockWrongClick(
+                POLICY.shouldBlockClick(experiment, slotIndex));
     }
 
     /**

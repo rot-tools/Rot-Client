@@ -92,7 +92,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** ships **110** quality-of-life parents. **Rot Client+** ships
+**Rot Client** ships **108** quality-of-life parents. **Rot Client+** ships
 **133**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
@@ -103,9 +103,9 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global |
 | **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
-| **Utilities** | Menu keybinds, wardrobe/pet keybinds, chat commands, auto sprint, market guard. Inventory Walk and custom macros are Rot Client+ |
+| **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, auto sprint, and market guard. Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+ |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
-| **Render** | Fullbright, viewmodel, player size, eye-height fix, legacy textures. **Plus:** Fox, Free Camera, and clip camera |
+| **Render** | Fullbright, viewmodel, player size, eye-height fix, and legacy textures. **Plus:** Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Trajectories, etherwarp helper, mob highlight. Auto clicker / Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
 | **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Secret hitboxes, auto terms, and hover-terms are Rot Client+ |
@@ -117,6 +117,13 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you
 opt in separately. Those options are not present in the legit JAR.
+
+The Lite build is packaged from the shared policy/client source sets only.
+Plus automation policies, Minecraft runtimes, mixins, and the Fox asset live in
+separate `plus` / `plusClient` source sets and are rejected by
+`verifyLegitJar` if they leak into `RotClient-*.jar`. The shared configuration
+model keeps inert compatibility fields so one installation can move safely
+between editions; Lite has no catalog or executable route to those fields.
 
 ### Fox (Rot Client+)
 

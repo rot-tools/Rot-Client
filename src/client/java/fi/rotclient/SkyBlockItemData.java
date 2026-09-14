@@ -20,7 +20,7 @@ final class SkyBlockItemData {
             return new InfoTooltipsPolicy.Snapshot("", 0, 0, 0L, false, false, "");
         }
         CompoundTag extra = extraAttributes(stack);
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         int boost = intValue(extra, "baseStatBoostPercentage");
         if (boost <= 0) {
             boost = intValue(extra, "qualityBoost");
@@ -46,7 +46,7 @@ final class SkyBlockItemData {
     }
 
     static String marketId(ItemStack stack) {
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         if (!id.isBlank()) {
             return id;
         }

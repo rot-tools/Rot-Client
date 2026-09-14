@@ -28,6 +28,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void tickEnd(Minecraft client) {
+        ClientBoundaryGuard.run("WARDROBE_AUTO_EQUIP", () -> WardrobeAutoEquipRuntime.tick(client));
+        ClientBoundaryGuard.run("LOADOUT_PET_AUTO_EQUIP", () -> RotClientPetAutoEquipRuntime.tick(client));
+        ClientBoundaryGuard.run("LOADOUT_EQUIPMENT_AUTO_EQUIP", () -> RotClientEquipmentAutoEquipRuntime.tick(client));
         ClientBoundaryGuard.run("CAMERA_ENFORCE", this::enforceCameraPerspective);
         ClientBoundaryGuard.run("FREECAM", () -> FreecamRuntime.tick(client));
         ClientBoundaryGuard.run("INVENTORY_WALK", () -> InventoryWalkRuntime.tick(client));
@@ -75,6 +78,199 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public boolean ghostsShouldSuppress(Entity entity) {
+        return GhostsRuntime.shouldSuppress(entity);
+    }
+
+    @Override
+    public void renderWorldGizmos() {
+        GhostsRuntime.renderGizmos();
+    }
+
+    @Override
+    public void slayerAutomationTick(Minecraft client) {
+        SlayerAutomationRuntime.tick(client);
+    }
+
+    @Override
+    public void slayerAutomationOnAttack(Minecraft client, Entity entity) {
+        SlayerAutomationRuntime.onAttack(client, entity);
+    }
+
+    @Override
+    public void slayerAutomationOnChat(String line) {
+        SlayerAutomationRuntime.onChat(line);
+    }
+
+    @Override
+    public void slayerAutomationScheduleAutoStart() {
+        SlayerAutomationRuntime.scheduleAutoStart();
+    }
+
+    @Override
+    public void slayerAutomationReset() {
+        SlayerAutomationRuntime.reset();
+    }
+
+    @Override
+    public void dungeonRequeueTick(Minecraft client) {
+        DungeonRequeueRuntime.tick(client);
+    }
+
+    @Override
+    public boolean dungeonRequeueOnChat(
+            boolean dungeonRunStarted,
+            boolean extraStatsSeen,
+            int dungeonWorldTicks,
+            String line) {
+        return DungeonRequeueRuntime.onChat(
+                dungeonRunStarted, extraStatsSeen, dungeonWorldTicks, line);
+    }
+
+    @Override
+    public void dungeonRequeueReset() {
+        DungeonRequeueRuntime.reset();
+    }
+
+    @Override
+    public void fishingCreatureAutoAttackTick(
+            Minecraft client, boolean lookingAtTrackedCreature, boolean screenOpen) {
+        FishingPlusRuntime.tickCreatureAutoAttack(
+                client, lookingAtTrackedCreature, screenOpen);
+    }
+
+    @Override
+    public void foragingAutomationTick(Minecraft client) {
+        ForagingAutomationRuntime.tick(client);
+    }
+
+    @Override
+    public void foragingAutomationReset() {
+        ForagingAutomationRuntime.reset();
+    }
+
+    @Override
+    public void dianaMaybeAutoWarp(
+            Minecraft client,
+            boolean moduleEnabled,
+            boolean autoWarpEnabled,
+            DianaPolicy.WarpPoint warp,
+            long now,
+            long lastSpadeUseAt) {
+        DianaAutomationRuntime.maybeAutoWarp(
+                client, moduleEnabled, autoWarpEnabled, warp, now, lastSpadeUseAt);
+    }
+
+    @Override
+    public void dianaMaybePartyShare(
+            Minecraft client,
+            boolean moduleEnabled,
+            boolean partyShareEnabled,
+            DianaPolicy.RareMob mob,
+            net.minecraft.core.BlockPos position,
+            long now) {
+        DianaAutomationRuntime.maybePartyShare(
+                client, moduleEnabled, partyShareEnabled, mob, position, now);
+    }
+
+    @Override
+    public void dianaAutomationReset() {
+        DianaAutomationRuntime.reset();
+    }
+
+    @Override
+    public boolean wardrobeMenuHandleInput(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            int code) {
+        return WardrobeMenuKeybindRuntime.handleInput(screen, code);
+    }
+
+    @Override
+    public boolean wardrobeMenuShouldCancelRender(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen) {
+        return WardrobeMenuKeybindRuntime.shouldCancelRender(screen);
+    }
+
+    @Override
+    public void wardrobeMenuTick(Minecraft client) {
+        WardrobeMenuKeybindRuntime.tick(client);
+    }
+
+    @Override
+    public boolean experimentShouldBlockWrongClick(boolean solverWouldBlock) {
+        return RotClientClient.qolConfigPublic().extras().experimentBlockWrongClicks
+                && solverWouldBlock;
+    }
+
+    @Override
+    public void plusModuleKeybindTick(Minecraft client) {
+        PlusModuleKeybindRuntime.tick(client);
+    }
+
+    @Override
+    public void escrowFixOnChat(net.minecraft.network.chat.Component message) {
+        EscrowFixRuntime.onChat(message);
+    }
+
+    @Override
+    public void dungeonPartyJoinTick(Minecraft client) {
+        DungeonPartyJoinAutomationRuntime.tick(client);
+    }
+
+    @Override
+    public void dungeonPartyJoinMaybeKick(
+            Minecraft client,
+            String player,
+            java.util.Optional<DungeonPartyFinderPolicy.Stats> stats,
+            DungeonAthenSettings settings) {
+        DungeonPartyJoinAutomationRuntime.maybeKick(client, player, stats, settings);
+    }
+
+    @Override
+    public void fishingCreatureSpawned(
+            Minecraft client, FishingCreaturesPolicy.Creature spawn) {
+        FishingPlusRuntime.onCreatureSpawned(client, spawn);
+    }
+
+    @Override
+    public void miningMineshaftPortal() {
+        MiningAutomationRuntime.onMineshaftPortal();
+    }
+
+    @Override
+    public void miningCommissionComplete() {
+        MiningAutomationRuntime.onCommissionComplete();
+    }
+
+    @Override
+    public void miningCorpseCoordinates(MiningLeftoverPolicy.CorpseCoords coordinates) {
+        MiningAutomationRuntime.onCorpseCoordinates(coordinates);
+    }
+
+    @Override
+    public void miningWormSeen(MiningLeftoverPolicy.WormKind kind) {
+        MiningAutomationRuntime.onWormSeen(kind);
+    }
+
+    @Override
+    public void miningShaftEntered(String area) {
+        MiningAutomationRuntime.onShaftEntered(area);
+    }
+
+    @Override
+    public java.util.List<RingPolicy.MacroDef> commandMacros(
+            QolUtilityConfig config, java.util.List<RingPolicy.MacroDef> presets) {
+        return RingPolicy.mergeMacros(
+                RingPolicy.parseMacroList(
+                        config.commandBindMacros,
+                        config.commandBindSendMode,
+                        config.commandBindConflict,
+                        config.commandBindActivation,
+                        config.commandBindUseRatelimit),
+                presets);
+    }
+
+    @Override
     public boolean inventoryWalkBlocksClick() {
         return InventoryWalkRuntime.shouldBlockContainerClick();
     }
@@ -91,7 +287,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public boolean consumeHiddenOpenScreen(ClientboundOpenScreenPacket packet) {
-        return WardrobeAutoEquipRuntime.consumeOpenScreen(packet);
+        return RotClientPetAutoEquipRuntime.consumeOpenScreen(packet)
+                || RotClientEquipmentAutoEquipRuntime.consumeOpenScreen(packet)
+                || WardrobeAutoEquipRuntime.consumeOpenScreen(packet);
     }
 
     @Override
@@ -101,6 +299,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onContainerClosed() {
+        RotClientPetAutoEquipRuntime.onContainerClosed();
+        RotClientEquipmentAutoEquipRuntime.onContainerClosed();
+        WardrobeAutoEquipRuntime.onContainerClosed();
         AutoExperimentsRuntime.reset();
         AutoHarpRuntime.reset();
     }
@@ -167,7 +368,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             return 0;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        String identity = AutoClickerItemIdentity.identify(client.player.getMainHandItem());
+        String identity = SkyBlockItemIdentity.identify(client.player.getMainHandItem());
         if (identity.isBlank()) {
             feedback.accept("Auto Clicker: hold an item to whitelist first.");
             return 0;
@@ -199,7 +400,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             return 0;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        String identity = AutoClickerItemIdentity.identify(client.player.getMainHandItem());
+        String identity = SkyBlockItemIdentity.identify(client.player.getMainHandItem());
         java.util.List<String> list = left
                 ? qol.autoClickerLeftWhitelist
                 : qol.autoClickerRightWhitelist;

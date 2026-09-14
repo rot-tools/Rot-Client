@@ -32,6 +32,33 @@ public final class QolPlusCatalog {
                 setting("qol.map_art_override.image_path", "Custom Local Image Path", "Optional path relative to .minecraft/config, or an absolute local path. Leave blank to use the image bundled with Rot Client+.", SettingType.TEXT, "bundled image"),
                 setting("qol.map_art_override.stretch_frames", "Stretch Item-Frame Panels", "Fit one image over a contiguous same-facing horizontal map wall (contain, centered). The Hub spawn map is 14x7; leftover tiles and edges stay black. Mixed item-frame rotations stay one canvas. Single maps always use the full image.", SettingType.TOGGLE)));
         modules.add(module(
+                "qol.escrow_fix",
+                "Escrow Fix",
+                "Reopen AH/BZ after an escrow chat line closes the menu. Plus automation, off by default.",
+                Group.UTILITIES,
+                "Market",
+                false,
+                true,
+                true,
+                List.of("escrow", "auction house", "bazaar", "ah", "bz")));
+        modules.add(module(
+                "qol.ghosts",
+                "Ghosts",
+                "Mist creeper reveal and highlight controls. Plus render helper, off by default.",
+                Group.RENDER,
+                "Players",
+                false,
+                true,
+                true,
+                List.of("ghosts", "creeper", "dwarven mines", "powered", "mist", "highlight"),
+                setting("qol.ghosts.highlight_style", "Highlight Style", "Outline, filled, or both boxes around each Mist creeper.", SettingType.ENUM,
+                        GhostsPolicy.HIGHLIGHT_STYLES, "both"),
+                setting("qol.ghosts.fill_color", "Fill Color", "Filled-box color over each Mist creeper.", SettingType.COLOR),
+                setting("qol.ghosts.outline_color", "Outline Color", "Box-outline color around each Mist creeper.", SettingType.COLOR),
+                setting("qol.ghosts.show_ghosts", "Show Ghosts", "Show the creeper entities.", SettingType.TOGGLE),
+                setting("qol.ghosts.show_powered", "Show Powered Layer", "Keep the vanilla charged overlay.", SettingType.TOGGLE),
+                setting("qol.ghosts.keybind", "Keybind", "Toggle Ghosts.", SettingType.KEYBIND)));
+        modules.add(module(
                 "qol.auto_clicker",
                 "Auto Clicker",
                 "Left/right auto clicker for Serveri. CPS averages the set value with about ±20% jitter so it is not a metronome.",
@@ -228,6 +255,49 @@ public final class QolPlusCatalog {
                 setting("qol.auto_experiments.auto_close", "Auto Close", "Automatically close the GUI after completing the experiment.", SettingType.TOGGLE),
                 setting("qol.auto_experiments.serum_count", "Serum Count", "Consumed Metaphysical Serum count.", SettingType.NUMBER, "0"),
                 setting("qol.auto_experiments.get_max_xp", "Get Max XP", "Solve Chronomatron to 15 and Ultrasequencer to 20 for max XP.", SettingType.TOGGLE)));
+        modules.add(module(
+                "qol.wardrobe_keybinds",
+                "Wardrobe Keybinds",
+                "Hypixel wardrobe binds: 1-9, pages, hidden auto-equip via /wd.",
+                Group.UTILITIES,
+                "Keybinds",
+                false,
+                true,
+                true,
+                List.of("wardrobe", "unequip", "auto equip"),
+                setting("qol.wardrobe_keybinds.style", "Keybind Style", "Simple uses 1-9. Hotbar uses Minecraft hotbar keys. Custom uses the slot binds below.", SettingType.ENUM,
+                        List.of("Simple", "Hotbar", "Custom"), "style"),
+                setting("qol.wardrobe_keybinds.disable_unequip", "Prevent Unequip", "Do not click a slot that is already equipped.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.sound", "Sound Effect", "Play a local click sound when a wardrobe slot is used.", SettingType.TOGGLE, "sound"),
+                setting("qol.wardrobe_keybinds.cancel_all", "Cancel All Other Clicks", "While the wardrobe is open, swallow keys that are not wardrobe binds.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.override", "Key Override", "Hold this key to allow other clicks when cancel-all is on.", SettingType.KEYBIND, "left control"),
+                setting("qol.wardrobe_keybinds.cancel_render", "Cancel GUI Render", "Hide the wardrobe chest while it stays open for keybinds.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.ping", "Ping", "Minimum milliseconds between wardrobe clicks.", SettingType.NUMBER, "250", "ms"),
+                setting("qol.wardrobe_keybinds.use_hotbar", "Use Hotbar Binds", "1-9 follow Minecraft hotbar keys.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.swap", "Swap Key", "Click the unequipped slot of a configured pair.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.swap_key", "Swap Keybind", "Key that triggers the swap pair.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.swap_a", "Swap Slot 1", "First swap slot, 1-9.", SettingType.NUMBER, "1"),
+                setting("qol.wardrobe_keybinds.swap_b", "Swap Slot 2", "Second swap slot, 1-9.", SettingType.NUMBER, "2"),
+                setting("qol.wardrobe_keybinds.next", "Next Page", "Next wardrobe page.", SettingType.KEYBIND, "right arrow"),
+                setting("qol.wardrobe_keybinds.previous", "Previous Page", "Previous wardrobe page.", SettingType.KEYBIND, "left arrow"),
+                setting("qol.wardrobe_keybinds.unequip", "Unequip", "Unequip wardrobe set.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.auto_close", "Auto Close After Use", "Close the wardrobe after a successful slot click.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.auto_equip", "Auto Equip", "Equip a slot with /wd without showing the GUI. Use at your own risk.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.move_equip", "Equip While Moving", "Allow WASD while hidden auto-equip runs. Increases detection risk.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.reset_open", "Reset On GUI Open", "Cancel a pending auto-equip if you open another GUI.", SettingType.TOGGLE),
+                setting("qol.wardrobe_keybinds.click_delay", "Click Delay", "Ticks to wait after the hidden menu opens before clicking.", SettingType.NUMBER, "1", "ticks"),
+                setting("qol.wardrobe_keybinds.close_delay", "Close Delay", "Ticks to wait after the click before closing.", SettingType.NUMBER, "1", "ticks"),
+                setting("qol.wardrobe_keybinds.delay_variance", "Max Delay Variety", "Random extra ticks added to click and close delays.", SettingType.NUMBER, "1", "ticks"),
+                setting("qol.wardrobe_keybinds.open_hud_editor", "Display Text", "Move the Equipping HUD.", SettingType.ACTION, "position"),
+                setting("qol.wardrobe_keybinds.custom_1", "Custom Slot 1", "Custom key for wardrobe slot 1.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_2", "Custom Slot 2", "Custom key for wardrobe slot 2.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_3", "Custom Slot 3", "Custom key for wardrobe slot 3.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_4", "Custom Slot 4", "Custom key for wardrobe slot 4.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_5", "Custom Slot 5", "Custom key for wardrobe slot 5.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_6", "Custom Slot 6", "Custom key for wardrobe slot 6.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_7", "Custom Slot 7", "Custom key for wardrobe slot 7.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_8", "Custom Slot 8", "Custom key for wardrobe slot 8.", SettingType.KEYBIND),
+                setting("qol.wardrobe_keybinds.custom_9", "Custom Slot 9", "Custom key for wardrobe slot 9.", SettingType.KEYBIND)));
         modules.add(module(
                 "qol.cheater_wardrobe",
                 "Wardrobe Swapper",
@@ -457,7 +527,14 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_f7.superboom_blocks", "Extra Blocks", "Comma-separated extra breakable ids. Use /rot superboom add while looking at a block.", SettingType.TEXT)
             );
             case "qol.dungeon_party_join" -> List.of(
-                    setting("qol.dungeon_party_join.auto_kick", "Auto Kick", "Send /p kick if PB, secrets, secret average, or MP is below the threshold. Cheat, off.", SettingType.TOGGLE, "cheat")
+                    setting("qol.dungeon_party_join.auto_kick", "Auto Kick", "Send /p kick if PB, secrets, secret average, or MP is below the threshold. Cheat, off.", SettingType.TOGGLE, "cheat"),
+                    setting("qol.dungeon_party_join.required_pb", "Required PB", "Kick if slower than this time, for example 5:30.", SettingType.TEXT),
+                    setting("qol.dungeon_party_join.required_secrets", "Required Secrets", "Kick if secrets are below this count, for example 50k.", SettingType.TEXT),
+                    setting("qol.dungeon_party_join.required_avg", "Required Secret Avg", "Kick if secret average is below this, for example 8.4.", SettingType.TEXT),
+                    setting("qol.dungeon_party_join.required_mp", "Required MP", "Kick if magical power is below this, for example 800.", SettingType.TEXT),
+                    setting("qol.dungeon_party_join.kick_message", "Kick Message", "Send a delayed party-chat kick reason.", SettingType.TOGGLE),
+                    setting("qol.dungeon_party_join.send_party", "Send In Party", "Use /pc for the kick message.", SettingType.TOGGLE),
+                    setting("qol.dungeon_party_join.message_delay", "Message Delay", "Ticks to wait before /p kick and the party message.", SettingType.NUMBER)
             );
             case "qol.dungeon_menus" -> List.of(
                     setting("qol.dungeon_menus.close_chest", "Close Chest", "Close a plain Chest GUI as soon as it opens. Off by default.", SettingType.TOGGLE),

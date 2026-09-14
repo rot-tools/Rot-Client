@@ -10,12 +10,19 @@ and the project uses semantic versioning where practical.
 ### Dual editions
 
 * One `./gradlew build` produces **Rot Client**
-  (`RotClient-2.0.1+mc26.2.jar`, Fabric id `rotclient`, **110** catalog
+  (`RotClient-2.0.1+mc26.2.jar`, Fabric id `rotclient`, **108** catalog
   parents) and **Rot Client+** (`RotClientPlus-2.0.1+mc26.2.jar`, id
-  `rotclientplus`, **131** parents). Plus holds automation bytecode; the
+  `rotclientplus`, **133** parents). Plus holds automation bytecode; the
   legit JAR does not. Playtest and versioned GitHub Releases upload both
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
   in `rotclient-plus.json`.
+* Completed the Modrinth-oriented Lite boundary: wardrobe execution, Ghosts,
+  Escrow Fix, Slayer/Diana/mining/fishing/foraging/dungeon automation, Fox,
+  their policies, runtimes, mixins, service providers, and assets now compile
+  only from `plus` / `plusClient`. Lite HUD/catalog routes are removed, and
+  `verifyLegitJar` automatically rejects every Plus top-level implementation.
+  Shared compatibility fields remain inert so edition switching does not
+  destroy an existing configuration.
 
 ### Rot Client+ render
 * Fox also replaces large fixed item-display wall art locally, using the same

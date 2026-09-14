@@ -142,9 +142,9 @@ final class QolSkyblockExtras {
     boolean ghostsEnabled;
     boolean ghostsShowGhosts;
     boolean ghostsShowPowered;
-    String ghostsHighlightStyle = GhostsPolicy.DEFAULT_HIGHLIGHT;
-    int ghostsFillColor = GhostsPolicy.DEFAULT_FILL;
-    int ghostsOutlineColor = GhostsPolicy.DEFAULT_OUTLINE;
+    String ghostsHighlightStyle = "Both";
+    int ghostsFillColor = 0x7F00C8C8;
+    int ghostsOutlineColor = 0xFF00C8C8;
     String ghostsKeybind = "";
 
     boolean autoDojoEnabled;
@@ -169,7 +169,7 @@ final class QolSkyblockExtras {
     boolean fishingCreaturesShortenChat;
     boolean fishingCreaturesHideCommon;
     boolean fishingCreaturesAutoAttack;
-    int fishingCreaturesAutoDelay = FishingCreaturesPolicy.DEFAULT_AUTO_DELAY;
+    int fishingCreaturesAutoDelay = 4;
     boolean fishingCreaturesThunderSparks = true;
 
     boolean fishingHotspotsEnabled;
@@ -2757,11 +2757,11 @@ final class QolSkyblockExtras {
             case "qol.auto_experiments.serum_count" -> autoExperimentsSerumCount =
                     Math.max(0, Math.min(3, (int) Math.round(value)));
             case "qol.cheater_wardrobe.click_delay" -> cheaterWardrobeClickDelay =
-                    WardrobeKeybindPolicy.clampDelayTicks((int) Math.round(value));
+                    Math.max(0, Math.min(8, (int) Math.round(value)));
             case "qol.cheater_wardrobe.close_delay" -> cheaterWardrobeCloseDelay =
-                    WardrobeKeybindPolicy.clampDelayTicks((int) Math.round(value));
+                    Math.max(0, Math.min(8, (int) Math.round(value)));
             case "qol.cheater_wardrobe.delay_variance" -> cheaterWardrobeDelayVariance =
-                    WardrobeKeybindPolicy.clampVariance((int) Math.round(value));
+                    Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.auto_gfs.timer_increments" -> autoGfsTimerIncrements =
                     Math.max(1, Math.min(60, (int) Math.round(value)));
             case "qol.auto_sell.delay" -> autoSellDelay =
@@ -2797,7 +2797,7 @@ final class QolSkyblockExtras {
             case "qol.fishing_creatures.timer_length" -> fishingCreaturesTimerLength =
                     FishingCreaturesPolicy.clampTimer((int) Math.round(value));
             case "qol.fishing_creatures.auto_delay" -> fishingCreaturesAutoDelay =
-                    FishingCreaturesPolicy.clampAutoDelay((int) Math.round(value));
+                    Math.max(1, Math.min(40, (int) Math.round(value)));
             case "qol.dungeon_requeue.delay" -> dungeonRequeueDelay =
                     Math.max(0, Math.min(200, (int) Math.round(value)));
             case "qol.dungeon_menus.party_cata" -> dungeonMenusPartyCata =
@@ -2838,13 +2838,13 @@ final class QolSkyblockExtras {
             case "qol.slayer_drops.ground_label_minimum" -> slayerDropsGroundLabelMinimum =
                     (int) SlayerGroundDropPolicy.clampMinimum(Math.round(value));
             case "qol.slayer_dagger_swap.delay" -> slayerDaggerSwapDelay =
-                    SlayerMechanicsPolicy.clampDelay((int) Math.round(value));
+                    Math.max(0, Math.min(10, (int) Math.round(value)));
             case "qol.slayer_dagger_swap.variance" -> slayerDaggerSwapVariance =
-                    SlayerMechanicsPolicy.clampVariance((int) Math.round(value));
+                    Math.max(0, Math.min(10, (int) Math.round(value)));
             case "qol.slayer_auto_soulcry.min_delay" -> slayerAutoSoulcryMinDelay =
-                    SlayerMechanicsPolicy.clampSoulcryDelay((int) Math.round(value));
+                    Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.slayer_auto_soulcry.max_delay" -> slayerAutoSoulcryMaxDelay =
-                    SlayerMechanicsPolicy.clampSoulcryDelay((int) Math.round(value));
+                    Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.slayer_voidgloom.line_width" -> slayerVoidgloomLineWidth =
                     SlayerFightPolicy.clampLineWidth((int) Math.round(value));
             case "qol.slayer_voidgloom.boss_line_width" -> slayerVoidgloomBossLineWidth =
@@ -2958,7 +2958,7 @@ final class QolSkyblockExtras {
             return IotaKuudraPolicy.normalizeStunPod(iotaStunPod);
         }
         if ("qol.ghosts.highlight_style".equals(settingId)) {
-            return GhostsPolicy.normalizeHighlight(ghostsHighlightStyle);
+            return normalizeGhostHighlight(ghostsHighlightStyle);
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
             return DungeonF7Policy.normalizeSoloClass(dungeonF7DragonSoloClass);
@@ -3033,7 +3033,7 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.ghosts.highlight_style".equals(settingId)) {
-            ghostsHighlightStyle = GhostsPolicy.normalizeHighlight(value);
+            ghostsHighlightStyle = normalizeGhostHighlight(value);
             return true;
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
@@ -4732,6 +4732,20 @@ final class QolSkyblockExtras {
             return STYLE_CUSTOM;
         }
         return STYLE_SIMPLE;
+    }
+
+    private static String normalizeGhostHighlight(String value) {
+        if (value == null || value.isBlank()) {
+            return "Both";
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT).replace(' ', '_');
+        if (normalized.equals("outline") || normalized.equals("stroke")) {
+            return "Outline";
+        }
+        if (normalized.equals("filled") || normalized.equals("fill")) {
+            return "Filled";
+        }
+        return "Both";
     }
 
     static String normalizeId(String id) {

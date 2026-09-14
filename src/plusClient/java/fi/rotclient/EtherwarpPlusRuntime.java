@@ -45,7 +45,7 @@ public final class EtherwarpPlusRuntime {
             return false;
         }
         LocalPlayer player = client.player;
-        boolean etherwarpItem = AutoClickerItemIdentity.isEtherwarpItem(player.getMainHandItem());
+        boolean etherwarpItem = SkyBlockItemIdentity.isEtherwarpItem(player.getMainHandItem());
         if (!EtherwarpHelperPolicy.shouldHandleLeftClick(
                 qol.etherwarpEnabled,
                 qol.etherwarpLeftClickWarp,

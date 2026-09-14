@@ -30,7 +30,7 @@ public final class MissingEnchantsRuntime {
         if (!controlDown || button != 0 || stack == null || stack.isEmpty()) {
             return;
         }
-        String identity = AutoClickerItemIdentity.identify(stack);
+        String identity = SkyBlockItemIdentity.identify(stack);
         if (identity.isBlank()) {
             return;
         }
@@ -59,14 +59,14 @@ public final class MissingEnchantsRuntime {
         boolean ctrl = QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL)
                 || QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_CONTROL);
         boolean pinned = !pinnedIdentity.isBlank()
-                && pinnedIdentity.equals(AutoClickerItemIdentity.identify(stack));
+                && pinnedIdentity.equals(SkyBlockItemIdentity.identify(stack));
         if (!MissingEnchantsPolicy.shouldShow(true, unbound, held || ctrl || pinned)) {
             return;
         }
         List<String> lore = InventoryChromeRuntime.loreLines(stack);
         String hover = stack.getHoverName() == null ? "" : stack.getHoverName().getString();
         String type = MissingEnchantsPolicy.itemType(
-                lore, hover, AutoClickerItemIdentity.skyBlockId(stack));
+                lore, hover, SkyBlockItemIdentity.skyBlockId(stack));
         MissingEnchantsPolicy.TooltipPlan plan = MissingEnchantsPolicy.plan(
                 type,
                 nbtEnchantLevels(stack, lore),

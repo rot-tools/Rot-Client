@@ -38,7 +38,6 @@ public final class FishingSuiteRuntime {
     private static final Map<Integer, LiveCreature> LIVE = new LinkedHashMap<>();
     private static FishingCreaturesPolicy.Creature lastCatch;
     private static boolean doubleHookPending;
-    private static int autoDelay;
     private static int baitScanTicks;
     private static Integer baitRemaining;
     private static boolean goldenActive;
@@ -72,7 +71,6 @@ public final class FishingSuiteRuntime {
         LIVE.clear();
         lastCatch = null;
         doubleHookPending = false;
-        autoDelay = 0;
         baitRemaining = null;
         goldenActive = false;
         goldenHits = 0;
@@ -195,15 +193,7 @@ public final class FishingSuiteRuntime {
                         extras.fishingCreaturesMinRarity)) {
                     flash(lastCatch.name(), extras.fishingCreaturesRareSound, client);
                 }
-                if (FishingCreaturesPolicy.shouldPartyAnnounce(
-                        true,
-                        extras.fishingCreaturesRareParty,
-                        lastCatch,
-                        extras.fishingCreaturesMinRarity)
-                        && client.player != null
-                        && client.player.connection != null) {
-                    client.player.connection.sendCommand("pc " + lastCatch.spawn());
-                }
+                QolClientFlavorSupport.hooks().fishingCreatureSpawned(client, lastCatch);
             }
         }
 
@@ -252,9 +242,6 @@ public final class FishingSuiteRuntime {
         }
         pruneDead(client);
         scanWorld(client, qol, extras);
-        if (autoDelay > 0) {
-            autoDelay--;
-        }
         maybeAutoAttack(client, extras);
         maybeBiteTitle(client, qol);
         if (++baitScanTicks >= 10) {
@@ -358,7 +345,7 @@ public final class FishingSuiteRuntime {
             return;
         }
         Integer fillet = FishingTrophyPolicy.filletMagmafish(
-                AutoClickerItemIdentity.skyBlockId(stack), stack.getCount());
+                SkyBlockItemIdentity.skyBlockId(stack), stack.getCount());
         if (fillet == null || lines == null) {
             return;
         }
@@ -399,7 +386,7 @@ public final class FishingSuiteRuntime {
         if (client.player == null) {
             return;
         }
-        String held = AutoClickerItemIdentity.skyBlockId(client.player.getMainHandItem());
+        String held = SkyBlockItemIdentity.skyBlockId(client.player.getMainHandItem());
         if (held == null || !held.toUpperCase().contains("HOTSPOT_RADAR")) {
             return;
         }
@@ -644,15 +631,8 @@ public final class FishingSuiteRuntime {
                 }
             }
         }
-        if (FishingCreaturesPolicy.shouldAutoAttack(
-                extras.fishingCreaturesEnabled,
-                extras.fishingCreaturesAutoAttack,
-                looking,
-                screen != null && !screen.isPauseScreen())
-                && autoDelay <= 0) {
-            ClickPulseHelper.pulseAttack(client);
-            autoDelay = FishingCreaturesPolicy.clampAutoDelay(extras.fishingCreaturesAutoDelay);
-        }
+        QolClientFlavorSupport.hooks().fishingCreatureAutoAttackTick(
+                client, looking, screen != null && !screen.isPauseScreen());
     }
 
     private static void maybeBiteTitle(Minecraft client, QolUtilityConfig qol) {
@@ -694,7 +674,7 @@ public final class FishingSuiteRuntime {
         LocalPlayer player = client.player;
         ItemStack stack = player.getMainHandItem();
         if (!FishingToolsPolicy.isBaitName(stack.getHoverName().getString())
-                && !FishingToolsPolicy.isThunderBottleId(AutoClickerItemIdentity.skyBlockId(stack))) {
+                && !FishingToolsPolicy.isThunderBottleId(SkyBlockItemIdentity.skyBlockId(stack))) {
             stack = player.getOffhandItem();
         }
         List<String> lore = InventoryChromeRuntime.loreLines(stack);

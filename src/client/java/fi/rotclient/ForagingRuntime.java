@@ -18,7 +18,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,17 +41,16 @@ import java.util.Set;
  */
 public final class ForagingRuntime {
     private static final ForagingGiftTracker GIFTS = new ForagingGiftTracker();
-    private static ForagingPolicy.Island island = ForagingPolicy.Island.NONE;
+    static ForagingPolicy.Island island = ForagingPolicy.Island.NONE;
     private static ForagingPolicy.TreeProgress progress;
     private static int tabSweep;
-    private static int clusterWood;
+    static int clusterWood;
     private static int maxWood;
     private static boolean beaconReady;
-    private static ForagingPolicy.BeaconHint beaconHint;
+    static ForagingPolicy.BeaconHint beaconHint;
     private static int templePending;
     private static String titleText = "";
     private static int titleTicks;
-    private static int cheatDelay;
     private static int lastTargetPane = -1;
     private static int ticksSincePaneMove;
     private static int targetSpeed;
@@ -76,7 +74,7 @@ public final class ForagingRuntime {
         templePending = 0;
         titleText = "";
         titleTicks = 0;
-        cheatDelay = 0;
+        QolClientFlavorSupport.hooks().foragingAutomationReset();
         lastTargetPane = -1;
         ticksSincePaneMove = 0;
         targetSpeed = 0;
@@ -143,7 +141,7 @@ public final class ForagingRuntime {
                 && Minecraft.getInstance().player != null) {
             ItemStack helmet = Minecraft.getInstance().player.getItemBySlot(EquipmentSlot.HEAD);
             boolean mask = ForagingPolicy.isFrogMask(
-                    AutoClickerItemIdentity.skyBlockId(helmet),
+                    SkyBlockItemIdentity.skyBlockId(helmet),
                     helmet.getHoverName().getString());
             if (ForagingPolicy.showFrogMaskHud(true, island, mask)) {
                 lines.add("Frog Mask");
@@ -153,7 +151,7 @@ public final class ForagingRuntime {
                 && Minecraft.getInstance().player != null) {
             ItemStack hand = Minecraft.getInstance().player.getMainHandItem();
             boolean lasso = ForagingPolicy.isLasso(
-                    AutoClickerItemIdentity.skyBlockId(hand),
+                    SkyBlockItemIdentity.skyBlockId(hand),
                     hand.getHoverName().getString());
             if (ForagingPolicy.showLassoHud(true, island, lasso)) {
                 lines.add("Lasso");
@@ -178,9 +176,6 @@ public final class ForagingRuntime {
         if (titleTicks > 0) {
             titleTicks--;
         }
-        if (cheatDelay > 0) {
-            cheatDelay--;
-        }
         if (client == null || client.player == null || client.level == null) {
             return;
         }
@@ -203,10 +198,7 @@ public final class ForagingRuntime {
             hotfOpen = hotfNow;
             maybeLassoAlert(client, extras);
         }
-        if (cheats(extras) && cheatDelay <= 0) {
-            maybeCheatBeacon(client, extras);
-            maybeCheatChopOrToss(client, extras);
-        }
+        QolClientFlavorSupport.hooks().foragingAutomationTick(client);
     }
 
     static void onChat(Component message) {
@@ -359,7 +351,7 @@ public final class ForagingRuntime {
         }
         ItemStack hand = client.player.getMainHandItem();
         boolean holding = ForagingPolicy.isLasso(
-                AutoClickerItemIdentity.skyBlockId(hand),
+                SkyBlockItemIdentity.skyBlockId(hand),
                 hand.getHoverName().getString());
         if (!holding) {
             lassoAlerted.clear();
@@ -489,7 +481,7 @@ public final class ForagingRuntime {
             return;
         }
         LocalPlayer player = client.player;
-        String axeId = AutoClickerItemIdentity.skyBlockId(player.getMainHandItem());
+        String axeId = SkyBlockItemIdentity.skyBlockId(player.getMainHandItem());
         boolean thrown = ForagingPolicy.isThrowableAxe(axeId);
         HitResult hit = client.hitResult;
         clusterWood = 0;
@@ -574,70 +566,6 @@ public final class ForagingRuntime {
         beaconHint = new ForagingPolicy.BeaconHint(colorClicks, speedClicks, pitchClicks);
     }
 
-    private static void maybeCheatBeacon(Minecraft client, QolSkyblockExtras extras) {
-        if (!toggle(extras, "qol.foraging_cheats", "qol.foraging_cheats.auto_beacon", false)) {
-            return;
-        }
-        Screen screen = client.gui == null ? null : client.gui.screen();
-        if (!(screen instanceof AbstractContainerScreen<?> container) || client.gameMode == null) {
-            return;
-        }
-        String title = screen.getTitle().getString();
-        ForagingPolicy.AutoBeaconClick click = ForagingPolicy.nextBeaconClick(
-                true, true, title, beaconHint);
-        if (click == null) {
-            return;
-        }
-        if (click.slot() < 0 || click.slot() >= container.getMenu().slots.size()) {
-            return;
-        }
-        client.gameMode.handleContainerInput(
-                container.getMenu().containerId,
-                click.slot(),
-                click.rightClick() ? 1 : 0,
-                ContainerInput.PICKUP,
-                client.player);
-        beaconHint = ForagingPolicy.applyPress(beaconHint, click.slot(), click.rightClick(), title);
-        cheatDelay = cheatDelay(extras);
-    }
-
-    private static void maybeCheatChopOrToss(Minecraft client, QolSkyblockExtras extras) {
-        if (client.gui != null && client.gui.screen() != null) {
-            return;
-        }
-        LocalPlayer player = client.player;
-        String axeId = AutoClickerItemIdentity.skyBlockId(player.getMainHandItem());
-        boolean holdingAxe = ForagingPolicy.isForagingAxe(axeId);
-        HitResult hit = client.hitResult;
-        boolean lookingLog = false;
-        if (hit != null && hit.getType() == HitResult.Type.BLOCK) {
-            String lookId = blockId(client.level.getBlockState(((BlockHitResult) hit).getBlockPos()));
-            island = ForagingPolicy.inferIslandFromLog(island, lookId);
-            lookingLog = ForagingPolicy.isChopLog(island, lookId);
-        }
-        int minCluster = number(extras, "qol.foraging_cheats.min_cluster", 5);
-        if (ForagingPolicy.shouldAxeToss(
-                cheats(extras),
-                toggle(extras, "qol.foraging_cheats", "qol.foraging_cheats.axe_toss", false),
-                ForagingPolicy.isThrowableAxe(axeId),
-                clusterWood,
-                minCluster,
-                true)) {
-            ClickPulseHelper.pulseUse(client);
-            cheatDelay = cheatDelay(extras);
-            return;
-        }
-        if (ForagingPolicy.shouldAutoChop(
-                cheats(extras),
-                toggle(extras, "qol.foraging_cheats", "qol.foraging_cheats.auto_chop", false),
-                island,
-                holdingAxe,
-                lookingLog)) {
-            ClickPulseHelper.pulseAttack(client);
-            cheatDelay = cheatDelay(extras);
-        }
-    }
-
     private static void renderForestTemple(Minecraft client) {
         List<ForagingPolicy.Cardinal> walls = new ArrayList<>();
         for (int x = ForagingPolicy.FOREST_TEMPLE_WALL_X_MAX; x >= ForagingPolicy.FOREST_TEMPLE_WALL_X_MIN; x--) {
@@ -707,7 +635,7 @@ public final class ForagingRuntime {
             return false;
         }
         return ForagingPolicy.isForagingAxe(
-                AutoClickerItemIdentity.skyBlockId(client.player.getMainHandItem()));
+                SkyBlockItemIdentity.skyBlockId(client.player.getMainHandItem()));
     }
 
     private static boolean nearbyMusicPants() {
@@ -718,7 +646,7 @@ public final class ForagingRuntime {
         AABB box = client.player.getBoundingBox().inflate(8.0D);
         for (Player player : client.level.getEntitiesOfClass(Player.class, box)) {
             ItemStack legs = player.getItemBySlot(EquipmentSlot.LEGS);
-            String id = AutoClickerItemIdentity.skyBlockId(legs).toUpperCase(Locale.ROOT);
+            String id = SkyBlockItemIdentity.skyBlockId(legs).toUpperCase(Locale.ROOT);
             String name = legs.getHoverName().getString().toUpperCase(Locale.ROOT);
             if (id.contains("STEREO") || name.contains("STEREO")) {
                 return true;
@@ -744,7 +672,7 @@ public final class ForagingRuntime {
         Gizmos.cuboid(entity.getBoundingBox().inflate(0.08D), GizmoStyle.stroke(color, 1.5F)).setAlwaysOnTop();
     }
 
-    private static String blockId(BlockState state) {
+    static String blockId(BlockState state) {
         if (state == null) {
             return "";
         }
@@ -836,11 +764,11 @@ public final class ForagingRuntime {
         return qol().isModuleEnabled("qol.foraging_helpers");
     }
 
-    private static boolean cheats(QolSkyblockExtras extras) {
+    static boolean cheats(QolSkyblockExtras extras) {
         return QolFlavorSupport.isPlus() && qol().isModuleEnabled("qol.foraging_cheats");
     }
 
-    private static boolean toggle(QolSkyblockExtras extras, String module, String setting, boolean fallback) {
+    static boolean toggle(QolSkyblockExtras extras, String module, String setting, boolean fallback) {
         QolUtilityConfig config = qol();
         if (!config.isModuleEnabled(module)) {
             return false;
@@ -849,17 +777,13 @@ public final class ForagingRuntime {
         return value != null ? value : fallback;
     }
 
-    private static int number(QolSkyblockExtras extras, String setting, int fallback) {
+    static int number(QolSkyblockExtras extras, String setting, int fallback) {
         Double value = qol().readNumber(setting);
         return value == null ? fallback : (int) Math.round(value);
     }
 
     private static QolUtilityConfig qol() {
         return RotClientClient.qolConfigPublic();
-    }
-
-    private static int cheatDelay(QolSkyblockExtras extras) {
-        return Math.max(1, number(extras, "qol.foraging_cheats.click_delay", 3));
     }
 
     private static int seaLumiesMin(QolSkyblockExtras extras) {

@@ -525,14 +525,6 @@ public final class ForagingPolicy {
         return prevent && remainingSignedClicks == 0;
     }
 
-    public static boolean shouldAutoClickBeacon(
-            boolean moduleEnabled,
-            boolean cheatClick,
-            boolean inTuneMenu,
-            int remainingSignedClicks) {
-        return moduleEnabled && cheatClick && inTuneMenu && remainingSignedClicks != 0;
-    }
-
     public static float toughness(String blockId) {
         String id = blockId == null ? "" : blockId.toLowerCase(Locale.ROOT);
         if (id.contains("stripped_spruce")) {
@@ -749,71 +741,6 @@ public final class ForagingPolicy {
         }
     }
 
-    public record AutoBeaconClick(int slot, boolean rightClick) {
-    }
-
-    /**
-     * Next cheat container click. Positive remaining clicks are right-click
-     * (button 1 / cycle +1).
-     */
-    public static AutoBeaconClick nextBeaconClick(
-            boolean moduleEnabled,
-            boolean cheatClick,
-            String title,
-            BeaconHint hint) {
-        if (hint == null || !isBeaconTuneTitle(title)) {
-            return null;
-        }
-        int remaining = firstPendingClicks(hint);
-        if (!shouldAutoClickBeacon(moduleEnabled, cheatClick, true, remaining)) {
-            return null;
-        }
-        if (hint.colorClicks() != 0) {
-            return new AutoBeaconClick(beaconSlot(title, BEACON_COLOR_SLOT), hint.colorClicks() > 0);
-        }
-        if (hint.speedClicks() != 0) {
-            return new AutoBeaconClick(beaconSlot(title, BEACON_SPEED_SLOT), hint.speedClicks() > 0);
-        }
-        return new AutoBeaconClick(beaconSlot(title, BEACON_PITCH_SLOT), hint.pitchClicks() > 0);
-    }
-
-    public static BeaconHint applyPress(BeaconHint hint, int slot, boolean rightClick, String title) {
-        if (hint == null) {
-            return null;
-        }
-        int colorSlot = beaconSlot(title, BEACON_COLOR_SLOT);
-        int speedSlot = beaconSlot(title, BEACON_SPEED_SLOT);
-        int pitchSlot = beaconSlot(title, BEACON_PITCH_SLOT);
-        int color = hint.colorClicks();
-        int speed = hint.speedClicks();
-        int pitch = hint.pitchClicks();
-        if (slot == colorSlot) {
-            color = remainingAfterDirectedClick(color, COLOR_CYCLE_LENGTH, rightClick);
-        } else if (slot == speedSlot) {
-            speed = remainingAfterDirectedClick(speed, SPEED_CYCLE_LENGTH, rightClick);
-        } else if (slot == pitchSlot) {
-            pitch = remainingAfterDirectedClick(pitch, PITCH_CYCLE_LENGTH, rightClick);
-        }
-        return new BeaconHint(color, speed, pitch);
-    }
-
-    /** After one click toward (+) or against (−) the remaining signed count. */
-    public static int remainingAfterDirectedClick(int remaining, int cycleLength, boolean rightClick) {
-        int delta = rightClick ? 1 : -1;
-        int next = remaining - delta;
-        return shortestCycleClicks(0, Math.floorMod(next, cycleLength), cycleLength);
-    }
-
-    private static int firstPendingClicks(BeaconHint hint) {
-        if (hint.colorClicks() != 0) {
-            return hint.colorClicks();
-        }
-        if (hint.speedClicks() != 0) {
-            return hint.speedClicks();
-        }
-        return hint.pitchClicks();
-    }
-
     public static Cardinal cardinalFromFacing(String facing) {
         if (facing == null || facing.isBlank()) {
             return null;
@@ -965,33 +892,6 @@ public final class ForagingPolicy {
             return false;
         }
         return containsSound(soundId, "note_block") || containsSound(soundId, "block.note");
-    }
-
-    public static boolean shouldAutoChop(
-            boolean moduleEnabled,
-            boolean cheatEnabled,
-            Island island,
-            boolean holdingAxe,
-            boolean lookingAtLog) {
-        return moduleEnabled
-                && cheatEnabled
-                && chopTrees(island)
-                && holdingAxe
-                && lookingAtLog;
-    }
-
-    public static boolean shouldAxeToss(
-            boolean moduleEnabled,
-            boolean cheatEnabled,
-            boolean throwableAxe,
-            int clusterSize,
-            int minCluster,
-            boolean cooldownReady) {
-        return moduleEnabled
-                && cheatEnabled
-                && throwableAxe
-                && cooldownReady
-                && clusterSize >= Math.max(1, minCluster);
     }
 
     public static boolean isInvisibugCrit(String particleId, int count, float speed) {

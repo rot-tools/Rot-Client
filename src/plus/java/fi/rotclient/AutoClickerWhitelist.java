@@ -12,7 +12,7 @@ public final class AutoClickerWhitelist {
     }
 
     public static boolean add(List<String> whitelist, String identity) {
-        String normalized = AutoClickerItemIdentity.normalizeForWhitelist(identity);
+        String normalized = SkyBlockItemIdentity.normalizeForWhitelist(identity);
         if (normalized.isBlank()) {
             return false;
         }
@@ -29,7 +29,7 @@ public final class AutoClickerWhitelist {
     }
 
     public static boolean remove(List<String> whitelist, String identity) {
-        String normalized = AutoClickerItemIdentity.normalizeForWhitelist(identity);
+        String normalized = SkyBlockItemIdentity.normalizeForWhitelist(identity);
         if (normalized.isBlank() || whitelist == null) {
             return false;
         }

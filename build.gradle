@@ -159,6 +159,31 @@ tasks.register('verifyLegitJar') {
 		def jarFile = tasks.named('jar').get().archiveFile.get().asFile
 		def forbiddenNames = [
 				'AutoClickerRuntime.class',
+				'WardrobeAutoEquipRuntime.class',
+				'RotClientPetAutoEquipRuntime.class',
+				'RotClientEquipmentAutoEquipRuntime.class',
+				'GhostsRuntime.class',
+				'GhostsPolicy.class',
+				'CreeperPoweredGhostsMixin.class',
+				'CreeperRendererGhostsMixin.class',
+				'SlayerAutomationRuntime.class',
+				'SlayerAutomationPolicy.class',
+				'DungeonRequeueRuntime.class',
+				'ForagingAutomationRuntime.class',
+				'ClickPulseHelper.class',
+				'FishingAutomationPolicy.class',
+				'ForagingAutomationPolicy.class',
+				'DianaAutomationRuntime.class',
+				'WardrobeMenuKeybindRuntime.class',
+				'WardrobeKeybindPolicy.class',
+				'KeyboardHandlerWardrobeMixin.class',
+				'PlusModuleKeybindRuntime.class',
+				'EscrowFixRuntime.class',
+				'EscrowFixPolicy.class',
+				'AutoClickerCpsMeter.class',
+				'AutoClickerItemIdentity.class',
+				'DungeonPartyJoinAutomationRuntime.class',
+				'MiningAutomationRuntime.class',
 				'FreecamRuntime.class',
 				'CameraFreecamMixin.class',
 				'rotclient.plus.mixins.json',
@@ -174,8 +199,15 @@ tasks.register('verifyLegitJar') {
 				'MapRendererMapArtMixin.class',
 				'MapRenderStateMapArtMixin.class',
 				'PaintingRendererFoxMixin.class',
-				'assets/rotclient/textures/map-art.jpg'
+				'assets/rotclient/textures/map-art.png',
+				'META-INF/services/fi.rotclient.QolFlavorExtension',
+				'META-INF/services/fi.rotclient.QolClientFlavorHooks'
 		]
+		[file('src/plus/java'), file('src/plusClient/java')].each { root ->
+			fileTree(root).matching { include '**/*.java' }.files.each { source ->
+				forbiddenNames << source.name.replaceFirst(/\.java$/, '.class')
+			}
+		}
 		def forbiddenText = [
 				'qol.auto_clicker',
 				'AutoClickerRuntime',

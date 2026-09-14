@@ -3,7 +3,6 @@ package fi.rotclient;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,20 +10,7 @@ import java.util.regex.Pattern;
 /** Pure rules for the smaller live Slayer mechanics. */
 public final class SlayerMechanicsPolicy {
     public static final long COCOON_DURATION_MILLIS = 6_000L;
-    public static final int MIN_DAGGER_DELAY_TICKS = 0;
-    public static final int MAX_DAGGER_DELAY_TICKS = 10;
-    public static final int MIN_DAGGER_VARIANCE_TICKS = 0;
-    public static final int MAX_DAGGER_VARIANCE_TICKS = 10;
     public static final int VENGEANCE_DURATION_TICKS = 120;
-    /**
-     * Hypixel Soulcry lasts 4s with a 4s cooldown from the same click.
-     * Attack-based use must wait for this, not fire on every katana hit.
-     */
-    public static final int SOULCRY_ABILITY_COOLDOWN_TICKS = 80;
-    private static final Set<String> SOULCRY_KATANAS = Set.of(
-            "VOIDEDGE_KATANA", "VORPAL_KATANA", "ATOMSPLIT_KATANA");
-    private static final Pattern ABILITY_COOLDOWN_CHAT = Pattern.compile(
-            "(?i)this ability is on cooldown(?: for)?\\s+([0-9]+(?:\\.[0-9]+)?)s");
     private static final Pattern ATTUNEMENT_DISPLAY = Pattern.compile(
             "^(ASHEN|AURIC|SPIRIT|CRYSTAL)\\s+♨(\\d)\\s+\\d{2}:\\d{2}$",
             Pattern.CASE_INSENSITIVE);
@@ -105,118 +91,6 @@ public final class SlayerMechanicsPolicy {
         }
     }
 
-    public static final class DaggerSwapState {
-        private DaggerAttunement lastObserved;
-        private DaggerAttunement pending;
-        private int remainingTicks = -1;
-
-        /**
-         * {@code sampledVarianceTicks} is supplied by the runtime so this state
-         * stays deterministic in tests.
-         */
-        public boolean observe(String tag, int delayTicks, int sampledVarianceTicks) {
-            Optional<DaggerAttunement> observed = daggerAttunement(tag);
-            if (observed.isEmpty() || observed.get() == lastObserved) {
-                return false;
-            }
-            lastObserved = observed.get();
-            pending = observed.get();
-            remainingTicks = clampDelay(delayTicks) + clampVariance(sampledVarianceTicks);
-            return true;
-        }
-
-        public void tick() {
-            if (pending != null && remainingTicks >= 0) {
-                remainingTicks--;
-            }
-        }
-
-        public Optional<DaggerAttunement> ready() {
-            return pending != null && remainingTicks <= 0
-                    ? Optional.of(pending)
-                    : Optional.empty();
-        }
-
-        public void complete() {
-            pending = null;
-            remainingTicks = -1;
-        }
-
-        public void reset() {
-            lastObserved = null;
-            complete();
-        }
-    }
-
-    public static final class SoulcryState {
-        private int remainingTicks = -1;
-
-        public boolean arm(int minDelayTicks, int maxDelayTicks, int sampledDelayTicks) {
-            if (remainingTicks >= 0) {
-                return false;
-            }
-            int min = clampSoulcryDelay(minDelayTicks);
-            int max = Math.max(min, clampSoulcryDelay(maxDelayTicks));
-            // Arm on the observation tick and start counting on the
-            // following client tick. Keep that boundary explicit here.
-            remainingTicks = Math.max(min, Math.min(max, sampledDelayTicks)) + 1;
-            return true;
-        }
-
-        public void tick() {
-            if (remainingTicks > 0) {
-                remainingTicks--;
-            }
-        }
-
-        public boolean ready() {
-            return remainingTicks == 0;
-        }
-
-        public void complete() {
-            remainingTicks = -1;
-        }
-
-        public void reset() {
-            complete();
-        }
-    }
-
-    /**
-     * Shared ready-gate for tick-based and attack-based Auto Soulcry.
-     * The 1–5 tick {@link SoulcryState} delay is only a first-use stagger;
-     * this gate is the real ability cooldown.
-     */
-    public static final class SoulcryAbilityGate {
-        private int remainingTicks;
-
-        public void tick() {
-            if (remainingTicks > 0) {
-                remainingTicks--;
-            }
-        }
-
-        public boolean ready(boolean itemOnCooldown) {
-            return remainingTicks <= 0 && !itemOnCooldown;
-        }
-
-        public void markUsed() {
-            remainingTicks = SOULCRY_ABILITY_COOLDOWN_TICKS;
-        }
-
-        public void observeRemaining(int ticks) {
-            remainingTicks = Math.max(remainingTicks, Math.max(0, ticks));
-        }
-
-        public int remainingTicks() {
-            return remainingTicks;
-        }
-
-        public void reset() {
-            remainingTicks = 0;
-        }
-    }
-
     public static final class VengeanceTimer {
         private int remainingTicks;
 
@@ -263,52 +137,6 @@ public final class SlayerMechanicsPolicy {
             }
         }
         return Optional.empty();
-    }
-
-    public static boolean supportsDagger(String itemId, DaggerAttunement attunement) {
-        return attunement != null && attunement.supports(itemId);
-    }
-
-    public static boolean isSoulcryKatana(String itemId) {
-        return SOULCRY_KATANAS.contains(normalizeId(itemId));
-    }
-
-    public static int soulcryManaCost(boolean ultimateWise) {
-        return ultimateWise ? 100 : 200;
-    }
-
-    public static boolean hasSoulcryMana(
-            double mana,
-            double overflowMana,
-            boolean ultimateWise) {
-        return Math.max(0.0D, mana) + Math.max(0.0D, overflowMana)
-                >= soulcryManaCost(ultimateWise);
-    }
-
-    public static int clampSoulcryDelay(int ticks) {
-        return Math.max(0, Math.min(5, ticks));
-    }
-
-    public static OptionalInt abilityCooldownTicks(String rawLine) {
-        if (rawLine == null || rawLine.isBlank()) {
-            return OptionalInt.empty();
-        }
-        String line = rawLine.replaceAll("§.", "").trim();
-        Matcher matcher = ABILITY_COOLDOWN_CHAT.matcher(line);
-        if (!matcher.find()) {
-            return OptionalInt.empty();
-        }
-        double seconds;
-        try {
-            seconds = Double.parseDouble(matcher.group(1));
-        } catch (NumberFormatException ignored) {
-            return OptionalInt.empty();
-        }
-        if (!(seconds > 0.0D) || !Double.isFinite(seconds)) {
-            return OptionalInt.empty();
-        }
-        int ticks = (int) Math.ceil(seconds * 20.0D);
-        return OptionalInt.of(Math.min(20 * 30, Math.max(1, ticks)));
     }
 
     public static Optional<AttunementDisplay> attunementDisplay(
@@ -408,14 +236,6 @@ public final class SlayerMechanicsPolicy {
             }
         }
         return false;
-    }
-
-    public static int clampDelay(int ticks) {
-        return Math.max(MIN_DAGGER_DELAY_TICKS, Math.min(MAX_DAGGER_DELAY_TICKS, ticks));
-    }
-
-    public static int clampVariance(int ticks) {
-        return Math.max(MIN_DAGGER_VARIANCE_TICKS, Math.min(MAX_DAGGER_VARIANCE_TICKS, ticks));
     }
 
     public static String formatAlertText(String configured) {

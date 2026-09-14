@@ -114,8 +114,8 @@ public final class QolNumberSettings {
                             true);
             case "qol.wardrobe_keybinds.ping" ->
                     new Spec(
-                            WardrobeKeybindPolicy.MIN_PING_MS,
-                            WardrobeKeybindPolicy.MAX_PING_MS,
+                            10.0D,
+                            1000.0D,
                             10.0D,
                             true);
             case "qol.wardrobe_keybinds.swap_a", "qol.wardrobe_keybinds.swap_b" ->
@@ -123,12 +123,12 @@ public final class QolNumberSettings {
             case "qol.wardrobe_keybinds.click_delay",
                  "qol.wardrobe_keybinds.close_delay" ->
                     new Spec(
-                            WardrobeKeybindPolicy.MIN_DELAY_TICKS,
-                            WardrobeKeybindPolicy.MAX_DELAY_TICKS,
+                            0.0D,
+                            8.0D,
                             1.0D,
                             true);
             case "qol.wardrobe_keybinds.delay_variance" ->
-                    new Spec(0.0D, WardrobeKeybindPolicy.MAX_VARIANCE, 1.0D, true);
+                    new Spec(0.0D, 5.0D, 1.0D, true);
             case "qol.trajectories.range" ->
                     new Spec(
                             TrajectoryPredictor.MIN_RANGE,
@@ -175,12 +175,12 @@ public final class QolNumberSettings {
             case "qol.cheater_wardrobe.click_delay",
                  "qol.cheater_wardrobe.close_delay" ->
                     new Spec(
-                            WardrobeKeybindPolicy.MIN_DELAY_TICKS,
-                            WardrobeKeybindPolicy.MAX_DELAY_TICKS,
+                            0.0D,
+                            8.0D,
                             1.0D,
                             true);
             case "qol.cheater_wardrobe.delay_variance" ->
-                    new Spec(0.0D, WardrobeKeybindPolicy.MAX_VARIANCE, 1.0D, true);
+                    new Spec(0.0D, 5.0D, 1.0D, true);
             case "qol.slayer_highlights.boss_width",
                  "qol.slayer_highlights.miniboss_width",
                  "qol.slayer_highlights.demon_width",
@@ -220,14 +220,14 @@ public final class QolNumberSettings {
                     new Spec(1.0D, 10.0D, 1.0D, true);
             case "qol.slayer_dagger_swap.delay" ->
                     new Spec(
-                            SlayerMechanicsPolicy.MIN_DAGGER_DELAY_TICKS,
-                            SlayerMechanicsPolicy.MAX_DAGGER_DELAY_TICKS,
+                            0.0D,
+                            10.0D,
                             1.0D,
                             true);
             case "qol.slayer_dagger_swap.variance" ->
                     new Spec(
-                            SlayerMechanicsPolicy.MIN_DAGGER_VARIANCE_TICKS,
-                            SlayerMechanicsPolicy.MAX_DAGGER_VARIANCE_TICKS,
+                            0.0D,
+                            10.0D,
                             1.0D,
                             true);
             case "qol.slayer_auto_soulcry.min_delay",

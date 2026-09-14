@@ -84,10 +84,10 @@ final class QolOverlayHud {
         if (qol.commissionDisplayEnabled) {
             renderCommission(graphics, font, qol);
         }
-        if (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled) {
+        if (wardrobeHudEnabled(qol)) {
             renderWardrobe(graphics, font, qol);
         }
-        if (qol.autoClickerCpsHudEnabled && QolClientFlavorSupport.hooks().autoClickerHud() != null) {
+        if (autoClickerHudEnabled(qol)) {
             renderAutoClickerHud(graphics, font, qol);
         }
         if (FishingSuiteRuntime.hudVisible(qol)) {
@@ -796,6 +796,17 @@ final class QolOverlayHud {
         graphics.pose()
                 .popMatrix();
     }
+
+    private static boolean wardrobeHudEnabled(QolUtilityConfig qol) {
+        return QolClientFlavorSupport.hooks().loadoutsEnabled()
+                && (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled);
+    }
+
+    private static boolean autoClickerHudEnabled(QolUtilityConfig qol) {
+        return qol.autoClickerCpsHudEnabled
+                && QolClientFlavorSupport.hooks().autoClickerHud() != null;
+    }
+
     private void renderAutoClickerHud(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -1355,10 +1366,10 @@ final class QolOverlayHud {
         if (qol.commissionDisplayEnabled) {
             labels.add("Commission Display");
         }
-        if (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled) {
+        if (wardrobeHudEnabled(qol)) {
             labels.add("Wardrobe Equipping");
         }
-        if (qol.autoClickerCpsHudEnabled) {
+        if (autoClickerHudEnabled(qol)) {
             labels.add("Auto Clicker CPS HUD");
         }
         if (qol.extras().slayerDisplayEnabled) labels.add("Slayer Display");
@@ -1523,7 +1534,7 @@ final class QolOverlayHud {
         if (qol.commissionDisplayEnabled && inside(mouseX, mouseY, "commission", 180, 48)) {
             return "commission";
         }
-        if ((qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled)) {
+        if (wardrobeHudEnabled(qol)) {
             String text = QolClientFlavorSupport.hooks().wardrobeHudText(true);
             int width = Math.max(110, Minecraft.getInstance().font.width(
                     text.isBlank() ? "Equipping [9]" : text) + 10);
@@ -1531,7 +1542,7 @@ final class QolOverlayHud {
                 return "wardrobe";
             }
         }
-        if (qol.autoClickerCpsHudEnabled && inside(mouseX, mouseY, "auto_clicker", 260, 16)) {
+        if (autoClickerHudEnabled(qol) && inside(mouseX, mouseY, "auto_clicker", 260, 16)) {
             return "auto_clicker";
         }
         if (FishingSuiteRuntime.hudVisible(qol)
@@ -2089,8 +2100,8 @@ final class QolOverlayHud {
         }
         if (qol.petHudEnabled) return "pet";
         if (qol.commissionDisplayEnabled) return "commission";
-        if (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled) return "wardrobe";
-        if (qol.autoClickerCpsHudEnabled) return "auto_clicker";
+        if (wardrobeHudEnabled(qol)) return "wardrobe";
+        if (autoClickerHudEnabled(qol)) return "auto_clicker";
         if (qol.extras().slayerDisplayEnabled) return "slayer";
         if (qol.extras().slayerProgressEnabled) return "slayer_progress";
         if (qol.extras().slayerDropsEnabled && qol.extras().slayerDropsRngHud) return "slayer_rng";
@@ -2131,8 +2142,8 @@ final class QolOverlayHud {
             case "speed" -> qol.playerDisplayEnabled && qol.playerDisplaySpeedHud;
             case "pet" -> qol.petHudEnabled;
             case "commission" -> qol.commissionDisplayEnabled;
-            case "wardrobe" -> qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled;
-            case "auto_clicker" -> qol.autoClickerCpsHudEnabled;
+            case "wardrobe" -> wardrobeHudEnabled(qol);
+            case "auto_clicker" -> autoClickerHudEnabled(qol);
             case "slayer" -> qol.extras().slayerDisplayEnabled;
             case "slayer_progress" -> qol.extras().slayerProgressEnabled;
             case "slayer_rng" -> qol.extras().slayerDropsEnabled && qol.extras().slayerDropsRngHud;

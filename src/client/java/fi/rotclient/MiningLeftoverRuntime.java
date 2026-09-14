@@ -204,9 +204,7 @@ public final class MiningLeftoverRuntime {
             if (extras.miningHelpersEnabled && extras.miningHelpersNotifyPortal) {
                 showTitle(MiningLeftoverPolicy.titleFor(kind), true, true);
             }
-            if (extras.miningGlaciteEnabled && extras.miningGlaciteShaftParty) {
-                sendParty("Mineshaft portal");
-            }
+            QolClientFlavorSupport.hooks().miningMineshaftPortal();
         }
         if (kind == MiningLeftoverPolicy.NotifyKind.SUSPICIOUS_SCRAP
                 && extras.miningHelpersEnabled
@@ -219,21 +217,16 @@ public final class MiningLeftoverRuntime {
                 && extras.miningHelpersNotifyGoblin) {
             showTitle(MiningLeftoverPolicy.titleFor(kind), true, true);
         }
-        if (kind == MiningLeftoverPolicy.NotifyKind.COMMISSION_COMPLETE
-                && extras.miningHelpersEnabled
-                && extras.miningHelpersCallKing) {
-            sendCommand(MiningLeftoverPolicy.kingCallCommand());
+        if (kind == MiningLeftoverPolicy.NotifyKind.COMMISSION_COMPLETE) {
+            QolClientFlavorSupport.hooks().miningCommissionComplete();
         }
         MiningLeftoverPolicy.parseCorpseLoot(text).ifPresent(type -> {
             if (extras.miningGlaciteEnabled && extras.miningGlaciteCorpseHud) {
                 showTitle(type.name() + " corpse", true, false);
             }
         });
-        MiningLeftoverPolicy.parseCorpseCoords(text).ifPresent(coords -> {
-            if (extras.miningGlaciteEnabled && extras.miningGlacitePartyShare) {
-                sendParty(coords.partyLine());
-            }
-        });
+        MiningLeftoverPolicy.parseCorpseCoords(text)
+                .ifPresent(QolClientFlavorSupport.hooks()::miningCorpseCoordinates);
         if (extras.miningEventsEnabled) {
             MiningLeftoverPolicy.MiningEvent parsed = MiningLeftoverPolicy.parseEvent(text);
             if (parsed != MiningLeftoverPolicy.MiningEvent.NONE) {
@@ -321,9 +314,7 @@ public final class MiningLeftoverRuntime {
                     kind == MiningLeftoverPolicy.WormKind.SCATHA ? "Scatha" : "Worm",
                     extras.miningScathaTitles,
                     extras.miningScathaSounds);
-            if (extras.miningScathaParty) {
-                sendParty(MiningLeftoverPolicy.scathaPartyLine(kind));
-            }
+            QolClientFlavorSupport.hooks().miningWormSeen(kind);
         }
     }
 
@@ -356,23 +347,6 @@ public final class MiningLeftoverRuntime {
         if (client != null && client.player != null) {
             client.player.sendSystemMessage(Component.literal("§e" + text));
         }
-    }
-
-    static void sendPartyChat(String text) {
-        sendParty(text);
-    }
-
-    private static void sendParty(String text) {
-        sendCommand("pc " + text);
-    }
-
-    private static void sendCommand(String command) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null || command == null || command.isBlank()) {
-            return;
-        }
-        String payload = command.startsWith("/") ? command.substring(1) : command;
-        client.player.connection.sendCommand(payload);
     }
 
     private static List<String> scoreboardLines() {

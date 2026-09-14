@@ -101,13 +101,6 @@ public final class HudLayoutLandingPolicy {
                 MiningTrackerCatalogPolicy.POWDER,
                 "Mining"));
         addExtra(grouped, extra(
-                "qol.wardrobe_keybinds",
-                "Wardrobe Equipping",
-                "Shows Equipping [slot] while a wardrobe set is applied.",
-                true,
-                "qol.wardrobe_keybinds",
-                "Player"));
-        addExtra(grouped, extra(
                 "qol.dungeon_carry",
                 "Dungeon Carry Display",
                 "Active dungeon-floor carry progress. Settings match Modules → Dungeon Carry Tracker.",

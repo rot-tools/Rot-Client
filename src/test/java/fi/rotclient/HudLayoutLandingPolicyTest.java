@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 final class HudLayoutLandingPolicyTest {
     @Test
-    void groupsVanillaAndRotOverlaysAndKeepsCatalogAt130() {
-        assertEquals(111, QolUtilityCatalog.modules().size());
+    void groupsVanillaAndRotOverlaysAndKeepsLiteCatalogStable() {
+        assertEquals(108, QolUtilityCatalog.modules().size());
         assertFalse(HudLayoutLandingPolicy.sections().isEmpty());
         assertTrue(HudLayoutLandingPolicy.sections().stream()
                 .anyMatch(section -> "Vanilla / Hypixel".equals(section.title())));
@@ -24,7 +24,7 @@ final class HudLayoutLandingPolicyTest {
                 .anyMatch(row -> row.settingId().startsWith("qol.hud_layout.hide_")
                         && !row.hasSettings()));
         assertEquals("HUD Elements Editor", HudLayoutLandingPolicy.TITLE);
-        assertTrue(HudLayoutLandingPolicy.rows().stream()
+        assertFalse(HudLayoutLandingPolicy.rows().stream()
                 .anyMatch(row -> "qol.wardrobe_keybinds".equals(row.settingId())));
         assertTrue(HudLayoutLandingPolicy.rows().stream()
                 .anyMatch(row -> "qol.iota.arrow_tracker".equals(row.settingId())));

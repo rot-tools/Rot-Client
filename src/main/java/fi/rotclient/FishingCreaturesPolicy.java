@@ -15,8 +15,6 @@ public final class FishingCreaturesPolicy {
     public static final int SEA_CREATURE_CAP = 10;
     public static final int DEFAULT_TIMER_SECONDS = 340;
     public static final int MAX_TIMER_SECONDS = 600;
-    public static final int DEFAULT_AUTO_DELAY = 4;
-    public static final int MAX_AUTO_DELAY = 40;
     public static final String DEFAULT_MIN_RARITY = "LEGENDARY";
     public static final List<String> RARITIES = List.of(
             "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC");
@@ -51,10 +49,6 @@ public final class FishingCreaturesPolicy {
 
     public static int clampTimer(int seconds) {
         return Math.max(30, Math.min(MAX_TIMER_SECONDS, seconds));
-    }
-
-    public static int clampAutoDelay(int ticks) {
-        return Math.max(1, Math.min(MAX_AUTO_DELAY, ticks));
     }
 
     public static String normalizeRarity(String value) {
@@ -189,14 +183,6 @@ public final class FishingCreaturesPolicy {
 
     public static boolean shouldEsp(boolean moduleEnabled, boolean espOn, Creature creature, String minRarity) {
         return moduleEnabled && espOn && creature != null && meetsRarity(creature.rarity(), minRarity);
-    }
-
-    public static boolean shouldAutoAttack(
-            boolean moduleEnabled,
-            boolean autoAttack,
-            boolean lookingAtTracked,
-            boolean screenOpen) {
-        return moduleEnabled && autoAttack && lookingAtTracked && !screenOpen;
     }
 
     public static boolean shouldPartyAnnounce(

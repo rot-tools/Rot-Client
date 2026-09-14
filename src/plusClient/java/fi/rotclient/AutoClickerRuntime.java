@@ -49,9 +49,9 @@ final class AutoClickerRuntime {
         }
 
         long window = client.getWindow().handle();
-        String heldIdentity = AutoClickerItemIdentity.identify(
+        String heldIdentity = SkyBlockItemIdentity.identify(
                 player.getMainHandItem());
-        String skyBlockId = AutoClickerItemIdentity.skyBlockId(
+        String skyBlockId = SkyBlockItemIdentity.skyBlockId(
                 player.getMainHandItem());
         boolean physicalLeft = isMappingHeld(client, client.options.keyAttack);
         boolean physicalRight = isMappingHeld(client, client.options.keyUse);

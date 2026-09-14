@@ -13,7 +13,6 @@ import net.minecraft.gizmos.GizmoStyle;
 import net.minecraft.gizmos.Gizmos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -32,12 +31,10 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import com.mojang.authlib.properties.Property;
@@ -54,7 +51,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,12 +59,6 @@ public final class SlayerRuntime {
     private static final SlayerSessionEngine ENGINE = new SlayerSessionEngine();
     private static final SlayerMechanicsPolicy.CocoonTimer COCOON_TIMER =
             new SlayerMechanicsPolicy.CocoonTimer();
-    private static final SlayerMechanicsPolicy.DaggerSwapState DAGGER_SWAP =
-            new SlayerMechanicsPolicy.DaggerSwapState();
-    private static final SlayerMechanicsPolicy.SoulcryState SOULCRY =
-            new SlayerMechanicsPolicy.SoulcryState();
-    private static final SlayerMechanicsPolicy.SoulcryAbilityGate SOULCRY_ABILITY =
-            new SlayerMechanicsPolicy.SoulcryAbilityGate();
     private static final SlayerMechanicsPolicy.VengeanceTimer VENGEANCE =
             new SlayerMechanicsPolicy.VengeanceTimer();
     private static final SlayerProgressPolicy.ThresholdState PROGRESS_THRESHOLD =
@@ -77,8 +67,6 @@ public final class SlayerRuntime {
     private static SlayerProgressPolicy.Progress latestProgress;
     private static boolean featuresWereEnabled;
     private static int scanCooldown;
-    private static int daggerUseCooldown;
-    private static int lastDaggerTargetEntityId = Integer.MIN_VALUE;
     /** A carry boss only activates the local fade after the player has attacked it. */
     private static int lastAttackedCarryBossEntityId = Integer.MIN_VALUE;
     private static SlayerDropScalePolicy.Window dropScaleWindow;
@@ -100,8 +88,6 @@ public final class SlayerRuntime {
     private static long laserEndsAtMillis;
     private static long lastLaserStartMillis;
     private static double sittingBeaconRemaining;
-    private static int autoStartTicks = -1;
-    private static String autoStartCommand = "";
     private static long lastBeaconWarningMillis;
     private static long lastBoomMillis;
     private static boolean revenantBoomActive;
@@ -182,7 +168,7 @@ public final class SlayerRuntime {
             if (featuresWereEnabled) {
                 ENGINE.resetWorld();
                 COCOON_TIMER.reset();
-                resetDaggerSwap();
+                QolClientFlavorSupport.hooks().slayerAutomationReset();
                 resetAdditionalMechanics();
             }
             resetProgress();
@@ -199,13 +185,7 @@ public final class SlayerRuntime {
         if (!settings.slayerProgressEnabled) {
             resetProgress();
         }
-        if (QolFlavorSupport.isPlus() && settings.slayerDaggerSwapEnabled) {
-            tickDaggerSwap(client);
-        } else {
-            resetDaggerSwap();
-        }
-        tickSoulcry(client, settings);
-        tickAutoStart(client, settings);
+        QolClientFlavorSupport.hooks().slayerAutomationTick(client);
         tickVoidgloomLaser(client, settings);
         tickGummyWarning(client, settings);
         if (settings.slayerVengeanceEnabled) {
@@ -248,7 +228,7 @@ public final class SlayerRuntime {
                     settings,
                     SlayerMinibossAlertPolicy.spawnFromChat(line).orElse(null));
         }
-        SlayerMechanicsPolicy.abilityCooldownTicks(line).ifPresent(SOULCRY_ABILITY::observeRemaining);
+        QolClientFlavorSupport.hooks().slayerAutomationOnChat(line);
         if (settings.slayerInfernoEnabled
                 && settings.slayerInfernoGummyWarning
                 && SlayerPolishPolicy.isGummyConsumeChat(line)) {
@@ -269,7 +249,7 @@ public final class SlayerRuntime {
                                     : "Slayer quest complete in " + duration(duration) + "."));
                 }
             }
-            scheduleAutoStart(settings);
+            QolClientFlavorSupport.hooks().slayerAutomationScheduleAutoStart();
         }
         if (settings.slayerTarantulaEnabled
                 && localQuestFamily(SlayerPolicy.SlayerType.TARANTULA)
@@ -347,7 +327,7 @@ public final class SlayerRuntime {
     static void onWorldChanged() {
         ENGINE.resetWorld();
         COCOON_TIMER.reset();
-        resetDaggerSwap();
+        QolClientFlavorSupport.hooks().slayerAutomationReset();
         resetAdditionalMechanics();
         scanCooldown = 0;
         pendingTradePlayer = "";
@@ -392,39 +372,27 @@ public final class SlayerRuntime {
         Minecraft client = Minecraft.getInstance();
         rememberAttackedCarryBoss(client, entity, settings);
         warnWrongQuest(client, entity, settings);
-        if (QolFlavorSupport.isPlus()
-                && settings.slayerAutoSoulcryEnabled
-                && settings.slayerAutoSoulcryAttackBased) {
-            tryAttackSoulcry(client, entity, settings);
-        }
-        if (!QolFlavorSupport.isPlus() || !settings.slayerDaggerSwapEnabled || entity == null
-                || client == null || client.level == null) {
-            return;
-        }
-        // The dagger swap reads attunement holograms on whatever was
-        // attacked. Requiring DEMON classification dropped swaps when the
-        // hologram box missed Quazii/Typhoeus tags.
-        String attunementLine = attachedAttunementLine(client.level, entity);
-        if (attunementLine == null) {
-            return;
-        }
-        if (lastDaggerTargetEntityId != entity.getId()) {
-            DAGGER_SWAP.reset();
-            lastDaggerTargetEntityId = entity.getId();
-        }
-        int variance = SlayerMechanicsPolicy.clampVariance(
-                settings.slayerDaggerSwapVariance);
-        int sampled = variance <= 0
-                ? 0
-                : ThreadLocalRandom.current().nextInt(variance + 1);
-        DAGGER_SWAP.observe(
-                attunementLine,
-                settings.slayerDaggerSwapDelay,
-                sampled);
+        QolClientFlavorSupport.hooks().slayerAutomationOnAttack(client, entity);
     }
 
     static SlayerSessionEngine.Snapshot snapshot() {
         return ENGINE.snapshot(System.currentTimeMillis());
+    }
+
+    static SlayerPolicy.EntityDescriptor automationDescriptor(Entity entity) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.level == null || entity == null) {
+            return null;
+        }
+        return descriptor(client.level, entity);
+    }
+
+    static String automationAttunementLine(Entity entity) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.level == null || entity == null) {
+            return null;
+        }
+        return attachedAttunementLine(client.level, entity);
     }
 
     /**
@@ -1133,7 +1101,7 @@ public final class SlayerRuntime {
                 || !familyEnabled(settings, dropScaleWindow.type())) {
             return 1.0F;
         }
-        String id = AutoClickerItemIdentity.skyBlockId(entity.getItem());
+        String id = SkyBlockItemIdentity.skyBlockId(entity.getItem());
         return SlayerDropScalePolicy.shouldScale(
                 dropScaleWindow,
                 id,
@@ -1224,7 +1192,7 @@ public final class SlayerRuntime {
             AABB search = player.getBoundingBox().inflate(24.0D);
             for (Entity entity : client.level.getEntities(player, search)) {
                 if (!(entity instanceof ItemEntity item)) continue;
-                String id = AutoClickerItemIdentity.skyBlockId(item.getItem());
+                String id = SkyBlockItemIdentity.skyBlockId(item.getItem());
                 if (!SlayerItemProfitPolicy.isKnownSlayerDropId(id)) continue;
                 if (settings.slayerDropsGroundHighlight) {
                     var props = Gizmos.cuboid(interpolatedBox(item, partialTick, 0.15D),
@@ -2014,73 +1982,7 @@ public final class SlayerRuntime {
                 progress.percent())));
     }
 
-    private static void tickDaggerSwap(Minecraft client) {
-        if (daggerUseCooldown > 0) {
-            daggerUseCooldown--;
-        }
-        DAGGER_SWAP.tick();
-        DAGGER_SWAP.ready().ifPresent(attunement -> applyDaggerSwap(client, attunement));
-    }
-
-    private static void applyDaggerSwap(
-            Minecraft client,
-            SlayerMechanicsPolicy.DaggerAttunement attunement) {
-        LocalPlayer player = client.player;
-        if (player == null || client.gameMode == null || player.connection == null) {
-            return;
-        }
-        ItemStack held = player.getMainHandItem();
-        if (SlayerMechanicsPolicy.supportsDagger(
-                AutoClickerItemIdentity.skyBlockId(held), attunement)) {
-            if (attunementMode(held) == attunement.mode()) {
-                DAGGER_SWAP.complete();
-                return;
-            }
-            if (daggerUseCooldown <= 0) {
-                ClickPulseHelper.pulseUse(client);
-                daggerUseCooldown = 2;
-            }
-            return;
-        }
-
-        for (int slot = 0; slot < 9; slot++) {
-            ItemStack candidate = player.getInventory().getItem(slot);
-            if (!SlayerMechanicsPolicy.supportsDagger(
-                    AutoClickerItemIdentity.skyBlockId(candidate), attunement)) {
-                continue;
-            }
-            player.getInventory().setSelectedSlot(slot);
-            player.connection.send(new ServerboundSetCarriedItemPacket(slot));
-            daggerUseCooldown = 1;
-            return;
-        }
-        DAGGER_SWAP.complete();
-    }
-
-    private static int attunementMode(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return -1;
-        }
-        CustomData custom = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = custom.copyTag();
-        int direct = tag.getInt("td_attune_mode").orElse(-1);
-        if (direct >= 0) {
-            return direct;
-        }
-        return tag.getCompound("ExtraAttributes")
-                .map(extra -> extra.getInt("td_attune_mode").orElse(-1))
-                .orElse(-1);
-    }
-
-    private static void resetDaggerSwap() {
-        DAGGER_SWAP.reset();
-        daggerUseCooldown = 0;
-        lastDaggerTargetEntityId = Integer.MIN_VALUE;
-    }
-
     private static void resetAdditionalMechanics() {
-        SOULCRY.reset();
-        SOULCRY_ABILITY.reset();
         VENGEANCE.reset();
         lastAttunement = null;
         dropScaleWindow = null;
@@ -2122,126 +2024,10 @@ public final class SlayerRuntime {
         gummyNeeded = false;
         ICHOR_BEAMS.clear();
         RECENT_DEATHS.clear();
-        autoStartTicks = -1;
-        autoStartCommand = "";
-    }
-
-    private static void tickSoulcry(Minecraft client, QolSkyblockExtras settings) {
-        SOULCRY_ABILITY.tick();
-        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
-                || client == null || client.player == null || client.level == null
-                || (client.gui != null && client.gui.screen() != null)) {
-            SOULCRY.reset();
-            return;
-        }
-        ItemStack held = client.player.getMainHandItem();
-        if (!SlayerMechanicsPolicy.isSoulcryKatana(AutoClickerItemIdentity.skyBlockId(held))) {
-            SOULCRY.reset();
-            return;
-        }
-        SlayerSessionEngine.ActiveBoss boss = ENGINE.snapshot(System.currentTimeMillis())
-                .activeBosses().stream()
-                .filter(SlayerSessionEngine.ActiveBoss::owned)
-                .filter(candidate -> candidate.descriptor().role() == SlayerPolicy.EntityRole.BOSS)
-                .filter(candidate -> candidate.descriptor().type() == SlayerPolicy.SlayerType.VOIDGLOOM)
-                .findFirst().orElse(null);
-        if (boss == null || (settings.slayerAutoSoulcryCheckHitbox
-                && (!(client.hitResult instanceof EntityHitResult hit)
-                || hit.getEntity().getId() != boss.entityId()))) {
-            SOULCRY.reset();
-            return;
-        }
-        if (settings.slayerAutoSoulcryCheckMana && !hasSoulcryMana(held)) {
-            SOULCRY.reset();
-            return;
-        }
-        if (!SOULCRY_ABILITY.ready(heldItemOnCooldown(client, held))) {
-            SOULCRY.reset();
-            return;
-        }
-        int min = SlayerMechanicsPolicy.clampSoulcryDelay(settings.slayerAutoSoulcryMinDelay);
-        int max = Math.max(min,
-                SlayerMechanicsPolicy.clampSoulcryDelay(settings.slayerAutoSoulcryMaxDelay));
-        if (SOULCRY.arm(min, max,
-                min == max ? min : ThreadLocalRandom.current().nextInt(min, max + 1))) {
-            return;
-        }
-        SOULCRY.tick();
-        if (SOULCRY.ready()) {
-            useHeldItem(client);
-            SOULCRY.complete();
-            SOULCRY_ABILITY.markUsed();
-        }
-    }
-
-    private static void tryAttackSoulcry(
-            Minecraft client,
-            Entity entity,
-            QolSkyblockExtras settings) {
-        if (client == null || client.player == null || client.level == null
-                || entity == null) {
-            return;
-        }
-        SlayerPolicy.EntityDescriptor descriptor = descriptor(client.level, entity);
-        if (descriptor == null || descriptor.role() != SlayerPolicy.EntityRole.BOSS
-                || descriptor.type() != SlayerPolicy.SlayerType.VOIDGLOOM) {
-            return;
-        }
-        boolean owned = descriptor.owner().equalsIgnoreCase(client.player.getGameProfile().name());
-        if (!owned && !settings.slayerAutoSoulcryOtherBosses) {
-            return;
-        }
-        ItemStack held = client.player.getMainHandItem();
-        if (!SlayerMechanicsPolicy.isSoulcryKatana(AutoClickerItemIdentity.skyBlockId(held))
-                || (settings.slayerAutoSoulcryCheckMana && !hasSoulcryMana(held))) {
-            return;
-        }
-        if (!SOULCRY_ABILITY.ready(heldItemOnCooldown(client, held))) {
-            return;
-        }
-        useHeldItem(client);
-        SOULCRY_ABILITY.markUsed();
-    }
-
-    private static boolean heldItemOnCooldown(Minecraft client, ItemStack held) {
-        if (client == null || client.player == null || held == null || held.isEmpty()) {
-            return false;
-        }
-        return client.player.getCooldowns().isOnCooldown(held);
-    }
-
-    private static boolean hasSoulcryMana(ItemStack held) {
-        SkyBlockStatBarParser.Stats stats = RotClientClient.qolHud().statsTracker().stats();
-        double mana = stats.mana().orElse(-1.0D);
-        double overflow = stats.overflowMana().orElse(0.0D);
-        if (mana < 0.0D) {
-            return false;
-        }
-        return SlayerMechanicsPolicy.hasSoulcryMana(
-                mana, overflow, hasUltimateWise(held));
-    }
-
-    private static boolean hasUltimateWise(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return false;
-        }
-        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        CompoundTag direct = tag.getCompound("enchantments").orElse(null);
-        if (direct != null && direct.contains("ultimate_wise")) {
-            return true;
-        }
-        return tag.getCompound("ExtraAttributes")
-                .flatMap(extra -> extra.getCompound("enchantments"))
-                .map(enchantments -> enchantments.contains("ultimate_wise"))
-                .orElse(false);
-    }
-
-    private static void useHeldItem(Minecraft client) {
-        ClickPulseHelper.pulseUse(client);
     }
 
     private static boolean isVengeanceDagger(ItemStack stack) {
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         return id.equals("HEARTFIRE_DAGGER")
                 || id.equals("BURSTFIRE_DAGGER")
                 || id.equals("FIREDUST_DAGGER");
@@ -3742,37 +3528,6 @@ public final class SlayerRuntime {
         if (settings.slayerQuestWarningChat && client.player != null) {
             client.player.sendSystemMessage(RotClientChat.message(text));
         }
-    }
-
-    private static void scheduleAutoStart(QolSkyblockExtras settings) {
-        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoStartEnabled) {
-            return;
-        }
-        Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(
-                List.of(SkyBlockSidebar.text().split("\n")));
-        if (quest.isEmpty()) {
-            return;
-        }
-        autoStartCommand = SlayerFightPolicy.autoStartCommand(quest.get().type(), quest.get().tier());
-        autoStartTicks = SlayerFightPolicy.clampAutoStartDelayTicks(settings.slayerAutoStartDelay);
-    }
-
-    private static void tickAutoStart(Minecraft client, QolSkyblockExtras settings) {
-        if (!QolFlavorSupport.isPlus() || !settings.slayerAutoStartEnabled || autoStartTicks < 0) {
-            autoStartTicks = -1;
-            return;
-        }
-        if (autoStartTicks > 0) {
-            autoStartTicks--;
-            return;
-        }
-        String command = autoStartCommand;
-        autoStartTicks = -1;
-        autoStartCommand = "";
-        if (command == null || command.isBlank() || client == null || client.player == null) {
-            return;
-        }
-        client.player.connection.sendCommand(command);
     }
 
     private static String name(Entity entity) {

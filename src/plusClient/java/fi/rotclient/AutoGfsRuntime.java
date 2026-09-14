@@ -97,7 +97,7 @@ public final class AutoGfsRuntime {
             if (stack == null || stack.isEmpty()) {
                 continue;
             }
-            if (AutoGfsPolicy.idMatches(AutoClickerItemIdentity.skyBlockId(stack), item)) {
+            if (AutoGfsPolicy.idMatches(SkyBlockItemIdentity.skyBlockId(stack), item)) {
                 return stack;
             }
         }

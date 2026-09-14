@@ -64,9 +64,7 @@ public final class SkyBlockUtilityRuntime {
             if (extras.miningGlaciteEnterChat) {
                 localChat(SkyBlockUtilityPolicy.shaftEnterLine(area));
             }
-            if (extras.miningGlaciteEnterParty) {
-                MiningLeftoverRuntime.sendPartyChat(SkyBlockUtilityPolicy.shaftEnterLine(area));
-            }
+            QolClientFlavorSupport.hooks().miningShaftEntered(area);
             if (extras.miningGlaciteKeyAnnounce) {
                 String keys = SkyBlockUtilityPolicy.keyAnnounceLine(
                         SkyBlockUtilityPolicy.countUnlooted(MiningLeftoverRuntime.corpses()),
@@ -257,7 +255,7 @@ public final class SkyBlockUtilityRuntime {
         AABB search = client.player.getBoundingBox().inflate(8.0D);
         for (Player player : client.level.getEntitiesOfClass(Player.class, search)) {
             if (!SkyBlockUtilityPolicy.isWitherBlade(
-                    AutoClickerItemIdentity.skyBlockId(player.getMainHandItem()))) {
+                    SkyBlockItemIdentity.skyBlockId(player.getMainHandItem()))) {
                 continue;
             }
             IMPLOSION_HOLDERS.add(player.position());
@@ -349,7 +347,7 @@ public final class SkyBlockUtilityRuntime {
             return counts;
         }
         for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
-            String id = AutoClickerItemIdentity.skyBlockId(stack);
+            String id = SkyBlockItemIdentity.skyBlockId(stack);
             if (id == null || id.isBlank()) {
                 continue;
             }

@@ -379,7 +379,7 @@ The current gemstone pipeline emits these core markers:
 
 ### QoL checkpoint validation
 
-The legit catalog contains **110** wired parents. Rot Client+ contains **131**.
+The legit catalog contains **108** wired parents. Rot Client+ contains **133**.
 Before claiming a module runtime verified, test its switch, settings drawer,
 reset behavior, persistence across restart, and the exact visual/input effect. Start with UI move/resize/snap,
 Inventory Overlay, Price/Info Tooltips, Viewmodel, Item Scale, Experiments,

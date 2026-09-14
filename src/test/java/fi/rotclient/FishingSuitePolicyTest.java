@@ -35,8 +35,6 @@ final class FishingSuitePolicyTest {
                 FishingCreaturesPolicy.matchSpawn(
                         "You have angered a legendary creature... Lord Jawbus has arrived."),
                 true));
-        assertTrue(FishingCreaturesPolicy.shouldAutoAttack(true, true, true, false));
-        assertFalse(FishingCreaturesPolicy.shouldAutoAttack(true, true, true, true));
         assertTrue(FishingCreaturesPolicy.creatures().size() >= 80);
     }
 

@@ -102,8 +102,6 @@ final class ForagingPolicyTest {
         assertEquals(1, ForagingPolicy.shortestCycleClicks(0, 1, 13));
         assertEquals(-1, ForagingPolicy.shortestCycleClicks(0, 12, 13));
         assertTrue(ForagingPolicy.preventBeaconOverClick(true, 0));
-        assertTrue(ForagingPolicy.shouldAutoClickBeacon(true, true, true, 3));
-        assertFalse(ForagingPolicy.shouldAutoClickBeacon(true, false, true, 3));
         assertEquals(0, ForagingPolicy.remainingClicksAfterPress(1, 13, false));
     }
 
@@ -119,24 +117,6 @@ final class ForagingPolicyTest {
         assertTrue(ForagingPolicy.isForagingAxe("FIG_AXE"));
         assertTrue(ForagingPolicy.isThrowableAxe("HELIX_CHOPPER"));
         assertFalse(ForagingPolicy.isThrowableAxe("ROOKIE_AXE"));
-    }
-
-    @Test
-    void cheatChopAndTossStayOffUnlessExplicit() {
-        assertFalse(ForagingPolicy.shouldAutoChop(
-                true, false, ForagingPolicy.Island.GALATEA, true, true));
-        assertTrue(ForagingPolicy.shouldAutoChop(
-                true, true, ForagingPolicy.Island.GALATEA, true, true));
-        assertTrue(ForagingPolicy.shouldAutoChop(
-                true, true, ForagingPolicy.Island.PARK, true, true));
-        assertTrue(ForagingPolicy.shouldAutoChop(
-                true, true, ForagingPolicy.Island.HUB, true, true));
-        assertTrue(ForagingPolicy.shouldAutoChop(
-                true, true, ForagingPolicy.Island.TORRHUS, true, true));
-        assertFalse(ForagingPolicy.shouldAutoChop(
-                true, true, ForagingPolicy.Island.NONE, true, true));
-        assertTrue(ForagingPolicy.shouldAxeToss(true, true, true, 8, 5, true));
-        assertFalse(ForagingPolicy.shouldAxeToss(true, true, true, 3, 5, true));
     }
 
     @Test
@@ -198,17 +178,6 @@ final class ForagingPolicyTest {
                 -1,
                 ForagingPolicy.pitchClicks(ForagingPolicy.BeaconPitch.LOW, ForagingPolicy.BeaconPitch.HIGH));
         ForagingPolicy.BeaconHint hint = new ForagingPolicy.BeaconHint(2, 0, 0);
-        ForagingPolicy.AutoBeaconClick click = ForagingPolicy.nextBeaconClick(
-                true, true, "Tune Frequency", hint);
-        assertNotNull(click);
-        assertEquals(ForagingPolicy.BEACON_COLOR_SLOT, click.slot());
-        assertTrue(click.rightClick());
-        assertNull(ForagingPolicy.nextBeaconClick(true, false, "Tune Frequency", hint));
-        assertEquals(
-                1,
-                ForagingPolicy.applyPress(hint, ForagingPolicy.BEACON_COLOR_SLOT, true, "Tune Frequency")
-                        .colorClicks());
-        assertEquals(0, ForagingPolicy.remainingAfterDirectedClick(1, 13, true));
         assertEquals(120, ForagingPolicy.parseSweepDetails("§eSweep Details: §a120 Sweep"));
         assertTrue(ForagingPolicy.shouldMuteSound(
                 true, false, false, false, false,

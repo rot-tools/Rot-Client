@@ -252,7 +252,7 @@ Gemstone targets are selected through the searchable UI; there are no gemstone t
 
 QoL modules are defined in `QolUtilityCatalog` (Minecraft-free labels, groups, and setting types) and persisted through `QolUtilityConfig` inside `rotclient.json`. Plus-only modules and cheat child settings load through `QolFlavorExtension` (`src/plus`) and persist in `rotclient-plus.json`. Shared client runtimes and mixins live under `src/client/java`. Plus runtimes and mixins live under `src/plusClient/java`. Policy classes that can be unit-tested stay in `src/main/java` or `src/plus/java`.
 
-The dashboard exposes **110** parents in Rot Client and **131** in Rot Client+
+The dashboard exposes **108** parents in Rot Client and **133** in Rot Client+
 across Combat, Slayer, Events,
 Dungeons, Kuudra, Mining, Fishing, Foraging, Garden, GUI, HUD & Display, Render,
 Interface, and Utilities. Garden is empty on the legit catalog.

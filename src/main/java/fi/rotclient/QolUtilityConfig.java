@@ -278,7 +278,7 @@ final class QolUtilityConfig {
     boolean wardrobeCancelAll;
     String wardrobeOverrideKey = "LEFT_CONTROL";
     boolean wardrobeCancelRender;
-    int wardrobePingMs = WardrobeKeybindPolicy.DEFAULT_PING_MS;
+    int wardrobePingMs = 250;
     boolean wardrobeUseHotbar = true;
     String wardrobeKeybindStyle = QolSkyblockExtras.STYLE_HOTBAR;
     boolean wardrobeSound;
@@ -299,8 +299,8 @@ final class QolUtilityConfig {
     boolean wardrobeAutoEquip;
     boolean wardrobeMoveEquip;
     boolean wardrobeResetOpen = true;
-    int wardrobeClickDelay = WardrobeKeybindPolicy.DEFAULT_CLICK_DELAY;
-    int wardrobeCloseDelay = WardrobeKeybindPolicy.DEFAULT_CLOSE_DELAY;
+    int wardrobeClickDelay = 1;
+    int wardrobeCloseDelay = 1;
     int wardrobeDelayVariance = 1;
     float wardrobeHudX = 12.0F;
     float wardrobeHudY = 48.0F;
@@ -1095,17 +1095,17 @@ final class QolUtilityConfig {
             case "qol.inventory_walk.ping" ->
                     inventoryWalkPingMs = clampPingMs((int) Math.round(value));
             case "qol.wardrobe_keybinds.ping" ->
-                    wardrobePingMs = WardrobeKeybindPolicy.clampPingMs((int) Math.round(value));
+                    wardrobePingMs = Math.max(10, Math.min(1000, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.swap_a" ->
-                    wardrobeSwapSlotA = WardrobeKeybindPolicy.clampSlotIndex((int) Math.round(value));
+                    wardrobeSwapSlotA = Math.max(1, Math.min(9, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.swap_b" ->
-                    wardrobeSwapSlotB = WardrobeKeybindPolicy.clampSlotIndex((int) Math.round(value));
+                    wardrobeSwapSlotB = Math.max(1, Math.min(9, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.click_delay" ->
-                    wardrobeClickDelay = WardrobeKeybindPolicy.clampDelayTicks((int) Math.round(value));
+                    wardrobeClickDelay = Math.max(0, Math.min(8, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.close_delay" ->
-                    wardrobeCloseDelay = WardrobeKeybindPolicy.clampDelayTicks((int) Math.round(value));
+                    wardrobeCloseDelay = Math.max(0, Math.min(8, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.delay_variance" ->
-                    wardrobeDelayVariance = WardrobeKeybindPolicy.clampVariance((int) Math.round(value));
+                    wardrobeDelayVariance = Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.command_keybinds.ratelimit_count" ->
                     commandBindRatelimitCount =
                             RingPolicy.clampRatelimitCount((int) Math.round(value));
@@ -1484,12 +1484,12 @@ final class QolUtilityConfig {
         autoClickerHudY = clampPos(autoClickerHudY);
         dungeonHudX = clampPos(dungeonHudX);
         dungeonHudY = clampPos(dungeonHudY);
-        wardrobePingMs = WardrobeKeybindPolicy.clampPingMs(wardrobePingMs);
-        wardrobeSwapSlotA = WardrobeKeybindPolicy.clampSlotIndex(wardrobeSwapSlotA);
-        wardrobeSwapSlotB = WardrobeKeybindPolicy.clampSlotIndex(wardrobeSwapSlotB);
-        wardrobeClickDelay = WardrobeKeybindPolicy.clampDelayTicks(wardrobeClickDelay);
-        wardrobeCloseDelay = WardrobeKeybindPolicy.clampDelayTicks(wardrobeCloseDelay);
-        wardrobeDelayVariance = WardrobeKeybindPolicy.clampVariance(wardrobeDelayVariance);
+        wardrobePingMs = Math.max(10, Math.min(1000, wardrobePingMs));
+        wardrobeSwapSlotA = Math.max(1, Math.min(9, wardrobeSwapSlotA));
+        wardrobeSwapSlotB = Math.max(1, Math.min(9, wardrobeSwapSlotB));
+        wardrobeClickDelay = Math.max(0, Math.min(8, wardrobeClickDelay));
+        wardrobeCloseDelay = Math.max(0, Math.min(8, wardrobeCloseDelay));
+        wardrobeDelayVariance = Math.max(0, Math.min(5, wardrobeDelayVariance));
         ensureWorldScannerTargets();
     }
 

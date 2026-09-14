@@ -32,7 +32,7 @@ public final class SkyBlockMenuHighlightRuntime {
                 }
                 ItemStack stack = slot.getItem();
                 if (ActivePetHighlightPolicy.isActivePet(
-                        AutoClickerItemIdentity.skyBlockId(stack),
+                        SkyBlockItemIdentity.skyBlockId(stack),
                         InventoryChromeRuntime.loreLines(stack))) {
                     outline(graphics, leftPos + slot.x, topPos + slot.y, extras.activePetHighlightColor);
                 }

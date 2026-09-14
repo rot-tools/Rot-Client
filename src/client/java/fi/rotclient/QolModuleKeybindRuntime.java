@@ -7,11 +7,6 @@ import net.minecraft.client.Minecraft;
  * otherwise only stored in extras.
  */
 public final class QolModuleKeybindRuntime {
-    private static boolean gfsWasDown;
-    private static boolean sellWasDown;
-    private static boolean ghostsWasDown;
-    private static boolean freecamWasDown;
-
     private static boolean termSimWasDown;
 
     private static boolean boardWasDown;
@@ -31,14 +26,7 @@ public final class QolModuleKeybindRuntime {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         QolSkyblockExtras extras = qol.extras();
         long window = client.getWindow().handle();
-        gfsWasDown = fire(
-                window, extras.autoGfsKeybind, gfsWasDown, "qol.auto_gfs", "Auto GFS");
-        sellWasDown = fire(
-                window, extras.autoSellKeybind, sellWasDown, "qol.auto_sell", "Auto Sell");
-        ghostsWasDown = fire(
-                window, extras.ghostsKeybind, ghostsWasDown, "qol.ghosts", "Ghosts");
-        freecamWasDown = fire(
-                window, extras.freecamKeybind, freecamWasDown, "qol.freecam", "Free Camera");
+        QolClientFlavorSupport.hooks().plusModuleKeybindTick(client);
         termSimWasDown = fireOpen(
                 window, extras.dungeonTermSimKeybind, termSimWasDown, extras.dungeonTermSimEnabled);
         boardWasDown = fire(
@@ -71,10 +59,6 @@ public final class QolModuleKeybindRuntime {
     }
 
     private static void reset() {
-        gfsWasDown = false;
-        sellWasDown = false;
-        ghostsWasDown = false;
-        freecamWasDown = false;
         termSimWasDown = false;
         boardWasDown = false;
     }

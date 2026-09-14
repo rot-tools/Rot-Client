@@ -53,18 +53,12 @@ final class PlainStylePolicyTest {
     }
 
     @Test
-    void wardrobeStyleAndCustomSlots() {
+    void wardrobeSettingsRoundTripForPlusCompatibility() {
         QolUtilityConfig config = new QolUtilityConfig();
         assertTrue(config.writeEnum("qol.wardrobe_keybinds.style", "Custom"));
         assertEquals("Custom", config.readEnum("qol.wardrobe_keybinds.style"));
         assertTrue(config.writeKeybind("qol.wardrobe_keybinds.custom_3", "H"));
         assertEquals("H", config.readKeybind("qol.wardrobe_keybinds.custom_3"));
-        assertEquals(
-                QolSkyblockExtras.STYLE_CUSTOM,
-                WardrobeKeybindPolicy.effectiveStyle("Custom", true));
-        assertEquals(
-                QolSkyblockExtras.STYLE_HOTBAR,
-                WardrobeKeybindPolicy.effectiveStyle("Simple", true));
     }
 
     @Test

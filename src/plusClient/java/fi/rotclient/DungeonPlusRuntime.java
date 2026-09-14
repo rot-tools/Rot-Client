@@ -523,8 +523,7 @@ final class DungeonPlusRuntime {
         if (client == null || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
-        if (!DungeonPolicy.shouldArmRequeue(
-                extras.dungeonRequeueEnabled,
+        if (!DungeonRequeueRuntime.onChat(
                 dungeonRunStarted,
                 extraStatsSeen,
                 dungeonWorldTicks,
@@ -532,7 +531,6 @@ final class DungeonPlusRuntime {
             return;
         }
         extraStatsSeen = true;
-        requeueTicks = Math.max(0, extras.dungeonRequeueDelay);
     }
 
     static void maybeCloseChest(Minecraft client, QolSkyblockExtras extras) {
@@ -662,7 +660,7 @@ final class DungeonPlusRuntime {
             ItemStack stack = player.getInventory().getItem(i);
             if (TempleDungeonPolicy.isSuperboomItem(
                     stack.getHoverName().getString(),
-                    AutoClickerItemIdentity.skyBlockId(stack))) {
+                    SkyBlockItemIdentity.skyBlockId(stack))) {
                 return i;
             }
         }

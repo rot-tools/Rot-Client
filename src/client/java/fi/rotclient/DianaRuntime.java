@@ -40,14 +40,12 @@ public final class DianaRuntime {
     private static long lastTrailAt;
     private static long lastSpadeUseAt;
     private static long lastGriffinWarnAt;
-    private static long lastPartyShareAt;
     private static long lastChatAt;
     private static String lastChat = "";
     private static String titleText = "";
     private static int titleTicks;
     private static boolean griffinWasCorrect;
     private static boolean useWasDown;
-    private static String lastSharedKey = "";
     private static int nametagScanTicks;
 
     private record LiveBurrow(
@@ -76,14 +74,13 @@ public final class DianaRuntime {
         lastTrailAt = 0;
         lastSpadeUseAt = 0;
         lastGriffinWarnAt = 0;
-        lastPartyShareAt = 0;
+        QolClientFlavorSupport.hooks().dianaAutomationReset();
         lastChatAt = 0;
         lastChat = "";
         titleText = "";
         titleTicks = 0;
         griffinWasCorrect = false;
         useWasDown = false;
-        lastSharedKey = "";
         nametagScanTicks = 0;
     }
 
@@ -233,14 +230,8 @@ public final class DianaRuntime {
             DianaPolicy.Point here = new DianaPolicy.Point(
                     player.getX(), player.getY(), player.getZ());
             suggestedWarp = DianaPolicy.nearestWarp(target, here).orElse(null);
-            if (DianaPolicy.shouldAutoWarp(true, flags.autoWarp)
-                    && suggestedWarp != null
-                    && player.connection != null
-                    && now - lastSpadeUseAt < 1_500L
-                    && now - lastPartyShareAt > 2_000L) {
-                lastPartyShareAt = now;
-                player.connection.sendCommand(suggestedWarp.command());
-            }
+            QolClientFlavorSupport.hooks().dianaMaybeAutoWarp(
+                    client, flags.share, flags.autoWarp, suggestedWarp, now, lastSpadeUseAt);
         } else {
             suggestedWarp = null;
         }
@@ -444,22 +435,13 @@ public final class DianaRuntime {
                 MOBS.put(stand.getId(), new LiveMob(mob, stand.getId(), now));
                 if (isNew && mob.rareHighlight()) {
                     flash(mob.display(), true, client);
-                    if (DianaPolicy.shouldPartyShare(flags.share, flags.partyShare, mob)
-                            && client.player.connection != null
-                            && now - lastPartyShareAt > DianaPolicy.PARTY_SHARE_COOLDOWN_MS) {
-                        String shareKey = mob.display() + ":" + stand.blockPosition().getX()
-                                + ":" + stand.blockPosition().getZ();
-                        if (!shareKey.equals(lastSharedKey)) {
-                            lastSharedKey = shareKey;
-                            lastPartyShareAt = now;
-                            client.player.connection.sendCommand(
-                                    "pc " + DianaPolicy.partyShareLine(
-                                            mob,
-                                            stand.blockPosition().getX(),
-                                            stand.blockPosition().getY(),
-                                            stand.blockPosition().getZ()));
-                        }
-                    }
+                    QolClientFlavorSupport.hooks().dianaMaybePartyShare(
+                            client,
+                            flags.share,
+                            flags.partyShare,
+                            mob,
+                            stand.blockPosition(),
+                            now);
                 }
             });
         }
@@ -502,7 +484,7 @@ public final class DianaRuntime {
 
     private static boolean holdingSpade(LocalPlayer player) {
         ItemStack stack = player.getMainHandItem();
-        String id = AutoClickerItemIdentity.skyBlockId(stack);
+        String id = SkyBlockItemIdentity.skyBlockId(stack);
         String hover = stack == null || stack.isEmpty()
                 ? ""
                 : stack.getHoverName().getString();

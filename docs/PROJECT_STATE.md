@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (111 HUD/QoL parents, no automation bytecode) and **Rot Client+** (133 parents). Fox (Map Art Override) is Plus-only, off by default, and renders the owner-supplied bundled image locally on maps, paintings, and large fixed item-display wall art; contiguous same-facing, unrotated horizontal item-frame or item-display rectangles can share one stretched image. It never changes map data or sends anything to a server; runtime playtest remains pending. comedy01 PRs #12 **Market Watch** and #13 **Profit Finder market opportunity scanner** are merged after isolated compatibility builds: Bazaar/Auction House watches, local alerts, persistence, search, local opportunity evaluation, watchlist, pinned deals, HUD and dashboard navigation coexist with Loadouts. Closing the dashboard keeps the last page and any open module Settings or HUD drawer (`rotclient-workspace.json`); Right Shift / inventory R reopen that view instead of Overview. Custom Scoreboard now reads tab widgets (Gems, unclaimed bits, Magical Power/tunings, mayor/minister/election, events), uses a computed SkyBlock clock for Exact Minutes, caches sidebar capture ~120ms, applies background opacity to the panel fill, and opens a board editor for Appearance / Event Priority / Chunked Stats. Party still needs a separate playtest. All new slices remain Ready for Runtime Test. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (108 HUD/QoL parents) and **Rot Client+** (133 parents). Plus-only gameplay automation, Ghosts, Escrow Fix, wardrobe execution, Free Camera, and Fox now live in separate `plus` / `plusClient` source sets. Lite keeps only no-op flavor boundaries and an inert compatibility config schema; its catalog, HUD editor, mixin manifest, runtime classes, service providers, and assets do not expose Plus implementations. `verifyLegitJar` derives forbidden top-level classes from both Plus source trees and rejects any packaging leak. This separation is automated-tested and compile-tested; Minecraft runtime validation is pending. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
@@ -21,8 +21,8 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,241** shared tests plus **103** Plus tests; 0 failures, errors, or skipped tests. Client compilation and clean dual-JAR build passed. Playable SHA-256 Rot Client `FC3EC69F2EF1286A60F310D5C954CABB03A6264C7A1F61C305B05CA4D5F72DEA`, Rot Client+ `233AB9F14FFD122869FCD198163ED5D0D352C77F6D6E807F622EBA2C0359BF70`. Fox now also replaces large fixed item-display wall art locally. Market Watch and Profit Finder are automated-tested; Minecraft runtime validation is pending. |
-| Current phase | Mining tracker / M1 gemstone matrix is **paused**. Dual catalog: legit **111** / Plus **133** parents across 14 groups. Fox is Plus-only, off by default, and locally renders the bundled image over maps, paintings, large fixed item-display wall art, and rectangular unrotated item-frame panels; runtime validation is pending. Market Watch with its Profit Finder opportunity scanner, Click GUI last-page restore, settings profiles, Fullbright and Night, and Custom Scoreboard are Ready for Runtime Test. Appearance, HUD Elements Editor, and Profiles are Visuals-only; unhandled clicks dismiss the landing. |
+| Automated baseline | Current working tree: **2,199** shared tests plus **136** Plus tests; 0 failures, errors, or skipped tests. Shared and Plus client compilation, the strengthened Lite-JAR leakage verifier, and a dual-JAR `check` pass. SHA-256: Rot Client `13211D6B0153A181F421E45FADD600CD61DB6CAB2954F9BCDD4C554923B5D663`; Rot Client+ `91BC513201A68400A319FEA7824BC47E14E36C11EE748AA92F634C85EEB4FE9F`. Minecraft runtime validation remains pending. |
+| Current phase | Lite/Plus packaging separation is complete in source and automated validation. Dual catalog: legit **108** / Plus **133** parents across 14 groups. Existing runtime-pending features remain Ready for Runtime Test; mining tracker / M1 gemstone work stays paused. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
@@ -108,7 +108,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The catalog lock (111 parents on legit, 133 on Plus), evidence-state guards, status-badge layout, and
+- The catalog lock (108 parents on legit, 133 on Plus), evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -176,7 +176,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 111 legit / 133 Plus modules across GUI, Utilities, Render, HUD & Display,
+- QoL catalog wiring for 108 legit / 133 Plus modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -353,7 +353,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: **111** wired parents in Rot Client and **133** in Rot Client+
+- QoL dashboard: **108** wired parents in Rot Client and **133** in Rot Client+
   across fourteen task-oriented groups, with automation-style development
   features disabled by default and scoped to the local Serveri / Plus JAR. No
   separate server-detection branch is planned.

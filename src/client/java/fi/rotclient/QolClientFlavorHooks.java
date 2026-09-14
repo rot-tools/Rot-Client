@@ -11,6 +11,8 @@ import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.List;
+
 /**
  * Plus-only Minecraft hooks. The legit JAR has no ServiceLoader provider, so
  * every default is a no-op and shared client code never names Plus classes.
@@ -42,6 +44,131 @@ public interface QolClientFlavorHooks {
 
     default boolean freecamHideLocalBody(Entity entity) {
         return false;
+    }
+
+    default boolean ghostsShouldSuppress(Entity entity) {
+        return false;
+    }
+
+    default void renderWorldGizmos() {
+    }
+
+    default void slayerAutomationTick(Minecraft client) {
+    }
+
+    default void slayerAutomationOnAttack(Minecraft client, Entity entity) {
+    }
+
+    default void slayerAutomationOnChat(String line) {
+    }
+
+    default void slayerAutomationScheduleAutoStart() {
+    }
+
+    default void slayerAutomationReset() {
+    }
+
+    default void dungeonRequeueTick(Minecraft client) {
+    }
+
+    default boolean dungeonRequeueOnChat(
+            boolean dungeonRunStarted,
+            boolean extraStatsSeen,
+            int dungeonWorldTicks,
+            String line) {
+        return false;
+    }
+
+    default void dungeonRequeueReset() {
+    }
+
+    default void fishingCreatureAutoAttackTick(
+            Minecraft client, boolean lookingAtTrackedCreature, boolean screenOpen) {
+    }
+
+    default void foragingAutomationTick(Minecraft client) {
+    }
+
+    default void foragingAutomationReset() {
+    }
+
+    default void dianaMaybeAutoWarp(
+            Minecraft client,
+            boolean moduleEnabled,
+            boolean autoWarpEnabled,
+            DianaPolicy.WarpPoint warp,
+            long now,
+            long lastSpadeUseAt) {
+    }
+
+    default void dianaMaybePartyShare(
+            Minecraft client,
+            boolean moduleEnabled,
+            boolean partyShareEnabled,
+            DianaPolicy.RareMob mob,
+            BlockPos position,
+            long now) {
+    }
+
+    default void dianaAutomationReset() {
+    }
+
+    default boolean wardrobeMenuHandleInput(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            int code) {
+        return false;
+    }
+
+    default boolean wardrobeMenuShouldCancelRender(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen) {
+        return false;
+    }
+
+    default void wardrobeMenuTick(Minecraft client) {
+    }
+
+    default boolean experimentShouldBlockWrongClick(boolean solverWouldBlock) {
+        return false;
+    }
+
+    default void plusModuleKeybindTick(Minecraft client) {
+    }
+
+    default void escrowFixOnChat(Component message) {
+    }
+
+    default void dungeonPartyJoinTick(Minecraft client) {
+    }
+
+    default void dungeonPartyJoinMaybeKick(
+            Minecraft client,
+            String player,
+            java.util.Optional<DungeonPartyFinderPolicy.Stats> stats,
+            DungeonAthenSettings settings) {
+    }
+
+    default void fishingCreatureSpawned(
+            Minecraft client, FishingCreaturesPolicy.Creature spawn) {
+    }
+
+    default void miningMineshaftPortal() {
+    }
+
+    default void miningCommissionComplete() {
+    }
+
+    default void miningCorpseCoordinates(MiningLeftoverPolicy.CorpseCoords coordinates) {
+    }
+
+    default void miningWormSeen(MiningLeftoverPolicy.WormKind kind) {
+    }
+
+    default void miningShaftEntered(String area) {
+    }
+
+    default List<RingPolicy.MacroDef> commandMacros(
+            QolUtilityConfig config, List<RingPolicy.MacroDef> presets) {
+        return presets == null ? List.of() : presets;
     }
 
     default boolean inventoryWalkBlocksClick() {
@@ -77,10 +204,9 @@ public interface QolClientFlavorHooks {
         return false;
     }
 
-        /**
+    /**
      * Loadouts are a Plus-only product feature.
-     *
-     * The regular/legal client has no Loadouts navigation or activation UI.
+     * The regular client has no Loadouts navigation or activation UI.
      */
     default boolean loadoutsEnabled() {
         return false;

@@ -17,34 +17,14 @@ final class DungeonPartyJoinRuntime {
     private record Cached(DungeonPartyFinderPolicy.Stats stats, long at) {
     }
 
-    private record PendingKick(String player, String command, String chat, long atTick) {
-    }
-
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(4)).build();
     private static final Map<String, Cached> CACHE = new ConcurrentHashMap<>();
-    private static PendingKick pending;
-
     private DungeonPartyJoinRuntime() {
     }
 
     static void tick(Minecraft client) {
-        if (pending == null || client == null || client.player == null || client.player.connection == null) {
-            return;
-        }
-        if (client.player.tickCount < pending.atTick()) {
-            return;
-        }
-        PendingKick kick = pending;
-        pending = null;
-        if (!kick.command.isBlank()) {
-            client.player.connection.sendCommand(kick.command.startsWith("/")
-                    ? kick.command.substring(1) : kick.command);
-        }
-        if (!kick.chat.isBlank()) {
-            client.player.connection.sendCommand(kick.chat.startsWith("/")
-                    ? kick.chat.substring(1) : kick.chat);
-        }
+        QolClientFlavorSupport.hooks().dungeonPartyJoinTick(client);
     }
 
     static void onChat(String raw, Minecraft client) {
@@ -68,28 +48,8 @@ final class DungeonPartyJoinRuntime {
                 client.player.sendSystemMessage(Component.literal(
                         DungeonPartyFinderPolicy.statsLine(name, stats.orElse(null))));
             }
-            if (!athen.partyJoinAutoKick || stats.isEmpty()) {
-                return;
-            }
-            DungeonPartyFinderPolicy.KickThresholds thresholds = new DungeonPartyFinderPolicy.KickThresholds(
-                    athen.partyJoinRequiredPb,
-                    athen.partyJoinRequiredSecrets,
-                    athen.partyJoinRequiredSecretAvg,
-                    athen.partyJoinRequiredMp);
-            if (!DungeonPartyFinderPolicy.shouldKick(stats.get(), thresholds)) {
-                return;
-            }
-            String reason = DungeonPartyFinderPolicy.kickReason(stats.get(), thresholds);
-            long delayTicks = Math.max(0, athen.partyJoinMessageDelay);
-            pending = new PendingKick(
-                    name,
-                    DungeonPartyFinderPolicy.partyKickCommand(name),
-                    athen.partyJoinKickMessage
-                            ? (athen.partyJoinSendParty
-                            ? DungeonPartyFinderPolicy.partyKickChat(name, reason)
-                            : reason)
-                            : "",
-                    client.player.tickCount + delayTicks);
+            QolClientFlavorSupport.hooks().dungeonPartyJoinMaybeKick(
+                    client, name, stats, athen);
         }, floor);
     }
 

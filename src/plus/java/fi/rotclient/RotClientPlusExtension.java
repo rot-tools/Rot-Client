@@ -45,12 +45,19 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public List<HudLayerCatalog.Layer> extraHudLayers() {
-        return List.of(new HudLayerCatalog.Layer(
-                "qol.auto_clicker.cps_hud",
-                "qol.auto_clicker.cps_hud",
-                "Auto Clicker CPS",
-                HudLayerCatalog.Kind.ROT,
-                false));
+        return List.of(
+                new HudLayerCatalog.Layer(
+                        "qol.auto_clicker.cps_hud",
+                        "qol.auto_clicker.cps_hud",
+                        "Auto Clicker CPS",
+                        HudLayerCatalog.Kind.ROT,
+                        false),
+                new HudLayerCatalog.Layer(
+                        "wardrobe",
+                        "qol.wardrobe_keybinds",
+                        "Wardrobe Equipping",
+                        HudLayerCatalog.Kind.ROT,
+                        true));
     }
 
     @Override

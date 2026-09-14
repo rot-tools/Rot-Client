@@ -63,7 +63,7 @@ public final class QolVisualRuntime {
         if (flags.foraging && ForagingRuntime.shouldSuppressEntity(entity)) {
             return true;
         }
-        if (flags.ghosts && GhostsRuntime.shouldSuppress(entity)) {
+        if (QolClientFlavorSupport.hooks().ghostsShouldSuppress(entity)) {
             return true;
         }
         if (flags.freecam && QolClientFlavorSupport.hooks().freecamHideLocalBody(entity)) {
@@ -148,7 +148,6 @@ public final class QolVisualRuntime {
                 || (extras.fishingVisualsEnabled
                 && (extras.fishingVisualsHideOtherBobbers || extras.fishingVisualsChumHider));
         boolean foraging = extras.foragingTreesEnabled && extras.foragingTreesHideBits;
-        boolean ghosts = extras.ghostsEnabled && !extras.ghostsShowGhosts && !extras.ghostsShowPowered;
         boolean freecam = QolClientFlavorSupport.hooks().freecamActive();
         boolean slayerLaser = extras.slayerLaserHiderEnabled;
         boolean slayerPups = extras.slayerSvenEnabled && extras.slayerSvenHidePupNametags;
@@ -157,13 +156,12 @@ public final class QolVisualRuntime {
                 && (extras.slayerHighlightsHideMobNames || extras.slayerHighlightsHideDamageSplash);
         boolean hidePlayers = qol.hidePlayersEnabled;
         boolean optimizer = qol.renderOptimizerEnabled;
-        boolean any = fishing || foraging || ghosts || freecam || slayerLaser || slayerPups
+        boolean any = fishing || foraging || freecam || slayerLaser || slayerPups
                 || slayerInferno || slayerNametags || hidePlayers || optimizer;
         suppressFlags = new SuppressFlags(
                 any,
                 fishing,
                 foraging,
-                ghosts,
                 freecam,
                 slayerLaser,
                 slayerPups,
@@ -178,7 +176,6 @@ public final class QolVisualRuntime {
             boolean any,
             boolean fishing,
             boolean foraging,
-            boolean ghosts,
             boolean freecam,
             boolean slayerLaser,
             boolean slayerPups,
@@ -187,7 +184,7 @@ public final class QolVisualRuntime {
             boolean hidePlayers,
             boolean optimizer) {
         static final SuppressFlags NONE = new SuppressFlags(
-                false, false, false, false, false, false, false, false, false, false, false);
+                false, false, false, false, false, false, false, false, false, false);
     }
 
     public static boolean shouldSuppressParticle(ParticleOptions options) {
@@ -346,11 +343,11 @@ public final class QolVisualRuntime {
         if (stack == null || stack.isEmpty()) {
             return null;
         }
-        return maybeLegacyItemModel(AutoClickerItemIdentity.skyBlockId(stack), currentModel);
+        return maybeLegacyItemModel(SkyBlockItemIdentity.skyBlockId(stack), currentModel);
     }
 
     public static Identifier maybeLegacyItemModel(CustomData custom, Identifier currentModel) {
-        return maybeLegacyItemModel(AutoClickerItemIdentity.skyBlockIdFromCustomData(custom), currentModel);
+        return maybeLegacyItemModel(SkyBlockItemIdentity.skyBlockIdFromCustomData(custom), currentModel);
     }
 
     public static Identifier maybeLegacyItemModel(String skyBlockId, Identifier currentModel) {

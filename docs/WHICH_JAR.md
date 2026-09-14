@@ -8,8 +8,8 @@ enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **110** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **131** parents (current full client) |
+| Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **108** HUD / QoL parents |
+| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **133** parents (current full client) |
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 `SHA256SUMS.txt` when you download from GitHub.
@@ -18,14 +18,20 @@ Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 
 Use this when you want overlays, HUDs, waypoints, visual ESP, trackers, Term
 Sim, World Scanner, puzzle/terminal **overlays**, Storage/Inventory, Custom
-Scoreboard, Fullbright, loadouts, and wardrobe/pet **keybinds**. Automation
-and cheat code is **not in the bytecode**.
+Scoreboard, Fullbright, and user-driven configuration tools. Plus automation
+policies, runtimes, mixins, and assets are **not in this JAR**.
+
+The common config schema deliberately retains inert compatibility fields for
+switching editions. Lite does not publish their Plus catalog cards and has no
+executable implementation route to them. `verifyLegitJar` checks the packaged
+archive for every separated Plus implementation and identifier.
 
 ## Rot Client+ (automation)
 
-This is the previous 131-module client. Clickers, Free Camera, Inventory Walk,
-auto terminals, Farm Keys, and the other cheat-tagged options stay **opt-in
-and off by default**. Do not use those features on Hypixel.
+This is the full 133-module client. Clickers, wardrobe automation, Ghosts,
+Escrow Fix, Free Camera, Inventory Walk, auto terminals, Farm Keys, and the
+other cheat-tagged options stay **opt-in and off by default**. Do not use
+those features on Hypixel.
 
 Plus settings persist in `rotclient-plus.json` so switching JARs in the same
 instance does not mix cheat toggles into the legit `rotclient.json`.
