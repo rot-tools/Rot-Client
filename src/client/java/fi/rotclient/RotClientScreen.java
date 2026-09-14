@@ -13,6 +13,12 @@ import org.lwjgl.glfw.GLFW;
  * HUD previews.
  */
 final class RotClientScreen extends Screen {
+    /*
+     * Dashboard placement is handled by the dashboard itself. It is not a
+     * world HUD element and should not appear in the world HUD editor.
+     */
+    private static final boolean CLIENT_UI_EDITOR_TARGET_ENABLED = false;
+
     private static final int CLIENT_UI_GHOST_WIDTH = 820;
     private static final int CLIENT_UI_GHOST_HEIGHT = 450;
 
@@ -114,11 +120,21 @@ final class RotClientScreen extends Screen {
         boolean hoverPowderHud = HudEditorPreviewPolicy.showPowderChest(
                 RotClientClient.trackerConfig().powderChestHudEnabled)
                 && powderHud.containsScreen(mouseX, mouseY);
-        boolean hoverUi = RotClientUiDraw.inside(
-                mx, my, clientUiGhostX(), clientUiGhostY(),
-                CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT);
+        boolean hoverUi =
+                CLIENT_UI_EDITOR_TARGET_ENABLED
+                        && RotClientUiDraw.inside(
+                        mx,
+                        my,
+                        clientUiGhostX(),
+                        clientUiGhostY(),
+                        CLIENT_UI_GHOST_WIDTH,
+                        CLIENT_UI_GHOST_HEIGHT);
 
-        drawClientUiGhost(graphics, hoverUi);
+        if (CLIENT_UI_EDITOR_TARGET_ENABLED) {
+            drawClientUiGhost(
+                    graphics,
+                    hoverUi);
+        }
         TrackerConfig tracker = RotClientClient.trackerConfig();
         if (HudEditorPreviewPolicy.showMiningTracker(tracker.enabled)) {
             drawHudEditorChrome(graphics, hoverHud);
@@ -157,15 +173,15 @@ final class RotClientScreen extends Screen {
                 extras();
 
         /*
-         * The redesign deliberately keeps the main inspector fixed. Old
-         * persisted TITLE coordinates no longer make the editor card appear in
-         * an unexpected place. Legacy HELP / INSPECTOR positions remain
-         * resolvable for config compatibility.
+         * The visible editor inspector uses its persisted position so it can
+         * be dragged out of the way and remains there on the next open.
          */
         return switch (panel) {
             case TITLE ->
-                    HudEditorChromePolicy.defaultRect(
+                    HudEditorChromePolicy.resolve(
                             panel,
+                            extras.hudEditorTitleX,
+                            extras.hudEditorTitleY,
                             this.width,
                             this.height);
 
@@ -1468,12 +1484,12 @@ final class RotClientScreen extends Screen {
             target = LayoutTarget.POWDER_CHEST_HUD;
             return true;
         }
-        if (key == GLFW.GLFW_KEY_3) {
-            target = LayoutTarget.CLIENT_UI;
-            return true;
-        }
-        if (key == GLFW.GLFW_KEY_4) {
-            target = LayoutTarget.QOL_HUD;
+        if (key == GLFW.GLFW_KEY_3
+                || key == GLFW.GLFW_KEY_4) {
+
+            target =
+                    LayoutTarget.QOL_HUD;
+
             return true;
         }
         if (key == GLFW.GLFW_KEY_C) {
@@ -1605,6 +1621,27 @@ final class RotClientScreen extends Screen {
             return true;
         }
 
+        HudEditorChromePolicy.Rect editorPanel =
+                chromeRect(
+                        HudEditorChromePolicy.Panel.TITLE);
+
+        /*
+         * The top 54px contain only title/help text and therefore form a safe
+         * drag handle. Controls start below this area.
+         */
+        if (editorPanel.containsHeader(
+                mx,
+                my,
+                54)) {
+
+            beginChromeDrag(
+                    HudEditorChromePolicy.Panel.TITLE,
+                    mx,
+                    my);
+
+            return true;
+        }
+
         if (handleEditorPanelClick(
                 mx,
                 my)) {
@@ -1642,7 +1679,8 @@ final class RotClientScreen extends Screen {
                         event.y());
 
         boolean onUi =
-                RotClientUiDraw.inside(
+                CLIENT_UI_EDITOR_TARGET_ENABLED
+                        && RotClientUiDraw.inside(
                         mx,
                         my,
                         clientUiGhostX(),
@@ -1696,10 +1734,18 @@ final class RotClientScreen extends Screen {
         if (title.contains(mx, my)) {
             return true;
         }
-        if (RotClientUiDraw.inside(
-                mx, my, clientUiGhostX(), clientUiGhostY(),
-                CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT)) {
-            target = LayoutTarget.CLIENT_UI;
+        if (CLIENT_UI_EDITOR_TARGET_ENABLED
+                && RotClientUiDraw.inside(
+                mx,
+                my,
+                clientUiGhostX(),
+                clientUiGhostY(),
+                CLIENT_UI_GHOST_WIDTH,
+                CLIENT_UI_GHOST_HEIGHT)) {
+
+            target =
+                    LayoutTarget.CLIENT_UI;
+
             return true;
         }
         String qolId = qolHud.elementAt(mx, my);
@@ -1846,10 +1892,23 @@ final class RotClientScreen extends Screen {
         }
         int mx = (int) Math.round(mouseX);
         int my = (int) Math.round(mouseY);
-        if (chromeRect(HudEditorChromePolicy.Panel.TITLE).contains(mx, my)
-                || RotClientUiDraw.inside(
-                        mx, my, clientUiGhostX(), clientUiGhostY(),
-                        CLIENT_UI_GHOST_WIDTH, CLIENT_UI_GHOST_HEIGHT)) {
+        boolean overClientUi =
+                CLIENT_UI_EDITOR_TARGET_ENABLED
+                        && RotClientUiDraw.inside(
+                        mx,
+                        my,
+                        clientUiGhostX(),
+                        clientUiGhostY(),
+                        CLIENT_UI_GHOST_WIDTH,
+                        CLIENT_UI_GHOST_HEIGHT);
+
+        if (chromeRect(
+                HudEditorChromePolicy.Panel.TITLE)
+                .contains(
+                        mx,
+                        my)
+                || overClientUi) {
+
             return true;
         }
         if (qolHud.onScroll(mouseX, mouseY, verticalAmount)) {

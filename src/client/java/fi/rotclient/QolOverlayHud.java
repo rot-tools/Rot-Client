@@ -162,9 +162,30 @@ final class QolOverlayHud {
         renderSlayerPanel(graphics, font, qol, "slayer_cocoon", SlayerRuntime.cocoonLines(editorOpen));
         renderSlayerPanel(graphics, font, qol, "slayer_attunement", SlayerRuntime.attunementLines(editorOpen));
         renderSlayerPanel(graphics, font, qol, "slayer_vengeance", SlayerRuntime.vengeanceLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "dungeon", DungeonRuntime.displayLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "dungeon_carry", DungeonCarryRuntime.hudLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "dungeon_watcher", DungeonWatcherRuntime.hudLines(editorOpen));
+        renderSlayerPanel(
+                graphics,
+                font,
+                qol,
+                "dungeon",
+                DungeonRuntime.displayLines(editorOpen));
+
+        if (dungeonCarryEditorVisible(qol)) {
+            renderSlayerPanel(
+                    graphics,
+                    font,
+                    qol,
+                    "dungeon_carry",
+                    DungeonCarryRuntime.hudLines(editorOpen));
+        }
+
+        if (dungeonWatcherEditorVisible(qol)) {
+            renderSlayerPanel(
+                    graphics,
+                    font,
+                    qol,
+                    "dungeon_watcher",
+                    DungeonWatcherRuntime.hudLines(editorOpen));
+        }
         ItemRarityRuntime.renderHotbar(
                 graphics,
                 client.getWindow() == null ? 0 : client.getWindow().getGuiScaledWidth(),
@@ -1386,6 +1407,8 @@ final class QolOverlayHud {
         if (qol.extras().slayerAttunementDisplayEnabled) labels.add("Attunement Display");
         if (qol.extras().slayerVengeanceEnabled) labels.add("Vengeance Timer");
         if (qol.extras().dungeonHudEnabled) labels.add("Dungeon HUD");
+        if (dungeonCarryEditorVisible(qol)) labels.add("Dungeon Carry Display");
+        if (dungeonWatcherEditorVisible(qol)) labels.add("Blood Timers");
         if (FishingSuiteRuntime.hudVisible(qol)) labels.add("Fishing HUD");
         if (MiningLeftoverRuntime.hudVisible(qol)) labels.add("Mining HUD");
         if (DianaRuntime.hudVisible(qol)) labels.add("Diana HUD");
@@ -1492,6 +1515,32 @@ final class QolOverlayHud {
 
     String elementAt(double mouseX, double mouseY) {
         return hitTest(mouseX, mouseY);
+    }
+
+    private boolean dungeonCarryEditorVisible(
+            QolUtilityConfig qol) {
+
+        if (qol == null) {
+            return false;
+        }
+
+        DungeonAthenSettings athen =
+                qol.extras().athen();
+
+        return athen.carryDisplay;
+    }
+
+    private boolean dungeonWatcherEditorVisible(
+            QolUtilityConfig qol) {
+
+        if (qol == null) {
+            return false;
+        }
+
+        DungeonAthenSettings athen =
+                qol.extras().athen();
+
+        return athen.watcherBloodTimers;
     }
 
     private String hitTest(double mouseX, double mouseY) {
@@ -1609,13 +1658,25 @@ final class QolOverlayHud {
                 && inside(mouseX, mouseY, "dungeon", SLAYER_EDITOR_WIDTH, 68)) {
             return "dungeon";
         }
-        DungeonAthenSettings athen = qol.extras().athen();
-        if (athen.carryEnabled && athen.carryDisplay
-                && inside(mouseX, mouseY, "dungeon_carry", SLAYER_EDITOR_WIDTH, 68)) {
+        if (dungeonCarryEditorVisible(qol)
+                && inside(
+                mouseX,
+                mouseY,
+                "dungeon_carry",
+                SLAYER_EDITOR_WIDTH,
+                68)) {
+
             return "dungeon_carry";
         }
-        if (athen.watcherEnabled && athen.watcherBloodTimers
-                && inside(mouseX, mouseY, "dungeon_watcher", SLAYER_EDITOR_WIDTH, 68)) {
+
+        if (dungeonWatcherEditorVisible(qol)
+                && inside(
+                mouseX,
+                mouseY,
+                "dungeon_watcher",
+                SLAYER_EDITOR_WIDTH,
+                68)) {
+
             return "dungeon_watcher";
         }
         return "";
@@ -2112,9 +2173,8 @@ final class QolOverlayHud {
         if (qol.extras().slayerAttunementDisplayEnabled) return "slayer_attunement";
         if (qol.extras().slayerVengeanceEnabled) return "slayer_vengeance";
         if (qol.extras().dungeonHudEnabled) return "dungeon";
-        DungeonAthenSettings athen = qol.extras().athen();
-        if (athen.carryEnabled && athen.carryDisplay) return "dungeon_carry";
-        if (athen.watcherEnabled && athen.watcherBloodTimers) return "dungeon_watcher";
+        if (dungeonCarryEditorVisible(qol)) return "dungeon_carry";
+        if (dungeonWatcherEditorVisible(qol)) return "dungeon_watcher";
         if (FishingSuiteRuntime.hudVisible(qol)) return "fishing";
         if (MiningLeftoverRuntime.hudVisible(qol)) return "mining";
         if (DianaRuntime.hudVisible(qol)) return "diana";
@@ -2154,8 +2214,8 @@ final class QolOverlayHud {
             case "slayer_attunement" -> qol.extras().slayerAttunementDisplayEnabled;
             case "slayer_vengeance" -> qol.extras().slayerVengeanceEnabled;
             case "dungeon" -> qol.extras().dungeonHudEnabled;
-            case "dungeon_carry" -> qol.extras().athen().carryEnabled && qol.extras().athen().carryDisplay;
-            case "dungeon_watcher" -> qol.extras().athen().watcherEnabled && qol.extras().athen().watcherBloodTimers;
+            case "dungeon_carry" -> dungeonCarryEditorVisible(qol);
+            case "dungeon_watcher" -> dungeonWatcherEditorVisible(qol);
             case "fishing" -> FishingSuiteRuntime.hudVisible(qol);
             case "mining" -> MiningLeftoverRuntime.hudVisible(qol);
             case "diana" -> DianaRuntime.hudVisible(qol);
@@ -2225,7 +2285,7 @@ final class QolOverlayHud {
         if ("custom_scoreboard".equals(id)) {
             return CustomScoreboardRuntime.editorWidth();
         }
-        if (id != null && (id.startsWith("slayer") || "dungeon".equals(id) || "fishing".equals(id) || "mining".equals(id) || "diana".equals(id) || "foraging".equals(id) || "iota_arrows".equals(id) || "kuudra_alerts".equals(id) || "stall_bin".equals(id))) {
+        if (id != null && (id.startsWith("slayer") || id.startsWith("dungeon") || "fishing".equals(id) || "mining".equals(id) || "diana".equals(id) || "foraging".equals(id) || "iota_arrows".equals(id) || "kuudra_alerts".equals(id) || "stall_bin".equals(id))) {
             return SLAYER_EDITOR_WIDTH;
         }
         return STAT_EDITOR_WIDTH;

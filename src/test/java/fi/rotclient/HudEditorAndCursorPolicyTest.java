@@ -88,6 +88,45 @@ final class HudEditorAndCursorPolicyTest {
     }
 
     @Test
+    void worldHudEditorUsesMovableChromeAndModernHudToggles()
+            throws Exception {
+
+        String editor =
+                java.nio.file.Files.readString(
+                        java.nio.file.Path.of(
+                                "src/client/java/fi/rotclient/RotClientScreen.java"));
+
+        assertTrue(
+                editor.contains(
+                        "CLIENT_UI_EDITOR_TARGET_ENABLED = false"));
+
+        assertTrue(
+                editor.contains(
+                        "extras.hudEditorTitleX"));
+
+        assertTrue(
+                editor.contains(
+                        "extras.hudEditorTitleY"));
+
+        assertTrue(
+                editor.contains(
+                        "editorPanel.containsHeader("));
+
+        String dashboard =
+                java.nio.file.Files.readString(
+                        java.nio.file.Path.of(
+                                "src/client/java/fi/rotclient/QolUtilityDashboard.java"));
+
+        assertTrue(
+                dashboard.contains(
+                        "\"hud-layout-toggle:\""));
+
+        assertTrue(
+                dashboard.contains(
+                        "RotClientUiDraw.drawAnimatedToggle("));
+    }
+
+    @Test
     void unfocusedHudUsesLowerAlphaWhenDimmingIsOn() {
         int focused = HudStylePolicy.dim(0xFFFFFFFF, true, true);
         int faded = HudStylePolicy.dim(0xFFFFFFFF, false, true);
