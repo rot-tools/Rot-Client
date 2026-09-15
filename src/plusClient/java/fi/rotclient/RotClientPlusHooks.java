@@ -18,6 +18,20 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
+    public void contributeCommands(
+            com.mojang.brigadier.builder.LiteralArgumentBuilder<
+                    net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> root,
+            String legacyAlias) {
+        RotClientPlusCommands.contribute(root, legacyAlias);
+    }
+
+    @Override
+    public void commandHelp(
+            net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource source) {
+        RotClientPlusCommands.help(source);
+    }
+
+    @Override
     public void tickStart(Minecraft client) {
         ClientBoundaryGuard.run("AUTO_CLICKER", () -> AutoClickerRuntime.tick(client));
         ClientBoundaryGuard.run("AUTO_EXPERIMENTS", () -> AutoExperimentsRuntime.tick(client));

@@ -248,6 +248,16 @@ public interface QolClientFlavorHooks {
         return 0;
     }
 
+    default void contributeCommands(
+            com.mojang.brigadier.builder.LiteralArgumentBuilder<
+                    net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> root,
+            String legacyAlias) {
+    }
+
+    default void commandHelp(
+            net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource source) {
+    }
+
     default CpsHud autoClickerHud() {
         return null;
     }
