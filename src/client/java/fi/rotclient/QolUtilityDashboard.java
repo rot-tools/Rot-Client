@@ -3498,6 +3498,12 @@ final class QolUtilityDashboard {
                 if (setting.id().contains("cps")) {
                     yield String.format(Locale.ROOT, "%.1f", value);
                 }
+                if (setting.id().equals("qol.zoom.amount")) {
+                    yield String.format(Locale.ROOT, "%.2fx", value);
+                }
+                if (setting.id().equals("qol.zoom.speed")) {
+                    yield String.format(Locale.ROOT, "%.1f", value);
+                }
                 if (setting.id().contains("alpha")
                         || setting.id().contains("opacity")
                         || setting.id().contains("line_width")

@@ -26,7 +26,7 @@ final class MiningTrackerCatalogPolicyTest {
 
     @Test
     void catalogLockIsOneHundredThirty() {
-        assertEquals(106, QolUtilityCatalog.modules().size());
+        assertEquals(107, QolUtilityCatalog.modules().size());
         assertEquals(QolUtilityCatalog.Group.MINING,
                 QolUtilityCatalog.findById("qol.mining_tracker").group());
         assertEquals(QolUtilityCatalog.Group.HUD_DISPLAY,

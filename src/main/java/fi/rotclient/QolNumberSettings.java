@@ -73,6 +73,20 @@ public final class QolNumberSettings {
             return flavored;
         }
         return switch (settingId) {
+            case "qol.zoom.amount" ->
+                    new Spec(
+                            SmoothZoomPolicy.MIN_AMOUNT,
+                            SmoothZoomPolicy.MAX_AMOUNT,
+                            0.25D,
+                            true);
+
+            case "qol.zoom.speed" ->
+                    new Spec(
+                            SmoothZoomPolicy.MIN_SPEED,
+                            SmoothZoomPolicy.MAX_SPEED,
+                            0.5D,
+                            true);
+
             case "qol.player_size.x", "qol.player_size.y", "qol.player_size.z" ->
                     new Spec(
                             PlayerSizePolicy.MIN_SCALE,

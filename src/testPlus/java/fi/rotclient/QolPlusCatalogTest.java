@@ -10,7 +10,7 @@ final class QolPlusCatalogTest {
     @Test
     void plusCatalogIncludesMapArtOverride() {
         assertTrue(QolFlavorSupport.isPlus());
-        assertEquals(133, QolUtilityCatalog.modules().size());
+        assertEquals(134, QolUtilityCatalog.modules().size());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));
         assertNotNull(QolUtilityCatalog.findById("qol.freecam"));
