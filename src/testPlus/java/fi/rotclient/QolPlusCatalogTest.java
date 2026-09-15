@@ -17,6 +17,7 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.diana_burrows"));
         assertNotNull(QolUtilityCatalog.findById("qol.diana_mobs"));
         assertNotNull(QolUtilityCatalog.findById("qol.diana_profit"));
+        assertNotNull(QolUtilityCatalog.findById("qol.dungeon_term_click"));
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.diana_burrows")));
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_sprint")));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));

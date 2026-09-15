@@ -6,7 +6,6 @@ import fi.rotclient.DungeonLeapOverlayRuntime;
 import fi.rotclient.DungeonPolicy;
 import fi.rotclient.PrizeSpinRuntime;
 import fi.rotclient.DungeonRuntime;
-import fi.rotclient.DungeonTerminalClickRuntime;
 import fi.rotclient.InventoryChromeRuntime;
 import fi.rotclient.InventoryButtonsRuntime;
 import fi.rotclient.ItemRarityRuntime;
@@ -116,7 +115,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 imageHeight,
                 mouseX,
                 mouseY);
-        DungeonTerminalClickRuntime.render(screen, graphics);
+        QolClientFlavorSupport.hooks().dungeonTerminalClickRender(screen, graphics);
         DungeonRuntime.renderMenuExtras(screen, graphics, leftPos, topPos);
         ClientBoundaryGuard.run("STORAGE_OVERLAY_RENDER", () ->
                 StorageOverlayRuntime.render(
@@ -319,7 +318,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             return;
         }
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
-        DungeonTerminalClickRuntime.record(
+        QolClientFlavorSupport.hooks().dungeonTerminalClickRecord(
                 screen,
                 (int) Math.round(event.x()),
                 (int) Math.round(event.y()),

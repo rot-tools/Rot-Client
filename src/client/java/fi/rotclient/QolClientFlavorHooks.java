@@ -3,6 +3,7 @@ package fi.rotclient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.core.BlockPos;
@@ -176,6 +177,14 @@ public interface QolClientFlavorHooks {
     }
 
     default void dianaRenderGizmos() {
+    }
+
+    default void dungeonTerminalClickRecord(
+            AbstractContainerScreen<?> screen, int mouseX, int mouseY, int button) {
+    }
+
+    default void dungeonTerminalClickRender(
+            AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
     }
 
     default boolean wardrobeMenuHandleInput(

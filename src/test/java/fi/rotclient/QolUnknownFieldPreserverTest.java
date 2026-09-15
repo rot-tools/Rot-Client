@@ -37,6 +37,10 @@ final class QolUnknownFieldPreserverTest {
         extras.addProperty("experimentSolverEnabled", true);
         extras.addProperty("experimentFirstColor", 0x80123456);
         extras.add("futureExtras", JsonParser.parseString("{\"value\":\"keep\"}"));
+        JsonObject athen = extras.getAsJsonObject("athen");
+        athen.addProperty("termClickEnabled", true);
+        athen.addProperty("termClickRadius", 9);
+        athen.addProperty("termClickLeftColor", 0xFF123456);
 
         TrackerConfig loaded = TrackerStore.fromJson(original);
         assertEquals(unknown, loaded.qolUtilities.extensionFields.get("futureEditionModule"));
@@ -62,6 +66,10 @@ final class QolUnknownFieldPreserverTest {
                 .get("experimentFirstColor").getAsInt());
         assertEquals("keep", loaded.qolUtilities.extras().extensionFields
                 .getAsJsonObject("futureExtras").get("value").getAsString());
+        assertTrue(loaded.qolUtilities.extras().athen().extensionFields
+                .get("termClickEnabled").getAsBoolean());
+        assertEquals(9, loaded.qolUtilities.extras().athen().extensionFields
+                .get("termClickRadius").getAsInt());
         assertTrue(qol.has("futureEditionModule"));
         assertFalse(qol.getAsJsonObject("extensionFields").has("futureEditionModule"));
 
@@ -80,6 +88,9 @@ final class QolUnknownFieldPreserverTest {
         assertTrue(saved.getAsJsonObject("qolUtilities").getAsJsonObject("extras")
                 .getAsJsonObject("extensionFields").get("experimentSolverEnabled")
                 .getAsBoolean());
+        assertEquals(0xFF123456, saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extras").getAsJsonObject("athen")
+                .getAsJsonObject("extensionFields").get("termClickLeftColor").getAsInt());
         assertEquals("keep", saved.getAsJsonObject("qolUtilities")
                 .getAsJsonObject("extensionFields").getAsJsonObject("worldScannerTargets")
                 .getAsJsonObject("fairy").get("custom").getAsString());

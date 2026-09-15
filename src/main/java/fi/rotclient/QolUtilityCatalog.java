@@ -1794,21 +1794,6 @@ public final class QolUtilityCatalog {
 
 
         modules.add(module(
-                "qol.dungeon_term_click",
-                "Terminal Click Trails",
-                "Record left and right clicks in terminal GUIs and draw short trails.",
-                Group.DUNGEONS,
-                "F7",
-                false,
-                true,
-                true,
-                List.of("terminal click", "click trail"),
-                setting("qol.dungeon_term_click.radius", "Trail Radius", "Circle radius in GUI pixels.", SettingType.NUMBER),
-                setting("qol.dungeon_term_click.thickness", "Trail Thickness", "Trail stroke thickness.", SettingType.NUMBER),
-                setting("qol.dungeon_term_click.left_color", "Left Color", "Left-click trail color.", SettingType.COLOR),
-                setting("qol.dungeon_term_click.right_color", "Right Color", "Right-click trail color.", SettingType.COLOR)));
-
-        modules.add(module(
                 "qol.dungeon_watcher",
                 "Watcher Helper",
                 "Blood-camp speak/move/spawned timings, speed-bucket titles, and a movable HUD.",

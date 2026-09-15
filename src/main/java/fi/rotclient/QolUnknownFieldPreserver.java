@@ -25,6 +25,13 @@ final class QolUnknownFieldPreserver {
                             && !field.isSynthetic())
                     .map(java.lang.reflect.Field::getName)
                     .collect(Collectors.toUnmodifiableSet());
+    private static final Set<String> KNOWN_ATHEN_FIELDS =
+            Arrays.stream(DungeonAthenSettings.class.getDeclaredFields())
+                    .filter(field -> !Modifier.isStatic(field.getModifiers())
+                            && !Modifier.isTransient(field.getModifiers())
+                            && !field.isSynthetic())
+                    .map(java.lang.reflect.Field::getName)
+                    .collect(Collectors.toUnmodifiableSet());
 
     private QolUnknownFieldPreserver() {
     }
@@ -54,6 +61,20 @@ final class QolUnknownFieldPreserver {
             }
         }
         extras.add("extensionFields", opaque);
+        preserveAthen(object(extras, "athen"));
+    }
+
+    private static void preserveAthen(JsonObject athen) {
+        if (athen == null) return;
+        JsonObject opaque = athen.has("extensionFields")
+                && athen.get("extensionFields").isJsonObject()
+                ? athen.getAsJsonObject("extensionFields") : new JsonObject();
+        for (var field : athen.entrySet()) {
+            if (!KNOWN_ATHEN_FIELDS.contains(field.getKey()) && !opaque.has(field.getKey())) {
+                opaque.add(field.getKey(), field.getValue().deepCopy());
+            }
+        }
+        athen.add("extensionFields", opaque);
     }
 
     static void preserveProfiles(JsonObject root) {

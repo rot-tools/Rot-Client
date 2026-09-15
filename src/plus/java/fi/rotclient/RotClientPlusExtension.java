@@ -111,6 +111,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.dungeon_term_click".equals(moduleId)) {
+            return DungeonTerminalClickSettings.from(config).enabled();
+        }
         Boolean diana = DianaSettings.module(config, moduleId);
         if (diana != null) return diana;
         if ("qol.experiment_solver".equals(moduleId)) {
@@ -143,6 +146,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.dungeon_term_click".equals(moduleId)) {
+            DungeonTerminalClickSettings.enabled(config, enabled);
+            return true;
+        }
         if (DianaSettings.writeModule(config, moduleId, enabled)) return true;
         if ("qol.experiment_solver".equals(moduleId)) {
             ExperimentSolverSettings.enabled(config, enabled);
@@ -278,6 +285,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return null;
         }
+        if (settingId.startsWith("qol.dungeon_term_click.")) {
+            return DungeonTerminalClickSettings.readNumber(config, settingId);
+        }
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.readNumber(config, settingId);
         }
@@ -300,6 +310,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             QolUtilityConfig config, String settingId, double value) {
         if (settingId == null) {
             return false;
+        }
+        if (settingId.startsWith("qol.dungeon_term_click.")) {
+            return DungeonTerminalClickSettings.writeNumber(config, settingId, value);
         }
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.writeNumber(config, settingId, value);
@@ -348,6 +361,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Integer readColor(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_term_click.")) {
+            return DungeonTerminalClickSettings.readColor(config, settingId);
+        }
         if (settingId != null && settingId.startsWith("qol.diana_")) {
             return DianaSettings.readColor(config, settingId);
         }
@@ -366,6 +382,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean writeColor(QolUtilityConfig config, String settingId, int value) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_term_click.")) {
+            return DungeonTerminalClickSettings.writeColor(config, settingId, value);
+        }
         if (settingId != null && settingId.startsWith("qol.diana_")) {
             return DianaSettings.writeColor(config, settingId, value);
         }
@@ -401,6 +420,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.dungeon_term_click".equals(moduleId)) {
+            DungeonTerminalClickSettings.reset(config);
+            return true;
+        }
         if (DianaSettings.reset(config, moduleId)) return true;
         if ("qol.experiment_solver".equals(moduleId)) {
             ExperimentSolverSettings.reset(config);
@@ -501,6 +524,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
                 return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
         }
         return switch (settingId) {
+            case "qol.dungeon_term_click.radius" ->
+                    new QolNumberSettings.Spec(1.0D, 16.0D, 1.0D, true);
+            case "qol.dungeon_term_click.thickness" ->
+                    new QolNumberSettings.Spec(1.0D, 8.0D, 1.0D, true);
             case "qol.world_scanner.esp_range" -> new QolNumberSettings.Spec(
                     WorldScannerPolicy.MIN_ESP_RANGE, WorldScannerPolicy.MAX_ESP_RANGE, 1.0D, true);
             case "qol.trajectories.range" -> new QolNumberSettings.Spec(

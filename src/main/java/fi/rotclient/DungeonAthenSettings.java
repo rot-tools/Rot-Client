@@ -1,10 +1,13 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
+
 /**
  * Nested extras for Athen/Nebulune dungeon screenshot modules.
  * Gson persists this object on {@link QolSkyblockExtras}.
  */
 final class DungeonAthenSettings {
+    JsonObject extensionFields = new JsonObject();
     int superboomMinDelay = 1;
     int superboomMaxDelay = 3;
     int superboomSwapBackMin = 1;
@@ -128,11 +131,6 @@ final class DungeonAthenSettings {
 
     boolean soulsandEnabled;
 
-    boolean termClickEnabled;
-    int termClickRadius = 4;
-    int termClickThickness = 2;
-    int termClickLeftColor = 0xFFC084FC;
-    int termClickRightColor = 0xFFFDBA74;
 
     boolean watcherEnabled;
     boolean watcherBreakdown = true;
@@ -181,7 +179,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_party_join.kick_message" -> partyJoinKickMessage;
             case "qol.dungeon_party_join.send_party" -> partyJoinSendParty;
             case "qol.dungeon_soulsand" -> soulsandEnabled;
-            case "qol.dungeon_term_click" -> termClickEnabled;
             case "qol.dungeon_watcher" -> watcherEnabled;
             case "qol.dungeon_watcher.breakdown" -> watcherBreakdown;
             case "qol.dungeon_watcher.spawned_all" -> watcherSpawnedAll;
@@ -251,10 +248,6 @@ final class DungeonAthenSettings {
                 soulsandEnabled = enabled;
                 yield true;
             }
-            case "qol.dungeon_term_click" -> {
-                termClickEnabled = enabled;
-                yield true;
-            }
             case "qol.dungeon_watcher" -> {
                 watcherEnabled = enabled;
                 yield true;
@@ -288,8 +281,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_hover_terms.min_delay" -> (double) hoverMinDelay;
             case "qol.dungeon_hover_terms.max_delay" -> (double) hoverMaxDelay;
             case "qol.dungeon_party_join.message_delay" -> (double) partyJoinMessageDelay;
-            case "qol.dungeon_term_click.radius" -> (double) termClickRadius;
-            case "qol.dungeon_term_click.thickness" -> (double) termClickThickness;
             default -> null;
         };
     }
@@ -343,10 +334,6 @@ final class DungeonAthenSettings {
                     hoverMaxDelay = DungeonAthenPortPolicy.clampHoverDelayMs(rounded);
             case "qol.dungeon_party_join.message_delay" ->
                     partyJoinMessageDelay = Math.max(0, Math.min(40, rounded));
-            case "qol.dungeon_term_click.radius" ->
-                    termClickRadius = Math.max(1, Math.min(16, rounded));
-            case "qol.dungeon_term_click.thickness" ->
-                    termClickThickness = Math.max(1, Math.min(8, rounded));
             default -> {
                 return false;
             }
@@ -450,8 +437,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_menus.pf_perm" -> pfPermColor;
             case "qol.dungeon_menus.pf_carry" -> pfCarryColor;
             case "qol.dungeon_carry.player_color" -> carryPlayerColor;
-            case "qol.dungeon_term_click.left_color" -> termClickLeftColor;
-            case "qol.dungeon_term_click.right_color" -> termClickRightColor;
             default -> null;
         };
     }
@@ -475,8 +460,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_menus.pf_perm" -> pfPermColor = argb;
             case "qol.dungeon_menus.pf_carry" -> pfCarryColor = argb;
             case "qol.dungeon_carry.player_color" -> carryPlayerColor = argb;
-            case "qol.dungeon_term_click.left_color" -> termClickLeftColor = argb;
-            case "qol.dungeon_term_click.right_color" -> termClickRightColor = argb;
             default -> {
                 return false;
             }
@@ -629,7 +612,6 @@ final class DungeonAthenSettings {
             }
             case "qol.dungeon_party_join" -> copyJoin(d);
             case "qol.dungeon_soulsand" -> soulsandEnabled = d.soulsandEnabled;
-            case "qol.dungeon_term_click" -> copyTermClick(d);
             case "qol.dungeon_watcher" -> copyWatcher(d);
             default -> {
             }
@@ -647,7 +629,6 @@ final class DungeonAthenSettings {
                  "qol.dungeon_hover_terms",
                  "qol.dungeon_party_join",
                  "qol.dungeon_soulsand",
-                 "qol.dungeon_term_click",
                  "qol.dungeon_watcher" -> true;
             default -> false;
         };
@@ -760,13 +741,6 @@ final class DungeonAthenSettings {
         partyJoinMessageDelay = d.partyJoinMessageDelay;
     }
 
-    private void copyTermClick(DungeonAthenSettings d) {
-        termClickEnabled = d.termClickEnabled;
-        termClickRadius = d.termClickRadius;
-        termClickThickness = d.termClickThickness;
-        termClickLeftColor = d.termClickLeftColor;
-        termClickRightColor = d.termClickRightColor;
-    }
 
     private void copyWatcher(DungeonAthenSettings d) {
         watcherEnabled = d.watcherEnabled;
@@ -827,10 +801,6 @@ final class DungeonAthenSettings {
                     new QolNumberSettings.Spec(0.0D, 400.0D, 5.0D, true);
             case "qol.dungeon_party_join.message_delay" ->
                     new QolNumberSettings.Spec(0.0D, 40.0D, 1.0D, true);
-            case "qol.dungeon_term_click.radius" ->
-                    new QolNumberSettings.Spec(1.0D, 16.0D, 1.0D, true);
-            case "qol.dungeon_term_click.thickness" ->
-                    new QolNumberSettings.Spec(1.0D, 8.0D, 1.0D, true);
             default -> null;
         };
     }
