@@ -664,17 +664,17 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public boolean tryBreakerInstamine(BlockPos pos) {
-        return DungeonRuntime.tryBreakerInstamine(pos);
+        return DungeonPlusInputRuntime.tryBreakerInstamine(pos);
     }
 
     @Override
     public boolean shouldCancelBlockUse(BlockPos pos, boolean sneaking) {
-        return DungeonRuntime.shouldCancelBlockUse(pos, sneaking);
+        return DungeonPlusInputRuntime.shouldCancelBlockUse(pos, sneaking);
     }
 
     @Override
     public boolean shouldCancelEntityUse(Entity entity, boolean sneaking) {
-        return DungeonRuntime.shouldCancelEntityUse(entity, sneaking);
+        return DungeonPlusInputRuntime.shouldCancelEntityUse(entity, sneaking);
     }
 
     @Override

@@ -17,7 +17,10 @@ final class DungeonF7ImproveExistingWiringTest {
         assertTrue(runtime.contains("shouldHideTerminalTooltip"));
         assertTrue(runtime.contains("shouldHideTerminalSlot"));
         assertTrue(runtime.contains("shouldCancelTerminalSlot"));
-        assertTrue(runtime.contains("shouldCancelEntityUse"));
+        String plusInput = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/DungeonPlusInputRuntime.java"), StandardCharsets.UTF_8);
+        assertTrue(plusInput.contains("shouldCancelEntityUse"));
+        assertTrue(!runtime.contains("shouldCancelEntityUse"));
         assertTrue(runtime.contains("dungeonF7DragonTracers"));
         assertTrue(runtime.contains("dungeonF7RelicBeacon"));
         assertTrue(runtime.contains("relicSpawnMillis"));

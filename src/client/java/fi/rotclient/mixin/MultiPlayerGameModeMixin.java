@@ -34,16 +34,6 @@ abstract class MultiPlayerGameModeMixin {
         }
     }
 
-    @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
-    private void rotclient$breakerSkipSecrets(
-            BlockPos pos,
-            Direction face,
-            CallbackInfoReturnable<Boolean> cir) {
-        if (DungeonRuntime.shouldSkipBreakerSecretMine(pos)) {
-            cir.setReturnValue(false);
-        }
-    }
-
     @Inject(method = "startDestroyBlock", at = @At("RETURN"))
     private void rotclient$trackMineStart(
             BlockPos pos,

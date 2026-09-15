@@ -261,6 +261,8 @@ tasks.register('verifyLegitJar') {
                 'qol.fishing_hotspots.tracer',
                 'HOTSPOT_RADAR',
                 'isRadarFlame',
+                'DungeonPlusInputRuntime',
+                'shouldSkipBreakerSecretMine',
                 'termSimIp',
 				'qol.dungeon_term_click',
 				'termClickEnabled',

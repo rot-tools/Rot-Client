@@ -36,7 +36,10 @@ final class DungeonGoldorWiringTest {
         assertTrue(runtime.contains("dungeonF7HideAfterLeap"));
         assertTrue(runtime.contains("dungeonHudMelodyOther"));
         assertTrue(runtime.contains("dungeonF7RelicHighlight"));
-        assertTrue(runtime.contains("dungeonF7RelicBlockWrong"));
+        String plusInput = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/DungeonPlusInputRuntime.java"), StandardCharsets.UTF_8);
+        assertTrue(plusInput.contains("dungeonF7RelicBlockWrong"));
+        assertTrue(!runtime.contains("dungeonF7RelicBlockWrong"));
         assertTrue(runtime.contains("dungeonF7CrystalSpawn"));
         assertTrue(runtime.contains("shouldHideTeammate"));
         assertTrue(!runtime.contains("qol.dungeon_sharp"));
