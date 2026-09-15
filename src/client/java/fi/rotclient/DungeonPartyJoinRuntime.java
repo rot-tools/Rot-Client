@@ -10,16 +10,22 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Cached SkyCrypt dungeon stats for Party Finder display and join kicks. */
 final class DungeonPartyJoinRuntime {
-    private record Cached(DungeonPartyFinderPolicy.Stats stats, long at) {
+    private record Cached(DungeonProfileStatsService.Lookup lookup, long until) {
     }
 
+    private static final int MAX_CACHE_ENTRIES = 256;
+    private static final long STATS_TTL_MS = 10 * 60_000L;
+    private static final long FAILURE_TTL_MS = 30_000L;
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(4)).build();
     private static final Map<String, Cached> CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, CompletableFuture<DungeonProfileStatsService.Lookup>> IN_FLIGHT =
+            new ConcurrentHashMap<>();
     private DungeonPartyJoinRuntime() {
     }
 
@@ -40,16 +46,21 @@ final class DungeonPartyJoinRuntime {
         String floor = athen.partyJoinDetectFloor
                 ? DungeonCarryPolicy.normalizeFloor(DungeonRuntime.sidebar().floor())
                 : "F7";
-        request(name, stats -> {
-            if (client == null || client.player == null) {
-                return;
-            }
-            if (athen.partyJoinStats) {
-                client.player.sendSystemMessage(Component.literal(
-                        DungeonPartyFinderPolicy.statsLine(name, stats.orElse(null))));
-            }
-            QolClientFlavorSupport.hooks().dungeonPartyJoinMaybeKick(
-                    client, name, stats, athen);
+        request(name, lookup -> {
+            if (client == null) return;
+            client.execute(() -> {
+                if (client.player == null) return;
+                if (athen.partyJoinStats || lookup.failed()) {
+                    String line = lookup.failed()
+                            ? name + " stats unavailable (" + lookup.failure() + ")"
+                            : DungeonPartyFinderPolicy.statsLine(name, lookup.stats().orElse(null));
+                    client.player.sendSystemMessage(Component.literal(line));
+                }
+                if (!lookup.failed()) {
+                    QolClientFlavorSupport.hooks().dungeonPartyJoinMaybeKick(
+                            client, name, lookup.stats(), athen);
+                }
+            });
         }, floor);
     }
 
@@ -60,24 +71,28 @@ final class DungeonPartyJoinRuntime {
 
     static java.util.Optional<DungeonPartyFinderPolicy.Stats> cached(String player, String floor) {
         Cached cached = CACHE.get(key(player, floor));
-        if (cached == null || System.currentTimeMillis() - cached.at > 10 * 60_000L) {
+        if (cached == null || System.currentTimeMillis() >= cached.until()) {
+            if (cached != null) CACHE.remove(key(player, floor), cached);
             return java.util.Optional.empty();
         }
-        return java.util.Optional.of(cached.stats);
+        return cached.lookup().stats();
     }
 
     private static void request(
             String player,
-            java.util.function.Consumer<java.util.Optional<DungeonPartyFinderPolicy.Stats>> callback,
+            java.util.function.Consumer<DungeonProfileStatsService.Lookup> callback,
             String floor) {
-        java.util.Optional<DungeonPartyFinderPolicy.Stats> hit = cached(player, floor);
-        if (hit.isPresent()) {
-            callback.accept(hit);
+        String cacheKey = key(player, floor);
+        Cached hit = CACHE.get(cacheKey);
+        if (hit != null && System.currentTimeMillis() < hit.until()) {
+            callback.accept(hit.lookup());
             return;
         }
+        if (hit != null) CACHE.remove(cacheKey, hit);
         String url = DungeonProfileStatsService.urlFor(player);
         if (url.isBlank()) {
-            callback.accept(java.util.Optional.empty());
+            callback.accept(new DungeonProfileStatsService.Lookup(
+                    java.util.Optional.empty(), ""));
             return;
         }
         try {
@@ -85,20 +100,42 @@ final class DungeonPartyJoinRuntime {
                     .timeout(Duration.ofSeconds(8))
                     .GET()
                     .build();
-            CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        var stats = DungeonProfileStatsService.parse(response.body(), floor);
-                        stats.ifPresent(value -> CACHE.put(key(player, floor),
-                                new Cached(value, System.currentTimeMillis())));
-                        callback.accept(stats);
-                    })
-                    .exceptionally(ignored -> {
-                        callback.accept(java.util.Optional.empty());
-                        return null;
+            CompletableFuture<DungeonProfileStatsService.Lookup> pending =
+                    IN_FLIGHT.computeIfAbsent(cacheKey, ignored -> {
+                        var future = CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                                .handle((response, error) -> {
+                                    var lookup = error == null && response != null
+                                            ? DungeonProfileStatsService.response(
+                                                    response.statusCode(), response.body(), floor)
+                                            : new DungeonProfileStatsService.Lookup(
+                                                    java.util.Optional.empty(), "SkyCrypt request failed");
+                                    cache(cacheKey, lookup);
+                                    return lookup;
+                                });
+                        return future;
                     });
+            pending.whenComplete((result, error) -> IN_FLIGHT.remove(cacheKey, pending));
+            pending.thenAccept(callback);
         } catch (RuntimeException ignored) {
-            callback.accept(java.util.Optional.empty());
+            var failure = new DungeonProfileStatsService.Lookup(
+                    java.util.Optional.empty(), "SkyCrypt request failed");
+            cache(cacheKey, failure);
+            callback.accept(failure);
         }
+    }
+
+    private static synchronized void cache(String key, DungeonProfileStatsService.Lookup lookup) {
+        long ttl = lookup.failed() ? FAILURE_TTL_MS : STATS_TTL_MS;
+        if (lookup.stats().isEmpty() && !lookup.failed()) return;
+        if (CACHE.size() >= MAX_CACHE_ENTRIES && !CACHE.containsKey(key)) {
+            long now = System.currentTimeMillis();
+            CACHE.entrySet().removeIf(entry -> entry.getValue().until() <= now);
+            if (CACHE.size() >= MAX_CACHE_ENTRIES) {
+                var keys = CACHE.keySet().iterator();
+                if (keys.hasNext()) CACHE.remove(keys.next());
+            }
+        }
+        CACHE.put(key, new Cached(lookup, System.currentTimeMillis() + ttl));
     }
 
     private static String key(String player, String floor) {

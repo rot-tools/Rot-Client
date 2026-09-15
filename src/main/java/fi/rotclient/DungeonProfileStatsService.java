@@ -13,6 +13,17 @@ import java.util.Optional;
 public final class DungeonProfileStatsService {
     public static final String PROFILE_URL = "https://sky.shiiyu.moe/api/v2/profile/";
 
+    public record Lookup(Optional<DungeonPartyFinderPolicy.Stats> stats, String failure) {
+        public Lookup {
+            stats = stats == null ? Optional.empty() : stats;
+            failure = failure == null ? "" : failure;
+        }
+
+        public boolean failed() {
+            return !failure.isBlank();
+        }
+    }
+
     private DungeonProfileStatsService() {
     }
 
@@ -45,6 +56,27 @@ public final class DungeonProfileStatsService {
         } catch (RuntimeException ignored) {
             return Optional.empty();
         }
+    }
+
+    public static Lookup response(int statusCode, String body, String floor) {
+        if (statusCode < 200 || statusCode >= 300) {
+            return new Lookup(Optional.empty(), "SkyCrypt HTTP " + statusCode);
+        }
+        if (body == null || body.isBlank()) {
+            return new Lookup(Optional.empty(), "SkyCrypt empty response");
+        }
+        try {
+            JsonElement root = JsonParser.parseString(body);
+            if (!root.isJsonObject()) {
+                return new Lookup(Optional.empty(), "SkyCrypt invalid response");
+            }
+            if (root.getAsJsonObject().has("error")) {
+                return new Lookup(Optional.empty(), "SkyCrypt error response");
+            }
+        } catch (RuntimeException ignored) {
+            return new Lookup(Optional.empty(), "SkyCrypt invalid response");
+        }
+        return new Lookup(parse(body, floor), "");
     }
 
     private static JsonObject currentProfile(JsonElement root) {
