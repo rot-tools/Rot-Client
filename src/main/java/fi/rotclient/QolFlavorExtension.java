@@ -34,6 +34,10 @@ public interface QolFlavorExtension {
         return List.of();
     }
 
+    default boolean isGameplayCheatModule(String moduleId) {
+        return false;
+    }
+
     default List<QolUtilityCatalog.SettingDef> extraSettings(String moduleId) {
         return List.of();
     }

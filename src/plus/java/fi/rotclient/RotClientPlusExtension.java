@@ -40,6 +40,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     }
 
     @Override
+    public boolean isGameplayCheatModule(String moduleId) {
+        return "qol.secret_hitboxes".equals(moduleId);
+    }
+
+    @Override
     public List<QolUtilityCatalog.SettingDef> extraSettings(String moduleId) {
         return QolPlusCatalog.extraSettings(moduleId);
     }
@@ -88,6 +93,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            return SecretHitboxesSettings.from(config).enabled();
+        }
         if ("qol.auto_clicker".equals(moduleId)) {
             return config.autoClickerEnabled;
         }
@@ -97,6 +105,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            SecretHitboxesSettings.write(config, "secretHitboxesEnabled", enabled);
+            return true;
+        }
         if ("qol.auto_clicker".equals(moduleId)) {
             config.autoClickerEnabled = enabled;
             return true;
@@ -110,6 +122,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.from(config).onlyDungeons();
+            case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.from(config).lever();
+            case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.from(config).oldLever();
+            case "qol.secret_hitboxes.button" -> SecretHitboxesSettings.from(config).button();
+            case "qol.secret_hitboxes.flat_button" -> SecretHitboxesSettings.from(config).flatButton();
+            case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.from(config).skull();
+            case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.from(config).chests();
+            case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.from(config).onlyTrappedChests();
             case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly;
             case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled;
             case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking;
@@ -128,6 +148,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return false;
         }
         switch (settingId) {
+            case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyDungeons", value);
+            case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.write(config, "secretHitboxesLever", value);
+            case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.write(config, "secretHitboxesOldLever", value);
+            case "qol.secret_hitboxes.button" -> SecretHitboxesSettings.write(config, "secretHitboxesButton", value);
+            case "qol.secret_hitboxes.flat_button" -> SecretHitboxesSettings.write(config, "secretHitboxesFlatButton", value);
+            case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.write(config, "secretHitboxesSkull", value);
+            case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.write(config, "secretHitboxesChests", value);
+            case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyTrappedChests", value);
             case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly = value;
             case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled = value;
             case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking = value;
@@ -203,6 +231,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            SecretHitboxesSettings.reset(config);
+            return true;
+        }
         if (!"qol.auto_clicker".equals(moduleId)) {
             return false;
         }
@@ -235,9 +267,22 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (root == null) return;
         JsonObject qol = root.has("qolUtilities") && root.get("qolUtilities").isJsonObject()
                 ? root.getAsJsonObject("qolUtilities") : new JsonObject();
-        if (!qol.has("secretHitboxesLever")) qol.addProperty("secretHitboxesLever", true);
-        if (!qol.has("secretHitboxesButton")) qol.addProperty("secretHitboxesButton", true);
-        if (!qol.has("secretHitboxesSkull")) qol.addProperty("secretHitboxesSkull", true);
+        JsonObject fields = qol.has("extensionFields") && qol.get("extensionFields").isJsonObject()
+                ? qol.getAsJsonObject("extensionFields") : new JsonObject();
+        for (String key : List.of(
+                "secretHitboxesEnabled", "secretHitboxesOnlyDungeons",
+                "secretHitboxesLever", "secretHitboxesOldLever",
+                "secretHitboxesButton", "secretHitboxesFlatButton",
+                "secretHitboxesSkull", "secretHitboxesChests",
+                "secretHitboxesOnlyTrappedChests")) {
+            if (!fields.has(key) && qol.has(key)) {
+                fields.add(key, qol.get(key).deepCopy());
+            }
+        }
+        if (!fields.has("secretHitboxesLever")) fields.addProperty("secretHitboxesLever", true);
+        if (!fields.has("secretHitboxesButton")) fields.addProperty("secretHitboxesButton", true);
+        if (!fields.has("secretHitboxesSkull")) fields.addProperty("secretHitboxesSkull", true);
+        qol.add("extensionFields", fields);
         root.add("qolUtilities", qol);
     }
 

@@ -76,6 +76,9 @@ final class TrackerStore {
         // the original serialized document.
         root = root.deepCopy();
         QolFlavorSupport.extension().migrateConfigJson(root);
+        if (root.has("qolUtilities") && root.get("qolUtilities").isJsonObject()) {
+            QolUnknownFieldPreserver.preserve(root.getAsJsonObject("qolUtilities"));
+        }
 
         int sourceVersion = intValue(root, "dataVersion", 0);
         TrackerConfig config;

@@ -210,6 +210,8 @@ tasks.register('verifyLegitJar') {
 		}
 		def forbiddenText = [
 				'qol.auto_clicker',
+				'qol.secret_hitboxes',
+				'secretHitboxes',
 				'AutoClickerRuntime',
 				'FreecamRuntime',
 				'CameraFreecamMixin',

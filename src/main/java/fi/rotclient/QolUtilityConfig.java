@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -10,6 +11,8 @@ import java.util.Map;
  * synced by the client dashboard layer.
  */
 final class QolUtilityConfig {
+    // Opaque fields from other editions or newer builds survive a Lite save.
+    JsonObject extensionFields = new JsonObject();
     boolean commandKeybindsEnabled;
     boolean wardrobeKeybindsEnabled;
     boolean loadoutKeybindsEnabled;
@@ -85,16 +88,6 @@ final class QolUtilityConfig {
     boolean trajectoriesPlane;
     boolean trajectoriesEntities = true;
     float trajectoriesPlaneSize = 2.0F;
-
-    boolean secretHitboxesEnabled;
-    boolean secretHitboxesOnlyDungeons = true;
-    boolean secretHitboxesLever;
-    boolean secretHitboxesOldLever = true;
-    boolean secretHitboxesButton;
-    boolean secretHitboxesFlatButton;
-    boolean secretHitboxesSkull;
-    boolean secretHitboxesChests;
-    boolean secretHitboxesOnlyTrappedChests;
 
     boolean worldScannerEnabled;
     boolean worldScannerOnlyHollows = true;
@@ -468,7 +461,6 @@ final class QolUtilityConfig {
             case "qol.pet_hud" -> petHudEnabled;
             case "qol.name_hider" -> nameHiderEnabled;
             case "qol.trajectories" -> trajectoriesEnabled;
-            case "qol.secret_hitboxes" -> secretHitboxesEnabled;
             case "qol.world_scanner" -> worldScannerEnabled;
             case "qol.auto_conversation" -> autoConversationEnabled;
             case "qol.fishing_helper" -> fishingHelperEnabled;
@@ -516,7 +508,6 @@ final class QolUtilityConfig {
             case "qol.pet_hud" -> petHudEnabled = enabled;
             case "qol.name_hider" -> nameHiderEnabled = enabled;
             case "qol.trajectories" -> trajectoriesEnabled = enabled;
-            case "qol.secret_hitboxes" -> secretHitboxesEnabled = enabled;
             case "qol.world_scanner" -> worldScannerEnabled = enabled;
             case "qol.auto_conversation" -> autoConversationEnabled = enabled;
             case "qol.fishing_helper" -> fishingHelperEnabled = enabled;
@@ -591,14 +582,6 @@ final class QolUtilityConfig {
             case "qol.trajectories.depth" -> trajectoriesDepth;
             case "qol.trajectories.plane" -> trajectoriesPlane;
             case "qol.trajectories.entities" -> trajectoriesEntities;
-            case "qol.secret_hitboxes.only_dungeons" -> secretHitboxesOnlyDungeons;
-            case "qol.secret_hitboxes.lever" -> secretHitboxesLever;
-            case "qol.secret_hitboxes.old_lever" -> secretHitboxesOldLever;
-            case "qol.secret_hitboxes.button" -> secretHitboxesButton;
-            case "qol.secret_hitboxes.flat_button" -> secretHitboxesFlatButton;
-            case "qol.secret_hitboxes.skull" -> secretHitboxesSkull;
-            case "qol.secret_hitboxes.chests" -> secretHitboxesChests;
-            case "qol.secret_hitboxes.only_trapped" -> secretHitboxesOnlyTrappedChests;
             case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows;
             case "qol.world_scanner.crystals" -> worldScannerCrystals;
             case "qol.world_scanner.mob_spots" -> worldScannerMobSpots;
@@ -749,14 +732,6 @@ final class QolUtilityConfig {
             case "qol.trajectories.depth" -> trajectoriesDepth = value;
             case "qol.trajectories.plane" -> trajectoriesPlane = value;
             case "qol.trajectories.entities" -> trajectoriesEntities = value;
-            case "qol.secret_hitboxes.only_dungeons" -> secretHitboxesOnlyDungeons = value;
-            case "qol.secret_hitboxes.lever" -> secretHitboxesLever = value;
-            case "qol.secret_hitboxes.old_lever" -> secretHitboxesOldLever = value;
-            case "qol.secret_hitboxes.button" -> secretHitboxesButton = value;
-            case "qol.secret_hitboxes.flat_button" -> secretHitboxesFlatButton = value;
-            case "qol.secret_hitboxes.skull" -> secretHitboxesSkull = value;
-            case "qol.secret_hitboxes.chests" -> secretHitboxesChests = value;
-            case "qol.secret_hitboxes.only_trapped" -> secretHitboxesOnlyTrappedChests = value;
             case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows = value;
             case "qol.world_scanner.crystals" -> worldScannerCrystals = value;
             case "qol.world_scanner.mob_spots" -> worldScannerMobSpots = value;
@@ -1967,17 +1942,6 @@ final class QolUtilityConfig {
                 trajectoriesPlane = d.trajectoriesPlane;
                 trajectoriesEntities = d.trajectoriesEntities;
                 trajectoriesPlaneSize = d.trajectoriesPlaneSize;
-            }
-            case "qol.secret_hitboxes" -> {
-                secretHitboxesEnabled = d.secretHitboxesEnabled;
-                secretHitboxesOnlyDungeons = d.secretHitboxesOnlyDungeons;
-                secretHitboxesLever = d.secretHitboxesLever;
-                secretHitboxesOldLever = d.secretHitboxesOldLever;
-                secretHitboxesButton = d.secretHitboxesButton;
-                secretHitboxesFlatButton = d.secretHitboxesFlatButton;
-                secretHitboxesSkull = d.secretHitboxesSkull;
-                secretHitboxesChests = d.secretHitboxesChests;
-                secretHitboxesOnlyTrappedChests = d.secretHitboxesOnlyTrappedChests;
             }
             case "qol.world_scanner" -> {
                 worldScannerEnabled = d.worldScannerEnabled;
