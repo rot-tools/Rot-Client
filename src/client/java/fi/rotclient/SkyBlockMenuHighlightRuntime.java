@@ -38,13 +38,13 @@ public final class SkyBlockMenuHighlightRuntime {
                 }
             }
         }
-        if (extras.experimentSolverEnabled) {
+        if (QolClientFlavorSupport.hooks().experimentEnabled()) {
             for (int index = 0; index < screen.getMenu().slots.size(); index++) {
                 Slot slot = screen.getMenu().slots.get(index);
                 if (slot == null) {
                     continue;
                 }
-                int color = ExperimentSolverRuntime.highlightColor(screen, index);
+                int color = QolClientFlavorSupport.hooks().experimentHighlightColor(screen, index);
                 if (color != 0) {
                     fill(graphics, leftPos + slot.x, topPos + slot.y, color);
                 }

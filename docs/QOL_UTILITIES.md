@@ -13,11 +13,11 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **134** Rot Client+ catalog entries (and the **106** Lite subset) are wired
+All **134** Rot Client+ catalog entries (and the **101** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
-Rot Client omits 28 Plus-only parents (Auto Clicker, wardrobe automation,
+Rot Client omits 33 Plus-only parents (Auto Sprint, Auto Clicker, wardrobe automation,
 Ghosts, Escrow Fix, Free Camera, Farm Keys, and the rest listed in
 [Which JAR](WHICH_JAR.md)). Mixed parents keep passive visual settings; Plus
 children and their executable implementations exist only in Plus source sets.
@@ -27,7 +27,7 @@ children and their executable implementations exist only in Plus source sets.
 | Group | Modules | Current evidence |
 | --- | --- | --- |
 | Combat | Hide Players; Etherwarp preview (occluded). **Plus:** Trajectories; Mob Highlight; Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
-| Events | Diana Burrows; Diana Mobs; Diana Profit. **Plus:** Diana Share | Wired · automated tested · runtime matrix pending |
+| Events | Empty on Rot Client. **Plus:** Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Enderman Laser Hider; Attunement Display; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras. **Plus:** Dagger Swap; Auto Soulcry; Auto Start | Wired · automated tested · runtime matrix pending |
 | Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Term Sim; Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Terminal Click Trails; Watcher Helper. **Plus:** Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
@@ -50,8 +50,8 @@ way. Same-facing, unrotated horizontal map frames or matching item-display
 panels are grouped only when they form one contiguous rectangle; each tile
 receives its own UV region so the image stretches across the panel. Runtime
 playtest remains pending.
-| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; Experiments Solver; No Cursor Reset; Click GUI. **Plus:** Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
-| Utilities | Loadout configuration; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Auto Sprint; Waypoints; Animation Fix; Double Use Fix; Market Guard. **Plus:** Wardrobe Keybinds; Wardrobe Swapper; Escrow Fix; Hotkey Macros; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
+| Interface | Inventory Overlay; Storage Overlay; Daily Reward Claim; Inventory Buttons; Slot Binds; Item Count Fix; Active Pet Highlight; Anvil Helper; Calendar Date; No Cursor Reset; Click GUI. **Plus:** Experiment Solver; Auto Experiments; Auto Harp | Wired · automated tested · runtime matrix pending |
+| Utilities | Loadout configuration; Pet Keybinds; Chat Commands (including overlay-only Vanguard prize reel); Waypoints; Animation Fix; Double Use Fix; Market Guard. **Plus:** Auto Sprint; Wardrobe Keybinds; Wardrobe Swapper; Escrow Fix; Hotkey Macros; Auto Conversation; Inventory Walk | Wired · automated tested · runtime matrix pending |
 
 ## Fishing suite
 

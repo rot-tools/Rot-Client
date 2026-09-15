@@ -33,6 +33,10 @@ final class QolUnknownFieldPreserverTest {
         qol.add("worldScannerTargets", JsonParser.parseString(
                 "{\"fairy\":{\"enabled\":false,\"custom\":\"keep\"}}").getAsJsonObject());
         qol.addProperty("commissionDisplayTitle", "Known field");
+        JsonObject extras = qol.getAsJsonObject("extras");
+        extras.addProperty("experimentSolverEnabled", true);
+        extras.addProperty("experimentFirstColor", 0x80123456);
+        extras.add("futureExtras", JsonParser.parseString("{\"value\":\"keep\"}"));
 
         TrackerConfig loaded = TrackerStore.fromJson(original);
         assertEquals(unknown, loaded.qolUtilities.extensionFields.get("futureEditionModule"));
@@ -52,6 +56,12 @@ final class QolUnknownFieldPreserverTest {
                 .getAsJsonObject("worldScannerTargets").getAsJsonObject("fairy")
                 .get("custom").getAsString());
         assertFalse(loaded.qolUtilities.extensionFields.has("commissionDisplayTitle"));
+        assertTrue(loaded.qolUtilities.extras().extensionFields
+                .get("experimentSolverEnabled").getAsBoolean());
+        assertEquals(0x80123456, loaded.qolUtilities.extras().extensionFields
+                .get("experimentFirstColor").getAsInt());
+        assertEquals("keep", loaded.qolUtilities.extras().extensionFields
+                .getAsJsonObject("futureExtras").get("value").getAsString());
         assertTrue(qol.has("futureEditionModule"));
         assertFalse(qol.getAsJsonObject("extensionFields").has("futureEditionModule"));
 
@@ -67,6 +77,9 @@ final class QolUnknownFieldPreserverTest {
         assertEquals("Goblin", saved.getAsJsonObject("qolUtilities")
                 .getAsJsonObject("extensionFields").getAsJsonArray("mobHighlightNames")
                 .get(0).getAsString());
+        assertTrue(saved.getAsJsonObject("qolUtilities").getAsJsonObject("extras")
+                .getAsJsonObject("extensionFields").get("experimentSolverEnabled")
+                .getAsBoolean());
         assertEquals("keep", saved.getAsJsonObject("qolUtilities")
                 .getAsJsonObject("extensionFields").getAsJsonObject("worldScannerTargets")
                 .getAsJsonObject("fairy").get("custom").getAsString());

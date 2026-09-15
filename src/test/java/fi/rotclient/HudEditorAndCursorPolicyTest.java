@@ -10,10 +10,6 @@ final class HudEditorAndCursorPolicyTest {
     @Test
     void moduleHudEditorActionsFocusTheMatchingOverlay() {
         assertEquals(
-                "diana",
-                HudElementCatalog.focusIdForHudEditorSetting(
-                        "qol.diana_burrows.open_hud_editor"));
-        assertEquals(
                 "fishing",
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.fishing_helper.open_hud_editor"));

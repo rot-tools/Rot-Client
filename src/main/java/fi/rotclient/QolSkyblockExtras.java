@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Map;
  * so Gson round-trips them without exploding every existing switch.
  */
 final class QolSkyblockExtras {
+    JsonObject extensionFields = new JsonObject();
     static final String STYLE_SIMPLE = "Simple";
     static final String STYLE_HOTBAR = "Hotbar";
     static final String STYLE_CUSTOM = "Custom";
@@ -73,21 +75,6 @@ final class QolSkyblockExtras {
     int anvilHelperColor = 0xFF22C55E;
     boolean calendarDateEnabled;
     boolean calendarMinister = true;
-
-    boolean experimentSolverEnabled;
-    boolean experimentChronomatron = true;
-    boolean experimentUltrasequencer = true;
-    boolean experimentSuperpairs = true;
-    boolean experimentBlockWrongClicks = true;
-    boolean experimentHideTooltip = true;
-    boolean experimentHideWrongChrono;
-    boolean experimentHideWrongUltra;
-    boolean experimentPrivateIslandOnly = true;
-    int experimentFirstColor = 0x8022C55E;
-    int experimentSecondColor = 0x80FACC15;
-    int experimentMatchedColor = 0x8022C55E;
-    int experimentMatchColor = 0x80FACC15;
-    int experimentPowerupColor = 0x80FF00FF;
 
     boolean autoExperimentsEnabled;
     int autoExperimentsClickDelay = 200;
@@ -256,30 +243,11 @@ final class QolSkyblockExtras {
     float miningHudX = 12.0F;
     float miningHudY = 220.0F;
 
-    boolean dianaBurrowsEnabled;
-    boolean dianaBurrowsGuess = true;
-    boolean dianaBurrowsParticles = true;
-    boolean dianaBurrowsWaypoints = true;
-    boolean dianaBurrowsMuteSpade = true;
-    boolean dianaBurrowsFixChat = true;
-    int dianaBurrowsGuessColor = 0xFF55FF55;
-    int dianaBurrowsStartColor = 0xFF55FFFF;
-    int dianaBurrowsMobColor = 0xFFFF5555;
-    int dianaBurrowsTreasureColor = 0xFFFFAA00;
     float dianaHudX = 12.0F;
     float dianaHudY = 292.0F;
 
-    boolean dianaMobsEnabled;
-    boolean dianaMobsRareEsp = true;
-    boolean dianaMobsGriffinWarn = true;
-    int dianaMobsEspColor = 0xFFFF55FF;
 
-    boolean dianaProfitEnabled;
-    boolean dianaProfitHud = true;
 
-    boolean dianaShareEnabled;
-    boolean dianaShareParty;
-    boolean dianaShareAutoWarp;
 
     boolean foragingTreesEnabled;
     boolean foragingTreesProgressHud = true;
@@ -1111,7 +1079,6 @@ final class QolSkyblockExtras {
             case "qol.active_pet_highlight" -> activePetHighlightEnabled;
             case "qol.anvil_helper" -> anvilHelperEnabled;
             case "qol.calendar_date" -> calendarDateEnabled;
-            case "qol.experiment_solver" -> experimentSolverEnabled;
             case "qol.auto_experiments" -> autoExperimentsEnabled;
             case "qol.cheater_wardrobe" -> cheaterWardrobeEnabled;
             case "qol.escrow_fix" -> escrowFixEnabled;
@@ -1130,10 +1097,6 @@ final class QolSkyblockExtras {
             case "qol.mining_glacite" -> miningGlaciteEnabled;
             case "qol.mining_helpers" -> miningHelpersEnabled;
             case "qol.mining_hotm" -> miningHotmEnabled;
-            case "qol.diana_burrows" -> dianaBurrowsEnabled;
-            case "qol.diana_mobs" -> dianaMobsEnabled;
-            case "qol.diana_profit" -> dianaProfitEnabled;
-            case "qol.diana_share" -> dianaShareEnabled;
             case "qol.foraging_trees" -> foragingTreesEnabled;
             case "qol.foraging_audio" -> foragingAudioEnabled;
             case "qol.foraging_helpers" -> foragingHelpersEnabled;
@@ -1207,7 +1170,6 @@ final class QolSkyblockExtras {
             case "qol.active_pet_highlight" -> activePetHighlightEnabled = enabled;
             case "qol.anvil_helper" -> anvilHelperEnabled = enabled;
             case "qol.calendar_date" -> calendarDateEnabled = enabled;
-            case "qol.experiment_solver" -> experimentSolverEnabled = enabled;
             case "qol.auto_experiments" -> autoExperimentsEnabled = enabled;
             case "qol.cheater_wardrobe" -> cheaterWardrobeEnabled = enabled;
             case "qol.escrow_fix" -> escrowFixEnabled = enabled;
@@ -1226,10 +1188,6 @@ final class QolSkyblockExtras {
             case "qol.mining_glacite" -> miningGlaciteEnabled = enabled;
             case "qol.mining_helpers" -> miningHelpersEnabled = enabled;
             case "qol.mining_hotm" -> miningHotmEnabled = enabled;
-            case "qol.diana_burrows" -> dianaBurrowsEnabled = enabled;
-            case "qol.diana_mobs" -> dianaMobsEnabled = enabled;
-            case "qol.diana_profit" -> dianaProfitEnabled = enabled;
-            case "qol.diana_share" -> dianaShareEnabled = enabled;
             case "qol.foraging_trees" -> foragingTreesEnabled = enabled;
             case "qol.foraging_audio" -> foragingAudioEnabled = enabled;
             case "qol.foraging_helpers" -> foragingHelpersEnabled = enabled;
@@ -1345,14 +1303,6 @@ final class QolSkyblockExtras {
             case "qol.render_optimizer.nether_fog" -> netherFog;
             case "qol.render_optimizer.totem_animation" -> totemAnimation;
             case "qol.render_optimizer.mob_icons" -> mobIcons;
-            case "qol.experiment_solver.chronomatron" -> experimentChronomatron;
-            case "qol.experiment_solver.ultrasequencer" -> experimentUltrasequencer;
-            case "qol.experiment_solver.superpairs" -> experimentSuperpairs;
-            case "qol.experiment_solver.block_wrong_clicks" -> experimentBlockWrongClicks;
-            case "qol.experiment_solver.hide_tooltip" -> experimentHideTooltip;
-            case "qol.experiment_solver.hide_wrong_chronomatron" -> experimentHideWrongChrono;
-            case "qol.experiment_solver.hide_wrong_ultrasequencer" -> experimentHideWrongUltra;
-            case "qol.experiment_solver.private_island_only" -> experimentPrivateIslandOnly;
             case "qol.auto_experiments.auto_close" -> autoExperimentsAutoClose;
             case "qol.auto_experiments.get_max_xp" -> autoExperimentsGetMaxXp;
             case "qol.cheater_wardrobe.move_equip" -> cheaterWardrobeMoveEquip;
@@ -1448,16 +1398,6 @@ final class QolSkyblockExtras {
             case "qol.mining_helpers.gemstone_desync" -> miningHelpersGemstoneDesync;
             case "qol.mining_hotm.sky_mall" -> miningHotmSkyMall;
             case "qol.mining_hotm.screen_hint" -> miningHotmScreenHint;
-            case "qol.diana_burrows.guess" -> dianaBurrowsGuess;
-            case "qol.diana_burrows.particles" -> dianaBurrowsParticles;
-            case "qol.diana_burrows.waypoints" -> dianaBurrowsWaypoints;
-            case "qol.diana_burrows.mute_spade" -> dianaBurrowsMuteSpade;
-            case "qol.diana_burrows.fix_chat" -> dianaBurrowsFixChat;
-            case "qol.diana_mobs.rare_esp" -> dianaMobsRareEsp;
-            case "qol.diana_mobs.griffin_warn" -> dianaMobsGriffinWarn;
-            case "qol.diana_profit.hud" -> dianaProfitHud;
-            case "qol.diana_share.party" -> dianaShareParty;
-            case "qol.diana_share.auto_warp" -> dianaShareAutoWarp;
             case "qol.foraging_trees.progress_hud" -> foragingTreesProgressHud;
             case "qol.foraging_trees.only_axe" -> foragingTreesOnlyAxe;
             case "qol.foraging_trees.hide_bits" -> foragingTreesHideBits;
@@ -2002,14 +1942,6 @@ final class QolSkyblockExtras {
             case "qol.render_optimizer.nether_fog" -> netherFog = value;
             case "qol.render_optimizer.totem_animation" -> totemAnimation = value;
             case "qol.render_optimizer.mob_icons" -> mobIcons = value;
-            case "qol.experiment_solver.chronomatron" -> experimentChronomatron = value;
-            case "qol.experiment_solver.ultrasequencer" -> experimentUltrasequencer = value;
-            case "qol.experiment_solver.superpairs" -> experimentSuperpairs = value;
-            case "qol.experiment_solver.block_wrong_clicks" -> experimentBlockWrongClicks = value;
-            case "qol.experiment_solver.hide_tooltip" -> experimentHideTooltip = value;
-            case "qol.experiment_solver.hide_wrong_chronomatron" -> experimentHideWrongChrono = value;
-            case "qol.experiment_solver.hide_wrong_ultrasequencer" -> experimentHideWrongUltra = value;
-            case "qol.experiment_solver.private_island_only" -> experimentPrivateIslandOnly = value;
             case "qol.auto_experiments.auto_close" -> autoExperimentsAutoClose = value;
             case "qol.auto_experiments.get_max_xp" -> autoExperimentsGetMaxXp = value;
             case "qol.cheater_wardrobe.move_equip" -> cheaterWardrobeMoveEquip = value;
@@ -2104,16 +2036,6 @@ final class QolSkyblockExtras {
             case "qol.mining_helpers.gemstone_desync" -> miningHelpersGemstoneDesync = value;
             case "qol.mining_hotm.sky_mall" -> miningHotmSkyMall = value;
             case "qol.mining_hotm.screen_hint" -> miningHotmScreenHint = value;
-            case "qol.diana_burrows.guess" -> dianaBurrowsGuess = value;
-            case "qol.diana_burrows.particles" -> dianaBurrowsParticles = value;
-            case "qol.diana_burrows.waypoints" -> dianaBurrowsWaypoints = value;
-            case "qol.diana_burrows.mute_spade" -> dianaBurrowsMuteSpade = value;
-            case "qol.diana_burrows.fix_chat" -> dianaBurrowsFixChat = value;
-            case "qol.diana_mobs.rare_esp" -> dianaMobsRareEsp = value;
-            case "qol.diana_mobs.griffin_warn" -> dianaMobsGriffinWarn = value;
-            case "qol.diana_profit.hud" -> dianaProfitHud = value;
-            case "qol.diana_share.party" -> dianaShareParty = value;
-            case "qol.diana_share.auto_warp" -> dianaShareAutoWarp = value;
             case "qol.foraging_trees.progress_hud" -> foragingTreesProgressHud = value;
             case "qol.foraging_trees.only_axe" -> foragingTreesOnlyAxe = value;
             case "qol.foraging_trees.hide_bits" -> foragingTreesHideBits = value;
@@ -3069,11 +2991,6 @@ final class QolSkyblockExtras {
         return switch (settingId) {
             case "qol.active_pet_highlight.color" -> activePetHighlightColor;
             case "qol.anvil_helper.color" -> anvilHelperColor;
-            case "qol.experiment_solver.first_color" -> experimentFirstColor;
-            case "qol.experiment_solver.second_color" -> experimentSecondColor;
-            case "qol.experiment_solver.matched_color" -> experimentMatchedColor;
-            case "qol.experiment_solver.match_color" -> experimentMatchColor;
-            case "qol.experiment_solver.powerup_color" -> experimentPowerupColor;
             case "qol.slayer_highlights.boss_color" -> slayerHighlightsBossColor;
             case "qol.slayer_highlights.miniboss_color" -> slayerHighlightsMinibossColor;
             case "qol.slayer_highlights.demon_color" -> slayerHighlightsDemonColor;
@@ -3146,11 +3063,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.profit_color" -> dungeonMenusProfitColor;
             case "qol.fishing_creatures.esp_color" -> fishingCreaturesEspColor;
             case "qol.fishing_hotspots.color" -> fishingHotspotsColor;
-            case "qol.diana_burrows.guess_color" -> dianaBurrowsGuessColor;
-            case "qol.diana_burrows.start_color" -> dianaBurrowsStartColor;
-            case "qol.diana_burrows.mob_color" -> dianaBurrowsMobColor;
-            case "qol.diana_burrows.treasure_color" -> dianaBurrowsTreasureColor;
-            case "qol.diana_mobs.esp_color" -> dianaMobsEspColor;
             case "qol.hud_layout.background" -> hudLayoutBackgroundColor;
             case "qol.hud_layout.text" -> hudLayoutTextColor;
             case "qol.custom_cursor.fill" -> customCursorFill;
@@ -3170,11 +3082,6 @@ final class QolSkyblockExtras {
         switch (settingId) {
             case "qol.active_pet_highlight.color" -> activePetHighlightColor = argb;
             case "qol.anvil_helper.color" -> anvilHelperColor = argb;
-            case "qol.experiment_solver.first_color" -> experimentFirstColor = argb;
-            case "qol.experiment_solver.second_color" -> experimentSecondColor = argb;
-            case "qol.experiment_solver.matched_color" -> experimentMatchedColor = argb;
-            case "qol.experiment_solver.match_color" -> experimentMatchColor = argb;
-            case "qol.experiment_solver.powerup_color" -> experimentPowerupColor = argb;
             case "qol.slayer_highlights.boss_color" -> slayerHighlightsBossColor = argb;
             case "qol.slayer_highlights.miniboss_color" -> slayerHighlightsMinibossColor = argb;
             case "qol.slayer_highlights.demon_color" -> slayerHighlightsDemonColor = argb;
@@ -3247,11 +3154,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.profit_color" -> dungeonMenusProfitColor = argb;
             case "qol.fishing_creatures.esp_color" -> fishingCreaturesEspColor = argb;
             case "qol.fishing_hotspots.color" -> fishingHotspotsColor = argb;
-            case "qol.diana_burrows.guess_color" -> dianaBurrowsGuessColor = argb;
-            case "qol.diana_burrows.start_color" -> dianaBurrowsStartColor = argb;
-            case "qol.diana_burrows.mob_color" -> dianaBurrowsMobColor = argb;
-            case "qol.diana_burrows.treasure_color" -> dianaBurrowsTreasureColor = argb;
-            case "qol.diana_mobs.esp_color" -> dianaMobsEspColor = argb;
             case "qol.hud_layout.background" -> hudLayoutBackgroundColor = argb;
             case "qol.hud_layout.text" -> hudLayoutTextColor = argb;
             case "qol.custom_cursor.fill" -> customCursorFill = argb;
@@ -3337,22 +3239,6 @@ final class QolSkyblockExtras {
             case "qol.calendar_date" -> {
                 calendarDateEnabled = d.calendarDateEnabled;
                 calendarMinister = d.calendarMinister;
-            }
-            case "qol.experiment_solver" -> {
-                experimentSolverEnabled = d.experimentSolverEnabled;
-                experimentChronomatron = d.experimentChronomatron;
-                experimentUltrasequencer = d.experimentUltrasequencer;
-                experimentSuperpairs = d.experimentSuperpairs;
-                experimentBlockWrongClicks = d.experimentBlockWrongClicks;
-                experimentHideTooltip = d.experimentHideTooltip;
-                experimentHideWrongChrono = d.experimentHideWrongChrono;
-                experimentHideWrongUltra = d.experimentHideWrongUltra;
-                experimentPrivateIslandOnly = d.experimentPrivateIslandOnly;
-                experimentFirstColor = d.experimentFirstColor;
-                experimentSecondColor = d.experimentSecondColor;
-                experimentMatchedColor = d.experimentMatchedColor;
-                experimentMatchColor = d.experimentMatchColor;
-                experimentPowerupColor = d.experimentPowerupColor;
             }
             case "qol.auto_experiments" -> {
                 autoExperimentsEnabled = d.autoExperimentsEnabled;
@@ -3536,37 +3422,6 @@ final class QolSkyblockExtras {
                 miningHotmScreenHint = d.miningHotmScreenHint;
                 miningHudX = d.miningHudX;
                 miningHudY = d.miningHudY;
-            }
-            case "qol.diana_burrows" -> {
-                dianaBurrowsEnabled = d.dianaBurrowsEnabled;
-                dianaBurrowsGuess = d.dianaBurrowsGuess;
-                dianaBurrowsParticles = d.dianaBurrowsParticles;
-                dianaBurrowsWaypoints = d.dianaBurrowsWaypoints;
-                dianaBurrowsMuteSpade = d.dianaBurrowsMuteSpade;
-                dianaBurrowsFixChat = d.dianaBurrowsFixChat;
-                dianaBurrowsGuessColor = d.dianaBurrowsGuessColor;
-                dianaBurrowsStartColor = d.dianaBurrowsStartColor;
-                dianaBurrowsMobColor = d.dianaBurrowsMobColor;
-                dianaBurrowsTreasureColor = d.dianaBurrowsTreasureColor;
-                dianaHudX = d.dianaHudX;
-                dianaHudY = d.dianaHudY;
-            }
-            case "qol.diana_mobs" -> {
-                dianaMobsEnabled = d.dianaMobsEnabled;
-                dianaMobsRareEsp = d.dianaMobsRareEsp;
-                dianaMobsGriffinWarn = d.dianaMobsGriffinWarn;
-                dianaMobsEspColor = d.dianaMobsEspColor;
-            }
-            case "qol.diana_profit" -> {
-                dianaProfitEnabled = d.dianaProfitEnabled;
-                dianaProfitHud = d.dianaProfitHud;
-                dianaHudX = d.dianaHudX;
-                dianaHudY = d.dianaHudY;
-            }
-            case "qol.diana_share" -> {
-                dianaShareEnabled = d.dianaShareEnabled;
-                dianaShareParty = d.dianaShareParty;
-                dianaShareAutoWarp = d.dianaShareAutoWarp;
             }
             case "qol.foraging_trees" -> {
                 foragingTreesEnabled = d.foragingTreesEnabled;

@@ -74,14 +74,10 @@ final class RotClientSettingsIndexTest {
     }
 
     @Test
-    void autoSprintIsSearchable() {
+    void autoSprintIsAbsentFromLiteSearch() {
         List<RotClientSettingsIndex.Entry> results =
                 RotClientSettingsIndex.search("auto sprint");
-        assertFalse(results.isEmpty());
-        assertEquals("qol.auto_sprint", results.get(0).id());
-        assertEquals(
-                RotClientSettingsIndex.Destination.QOL_SETTINGS,
-                results.get(0).destination());
+        assertTrue(results.isEmpty());
     }
 
     @Test

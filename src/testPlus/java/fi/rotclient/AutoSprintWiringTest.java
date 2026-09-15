@@ -12,11 +12,15 @@ import org.junit.jupiter.api.Test;
 final class AutoSprintWiringTest {
     @Test
     void localPlayerMixinUsesSprintOverrideTarget() throws Exception {
-        String source = Files.readString(Path.of(
+        String shared = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/LocalPlayerMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(source.contains("drop(Z)Z"));
-        assertTrue(source.contains("ItemProtectRuntime.shouldBlockDrop"));
+        assertTrue(shared.contains("drop(Z)Z"));
+        assertTrue(shared.contains("ItemProtectRuntime.shouldBlockDrop"));
+        assertFalse(shared.contains("Input;sprint()Z"));
+        String source = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/mixin/LocalPlayerAutoSprintMixin.java"),
+                StandardCharsets.UTF_8);
         assertTrue(source.contains(
                 "Lnet/minecraft/world/entity/player/Input;sprint()Z"));
         assertTrue(source.contains("AutoSprintPolicy.resolveSprintInput"));
@@ -29,7 +33,7 @@ final class AutoSprintWiringTest {
     @Test
     void policyHasNoHypixelGate() throws Exception {
         String source = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/AutoSprintPolicy.java"),
+                "src/plus/java/fi/rotclient/AutoSprintPolicy.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("originalSprintInput || moduleEnabled"));
         assertFalse(source.contains("onHypixel"));
@@ -57,10 +61,12 @@ final class AutoSprintWiringTest {
                 "src/client/resources/rotclient.client.mixins.json"),
                 StandardCharsets.UTF_8);
         assertTrue(json.contains("LocalPlayerMixin"));
+        assertFalse(json.contains("LocalPlayerAutoSprintMixin"));
         String plusJson = Files.readString(Path.of(
                 "src/plusClient/resources/rotclient.plus.mixins.json"),
                 StandardCharsets.UTF_8);
         assertTrue(plusJson.contains("OptionsCameraMixin"));
+        assertTrue(plusJson.contains("LocalPlayerAutoSprintMixin"));
     }
 
     @Test
@@ -76,12 +82,12 @@ final class AutoSprintWiringTest {
         String catalog = Files.readString(Path.of(
                 "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(catalog.contains("Auto Sprint"));
-        assertTrue(catalog.contains("qol.auto_sprint"));
+        assertFalse(catalog.contains("\"qol.auto_sprint\","));
         String plusCatalog = Files.readString(Path.of(
                 "src/plus/java/fi/rotclient/QolPlusCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(plusCatalog.contains("Camera"));
+        assertTrue(plusCatalog.contains("qol.auto_sprint"));
     }
 
     @Test

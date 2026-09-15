@@ -8,7 +8,7 @@ enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **106** HUD / QoL parents |
+| Lite | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **101** HUD / QoL parents |
 | Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **134** parents (current full client) |
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
@@ -17,10 +17,9 @@ Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 ## Rot Client (legit)
 
 This is the HUD/QoL playtest edition. Trajectories, World Scanner, and Mob
-Highlight are Plus-only. Etherwarp destination boxes respect block occlusion
+Highlight and Auto Sprint's input override are Plus-only. Etherwarp destination boxes respect block occlusion
 in Lite, including when an older profile saved depth check off. Dungeon
-ESP/solvers, Diana burrows, and Experiment Solver still require an edition
-audit before a public Lite release.
+ESP/solvers still require an edition audit before a public Lite release.
 
 Older profiles retain moved Plus settings as opaque JSON so switching editions
 does not erase them. `verifyLegitJar` checks the packaged archive for the

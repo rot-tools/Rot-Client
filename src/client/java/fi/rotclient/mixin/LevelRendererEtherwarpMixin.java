@@ -2,7 +2,6 @@ package fi.rotclient.mixin;
 
 import fi.rotclient.ClientBoundaryGuard;
 import fi.rotclient.DungeonRuntime;
-import fi.rotclient.DianaRuntime;
 import fi.rotclient.FishingSuiteRuntime;
 import fi.rotclient.ForagingRuntime;
 import fi.rotclient.QolClientFlavorSupport;
@@ -34,7 +33,7 @@ abstract class LevelRendererEtherwarpMixin {
         ClientBoundaryGuard.run("DUNGEON_GIZMOS", () -> DungeonRuntime.renderGizmos());
         ClientBoundaryGuard.run("FISHING_GIZMOS", () -> FishingSuiteRuntime.renderGizmos());
         ClientBoundaryGuard.run("MINING_LEFTOVER_GIZMOS", () -> MiningLeftoverRuntime.renderGizmos());
-        ClientBoundaryGuard.run("DIANA_GIZMOS", () -> DianaRuntime.renderGizmos());
+        ClientBoundaryGuard.run("DIANA_GIZMOS", () -> QolClientFlavorSupport.hooks().dianaRenderGizmos());
         ClientBoundaryGuard.run("FORAGING_GIZMOS", () -> ForagingRuntime.renderGizmos());
         ClientBoundaryGuard.run("PLUS_WORLD_GIZMOS", () -> QolClientFlavorSupport.hooks().renderWorldGizmos());
     }

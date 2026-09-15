@@ -141,20 +141,20 @@ final class QolUtilityUiMathTest {
     }
 
     @Test
-    void pageFilterKeepsEnabledModulesWithoutCheatChipOnLegit() {
-        QolUtilityCatalog.ModuleDef sprint = QolUtilityCatalog.findById("qol.auto_sprint");
+    void pageFilterKeepsEnabledModulesWithoutCheatChipOnLite() {
+        QolUtilityCatalog.ModuleDef pet = QolUtilityCatalog.findById("qol.pet_hud");
         QolUtilityCatalog.ModuleDef fishing = QolUtilityCatalog.findById("qol.fishing_helper");
-        List<QolUtilityCatalog.ModuleDef> modules = List.of(sprint, fishing);
+        List<QolUtilityCatalog.ModuleDef> modules = List.of(pet, fishing);
         assertEquals(
                 2,
                 QolUtilityUiMath.filterPageModules(
                         modules, QolUtilityUiMath.PageFilter.ALL, ignored -> true).size());
         assertEquals(
-                "qol.auto_sprint",
+                "qol.pet_hud",
                 QolUtilityUiMath.filterPageModules(
                                 modules,
                                 QolUtilityUiMath.PageFilter.ENABLED,
-                                module -> module.id().equals("qol.auto_sprint"))
+                                module -> module.id().equals("qol.pet_hud"))
                         .get(0)
                         .id());
         assertTrue(

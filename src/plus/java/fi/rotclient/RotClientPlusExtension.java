@@ -43,7 +43,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     public boolean isGameplayCheatModule(String moduleId) {
         return "qol.secret_hitboxes".equals(moduleId)
                 || "qol.inventory_walk".equals(moduleId)
-                || "qol.mob_highlight".equals(moduleId);
+                || "qol.mob_highlight".equals(moduleId)
+                || "qol.auto_sprint".equals(moduleId)
+                || "qol.experiment_solver".equals(moduleId)
+                || "qol.diana_burrows".equals(moduleId)
+                || "qol.diana_mobs".equals(moduleId);
     }
 
     @Override
@@ -54,6 +58,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public List<HudLayerCatalog.Layer> extraHudLayers() {
         return List.of(
+                new HudLayerCatalog.Layer(
+                        "qol.diana_burrows",
+                        "qol.diana_burrows",
+                        "Diana HUD",
+                        HudLayerCatalog.Kind.ROT,
+                        true),
                 new HudLayerCatalog.Layer(
                         "qol.auto_clicker.cps_hud",
                         "qol.auto_clicker.cps_hud",
@@ -70,6 +80,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String hudFocusId(String settingId) {
+        if (settingId != null && settingId.contains("diana")) {
+            return "diana";
+        }
         if (settingId != null && settingId.contains("auto_clicker")) {
             return "auto_clicker";
         }
@@ -87,6 +100,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String disableSettingId(String poseId) {
+        if ("diana".equals(poseId)) {
+            return "qol.diana_burrows";
+        }
         if ("auto_clicker".equals(poseId)) {
             return "qol.auto_clicker.cps_hud";
         }
@@ -95,6 +111,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        Boolean diana = DianaSettings.module(config, moduleId);
+        if (diana != null) return diana;
+        if ("qol.experiment_solver".equals(moduleId)) {
+            return ExperimentSolverSettings.from(config).enabled();
+        }
         if ("qol.mob_highlight".equals(moduleId)) {
             return MobHighlightSettings.from(config).enabled();
         }
@@ -122,6 +143,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if (DianaSettings.writeModule(config, moduleId, enabled)) return true;
+        if ("qol.experiment_solver".equals(moduleId)) {
+            ExperimentSolverSettings.enabled(config, enabled);
+            return true;
+        }
         if ("qol.mob_highlight".equals(moduleId)) {
             MobHighlightSettings.enabled(config, enabled);
             return true;
@@ -157,6 +183,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     public Boolean readBoolean(QolUtilityConfig config, String settingId) {
         if (settingId == null) {
             return null;
+        }
+        if (settingId.startsWith("qol.experiment_solver.")) {
+            return ExperimentSolverSettings.readBoolean(config, settingId);
+        }
+        if (settingId.startsWith("qol.diana_")) {
+            return DianaSettings.readBoolean(config, settingId);
         }
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.readBoolean(config, settingId);
@@ -199,6 +231,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             QolUtilityConfig config, String settingId, boolean value) {
         if (settingId == null) {
             return false;
+        }
+        if (settingId.startsWith("qol.experiment_solver.")) {
+            return ExperimentSolverSettings.writeBoolean(config, settingId, value);
+        }
+        if (settingId.startsWith("qol.diana_")) {
+            return DianaSettings.writeBoolean(config, settingId, value);
         }
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.writeBoolean(config, settingId, value);
@@ -310,6 +348,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Integer readColor(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.diana_")) {
+            return DianaSettings.readColor(config, settingId);
+        }
+        if (settingId != null && settingId.startsWith("qol.experiment_solver.")) {
+            return ExperimentSolverSettings.readColor(config, settingId);
+        }
         if ("qol.mob_highlight.color".equals(settingId)) {
             return MobHighlightSettings.from(config).color();
         }
@@ -322,6 +366,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean writeColor(QolUtilityConfig config, String settingId, int value) {
+        if (settingId != null && settingId.startsWith("qol.diana_")) {
+            return DianaSettings.writeColor(config, settingId, value);
+        }
+        if (settingId != null && settingId.startsWith("qol.experiment_solver.")) {
+            return ExperimentSolverSettings.writeColor(config, settingId, value);
+        }
         if ("qol.mob_highlight.color".equals(settingId)) {
             MobHighlightSettings.color(config, value);
             return true;
@@ -351,6 +401,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if (DianaSettings.reset(config, moduleId)) return true;
+        if ("qol.experiment_solver".equals(moduleId)) {
+            ExperimentSolverSettings.reset(config);
+            return true;
+        }
         if ("qol.etherwarp".equals(moduleId)) {
             PlusOpaqueSettings.reset(config, "etherwarpDepth");
             return true;

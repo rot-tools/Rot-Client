@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import com.google.gson.JsonElement;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.particles.ParticleOptions;
@@ -590,6 +592,11 @@ public final class DianaRuntime {
             if (extras == null) {
                 return fallback;
             }
+            JsonElement stored = extras.extensionFields == null ? null : extras.extensionFields.get(name);
+            if (stored != null && stored.isJsonPrimitive()
+                    && stored.getAsJsonPrimitive().isBoolean()) {
+                return stored.getAsBoolean();
+            }
             try {
                 Field field = extras.getClass().getDeclaredField(name);
                 field.setAccessible(true);
@@ -602,6 +609,11 @@ public final class DianaRuntime {
         private static int color(QolSkyblockExtras extras, String name, int fallback) {
             if (extras == null) {
                 return fallback;
+            }
+            JsonElement stored = extras.extensionFields == null ? null : extras.extensionFields.get(name);
+            if (stored != null && stored.isJsonPrimitive()
+                    && stored.getAsJsonPrimitive().isNumber()) {
+                return stored.getAsInt();
             }
             try {
                 Field field = extras.getClass().getDeclaredField(name);
