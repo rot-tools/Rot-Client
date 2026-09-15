@@ -13,11 +13,11 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **133** Rot Client+ catalog entries (and the **108** legit subset) are wired
+All **134** Rot Client+ catalog entries (and the **106** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
-Rot Client omits 23 Plus-only parents (Auto Clicker, wardrobe automation,
+Rot Client omits 28 Plus-only parents (Auto Clicker, wardrobe automation,
 Ghosts, Escrow Fix, Free Camera, Farm Keys, and the rest listed in
 [Which JAR](WHICH_JAR.md)). Mixed parents keep passive visual settings; Plus
 children and their executable implementations exist only in Plus source sets.
@@ -26,12 +26,12 @@ children and their executable implementations exist only in Plus source sets.
 
 | Group | Modules | Current evidence |
 | --- | --- | --- |
-| Combat | Hide Players; Trajectories; Etherwarp; Mob Highlight. **Plus:** Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
+| Combat | Hide Players; Etherwarp preview (occluded). **Plus:** Trajectories; Mob Highlight; Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
 | Events | Diana Burrows; Diana Mobs; Diana Profit. **Plus:** Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Enderman Laser Hider; Attunement Display; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras. **Plus:** Dagger Swap; Auto Soulcry; Auto Start | Wired · automated tested · runtime matrix pending |
 | Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Term Sim; Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Terminal Click Trails; Watcher Helper. **Plus:** Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
-| Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; World Scanner; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain | Wired · automated tested · runtime matrix pending |
+| Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain. **Plus:** World Scanner | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
 | Foraging | Foraging Trees; Foraging Audio; Foraging Helpers. **Plus:** Foraging Cheats | Wired · automated tested · runtime matrix pending |
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |

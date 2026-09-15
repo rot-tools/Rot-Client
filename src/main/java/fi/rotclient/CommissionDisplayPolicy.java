@@ -17,10 +17,12 @@ public final class CommissionDisplayPolicy {
     public static final String DEFAULT_NONE = "<red>No commissions available!";
     public static final String DEFAULT_ROW = "<gray>- <r>#name: #progress";
     private static final Pattern ROW = Pattern.compile(
-            "^(.+?)\\s*:\\s*(DONE|COMPLETE|([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*%)\\s*$",
+            "^(.+?)\\s*[:\\-–—]\\s*(DONE|COMPLETE|COMPLETED|([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*%)\\s*$",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern FRACTION = Pattern.compile(
-            "^(.+?)\\s*:\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*/\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*$");
+            "^(.+?)\\s*[:\\-–—]\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*/\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*$");
+    private static final Pattern BARE_PERCENT = Pattern.compile(
+            "^(.+?)\\s+([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*%\\s*$");
     private static final Set<String> SECTION_HEADERS = Set.of(
             "area",
             "profile",
@@ -57,7 +59,10 @@ public final class CommissionDisplayPolicy {
             "essences",
             "party",
             "daily quests",
-            "active effects");
+            "active effects",
+            "commission progress",
+            "hotm",
+            "heart of the mountain");
 
     public record Commission(String name, float progressPercent, boolean done) {
         public Commission {
@@ -115,7 +120,9 @@ public final class CommissionDisplayPolicy {
         if (status == null) {
             return null;
         }
-        if (status.equalsIgnoreCase("DONE") || status.equalsIgnoreCase("COMPLETE")) {
+        if (status.equalsIgnoreCase("DONE")
+                || status.equalsIgnoreCase("COMPLETE")
+                || status.equalsIgnoreCase("COMPLETED")) {
             return new Commission(name, 100.0F, true);
         }
         try {
@@ -129,7 +136,7 @@ public final class CommissionDisplayPolicy {
     private static Commission parseFractionRow(String stripped) {
         Matcher matcher = FRACTION.matcher(stripped);
         if (!matcher.matches()) {
-            return null;
+            return parseBarePercentRow(stripped);
         }
         String name = sanitizeName(matcher.group(1));
         if (!looksLikeCommissionName(name)) {
@@ -142,6 +149,23 @@ public final class CommissionDisplayPolicy {
                 return null;
             }
             float percent = 100.0F * current / max;
+            return new Commission(name, percent, percent >= 100.0F);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static Commission parseBarePercentRow(String stripped) {
+        Matcher matcher = BARE_PERCENT.matcher(stripped);
+        if (!matcher.matches()) {
+            return null;
+        }
+        String name = sanitizeName(matcher.group(1));
+        if (!looksLikeCommissionName(name)) {
+            return null;
+        }
+        try {
+            float percent = Float.parseFloat(matcher.group(2).replace(",", ""));
             return new Commission(name, percent, percent >= 100.0F);
         } catch (NumberFormatException ignored) {
             return null;
@@ -168,7 +192,9 @@ public final class CommissionDisplayPolicy {
 
     static boolean isCommissionsHeader(String line) {
         String compact = line.replace(":", "").trim().toLowerCase(Locale.ROOT);
-        return compact.equals("commissions") || compact.startsWith("commissions ");
+        return compact.equals("commissions")
+                || compact.equals("commission progress")
+                || compact.startsWith("commissions ");
     }
 
     static boolean looksLikeCommissionName(String name) {
@@ -180,14 +206,15 @@ public final class CommissionDisplayPolicy {
                 && !compact.equals("ping")
                 && !compact.equals("fps")
                 && !compact.equals("cookies")
-                && !compact.equals("commissions");
+                && !compact.equals("commissions")
+                && !compact.equals("commission progress");
     }
 
     private static String sanitizeName(String raw) {
         if (raw == null) {
             return "";
         }
-        return raw.replaceFirst("^[-•●○]+\\s*", "").trim();
+        return raw.replaceFirst("^[\\s\\-•●○▪▫◆◇►▶➤]+", "").trim();
     }
 
     public static String formatLine(

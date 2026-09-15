@@ -76,6 +76,6 @@ final class DungeonGoldorWiringTest {
                 "src/client/java/fi/rotclient/DungeonLeapOverlayRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(leap.contains("fromLore"));
         assertTrue(leap.contains("statusLabel"));
-        assertEquals(109, QolUtilityCatalog.modules().size());
+        assertEquals(106, QolUtilityCatalog.modules().size());
     }
 }

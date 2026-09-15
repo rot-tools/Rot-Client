@@ -503,18 +503,19 @@ public final class QolVisualRuntime {
                         plane.maxY(),
                         plane.maxZ()),
                 style);
-        if (!EtherwarpPredictor.depthRespectsOcclusion(qol.etherwarpDepth)) {
+        if (!EtherwarpPredictor.depthRespectsOcclusion(
+                QolClientFlavorSupport.hooks().etherwarpOcclusion(qol))) {
             props.setAlwaysOnTop();
         }
         maybePlaySound(qol, player, hit);
     }
 
     public static void renderTrajectoryGizmos() {
-        TrajectoryRuntime.renderGizmos();
+        QolClientFlavorSupport.hooks().renderTrajectoryGizmos();
     }
 
     public static void renderWorldScannerGizmos() {
-        WorldScannerRuntime.renderGizmos();
+        QolClientFlavorSupport.hooks().renderWorldScannerGizmos();
     }
 
     public static void renderWaypointGizmos() {

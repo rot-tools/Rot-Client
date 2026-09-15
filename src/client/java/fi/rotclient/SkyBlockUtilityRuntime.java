@@ -15,7 +15,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
@@ -196,10 +195,7 @@ public final class SkyBlockUtilityRuntime {
         boolean corpses = extras.miningGlaciteEnabled
                 && extras.miningGlaciteCorpseWaypoints
                 && SkyBlockUtilityPolicy.isMineshaftArea(area);
-        boolean rats = qol.worldScannerEnabled
-                && qol.worldScannerRatHitboxes
-                && SkyBlockUtilityPolicy.isHubIsland(area);
-        if (!corpses && !rats) {
+        if (!corpses) {
             return;
         }
         float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
@@ -209,12 +205,6 @@ public final class SkyBlockUtilityRuntime {
                     && entity instanceof ArmorStand stand
                     && SkyBlockUtilityPolicy.isCorpseStand(stand.getName().getString())) {
                 Gizmos.cuboid(interpolatedBox(stand, partialTick, 0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F))
-                        .setAlwaysOnTop();
-            }
-            if (rats
-                    && entity instanceof Zombie zombie
-                    && SkyBlockUtilityPolicy.isHubRat(true, zombie.isBaby())) {
-                Gizmos.cuboid(interpolatedBox(zombie, partialTick, 0.08D), GizmoStyle.stroke(0xFFFFAA00, 2.0F))
                         .setAlwaysOnTop();
             }
         }

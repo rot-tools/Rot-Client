@@ -64,11 +64,13 @@ final class AutoClickerWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("qol.inventory_walk"));
         assertTrue(catalog.contains("qol.secret_hitboxes"));
+        assertTrue(catalog.contains("qol.trajectories"));
+        assertTrue(catalog.contains("qol.world_scanner"));
         String shared = Files.readString(Path.of(
                 "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(shared.contains("qol.trajectories"));
-        assertTrue(shared.contains("qol.world_scanner"));
+        assertFalse(shared.contains("\"qol.trajectories\""));
+        assertFalse(shared.contains("\"qol.world_scanner\""));
         assertTrue(shared.contains("\"qol.command_keybinds\""));
     }
 
@@ -159,12 +161,12 @@ final class AutoClickerWiringTest {
     @Test
     void worldScannerQueuesLoadedChunksInsteadOfFullRescan() throws Exception {
         String policy = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/WorldScannerPolicy.java"),
+                "src/plus/java/fi/rotclient/WorldScannerPolicy.java"),
                 StandardCharsets.UTF_8);
         assertTrue(policy.contains("shouldRescanLoadedChunks"));
         assertTrue(policy.contains("SCAN_CHUNKS_PER_TICK"));
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/WorldScannerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/WorldScannerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(runtime.contains("drainQueue"));
         assertTrue(runtime.contains("billboardTextOverBlock"));
@@ -176,7 +178,7 @@ final class AutoClickerWiringTest {
     @Test
     void trajectoriesDrawLinesNotSegmentCuboids() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/TrajectoryRuntime.java"),
+                "src/plusClient/java/fi/rotclient/TrajectoryRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("Gizmos.line"));
         assertTrue(source.contains("getGameTimeDeltaPartialTick"));

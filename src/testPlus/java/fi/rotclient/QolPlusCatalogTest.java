@@ -24,6 +24,8 @@ final class QolPlusCatalogTest {
         assertTrue(QolUtilityCatalog.findById("qol.dungeon_hud").settings().stream()
                 .anyMatch(setting -> "qol.dungeon_hud.map_mode".equals(setting.id())));
         assertNotNull(QolUtilityCatalog.findById("qol.ghosts"));
+        assertNotNull(QolUtilityCatalog.findById("qol.trajectories"));
+        assertNotNull(QolUtilityCatalog.findById("qol.world_scanner"));
         assertEquals("Fox", QolUtilityCatalog.findById("qol.map_art_override").name());
     }
 }

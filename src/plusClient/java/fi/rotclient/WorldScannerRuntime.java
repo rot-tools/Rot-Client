@@ -8,6 +8,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gizmos.GizmoStyle;
 import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,7 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Crystal Hollows structure scan + named waypoints. Chunk work is queued and
  * section palettes skip empty / irrelevant 16³ cubes so the game does not hitch.
  */
-final class WorldScannerRuntime {
+public final class WorldScannerRuntime {
     private static final Map<String, WorldScannerPolicy.Hit> WAYPOINTS =
             new ConcurrentHashMap<>();
     private static final Map<Long, Integer> FLUID_ESP = new ConcurrentHashMap<>();
@@ -40,7 +42,7 @@ final class WorldScannerRuntime {
     private WorldScannerRuntime() {
     }
 
-    static void clear() {
+    public static void clear() {
         WAYPOINTS.clear();
         FLUID_ESP.clear();
         PENDING.clear();
@@ -50,25 +52,25 @@ final class WorldScannerRuntime {
         fluidRefreshTicks = 0;
     }
 
-    static void onChunkLoad(ClientLevel level, LevelChunk chunk) {
-        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+    public static void onChunkLoad(ClientLevel level, LevelChunk chunk) {
+        WorldScannerSettings qol = WorldScannerSettings.from(RotClientClient.qolConfigPublic());
         if (!WorldScannerPolicy.shouldScan(
-                qol.worldScannerEnabled,
-                qol.worldScannerOnlyHollows,
+                qol.enabled(),
+                qol.onlyHollows(),
                 inCrystalHollows())) {
             return;
         }
         enqueue(chunk);
     }
 
-    static void tick(Minecraft client) {
-        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        boolean enabled = qol.worldScannerEnabled;
+    public static void tick(Minecraft client) {
+        WorldScannerSettings qol = WorldScannerSettings.from(RotClientClient.qolConfigPublic());
+        boolean enabled = qol.enabled();
         boolean inHollows = inCrystalHollows();
         if (WorldScannerPolicy.shouldRescanLoadedChunks(
                 enabled,
                 lastEnabled,
-                qol.worldScannerOnlyHollows,
+                qol.onlyHollows(),
                 inHollows,
                 lastInHollows)) {
             enqueueLoadedChunks(client);
@@ -82,7 +84,7 @@ final class WorldScannerRuntime {
             }
             return;
         }
-        if (qol.worldScannerOnlyHollows && !inHollows) {
+        if (qol.onlyHollows() && !inHollows) {
             if (!WAYPOINTS.isEmpty() || !FLUID_ESP.isEmpty() || !PENDING.isEmpty()) {
                 WAYPOINTS.clear();
                 FLUID_ESP.clear();
@@ -95,9 +97,9 @@ final class WorldScannerRuntime {
         refreshFluidsIfDue(client, qol);
     }
 
-    static void renderGizmos() {
-        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.worldScannerEnabled) {
+    public static void renderGizmos() {
+        WorldScannerSettings qol = WorldScannerSettings.from(RotClientClient.qolConfigPublic());
+        if (!qol.enabled()) {
             return;
         }
         Minecraft client = Minecraft.getInstance();
@@ -105,7 +107,7 @@ final class WorldScannerRuntime {
         if (player == null) {
             return;
         }
-        double range = WorldScannerPolicy.clampEspRange(qol.worldScannerEspRange);
+        double range = WorldScannerPolicy.clampEspRange(qol.espRange());
         double rangeSq = range * range;
         Vec3 eye = player.getEyePosition(client.getDeltaTracker().getGameTimeDeltaPartialTick(true));
         for (WorldScannerPolicy.Hit hit : WAYPOINTS.values()) {
@@ -135,7 +137,22 @@ final class WorldScannerRuntime {
                 line.setAlwaysOnTop();
             }
         }
-        if (qol.worldScannerLavaEsp || qol.worldScannerWaterEsp) {
+        if (qol.ratHitboxes()) {
+            String area = SkyBlockAreaDetector.detect().displayName() + " "
+                    + MiningLeftoverRuntime.scoreboardText();
+            if (SkyBlockUtilityPolicy.isHubIsland(area)) {
+                AABB search = player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+                float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                for (Entity entity : client.level.getEntities(player, search)) {
+                    if (entity instanceof Zombie zombie
+                            && SkyBlockUtilityPolicy.isHubRat(true, zombie.isBaby())) {
+                        Gizmos.cuboid(interpolatedBox(zombie, partialTick, 0.08D),
+                                GizmoStyle.stroke(0xFFFFAA00, 2.0F)).setAlwaysOnTop();
+                    }
+                }
+            }
+        }
+        if (qol.lavaEsp() || qol.waterEsp()) {
             for (Map.Entry<Long, Integer> entry : FLUID_ESP.entrySet()) {
                 BlockPos pos = BlockPos.of(entry.getKey());
                 if (player.distanceToSqr(
@@ -148,7 +165,7 @@ final class WorldScannerRuntime {
         }
     }
 
-    private static void drainQueue(Minecraft client, QolUtilityConfig qol) {
+    private static void drainQueue(Minecraft client, WorldScannerSettings qol) {
         if (client == null || client.level == null) {
             return;
         }
@@ -200,10 +217,10 @@ final class WorldScannerRuntime {
         }
     }
 
-    private static void scanChunk(LevelChunk chunk, QolUtilityConfig qol) {
+    private static void scanChunk(LevelChunk chunk, WorldScannerSettings qol) {
         List<WorldScannerPolicy.StructureDef> structures = activeStructures(qol);
-        boolean fairy = qol.worldScannerFairyGrottos && targetEnabled("fairy", qol);
-        boolean worm = qol.worldScannerWormFishing && targetEnabled("worm", qol);
+        boolean fairy = qol.fairyGrottos() && targetEnabled("fairy", qol);
+        boolean worm = qol.wormFishing() && targetEnabled("worm", qol);
         Set<String> triggers = WorldScannerPolicy.triggerBlocks(
                 structures, fairy, worm, false);
         if (triggers.isEmpty() && !fairy && !worm) {
@@ -274,7 +291,7 @@ final class WorldScannerRuntime {
             String triggerId,
             String aboveId,
             LevelChunk chunk,
-            QolUtilityConfig qol,
+            WorldScannerSettings qol,
             BlockPos.MutableBlockPos cursor) {
         List<WorldScannerPolicy.StructureDef> matches =
                 WorldScannerPolicy.matchingStructures(structures, triggerId);
@@ -282,7 +299,7 @@ final class WorldScannerRuntime {
             if (WAYPOINTS.containsKey(structure.name())) {
                 continue;
             }
-            if (structure.name().equals("Golden Dragon") && !qol.worldScannerDragonNest) {
+            if (structure.name().equals("Golden Dragon") && !qol.dragonNest()) {
                 continue;
             }
             if (!targetEnabled(WorldScannerEspSettings.idForHit(structure.name()), qol)) {
@@ -297,14 +314,14 @@ final class WorldScannerRuntime {
         }
     }
 
-    private static List<WorldScannerPolicy.StructureDef> activeStructures(QolUtilityConfig qol) {
+    private static List<WorldScannerPolicy.StructureDef> activeStructures(WorldScannerSettings qol) {
         ArrayList<WorldScannerPolicy.StructureDef> out = new ArrayList<>();
-        if (qol.worldScannerCrystals) {
+        if (qol.crystals()) {
             out.addAll(WorldScannerPolicy.crystalStructures());
         }
-        if (qol.worldScannerMobSpots) {
+        if (qol.mobSpots()) {
             out.addAll(WorldScannerPolicy.mobSpotStructures());
-        } else if (qol.worldScannerDragonNest) {
+        } else if (qol.dragonNest()) {
             for (WorldScannerPolicy.StructureDef structure
                     : WorldScannerPolicy.mobSpotStructures()) {
                 if ("Golden Dragon".equals(structure.name())) {
@@ -329,8 +346,8 @@ final class WorldScannerRuntime {
         return out;
     }
 
-    private static void refreshFluidsIfDue(Minecraft client, QolUtilityConfig qol) {
-        if (!qol.worldScannerLavaEsp && !qol.worldScannerWaterEsp) {
+    private static void refreshFluidsIfDue(Minecraft client, WorldScannerSettings qol) {
+        if (!qol.lavaEsp() && !qol.waterEsp()) {
             if (!FLUID_ESP.isEmpty()) {
                 FLUID_ESP.clear();
             }
@@ -344,14 +361,14 @@ final class WorldScannerRuntime {
         refreshNearbyFluids(client, qol);
     }
 
-    private static void refreshNearbyFluids(Minecraft client, QolUtilityConfig qol) {
+    private static void refreshNearbyFluids(Minecraft client, WorldScannerSettings qol) {
         FLUID_ESP.clear();
         if (client == null || client.level == null || client.player == null) {
             return;
         }
         ClientLevel level = client.level;
         LocalPlayer player = client.player;
-        int range = WorldScannerPolicy.clampEspRange(qol.worldScannerEspRange);
+        int range = WorldScannerPolicy.clampEspRange(qol.espRange());
         int minX = player.getBlockX() - range;
         int maxX = player.getBlockX() + range;
         int minZ = player.getBlockZ() - range;
@@ -400,11 +417,11 @@ final class WorldScannerRuntime {
                                 BlockState state = section.getBlockState(lx, ly, lz);
                                 String id = blockId(state);
                                 String above = blockId(chunk.getBlockState(cursor.set(x, y + 1, z)));
-                                if (qol.worldScannerLavaEsp
+                                if (qol.lavaEsp()
                                         && WorldScannerPolicy.isEspSurface(id, above, "lava")) {
                                     FLUID_ESP.put(BlockPos.asLong(x, y, z), 0xFFFF5500);
                                     remaining--;
-                                } else if (qol.worldScannerWaterEsp
+                                } else if (qol.waterEsp()
                                         && WorldScannerPolicy.isEspSurface(id, above, "water")) {
                                     FLUID_ESP.put(BlockPos.asLong(x, y, z), 0xFF3399FF);
                                     remaining--;
@@ -418,7 +435,7 @@ final class WorldScannerRuntime {
     }
 
     private static void add(
-            String name, int x, int y, int z, QolUtilityConfig qol) {
+            String name, int x, int y, int z, WorldScannerSettings qol) {
         WorldScannerEspSettings.Target target = targetFor(name, qol);
         int color = target == null ? 0xFFFFFFFF : target.colorArgb;
         if (WAYPOINTS.putIfAbsent(name, new WorldScannerPolicy.Hit(name, x, y, z, color))
@@ -430,7 +447,7 @@ final class WorldScannerRuntime {
             return;
         }
         String label = WorldScannerEspSettings.labelForHit(name);
-        if (target.chatCoords || qol.worldScannerChatCoords) {
+        if (target.chatCoords || qol.chatCoords()) {
             client.player.sendSystemMessage(Component.literal(
                     "World Scanner: " + label + " at " + x + ", " + y + ", " + z));
         }
@@ -439,19 +456,19 @@ final class WorldScannerRuntime {
         }
     }
 
-    private static boolean targetEnabled(String id, QolUtilityConfig qol) {
-        WorldScannerEspSettings.Target target = qol.worldScannerTarget(id);
+    private static boolean targetEnabled(String id, WorldScannerSettings qol) {
+        WorldScannerEspSettings.Target target = qol.target(id);
         return target.enabled && WorldScannerEspSettings.masterAllows(
                 id,
-                qol.worldScannerCrystals,
-                qol.worldScannerMobSpots,
-                qol.worldScannerFairyGrottos,
-                qol.worldScannerDragonNest,
-                qol.worldScannerWormFishing);
+                qol.crystals(),
+                qol.mobSpots(),
+                qol.fairyGrottos(),
+                qol.dragonNest(),
+                qol.wormFishing());
     }
 
-    private static WorldScannerEspSettings.Target targetFor(String hitName, QolUtilityConfig qol) {
-        return qol.worldScannerTarget(WorldScannerEspSettings.idForHit(hitName));
+    private static WorldScannerEspSettings.Target targetFor(String hitName, WorldScannerSettings qol) {
+        return qol.target(WorldScannerEspSettings.idForHit(hitName));
     }
 
     private static void drawBox(
@@ -465,6 +482,13 @@ final class WorldScannerRuntime {
         if (alwaysOnTop) {
             props.setAlwaysOnTop();
         }
+    }
+
+    private static AABB interpolatedBox(Entity entity, float partialTick, double inflate) {
+        EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
+                entity.getX(), entity.getY(), entity.getZ(),
+                entity.xo, entity.yo, entity.zo, partialTick);
+        return entity.getBoundingBox().move(offset.x(), offset.y(), offset.z()).inflate(inflate);
     }
 
     private static void drawPointer(Vec3 center, int color) {

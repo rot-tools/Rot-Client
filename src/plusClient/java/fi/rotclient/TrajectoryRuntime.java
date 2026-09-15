@@ -26,14 +26,14 @@ import java.util.Optional;
  * (lerp of xo/yo/zo), and each step uses vanilla world clip instead of
  * per-voxel collision shapes so the line stays glued while jumping.
  */
-final class TrajectoryRuntime {
+public final class TrajectoryRuntime {
     private static int chargeTicks;
     private static int lastChargeTicks;
 
     private TrajectoryRuntime() {
     }
 
-    static void tick(Minecraft client) {
+    public static void tick(Minecraft client) {
         lastChargeTicks = chargeTicks;
         if (client == null || client.player == null) {
             chargeTicks = 0;
@@ -43,9 +43,10 @@ final class TrajectoryRuntime {
         chargeTicks = player.isUsingItem() ? player.getTicksUsingItem() : 0;
     }
 
-    static void renderGizmos() {
+    public static void renderGizmos() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.trajectoriesEnabled) {
+        TrajectoriesSettings settings = TrajectoriesSettings.from(qol);
+        if (!settings.enabled()) {
             return;
         }
         Minecraft client = Minecraft.getInstance();
@@ -58,8 +59,8 @@ final class TrajectoryRuntime {
         boolean terminator = TrajectoryPredictor.isTerminatorId(skyBlockId);
         Optional<TrajectoryPredictor.ProjectileKind> kind =
                 TrajectoryPredictor.detectHeld(
-                        qol.trajectoriesBows,
-                        qol.trajectoriesPearls,
+                        settings.bows(),
+                        settings.pearls(),
                         terminator ? "terminator" : identity(held));
         if (kind.isEmpty()) {
             return;
@@ -82,12 +83,12 @@ final class TrajectoryRuntime {
         TrajectoryPredictor.Vec3d start = TrajectoryPredictor.startPos(
                 new TrajectoryPredictor.Vec3d(eye.x, eye.y, eye.z),
                 yaw);
-        int color = qol.trajectoriesColor;
-        float lineWidth = Math.max(0.1F, Math.min(5.0F, qol.trajectoriesWidth));
+        int color = settings.color();
+        float lineWidth = settings.width();
         GizmoStyle hitStyle = GizmoStyle.strokeAndFill(
                 color, lineWidth, withAlpha(color, 0x4D));
         TrajectoryPredictor.SegmentClipper clipper =
-                worldClip(client.level, player, qol.trajectoriesEntities);
+                worldClip(client.level, player, settings.entities());
         for (float yawOffset : yawOffsets) {
             TrajectoryPredictor.Result result = TrajectoryPredictor.simulateWithClip(
                     kind.get(),
@@ -95,9 +96,9 @@ final class TrajectoryRuntime {
                     yaw + yawOffset,
                     pitch,
                     pull,
-                    qol.trajectoriesRange,
+                    settings.range(),
                     clipper);
-            drawResult(qol, color, hitStyle, result);
+            drawResult(settings, color, hitStyle, result);
         }
     }
 
@@ -181,12 +182,12 @@ final class TrajectoryRuntime {
     }
 
     private static void drawResult(
-            QolUtilityConfig qol,
+            TrajectoriesSettings settings,
             int color,
             GizmoStyle hitStyle,
             TrajectoryPredictor.Result result) {
         List<TrajectoryPredictor.Vec3d> points = result.points();
-        if (qol.trajectoriesLines) {
+        if (settings.lines()) {
             for (int i = 1; i < points.size(); i++) {
                 TrajectoryPredictor.Vec3d a = points.get(i - 1);
                 TrajectoryPredictor.Vec3d b = points.get(i);
@@ -194,14 +195,14 @@ final class TrajectoryRuntime {
                         new Vec3(a.x(), a.y(), a.z()),
                         new Vec3(b.x(), b.y(), b.z()),
                         color);
-                if (!qol.trajectoriesDepth) {
+                if (!settings.depth()) {
                     props.setAlwaysOnTop();
                 }
             }
         }
-        if (qol.trajectoriesBoxes && result.hit().isPresent()) {
+        if (settings.boxes() && result.hit().isPresent()) {
             TrajectoryPredictor.Hit hit = result.hit().get();
-            double s = 0.15D * Math.max(0.5F, qol.trajectoriesBoxSize);
+            double s = 0.15D * settings.boxSize();
             var props = Gizmos.cuboid(
                     new AABB(
                             hit.point().x() - s,
@@ -211,13 +212,13 @@ final class TrajectoryRuntime {
                             hit.point().y() + s,
                             hit.point().z() + s),
                     hitStyle);
-            if (!qol.trajectoriesDepth) {
+            if (!settings.depth()) {
                 props.setAlwaysOnTop();
             }
         }
-        if (qol.trajectoriesPlane && result.hit().isPresent()) {
+        if (settings.plane() && result.hit().isPresent()) {
             TrajectoryPredictor.Plane plane =
-                    TrajectoryPredictor.impactPlane(result.hit().get(), qol.trajectoriesPlaneSize);
+                    TrajectoryPredictor.impactPlane(result.hit().get(), settings.planeSize());
             var props = Gizmos.cuboid(
                     new AABB(
                             plane.minX(),
@@ -228,7 +229,7 @@ final class TrajectoryRuntime {
                             plane.maxZ()),
                     GizmoStyle.strokeAndFill(
                             color, 0.01F, withAlpha(color, 0x80)));
-            if (!qol.trajectoriesDepth) {
+            if (!settings.depth()) {
                 props.setAlwaysOnTop();
             }
         }

@@ -1318,29 +1318,6 @@ public final class QolUtilityCatalog {
                 setting("qol.player_size.player_animals", "Player Animals", "Replace other players with client-only animal models. Scope and species stay local.", SettingType.TOGGLE, "pets", "animals"),
                 setting("qol.player_size.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
-        modules.add(module(
-                "qol.trajectories",
-                "Trajectories",
-                "Predicted bow and ender-pearl flight path for the Serveri.",
-                Group.COMBAT,
-                "Aim",
-                false,
-                true,
-                true,
-                List.of("trajectory", "bow", "pearl", "arrow"),
-                setting("qol.trajectories.bows", "Bows", "Show bow / Terminator trajectories.", SettingType.TOGGLE, "bow"),
-                setting("qol.trajectories.pearls", "Pearls", "Show ender-pearl trajectories.", SettingType.TOGGLE, "pearl"),
-                setting("qol.trajectories.lines", "Show Lines", "Draw the simulated path.", SettingType.TOGGLE),
-                setting("qol.trajectories.boxes", "Show Hit Box", "Mark the predicted impact.", SettingType.TOGGLE),
-                setting("qol.trajectories.depth", "Depth Check", "Hide the path behind blocks.", SettingType.TOGGLE),
-                setting("qol.trajectories.range", "Solver Range", "How many ticks to simulate.", SettingType.NUMBER, "30"),
-                setting("qol.trajectories.width", "Line Width", "Pixel thickness of the path line.", SettingType.NUMBER),
-                setting("qol.trajectories.box_size", "Box Size", "Impact marker size.", SettingType.NUMBER),
-                setting("qol.trajectories.plane", "Show Plane", "Draw a face-aligned impact plane at the impact point.", SettingType.TOGGLE),
-                setting("qol.trajectories.entities", "Show Entities", "Stop the path on entity hits and box the target.", SettingType.TOGGLE),
-                setting("qol.trajectories.plane_size", "Plane Size", "Impact plane scale.", SettingType.NUMBER),
-                setting("qol.trajectories.color", "Color", "Trajectory color.", SettingType.COLOR)));
-
 
 
         modules.add(module(
@@ -1870,21 +1847,9 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_watcher.open_hud_editor", "Open HUD Elements Editor", "Move the Watcher HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
-                "qol.world_scanner",
-                "World Scanner",
-                "Scan Crystal Hollows chunks for structures. Finds create a named waypoint (for example Mines of Divan) without scanning the whole world every frame.",
-                Group.MINING,
-                "Scanner",
-                false,
-                true,
-                true,
-                List.of("world scanner", "crystal hollows", "divan", "corleone", "fairy grotto"),
-                worldScannerSettings()));
-
-        modules.add(module(
                 "qol.etherwarp",
                 "Etherwarp",
-                "Predicted Etherwarp destination plus a left-click warp helper.",
+                "Predicted Etherwarp destination highlight. Local visual only.",
                 Group.COMBAT,
                 "Warp",
                 false,
@@ -1899,7 +1864,6 @@ public final class QolUtilityCatalog {
                         EtherwarpPredictor.RENDER_STYLES, "outline"),
                 setting("qol.etherwarp.full_block", "Full Block", "Highlight the whole destination cube instead of a thin top face.", SettingType.TOGGLE),
                 setting("qol.etherwarp.use_server_position", "Use Server Position", "Use server-authoritative position.", SettingType.TOGGLE),
-                setting("qol.etherwarp.depth", "Depth", "Respect depth vs visible-through.", SettingType.TOGGLE),
                 setting("qol.etherwarp.sounds", "Sounds", "Local feedback sounds.", SettingType.TOGGLE),
                 setting("qol.etherwarp.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
@@ -1976,22 +1940,6 @@ public final class QolUtilityCatalog {
                 setting("qol.item_rarity.mythic", "Mythic Color", "Slot tint for Mythic rarity. RGB picker with alpha.", SettingType.COLOR),
                 setting("qol.item_rarity.divine", "Divine Color", "Slot tint for Divine rarity. RGB picker with alpha.", SettingType.COLOR),
                 setting("qol.item_rarity.special", "Special Color", "Slot tint for Special rarity items. RGB picker with alpha.", SettingType.COLOR)));
-
-        modules.add(module(
-                "qol.mob_highlight",
-                "Mob Highlight",
-                "Highlight named mobs. Look at one and press Add Entity to remember it.",
-                Group.COMBAT,
-                "ESP",
-                false,
-                true,
-                true,
-                List.of("mob highlight", "esp", "tracer"),
-                setting("qol.mob_highlight.highlight_key", "Highlight Key", "Require the add key instead of always highlighting.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.add_key", "Key To Add Entity", "Look at a nametag and press to add/remove it.", SettingType.KEYBIND),
-                setting("qol.mob_highlight.depth", "Depth Check", "Hide boxes behind blocks.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.tracers", "Tracers", "Draw a line to highlighted mobs.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.color", "Color", "Box and tracer color for remembered nametags. RGB picker.", SettingType.COLOR)));
 
         modules.add(module(
                 "qol.slayer_display",
@@ -2899,32 +2847,6 @@ public final class QolUtilityCatalog {
                     module.searchAliases()));
         }
         return List.copyOf(out);
-    }
-
-    private static SettingDef[] worldScannerSettings() {
-        List<SettingDef> settings = new ArrayList<>();
-        settings.add(setting("qol.world_scanner.only_hollows", "Only Crystal Hollows", "Scan only when the area detector says Crystal Hollows.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.crystals", "Scan Crystals", "Master toggle for Goblin King, Goblin Queen, Mines of Divan, Precursor City, Jungle Temple, Khazad-dûm.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.mob_spots", "Scan Mob Spots", "Master toggle for Corleone, Key Guardian, Xalx, Pete, Odawa.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.fairy", "Scan Fairy Grottos", "Master toggle for Fairy Grotto finds.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.dragon", "Scan Dragon Nest", "Master toggle for Golden Dragon nest finds.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.worm", "Scan Worm Fishing", "Master toggle for worm-fishing lava spots.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.lava_esp", "Lava ESP", "Highlight nearby lava surfaces.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.water_esp", "Water ESP", "Highlight nearby water surfaces.", SettingType.TOGGLE));
-        settings.add(setting("qol.world_scanner.rat_hitboxes", "Rat Hitboxes", "Box baby zombies in the Hub so rats are easier to click.", SettingType.TOGGLE, "rat"));
-        settings.add(setting("qol.world_scanner.esp_range", "ESP Range", "Fluid ESP distance in blocks.", SettingType.NUMBER));
-        for (WorldScannerEspSettings.Spec spec : WorldScannerEspSettings.TARGETS) {
-            String prefix = "qol.world_scanner.target." + spec.id();
-            settings.add(section(prefix, spec.label()));
-            settings.add(setting(prefix + ".enabled", "Enable", "Scan and highlight " + spec.label() + ".", SettingType.TOGGLE));
-            settings.add(setting(prefix + ".style", "Highlight Style", "Outline, filled, or both.", SettingType.ENUM, WorldScannerEspSettings.STYLES));
-            settings.add(setting(prefix + ".color", "ESP Color", spec.label() + " highlight color.", SettingType.COLOR));
-            settings.add(setting(prefix + ".tracer", "Tracer", "Draw a line to this find.", SettingType.TOGGLE));
-            settings.add(setting(prefix + ".name", "Display Name", "Show the structure name and distance above the waypoint.", SettingType.TOGGLE));
-            settings.add(setting(prefix + ".chat", "Send Coords In Chat", "Print coordinates when found.", SettingType.TOGGLE));
-            settings.add(setting(prefix + ".notify", "Show Notification", "Also print a short found message.", SettingType.TOGGLE));
-        }
-        return settings.toArray(SettingDef[]::new);
     }
 
     static ModuleDef module(

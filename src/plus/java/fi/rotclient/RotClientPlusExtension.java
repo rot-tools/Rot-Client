@@ -42,7 +42,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean isGameplayCheatModule(String moduleId) {
         return "qol.secret_hitboxes".equals(moduleId)
-                || "qol.inventory_walk".equals(moduleId);
+                || "qol.inventory_walk".equals(moduleId)
+                || "qol.mob_highlight".equals(moduleId);
     }
 
     @Override
@@ -94,6 +95,15 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.mob_highlight".equals(moduleId)) {
+            return MobHighlightSettings.from(config).enabled();
+        }
+        if ("qol.world_scanner".equals(moduleId)) {
+            return WorldScannerSettings.from(config).enabled();
+        }
+        if ("qol.trajectories".equals(moduleId)) {
+            return TrajectoriesSettings.from(config).enabled();
+        }
         if ("qol.auto_conversation".equals(moduleId)) {
             return AutoConversationSettings.from(config).enabled();
         }
@@ -112,6 +122,18 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.mob_highlight".equals(moduleId)) {
+            MobHighlightSettings.enabled(config, enabled);
+            return true;
+        }
+        if ("qol.world_scanner".equals(moduleId)) {
+            WorldScannerSettings.enabled(config, enabled);
+            return true;
+        }
+        if ("qol.trajectories".equals(moduleId)) {
+            TrajectoriesSettings.enabled(config, enabled);
+            return true;
+        }
         if ("qol.auto_conversation".equals(moduleId)) {
             AutoConversationSettings.write(config, "autoConversationEnabled", enabled);
             return true;
@@ -136,7 +158,21 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return null;
         }
+        if (settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.readBoolean(config, settingId);
+        }
         return switch (settingId) {
+            case "qol.mob_highlight.highlight_key" -> MobHighlightSettings.from(config).requireKey();
+            case "qol.etherwarp.depth" -> PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
+            case "qol.mob_highlight.depth" -> MobHighlightSettings.from(config).depth();
+            case "qol.mob_highlight.tracers" -> MobHighlightSettings.from(config).tracers();
+            case "qol.trajectories.bows" -> TrajectoriesSettings.from(config).bows();
+            case "qol.trajectories.pearls" -> TrajectoriesSettings.from(config).pearls();
+            case "qol.trajectories.lines" -> TrajectoriesSettings.from(config).lines();
+            case "qol.trajectories.boxes" -> TrajectoriesSettings.from(config).boxes();
+            case "qol.trajectories.depth" -> TrajectoriesSettings.from(config).depth();
+            case "qol.trajectories.plane" -> TrajectoriesSettings.from(config).plane();
+            case "qol.trajectories.entities" -> TrajectoriesSettings.from(config).entities();
             case "qol.auto_conversation.multi" -> AutoConversationSettings.from(config).multi();
             case "qol.auto_conversation.green" -> AutoConversationSettings.from(config).green();
             case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.from(config).onlyDungeons();
@@ -164,7 +200,17 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return false;
         }
+        if (settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.writeBoolean(config, settingId, value);
+        }
         switch (settingId) {
+            case "qol.mob_highlight.highlight_key", "qol.mob_highlight.depth",
+                 "qol.mob_highlight.tracers" -> MobHighlightSettings.writeBoolean(config, settingId, value);
+            case "qol.etherwarp.depth" -> PlusOpaqueSettings.write(config, "etherwarpDepth", value);
+            case "qol.trajectories.bows", "qol.trajectories.pearls",
+                 "qol.trajectories.lines", "qol.trajectories.boxes",
+                 "qol.trajectories.depth", "qol.trajectories.plane",
+                 "qol.trajectories.entities" -> TrajectoriesSettings.writeBoolean(config, settingId, value);
             case "qol.auto_conversation.multi" -> AutoConversationSettings.write(config, "autoConversationMulti", value);
             case "qol.auto_conversation.green" -> AutoConversationSettings.write(config, "autoConversationGreen", value);
             case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyDungeons", value);
@@ -194,7 +240,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return null;
         }
+        if (settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.readNumber(config, settingId);
+        }
         return switch (settingId) {
+            case "qol.trajectories.range" -> (double) TrajectoriesSettings.from(config).range();
+            case "qol.trajectories.width" -> (double) TrajectoriesSettings.from(config).width();
+            case "qol.trajectories.box_size" -> (double) TrajectoriesSettings.from(config).boxSize();
+            case "qol.trajectories.plane_size" -> (double) TrajectoriesSettings.from(config).planeSize();
             case "qol.auto_conversation.delay" -> (double) AutoConversationSettings.from(config).delayTicks();
             case "qol.inventory_walk.ping" -> (double) InventoryWalkSettings.from(config).pingMs();
             case "qol.auto_clicker.cps" -> (double) config.autoClickerCps;
@@ -210,7 +263,13 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return false;
         }
+        if (settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.writeNumber(config, settingId, value);
+        }
         switch (settingId) {
+            case "qol.trajectories.range", "qol.trajectories.width",
+                 "qol.trajectories.box_size", "qol.trajectories.plane_size" ->
+                    TrajectoriesSettings.writeNumber(config, settingId, value);
             case "qol.auto_conversation.delay" -> AutoConversationSettings.delayTicks(config, (int) Math.round(value));
             case "qol.inventory_walk.ping" -> InventoryWalkSettings.pingMs(config, (int) Math.round(value));
             case "qol.auto_clicker.cps" ->
@@ -232,6 +291,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.mob_highlight.add_key" -> MobHighlightSettings.from(config).addKey();
             case "qol.auto_clicker.left_keybind" -> config.autoClickerLeftKeybind;
             case "qol.auto_clicker.right_keybind" -> config.autoClickerRightKeybind;
             default -> null;
@@ -239,10 +299,47 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     }
 
     @Override
+    public String readEnum(QolUtilityConfig config, String settingId) {
+        return WorldScannerSettings.readEnum(config, settingId);
+    }
+
+    @Override
+    public boolean writeEnum(QolUtilityConfig config, String settingId, String value) {
+        return WorldScannerSettings.writeEnum(config, settingId, value);
+    }
+
+    @Override
+    public Integer readColor(QolUtilityConfig config, String settingId) {
+        if ("qol.mob_highlight.color".equals(settingId)) {
+            return MobHighlightSettings.from(config).color();
+        }
+        if (settingId != null && settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.readColor(config, settingId);
+        }
+        return "qol.trajectories.color".equals(settingId)
+                ? TrajectoriesSettings.from(config).color() : null;
+    }
+
+    @Override
+    public boolean writeColor(QolUtilityConfig config, String settingId, int value) {
+        if ("qol.mob_highlight.color".equals(settingId)) {
+            MobHighlightSettings.color(config, value);
+            return true;
+        }
+        if (settingId != null && settingId.startsWith("qol.world_scanner.")) {
+            return WorldScannerSettings.writeColor(config, settingId, value);
+        }
+        if (!"qol.trajectories.color".equals(settingId)) return false;
+        TrajectoriesSettings.color(config, value);
+        return true;
+    }
+
+    @Override
     public boolean writeKeybind(
             QolUtilityConfig config, String settingId, String value) {
         String stored = value == null ? "" : value.trim();
         switch (settingId == null ? "" : settingId) {
+            case "qol.mob_highlight.add_key" -> MobHighlightSettings.addKey(config, stored);
             case "qol.auto_clicker.left_keybind" -> config.autoClickerLeftKeybind = stored;
             case "qol.auto_clicker.right_keybind" -> config.autoClickerRightKeybind = stored;
             default -> {
@@ -254,6 +351,22 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.etherwarp".equals(moduleId)) {
+            PlusOpaqueSettings.reset(config, "etherwarpDepth");
+            return true;
+        }
+        if ("qol.mob_highlight".equals(moduleId)) {
+            MobHighlightSettings.reset(config);
+            return true;
+        }
+        if ("qol.world_scanner".equals(moduleId)) {
+            WorldScannerSettings.reset(config);
+            return true;
+        }
+        if ("qol.trajectories".equals(moduleId)) {
+            TrajectoriesSettings.reset(config);
+            return true;
+        }
         if ("qol.auto_conversation".equals(moduleId)) {
             AutoConversationSettings.reset(config);
             return true;
@@ -326,7 +439,20 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null || settingId.isBlank()) {
             return null;
         }
+        if (settingId.startsWith("qol.world_scanner.target.")) {
+            if (settingId.endsWith(".opacity"))
+                return new QolNumberSettings.Spec(0.0D, 1.0D, 0.01D, true);
+            if (settingId.endsWith(".name_scale"))
+                return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
+        }
         return switch (settingId) {
+            case "qol.world_scanner.esp_range" -> new QolNumberSettings.Spec(
+                    WorldScannerPolicy.MIN_ESP_RANGE, WorldScannerPolicy.MAX_ESP_RANGE, 1.0D, true);
+            case "qol.trajectories.range" -> new QolNumberSettings.Spec(
+                    TrajectoryPredictor.MIN_RANGE, TrajectoryPredictor.MAX_RANGE, 1.0D, true);
+            case "qol.trajectories.width" -> new QolNumberSettings.Spec(0.1D, 5.0D, 0.1D, true);
+            case "qol.trajectories.box_size" -> new QolNumberSettings.Spec(0.5D, 3.0D, 0.1D, true);
+            case "qol.trajectories.plane_size" -> new QolNumberSettings.Spec(0.5D, 8.0D, 0.1D, true);
             case "qol.auto_clicker.cps",
                  "qol.auto_clicker.left_cps",
                  "qol.auto_clicker.right_cps" ->

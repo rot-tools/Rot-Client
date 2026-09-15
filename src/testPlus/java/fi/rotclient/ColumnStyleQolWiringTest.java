@@ -39,7 +39,8 @@ final class ColumnStyleQolWiringTest {
                 "src/client/java/fi/rotclient/CommissionDisplayRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(commissionRuntime.contains("rotclient$getNameForDisplay"));
-        assertTrue(client.contains("MobHighlightRuntime.tick"));
+        assertTrue(client.contains("QolClientFlavorSupport.hooks().mobHighlightTick"));
+        assertTrue(plus.contains("MobHighlightRuntime.tick"));
         assertTrue(client.contains("MenuKeybindRuntime.tick"));
         assertFalse(client.contains("WardrobeAutoEquipRuntime.tick"));
         assertTrue(plus.contains("WardrobeAutoEquipRuntime.tick"));
@@ -179,7 +180,7 @@ final class ColumnStyleQolWiringTest {
     @Test
     void worldScannerUsesPerTargetEsp() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/WorldScannerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/WorldScannerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("WorldScannerEspSettings.idForHit"));
         assertTrue(source.contains("target.tracer"));

@@ -28,6 +28,18 @@ final class PlusOpaqueSettings {
         }
     }
 
+    static float floating(QolUtilityConfig config, String key, float fallback) {
+        JsonElement value = fields(config).get(key);
+        if (value == null || !value.isJsonPrimitive()
+                || !value.getAsJsonPrimitive().isNumber()) return fallback;
+        try {
+            float result = value.getAsFloat();
+            return Float.isFinite(result) ? result : fallback;
+        } catch (RuntimeException malformed) {
+            return fallback;
+        }
+    }
+
     static void write(QolUtilityConfig config, String key, boolean value) {
         fields(config).addProperty(key, value);
     }
@@ -36,12 +48,16 @@ final class PlusOpaqueSettings {
         fields(config).addProperty(key, value);
     }
 
+    static void write(QolUtilityConfig config, String key, float value) {
+        fields(config).addProperty(key, value);
+    }
+
     static void reset(QolUtilityConfig config, String... keys) {
         JsonObject fields = fields(config);
         for (String key : keys) fields.remove(key);
     }
 
-    private static JsonObject fields(QolUtilityConfig config) {
+    static JsonObject fields(QolUtilityConfig config) {
         if (config.extensionFields == null) {
             config.extensionFields = new JsonObject();
         }

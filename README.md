@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.2`** is a public checkpoint, not a finished 2.0 release.
+> **`2.0.1+mc26.2`** is a development playtest checkpoint. Lite is still being audited for Modrinth and Hypixel; do not treat this JAR as an approved public Lite release.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,7 +48,7 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL. No automation bytecode. |
+| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL playtest. Edition audit is still in progress. |
 | `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Playtest JAR
@@ -92,8 +92,8 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** ships **108** quality-of-life parents. **Rot Client+** ships
-**133**. Wired means a catalog entry, saved
+**Rot Client** currently ships **106** quality-of-life parents. **Rot Client+** ships
+**134**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 [QoL Utilities](docs/QOL_UTILITIES.md).
@@ -106,24 +106,24 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, auto sprint, and market guard. Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+ |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
 | **Render** | Fullbright, viewmodel, player size, eye-height fix, and legacy textures. **Plus:** Fox, Ghosts, Free Camera, and clip camera |
-| **Combat** | Trajectories, etherwarp helper, mob highlight. Auto clicker / Auto Dojo are Rot Client+ |
-| **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers |
+| **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
+| **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers; Lite audit pending |
 | **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Secret hitboxes, auto terms, and hover-terms are Rot Client+ |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
-| **Mining QoL** | World scanner, commissions, Scatha, Glacite, HOTM helpers |
+| **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
 | **Fishing, foraging & garden** | Bite HUD, sea creatures, trophy, tree HUD. Farm Keys and foraging cheats are Rot Client+ |
 
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you
-opt in separately. Those options are not present in the legit JAR.
+opt in separately. The remaining shared dungeon paths are under Lite audit.
 
 The Lite build is packaged from the shared policy/client source sets only.
-Plus automation policies, Minecraft runtimes, mixins, and the Fox asset live in
-separate `plus` / `plusClient` source sets and are rejected by
-`verifyLegitJar` if they leak into `RotClient-*.jar`. The shared configuration
-model keeps inert compatibility fields so one installation can move safely
-between editions; Lite has no catalog or executable route to those fields.
+Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
+`plus` / `plusClient` source sets. `verifyLegitJar` rejects the separated
+classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
+from older profiles survive as opaque compatibility data. The remaining Lite
+edition audit is tracked in [Project State](docs/PROJECT_STATE.md).
 
 ### Fox (Rot Client+)
 

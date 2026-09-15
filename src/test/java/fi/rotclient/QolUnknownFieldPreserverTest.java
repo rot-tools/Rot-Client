@@ -22,6 +22,16 @@ final class QolUnknownFieldPreserverTest {
         qol.addProperty("autoConversationEnabled", true);
         qol.addProperty("autoConversationMulti", false);
         qol.addProperty("autoConversationDelayTicks", 9);
+        qol.addProperty("trajectoriesEnabled", true);
+        qol.addProperty("trajectoriesRange", 47);
+        qol.addProperty("worldScannerEnabled", true);
+        qol.addProperty("worldScannerOnlyHollows", false);
+        qol.addProperty("mobHighlightEnabled", true);
+        qol.addProperty("etherwarpDepth", false);
+        qol.addProperty("mobHighlightAddKey", "H");
+        qol.add("mobHighlightNames", JsonParser.parseString("[\"Goblin\"]"));
+        qol.add("worldScannerTargets", JsonParser.parseString(
+                "{\"fairy\":{\"enabled\":false,\"custom\":\"keep\"}}").getAsJsonObject());
         qol.addProperty("commissionDisplayTitle", "Known field");
 
         TrackerConfig loaded = TrackerStore.fromJson(original);
@@ -31,6 +41,16 @@ final class QolUnknownFieldPreserverTest {
         assertTrue(loaded.qolUtilities.extensionFields.get("autoConversationEnabled").getAsBoolean());
         assertFalse(loaded.qolUtilities.extensionFields.get("autoConversationMulti").getAsBoolean());
         assertEquals(9, loaded.qolUtilities.extensionFields.get("autoConversationDelayTicks").getAsInt());
+        assertTrue(loaded.qolUtilities.extensionFields.get("trajectoriesEnabled").getAsBoolean());
+        assertEquals(47, loaded.qolUtilities.extensionFields.get("trajectoriesRange").getAsInt());
+        assertTrue(loaded.qolUtilities.extensionFields.get("worldScannerEnabled").getAsBoolean());
+        assertFalse(loaded.qolUtilities.extensionFields.get("worldScannerOnlyHollows").getAsBoolean());
+        assertTrue(loaded.qolUtilities.extensionFields.get("mobHighlightEnabled").getAsBoolean());
+        assertFalse(loaded.qolUtilities.extensionFields.get("etherwarpDepth").getAsBoolean());
+        assertEquals("H", loaded.qolUtilities.extensionFields.get("mobHighlightAddKey").getAsString());
+        assertEquals("keep", loaded.qolUtilities.extensionFields
+                .getAsJsonObject("worldScannerTargets").getAsJsonObject("fairy")
+                .get("custom").getAsString());
         assertFalse(loaded.qolUtilities.extensionFields.has("commissionDisplayTitle"));
         assertTrue(qol.has("futureEditionModule"));
         assertFalse(qol.getAsJsonObject("extensionFields").has("futureEditionModule"));
@@ -42,6 +62,14 @@ final class QolUnknownFieldPreserverTest {
                 .getAsJsonObject("extensionFields").get("inventoryWalkPingMs").getAsInt());
         assertEquals(9, saved.getAsJsonObject("qolUtilities")
                 .getAsJsonObject("extensionFields").get("autoConversationDelayTicks").getAsInt());
+        assertEquals(47, saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields").get("trajectoriesRange").getAsInt());
+        assertEquals("Goblin", saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields").getAsJsonArray("mobHighlightNames")
+                .get(0).getAsString());
+        assertEquals("keep", saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields").getAsJsonObject("worldScannerTargets")
+                .getAsJsonObject("fairy").get("custom").getAsString());
         assertEquals(unknown, TrackerStore.fromJson(saved).qolUtilities
                 .extensionFields.get("futureEditionModule"));
     }
