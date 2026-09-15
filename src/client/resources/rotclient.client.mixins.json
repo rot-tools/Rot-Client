@@ -28,6 +28,7 @@
     "FogRendererMixin",
     "FramerateLimitTrackerMixin",
     "FramerateLimiterMixin",
+    "CameraZoomMixin",
     "GuiGraphicsExtractorCustomTooltipMixin",
     "GuiGraphicsExtractorNameHiderMixin",
     "GuiNoCursorResetMixin",

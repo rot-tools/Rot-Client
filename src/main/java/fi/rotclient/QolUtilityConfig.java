@@ -363,6 +363,12 @@ final class QolUtilityConfig {
     String autoSprintKeybind = "";
     String cameraKeybind = "";
 
+    // Smooth Zoom
+    boolean zoomEnabled = true;
+    String zoomKeybind = "C";
+    float zoomAmount = (float) SmoothZoomPolicy.DEFAULT_AMOUNT;
+    float zoomSpeed = (float) SmoothZoomPolicy.DEFAULT_SPEED;
+
     // Movable QoL HUD poses (screen pixels)
     float performanceHudX = 12.0F;
     float performanceHudY = 220.0F;
@@ -448,6 +454,7 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled;
             case "qol.etherwarp" -> etherwarpEnabled;
             case "qol.click_gui" -> clickGuiEnabled;
+            case "qol.zoom" -> zoomEnabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled;
             case "qol.skill_levels" -> skillLevelsEnabled;
             case "qol.pet_hud" -> petHudEnabled;
@@ -493,6 +500,7 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled = enabled;
             case "qol.etherwarp" -> etherwarpEnabled = enabled;
             case "qol.click_gui" -> clickGuiEnabled = enabled;
+            case "qol.zoom" -> zoomEnabled = enabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled = enabled;
             case "qol.skill_levels" -> skillLevelsEnabled = enabled;
             case "qol.pet_hud" -> petHudEnabled = enabled;
@@ -990,6 +998,8 @@ final class QolUtilityConfig {
             return target;
         }
         return switch (settingId) {
+            case "qol.zoom.amount" -> (double) zoomAmount;
+            case "qol.zoom.speed" -> (double) zoomSpeed;
             case "qol.hide_players.distance" -> hidePlayersDistance;
             case "qol.player_size.x" -> (double) playerSizeX;
             case "qol.player_size.y" -> (double) playerSizeY;
@@ -1042,6 +1052,10 @@ final class QolUtilityConfig {
             return false;
         }
         switch (settingId) {
+            case "qol.zoom.amount" ->
+                    zoomAmount = (float) SmoothZoomPolicy.clampAmount(value);
+            case "qol.zoom.speed" ->
+                    zoomSpeed = (float) SmoothZoomPolicy.clampSpeed(value);
             case "qol.hide_players.distance" -> hidePlayersDistance = value;
             case "qol.player_size.x" -> playerSizeX = (float) value;
             case "qol.player_size.y" -> playerSizeY = (float) value;
@@ -1219,6 +1233,7 @@ final class QolUtilityConfig {
             case "qol.click_gui.keybind" -> clickGuiKeybind;
             case "qol.auto_sprint.keybind" -> autoSprintKeybind;
             case "qol.camera.keybind" -> cameraKeybind;
+            case "qol.zoom.keybind" -> zoomKeybind;
             case "qol.command_keybinds.pets" -> commandPetsKey;
             case "qol.command_keybinds.storage" -> commandStorageKey;
             case "qol.command_keybinds.armor_wardrobe" -> commandArmorWardrobeKey;
@@ -1278,6 +1293,7 @@ final class QolUtilityConfig {
             case "qol.click_gui.keybind" -> clickGuiKeybind = stored;
             case "qol.auto_sprint.keybind" -> autoSprintKeybind = stored;
             case "qol.camera.keybind" -> cameraKeybind = stored;
+            case "qol.zoom.keybind" -> zoomKeybind = stored;
             case "qol.command_keybinds.pets" -> commandPetsKey = stored;
             case "qol.command_keybinds.storage" -> commandStorageKey = stored;
             case "qol.command_keybinds.armor_wardrobe" -> commandArmorWardrobeKey = stored;
@@ -1409,6 +1425,19 @@ final class QolUtilityConfig {
         playerSizeX = PlayerSizePolicy.clamp(playerSizeX);
         playerSizeY = PlayerSizePolicy.clamp(playerSizeY);
         playerSizeZ = PlayerSizePolicy.clamp(playerSizeZ);
+
+        zoomAmount =
+                (float) SmoothZoomPolicy.clampAmount(
+                        zoomAmount);
+
+        zoomSpeed =
+                (float) SmoothZoomPolicy.clampSpeed(
+                        zoomSpeed);
+
+        if (zoomKeybind == null) {
+            zoomKeybind = "C";
+        }
+
         if (performanceDirection == null || performanceDirection.isBlank()) {
             performanceDirection = "Horizontal";
         }
@@ -1809,6 +1838,12 @@ final class QolUtilityConfig {
                 performanceShowPing = d.performanceShowPing;
                 performanceKeybind = d.performanceKeybind;
                 extras().resetHudStyle("performance");
+            }
+            case "qol.zoom" -> {
+                zoomEnabled = d.zoomEnabled;
+                zoomKeybind = d.zoomKeybind;
+                zoomAmount = d.zoomAmount;
+                zoomSpeed = d.zoomSpeed;
             }
             case "qol.render_optimizer" -> {
                 renderOptimizerEnabled = d.renderOptimizerEnabled;
