@@ -1,8 +1,11 @@
 package fi.rotclient;
 
 /**
- * Hide vanilla / Hypixel HUD layers. HUD Layout is the single switchboard;
- * Player Display and Render Optimizer keeps still apply so old configs work.
+ * Hide vanilla / Hypixel HUD layers.
+ *
+ * The HUD Elements Editor exposes each vanilla hide row as a direct switch,
+ * so those flags apply independently of the HUD Layout module's master state.
+ * Player Display and Render Optimizer compatibility hides still apply as well.
  */
 public final class HudLayerHidePolicy {
     public enum Layer {
@@ -101,10 +104,10 @@ public final class HudLayerHidePolicy {
         if (layer == null || flags == null) {
             return false;
         }
-        boolean layout = flags.layoutEnabled();
         return switch (layer) {
-            case HOTBAR -> layout && flags.hideHotbar();
-            case HEALTH -> (layout && flags.hideHealth())
+            case HOTBAR -> flags.hideHotbar();
+
+            case HEALTH -> flags.hideHealth()
                     || VanillaHudHidePolicy.shouldHideLayer(
                             flags.playerDisplayEnabled(),
                             flags.playerHideHealth(),
@@ -112,7 +115,8 @@ public final class HudLayerHidePolicy {
                             flags.playerHideArmor(),
                             flags.playerHideXp(),
                             VanillaHudHidePolicy.Layer.HEALTH);
-            case FOOD -> (layout && flags.hideFood())
+
+            case FOOD -> flags.hideFood()
                     || VanillaHudHidePolicy.shouldHideLayer(
                             flags.playerDisplayEnabled(),
                             flags.playerHideHealth(),
@@ -120,8 +124,10 @@ public final class HudLayerHidePolicy {
                             flags.playerHideArmor(),
                             flags.playerHideXp(),
                             VanillaHudHidePolicy.Layer.FOOD)
-                    || (flags.renderOptimizerEnabled() && flags.optimizerHideFood());
-            case ARMOR -> (layout && flags.hideArmor())
+                    || (flags.renderOptimizerEnabled()
+                            && flags.optimizerHideFood());
+
+            case ARMOR -> flags.hideArmor()
                     || VanillaHudHidePolicy.shouldHideLayer(
                             flags.playerDisplayEnabled(),
                             flags.playerHideHealth(),
@@ -129,8 +135,10 @@ public final class HudLayerHidePolicy {
                             flags.playerHideArmor(),
                             flags.playerHideXp(),
                             VanillaHudHidePolicy.Layer.ARMOR)
-                    || (flags.renderOptimizerEnabled() && flags.optimizerHideArmor());
-            case XP -> (layout && flags.hideXp())
+                    || (flags.renderOptimizerEnabled()
+                            && flags.optimizerHideArmor());
+
+            case XP -> flags.hideXp()
                     || VanillaHudHidePolicy.shouldHideLayer(
                             flags.playerDisplayEnabled(),
                             flags.playerHideHealth(),
@@ -138,19 +146,30 @@ public final class HudLayerHidePolicy {
                             flags.playerHideArmor(),
                             flags.playerHideXp(),
                             VanillaHudHidePolicy.Layer.XP);
-            case AIR -> layout && flags.hideAir();
-            case MOUNT -> layout && flags.hideMount();
-            case SCOREBOARD -> (layout && flags.hideScoreboard())
-                    || (flags.customBoardEnabled() && flags.customBoardHideVanilla());
-            case BOSS -> (layout && flags.hideBoss())
-                    || (flags.renderOptimizerEnabled() && flags.optimizerHideBoss());
-            case ACTION -> layout && flags.hideAction();
-            case ITEM_NAME -> (layout && flags.hideItemName())
-                    || (flags.renderOptimizerEnabled() && flags.optimizerHideItemName());
-            case EFFECTS -> (layout && flags.hideEffects())
-                    || (flags.renderOptimizerEnabled() && flags.optimizerHideEffects());
-            case TITLES -> layout && flags.hideTitles();
-            case TAB -> layout && flags.hideTab();
+
+            case AIR -> flags.hideAir();
+            case MOUNT -> flags.hideMount();
+
+            case SCOREBOARD -> flags.hideScoreboard()
+                    || (flags.customBoardEnabled()
+                            && flags.customBoardHideVanilla());
+
+            case BOSS -> flags.hideBoss()
+                    || (flags.renderOptimizerEnabled()
+                            && flags.optimizerHideBoss());
+
+            case ACTION -> flags.hideAction();
+
+            case ITEM_NAME -> flags.hideItemName()
+                    || (flags.renderOptimizerEnabled()
+                            && flags.optimizerHideItemName());
+
+            case EFFECTS -> flags.hideEffects()
+                    || (flags.renderOptimizerEnabled()
+                            && flags.optimizerHideEffects());
+
+            case TITLES -> flags.hideTitles();
+            case TAB -> flags.hideTab();
         };
     }
 }

@@ -40,20 +40,81 @@ final class HudLayerHidePolicyTest {
     }
 
     @Test
-    void layoutHideRequiresHudLayoutModule() {
-        QolUtilityConfig qol = new QolUtilityConfig();
-        qol.setModuleEnabled("qol.hud_layout", true);
-        qol.writeBoolean("qol.hud_layout.hide_scoreboard", true);
-        qol.writeBoolean("qol.hud_layout.hide_hotbar", true);
-        assertTrue(HudLayerHidePolicy.shouldHide(
-                HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
-        assertTrue(HudLayerHidePolicy.shouldHide(
-                HudLayerHidePolicy.Layer.HOTBAR, HudLayerHidePolicy.flags(qol)));
-        qol.setModuleEnabled("qol.hud_layout", false);
-        assertFalse(HudLayerHidePolicy.shouldHide(
-                HudLayerHidePolicy.Layer.SCOREBOARD, HudLayerHidePolicy.flags(qol)));
-        assertFalse(HudLayerHidePolicy.shouldHide(
-                HudLayerHidePolicy.Layer.HOTBAR, HudLayerHidePolicy.flags(qol)));
+    void landingVanillaHideTogglesApplyWithoutHudLayoutModule() {
+        for (HudLayerCatalog.Layer catalogLayer
+                : HudLayerCatalog.vanillaLayers()) {
+
+            QolUtilityConfig qol =
+                    new QolUtilityConfig();
+
+            /*
+             * Reproduce the real HUD Elements Editor state:
+             * the landing page exposes the individual vanilla rows even while
+             * the separate HUD Layout module master switch is off.
+             */
+            qol.setModuleEnabled(
+                    "qol.hud_layout",
+                    false);
+
+            qol.writeBoolean(
+                    catalogLayer.settingId(),
+                    true);
+
+            HudLayerHidePolicy.Layer policyLayer =
+                    switch (catalogLayer.id()) {
+                        case "hotbar" ->
+                                HudLayerHidePolicy.Layer.HOTBAR;
+                        case "health" ->
+                                HudLayerHidePolicy.Layer.HEALTH;
+                        case "food" ->
+                                HudLayerHidePolicy.Layer.FOOD;
+                        case "armor" ->
+                                HudLayerHidePolicy.Layer.ARMOR;
+                        case "xp" ->
+                                HudLayerHidePolicy.Layer.XP;
+                        case "air" ->
+                                HudLayerHidePolicy.Layer.AIR;
+                        case "mount" ->
+                                HudLayerHidePolicy.Layer.MOUNT;
+                        case "scoreboard" ->
+                                HudLayerHidePolicy.Layer.SCOREBOARD;
+                        case "boss" ->
+                                HudLayerHidePolicy.Layer.BOSS;
+                        case "action" ->
+                                HudLayerHidePolicy.Layer.ACTION;
+                        case "item_name" ->
+                                HudLayerHidePolicy.Layer.ITEM_NAME;
+                        case "effects" ->
+                                HudLayerHidePolicy.Layer.EFFECTS;
+                        case "titles" ->
+                                HudLayerHidePolicy.Layer.TITLES;
+                        case "tab" ->
+                                HudLayerHidePolicy.Layer.TAB;
+                        default ->
+                                throw new AssertionError(
+                                        "Unhandled vanilla HUD layer: "
+                                                + catalogLayer.id());
+                    };
+
+            assertTrue(
+                    HudLayerHidePolicy.shouldHide(
+                            policyLayer,
+                            HudLayerHidePolicy.flags(qol)),
+                    () -> catalogLayer.label()
+                            + " should hide without requiring "
+                            + "the HUD Layout master switch");
+
+            qol.writeBoolean(
+                    catalogLayer.settingId(),
+                    false);
+
+            assertFalse(
+                    HudLayerHidePolicy.shouldHide(
+                            policyLayer,
+                            HudLayerHidePolicy.flags(qol)),
+                    () -> catalogLayer.label()
+                            + " should become visible again");
+        }
     }
 
     @Test
