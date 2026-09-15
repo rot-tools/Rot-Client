@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -36,6 +37,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public List<QolUtilityCatalog.ModuleDef> extraModules() {
         return QolPlusCatalog.extraModules();
+    }
+
+    @Override
+    public boolean isGameplayCheatModule(String moduleId) {
+        return "qol.secret_hitboxes".equals(moduleId)
+                || "qol.inventory_walk".equals(moduleId);
     }
 
     @Override
@@ -87,6 +94,15 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            return AutoConversationSettings.from(config).enabled();
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            return InventoryWalkSettings.from(config).enabled();
+        }
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            return SecretHitboxesSettings.from(config).enabled();
+        }
         if ("qol.auto_clicker".equals(moduleId)) {
             return config.autoClickerEnabled;
         }
@@ -96,6 +112,18 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            AutoConversationSettings.write(config, "autoConversationEnabled", enabled);
+            return true;
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            InventoryWalkSettings.enabled(config, enabled);
+            return true;
+        }
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            SecretHitboxesSettings.write(config, "secretHitboxesEnabled", enabled);
+            return true;
+        }
         if ("qol.auto_clicker".equals(moduleId)) {
             config.autoClickerEnabled = enabled;
             return true;
@@ -109,6 +137,16 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.auto_conversation.multi" -> AutoConversationSettings.from(config).multi();
+            case "qol.auto_conversation.green" -> AutoConversationSettings.from(config).green();
+            case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.from(config).onlyDungeons();
+            case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.from(config).lever();
+            case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.from(config).oldLever();
+            case "qol.secret_hitboxes.button" -> SecretHitboxesSettings.from(config).button();
+            case "qol.secret_hitboxes.flat_button" -> SecretHitboxesSettings.from(config).flatButton();
+            case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.from(config).skull();
+            case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.from(config).chests();
+            case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.from(config).onlyTrappedChests();
             case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly;
             case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled;
             case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking;
@@ -127,6 +165,16 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return false;
         }
         switch (settingId) {
+            case "qol.auto_conversation.multi" -> AutoConversationSettings.write(config, "autoConversationMulti", value);
+            case "qol.auto_conversation.green" -> AutoConversationSettings.write(config, "autoConversationGreen", value);
+            case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyDungeons", value);
+            case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.write(config, "secretHitboxesLever", value);
+            case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.write(config, "secretHitboxesOldLever", value);
+            case "qol.secret_hitboxes.button" -> SecretHitboxesSettings.write(config, "secretHitboxesButton", value);
+            case "qol.secret_hitboxes.flat_button" -> SecretHitboxesSettings.write(config, "secretHitboxesFlatButton", value);
+            case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.write(config, "secretHitboxesSkull", value);
+            case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.write(config, "secretHitboxesChests", value);
+            case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyTrappedChests", value);
             case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly = value;
             case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled = value;
             case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking = value;
@@ -147,6 +195,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.auto_conversation.delay" -> (double) AutoConversationSettings.from(config).delayTicks();
+            case "qol.inventory_walk.ping" -> (double) InventoryWalkSettings.from(config).pingMs();
             case "qol.auto_clicker.cps" -> (double) config.autoClickerCps;
             case "qol.auto_clicker.left_cps" -> (double) config.autoClickerLeftCps;
             case "qol.auto_clicker.right_cps" -> (double) config.autoClickerRightCps;
@@ -161,6 +211,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return false;
         }
         switch (settingId) {
+            case "qol.auto_conversation.delay" -> AutoConversationSettings.delayTicks(config, (int) Math.round(value));
+            case "qol.inventory_walk.ping" -> InventoryWalkSettings.pingMs(config, (int) Math.round(value));
             case "qol.auto_clicker.cps" ->
                     config.autoClickerCps = AutoClickerPolicy.clampCps((float) value);
             case "qol.auto_clicker.left_cps" ->
@@ -202,6 +254,18 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            AutoConversationSettings.reset(config);
+            return true;
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            InventoryWalkSettings.reset(config);
+            return true;
+        }
+        if ("qol.secret_hitboxes".equals(moduleId)) {
+            SecretHitboxesSettings.reset(config);
+            return true;
+        }
         if (!"qol.auto_clicker".equals(moduleId)) {
             return false;
         }
@@ -227,6 +291,30 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public void loadPersistence() {
         QolPlusConfigStore.migrateFromSharedIfNeeded();
+    }
+
+    @Override
+    public void migrateConfigJson(JsonObject root) {
+        if (root == null) return;
+        JsonObject qol = root.has("qolUtilities") && root.get("qolUtilities").isJsonObject()
+                ? root.getAsJsonObject("qolUtilities") : new JsonObject();
+        JsonObject fields = qol.has("extensionFields") && qol.get("extensionFields").isJsonObject()
+                ? qol.getAsJsonObject("extensionFields") : new JsonObject();
+        for (String key : List.of(
+                "secretHitboxesEnabled", "secretHitboxesOnlyDungeons",
+                "secretHitboxesLever", "secretHitboxesOldLever",
+                "secretHitboxesButton", "secretHitboxesFlatButton",
+                "secretHitboxesSkull", "secretHitboxesChests",
+                "secretHitboxesOnlyTrappedChests")) {
+            if (!fields.has(key) && qol.has(key)) {
+                fields.add(key, qol.get(key).deepCopy());
+            }
+        }
+        if (!fields.has("secretHitboxesLever")) fields.addProperty("secretHitboxesLever", true);
+        if (!fields.has("secretHitboxesButton")) fields.addProperty("secretHitboxesButton", true);
+        if (!fields.has("secretHitboxesSkull")) fields.addProperty("secretHitboxesSkull", true);
+        qol.add("extensionFields", fields);
+        root.add("qolUtilities", qol);
     }
 
     @Override

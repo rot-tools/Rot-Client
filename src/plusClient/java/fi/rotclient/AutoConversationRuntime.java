@@ -31,7 +31,8 @@ final class AutoConversationRuntime {
 
     static void onChat(Component message) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.autoConversationEnabled || message == null) {
+        AutoConversationSettings settings = AutoConversationSettings.from(qol);
+        if (!settings.enabled() || message == null) {
             return;
         }
         String stripped = AutoConversationPolicy.stripFormatting(message.getString());
@@ -41,12 +42,12 @@ final class AutoConversationRuntime {
         List<AutoConversationPolicy.ClickOption> options = new ArrayList<>();
         collect(message, options);
         List<String> commands = AutoConversationPolicy.selectCommands(
-                options, qol.autoConversationGreen, qol.autoConversationMulti);
+                options, settings.green(), settings.multi());
         if (commands.isEmpty()) {
             return;
         }
         String command = commands.getFirst();
-        int delay = AutoConversationPolicy.clampDelayTicks(qol.autoConversationDelayTicks);
+        int delay = settings.delayTicks();
         if (delay <= 0) {
             send(command);
             return;
@@ -61,7 +62,7 @@ final class AutoConversationRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.autoConversationEnabled) {
+        if (!AutoConversationSettings.from(qol).enabled()) {
             QUEUE.clear();
             return;
         }

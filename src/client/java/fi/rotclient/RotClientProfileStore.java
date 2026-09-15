@@ -48,6 +48,7 @@ final class RotClientProfileStore {
             }
 
             JsonObject object = root.getAsJsonObject();
+            QolUnknownFieldPreserver.preserveProfiles(object);
 
             int sourceVersion = object.has("schemaVersion")
                     ? object.get("schemaVersion").getAsInt()

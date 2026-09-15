@@ -256,7 +256,8 @@ public final class QolUtilityCatalog {
         if (module == null) {
             return false;
         }
-        if (isGameplayCheatId(module.id())) {
+        if (QolFlavorSupport.extension().isGameplayCheatModule(module.id())
+                || isGameplayCheatId(module.id())) {
             return true;
         }
         if (containsCheatToken(module.searchAliases())
@@ -289,10 +290,8 @@ public final class QolUtilityCatalog {
         return switch (id) {
             case "qol.cheater_wardrobe",
                     "qol.farm_keys",
-                    "qol.inventory_walk",
                     "qol.freecam",
                     "qol.camera",
-                    "qol.secret_hitboxes",
                     "qol.diana_share",
                     "qol.slayer_auto_start",
                     "qol.slayer_auto_soulcry",

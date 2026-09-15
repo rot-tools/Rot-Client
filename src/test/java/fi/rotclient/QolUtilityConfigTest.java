@@ -145,14 +145,10 @@ final class QolUtilityConfigTest {
     }
 
     @Test
-    void secretHitboxesDefaultToParentSubToggles() {
+    void liteDoesNotExposeSecretHitboxSettings() {
         QolUtilityConfig config = new QolUtilityConfig();
-        assertTrue(config.secretHitboxesOnlyDungeons);
-        assertFalse(config.secretHitboxesLever);
-        assertFalse(config.secretHitboxesButton);
-        assertFalse(config.secretHitboxesSkull);
-        assertTrue(config.secretHitboxesOldLever);
-        assertFalse(config.secretHitboxesChests);
+        assertEquals(null, config.readBoolean("qol.secret_hitboxes.lever"));
+        assertFalse(config.isModuleEnabled("qol.secret_hitboxes"));
     }
 
     @Test

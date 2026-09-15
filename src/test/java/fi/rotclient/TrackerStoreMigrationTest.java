@@ -907,7 +907,7 @@ final class TrackerStoreMigrationTest {
     }
 
     @Test
-    void missingSecretHitboxKeysRestorePlayableDefaults() {
+    void liteDoesNotRestoreMissingPlusSecretHitboxKeys() {
         JsonObject json = TrackerStore.toJson(new TrackerConfig());
         JsonObject qol = json.getAsJsonObject("qolUtilities");
         qol.remove("secretHitboxesLever");
@@ -916,19 +916,25 @@ final class TrackerStoreMigrationTest {
         qol.addProperty("secretHitboxesChests", false);
 
         TrackerConfig restored = TrackerStore.fromJson(json);
-        assertTrue(restored.qolUtilities.secretHitboxesLever);
-        assertTrue(restored.qolUtilities.secretHitboxesButton);
-        assertTrue(restored.qolUtilities.secretHitboxesSkull);
-        assertFalse(restored.qolUtilities.secretHitboxesChests);
+        assertFalse(restored.qolUtilities.extensionFields.has("secretHitboxesLever"));
+        assertFalse(restored.qolUtilities.extensionFields.has("secretHitboxesButton"));
+        assertFalse(restored.qolUtilities.extensionFields.has("secretHitboxesSkull"));
+        assertFalse(restored.qolUtilities.extensionFields.get("secretHitboxesChests").getAsBoolean());
+        assertFalse(qol.has("secretHitboxesLever"));
+        assertFalse(qol.has("secretHitboxesButton"));
+        assertFalse(qol.has("secretHitboxesSkull"));
 
-        TrackerConfig explicitOff = new TrackerConfig();
-        explicitOff.qolUtilities.secretHitboxesLever = false;
-        explicitOff.qolUtilities.secretHitboxesButton = false;
-        explicitOff.qolUtilities.secretHitboxesSkull = false;
-        TrackerConfig kept = TrackerStore.fromJson(TrackerStore.toJson(explicitOff));
-        assertFalse(kept.qolUtilities.secretHitboxesLever);
-        assertFalse(kept.qolUtilities.secretHitboxesButton);
-        assertFalse(kept.qolUtilities.secretHitboxesSkull);
+        JsonObject explicitOff = TrackerStore.toJson(new TrackerConfig());
+        JsonObject oldQol = explicitOff.getAsJsonObject("qolUtilities");
+        oldQol.addProperty("secretHitboxesLever", false);
+        oldQol.addProperty("secretHitboxesButton", false);
+        oldQol.addProperty("secretHitboxesSkull", false);
+        TrackerConfig kept = TrackerStore.fromJson(explicitOff);
+        JsonObject opaque = TrackerStore.toJson(kept).getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields");
+        assertFalse(opaque.get("secretHitboxesLever").getAsBoolean());
+        assertFalse(opaque.get("secretHitboxesButton").getAsBoolean());
+        assertFalse(opaque.get("secretHitboxesSkull").getAsBoolean());
     }
 
     @Test

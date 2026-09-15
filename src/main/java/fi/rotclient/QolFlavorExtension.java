@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -31,6 +32,10 @@ public interface QolFlavorExtension {
 
     default List<QolUtilityCatalog.ModuleDef> extraModules() {
         return List.of();
+    }
+
+    default boolean isGameplayCheatModule(String moduleId) {
+        return false;
     }
 
     default List<QolUtilityCatalog.SettingDef> extraSettings(String moduleId) {
@@ -110,6 +115,10 @@ public interface QolFlavorExtension {
     }
 
     default void loadPersistence() {
+    }
+
+    /** Edition-specific migration before the shared config is decoded. */
+    default void migrateConfigJson(JsonObject root) {
     }
 
     default void savePersistence() {

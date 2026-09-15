@@ -52,18 +52,19 @@ public final class SecretHitboxesRuntime {
             return null;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        SecretHitboxesSettings settings = SecretHitboxesSettings.from(qol);
         SecretHitboxesPolicy.ShapeId id = SecretHitboxesPolicy.resolve(
-                qol.secretHitboxesEnabled,
-                qol.secretHitboxesOnlyDungeons,
+                settings.enabled(),
+                settings.onlyDungeons(),
                 SkyBlockDungeonDetector.confidentlyInDungeon(),
                 kind(state),
-                qol.secretHitboxesLever,
-                qol.secretHitboxesOldLever,
-                qol.secretHitboxesButton,
-                qol.secretHitboxesFlatButton,
-                qol.secretHitboxesSkull,
-                qol.secretHitboxesChests,
-                qol.secretHitboxesOnlyTrappedChests,
+                settings.lever(),
+                settings.oldLever(),
+                settings.button(),
+                settings.flatButton(),
+                settings.skull(),
+                settings.chests(),
+                settings.onlyTrappedChests(),
                 attachFace(state),
                 cardinal(state),
                 powered(state));

@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -10,6 +11,8 @@ import java.util.Map;
  * synced by the client dashboard layer.
  */
 final class QolUtilityConfig {
+    // Opaque fields from other editions or newer builds survive a Lite save.
+    JsonObject extensionFields = new JsonObject();
     boolean commandKeybindsEnabled;
     boolean wardrobeKeybindsEnabled;
     boolean loadoutKeybindsEnabled;
@@ -41,9 +44,6 @@ final class QolUtilityConfig {
     String autoClickerRightKeybind = "";
     java.util.List<String> autoClickerLeftWhitelist = new java.util.ArrayList<>();
     java.util.List<String> autoClickerRightWhitelist = new java.util.ArrayList<>();
-
-    boolean inventoryWalkEnabled;
-    int inventoryWalkPingMs = 200;
 
     boolean inventoryOverlayEnabled = true;
     boolean inventoryOverlayEquipment = true;
@@ -86,16 +86,6 @@ final class QolUtilityConfig {
     boolean trajectoriesEntities = true;
     float trajectoriesPlaneSize = 2.0F;
 
-    boolean secretHitboxesEnabled;
-    boolean secretHitboxesOnlyDungeons = true;
-    boolean secretHitboxesLever;
-    boolean secretHitboxesOldLever = true;
-    boolean secretHitboxesButton;
-    boolean secretHitboxesFlatButton;
-    boolean secretHitboxesSkull;
-    boolean secretHitboxesChests;
-    boolean secretHitboxesOnlyTrappedChests;
-
     boolean worldScannerEnabled;
     boolean worldScannerOnlyHollows = true;
     boolean worldScannerCrystals = true;
@@ -111,10 +101,6 @@ final class QolUtilityConfig {
     java.util.Map<String, WorldScannerEspSettings.Target> worldScannerTargets =
             WorldScannerEspSettings.defaults();
 
-    boolean autoConversationEnabled;
-    boolean autoConversationMulti = true;
-    boolean autoConversationGreen = true;
-    int autoConversationDelayTicks = 4;
 
     boolean fishingHelperEnabled;
     boolean fishingHelperAutoPull = true;
@@ -462,15 +448,12 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled;
             case "qol.etherwarp" -> etherwarpEnabled;
             case "qol.click_gui" -> clickGuiEnabled;
-            case "qol.inventory_walk" -> inventoryWalkEnabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled;
             case "qol.skill_levels" -> skillLevelsEnabled;
             case "qol.pet_hud" -> petHudEnabled;
             case "qol.name_hider" -> nameHiderEnabled;
             case "qol.trajectories" -> trajectoriesEnabled;
-            case "qol.secret_hitboxes" -> secretHitboxesEnabled;
             case "qol.world_scanner" -> worldScannerEnabled;
-            case "qol.auto_conversation" -> autoConversationEnabled;
             case "qol.fishing_helper" -> fishingHelperEnabled;
             case "qol.item_tooltips" ->
                     missingEnchantsEnabled
@@ -510,15 +493,12 @@ final class QolUtilityConfig {
             case "qol.player_size" -> playerSizeEnabled = enabled;
             case "qol.etherwarp" -> etherwarpEnabled = enabled;
             case "qol.click_gui" -> clickGuiEnabled = enabled;
-            case "qol.inventory_walk" -> inventoryWalkEnabled = enabled;
             case "qol.inventory_overlay" -> inventoryOverlayEnabled = enabled;
             case "qol.skill_levels" -> skillLevelsEnabled = enabled;
             case "qol.pet_hud" -> petHudEnabled = enabled;
             case "qol.name_hider" -> nameHiderEnabled = enabled;
             case "qol.trajectories" -> trajectoriesEnabled = enabled;
-            case "qol.secret_hitboxes" -> secretHitboxesEnabled = enabled;
             case "qol.world_scanner" -> worldScannerEnabled = enabled;
-            case "qol.auto_conversation" -> autoConversationEnabled = enabled;
             case "qol.fishing_helper" -> fishingHelperEnabled = enabled;
             case "qol.item_tooltips" -> {
                 missingEnchantsEnabled = enabled;
@@ -591,14 +571,6 @@ final class QolUtilityConfig {
             case "qol.trajectories.depth" -> trajectoriesDepth;
             case "qol.trajectories.plane" -> trajectoriesPlane;
             case "qol.trajectories.entities" -> trajectoriesEntities;
-            case "qol.secret_hitboxes.only_dungeons" -> secretHitboxesOnlyDungeons;
-            case "qol.secret_hitboxes.lever" -> secretHitboxesLever;
-            case "qol.secret_hitboxes.old_lever" -> secretHitboxesOldLever;
-            case "qol.secret_hitboxes.button" -> secretHitboxesButton;
-            case "qol.secret_hitboxes.flat_button" -> secretHitboxesFlatButton;
-            case "qol.secret_hitboxes.skull" -> secretHitboxesSkull;
-            case "qol.secret_hitboxes.chests" -> secretHitboxesChests;
-            case "qol.secret_hitboxes.only_trapped" -> secretHitboxesOnlyTrappedChests;
             case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows;
             case "qol.world_scanner.crystals" -> worldScannerCrystals;
             case "qol.world_scanner.mob_spots" -> worldScannerMobSpots;
@@ -660,8 +632,6 @@ final class QolUtilityConfig {
             case "qol.player_display.hide_action_speed" -> playerDisplayHideActionSpeed;
             case "qol.player_display.hide_action_vitality" -> playerDisplayHideActionVitality;
             case "qol.player_display.hide_action_location" -> playerDisplayHideActionLocation;
-            case "qol.auto_conversation.multi" -> autoConversationMulti;
-            case "qol.auto_conversation.green" -> autoConversationGreen;
             case "qol.fishing_helper.auto_pull" -> fishingHelperAutoPull;
             case "qol.fishing_helper.recast" -> fishingHelperRecast;
             case "qol.fishing_helper.recast_check" -> fishingHelperRecastCheck;
@@ -749,14 +719,6 @@ final class QolUtilityConfig {
             case "qol.trajectories.depth" -> trajectoriesDepth = value;
             case "qol.trajectories.plane" -> trajectoriesPlane = value;
             case "qol.trajectories.entities" -> trajectoriesEntities = value;
-            case "qol.secret_hitboxes.only_dungeons" -> secretHitboxesOnlyDungeons = value;
-            case "qol.secret_hitboxes.lever" -> secretHitboxesLever = value;
-            case "qol.secret_hitboxes.old_lever" -> secretHitboxesOldLever = value;
-            case "qol.secret_hitboxes.button" -> secretHitboxesButton = value;
-            case "qol.secret_hitboxes.flat_button" -> secretHitboxesFlatButton = value;
-            case "qol.secret_hitboxes.skull" -> secretHitboxesSkull = value;
-            case "qol.secret_hitboxes.chests" -> secretHitboxesChests = value;
-            case "qol.secret_hitboxes.only_trapped" -> secretHitboxesOnlyTrappedChests = value;
             case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows = value;
             case "qol.world_scanner.crystals" -> worldScannerCrystals = value;
             case "qol.world_scanner.mob_spots" -> worldScannerMobSpots = value;
@@ -826,8 +788,6 @@ final class QolUtilityConfig {
             case "qol.player_display.hide_action_speed" -> playerDisplayHideActionSpeed = value;
             case "qol.player_display.hide_action_vitality" -> playerDisplayHideActionVitality = value;
             case "qol.player_display.hide_action_location" -> playerDisplayHideActionLocation = value;
-            case "qol.auto_conversation.multi" -> autoConversationMulti = value;
-            case "qol.auto_conversation.green" -> autoConversationGreen = value;
             case "qol.fishing_helper.auto_pull" -> fishingHelperAutoPull = value;
             case "qol.fishing_helper.recast" -> fishingHelperRecast = value;
             case "qol.fishing_helper.recast_check" -> fishingHelperRecastCheck = value;
@@ -1036,14 +996,12 @@ final class QolUtilityConfig {
             case "qol.player_size.z" -> (double) playerSizeZ;
             case "qol.no_cursor_reset.unhook_timeout" -> (double) noCursorUnhookTimeoutMs;
             case "qol.slot_binds.line_width" -> (double) slotBindLineWidth;
-            case "qol.inventory_walk.ping" -> (double) inventoryWalkPingMs;
             case "qol.trajectories.range" -> (double) trajectoriesRange;
             case "qol.trajectories.width" -> (double) trajectoriesWidth;
             case "qol.trajectories.box_size" -> (double) trajectoriesBoxSize;
             case "qol.trajectories.plane_size" -> (double) trajectoriesPlaneSize;
             case "qol.world_scanner.esp_range" -> (double) worldScannerEspRange;
             case "qol.chat_commands.previous_server_time" -> (double) chatPreviousServerSeconds;
-            case "qol.auto_conversation.delay" -> (double) autoConversationDelayTicks;
             case "qol.fishing_helper.pull_delay" -> (double) fishingHelperPullDelay;
             case "qol.fishing_helper.pull_variance" -> (double) fishingHelperPullVariance;
             case "qol.fishing_helper.recast_delay" -> (double) fishingHelperRecastDelay;
@@ -1092,8 +1050,6 @@ final class QolUtilityConfig {
                     noCursorUnhookTimeoutMs = (int) Math.round(value);
             case "qol.slot_binds.line_width" ->
                     slotBindLineWidth = SlotBindsPolicy.clampLineWidth((float) value);
-            case "qol.inventory_walk.ping" ->
-                    inventoryWalkPingMs = clampPingMs((int) Math.round(value));
             case "qol.wardrobe_keybinds.ping" ->
                     wardrobePingMs = Math.max(10, Math.min(1000, (int) Math.round(value)));
             case "qol.wardrobe_keybinds.swap_a" ->
@@ -1126,8 +1082,6 @@ final class QolUtilityConfig {
                     worldScannerEspRange = WorldScannerPolicy.clampEspRange((int) Math.round(value));
             case "qol.chat_commands.previous_server_time" ->
                     chatPreviousServerSeconds = SkyBlockUtilityPolicy.clampPreviousServerSeconds((int) Math.round(value));
-            case "qol.auto_conversation.delay" ->
-                    autoConversationDelayTicks = Math.max(0, Math.min(40, (int) Math.round(value)));
             case "qol.fishing_helper.pull_delay" ->
                     fishingHelperPullDelay = FishingHelperPolicy.clampDelay((int) Math.round(value));
             case "qol.fishing_helper.pull_variance" ->
@@ -1915,10 +1869,6 @@ final class QolUtilityConfig {
                 clickGuiDeveloperMessage = d.clickGuiDeveloperMessage;
                 clickGuiKeybind = d.clickGuiKeybind;
             }
-            case "qol.inventory_walk" -> {
-                inventoryWalkEnabled = d.inventoryWalkEnabled;
-                inventoryWalkPingMs = d.inventoryWalkPingMs;
-            }
             case "qol.inventory_overlay" -> {
                 inventoryOverlayEnabled = d.inventoryOverlayEnabled;
                 inventoryOverlayEquipment = d.inventoryOverlayEquipment;
@@ -1968,17 +1918,6 @@ final class QolUtilityConfig {
                 trajectoriesEntities = d.trajectoriesEntities;
                 trajectoriesPlaneSize = d.trajectoriesPlaneSize;
             }
-            case "qol.secret_hitboxes" -> {
-                secretHitboxesEnabled = d.secretHitboxesEnabled;
-                secretHitboxesOnlyDungeons = d.secretHitboxesOnlyDungeons;
-                secretHitboxesLever = d.secretHitboxesLever;
-                secretHitboxesOldLever = d.secretHitboxesOldLever;
-                secretHitboxesButton = d.secretHitboxesButton;
-                secretHitboxesFlatButton = d.secretHitboxesFlatButton;
-                secretHitboxesSkull = d.secretHitboxesSkull;
-                secretHitboxesChests = d.secretHitboxesChests;
-                secretHitboxesOnlyTrappedChests = d.secretHitboxesOnlyTrappedChests;
-            }
             case "qol.world_scanner" -> {
                 worldScannerEnabled = d.worldScannerEnabled;
                 worldScannerOnlyHollows = d.worldScannerOnlyHollows;
@@ -1993,12 +1932,6 @@ final class QolUtilityConfig {
                 worldScannerChatCoords = d.worldScannerChatCoords;
                 worldScannerEspRange = d.worldScannerEspRange;
                 worldScannerTargets = WorldScannerEspSettings.defaults();
-            }
-            case "qol.auto_conversation" -> {
-                autoConversationEnabled = d.autoConversationEnabled;
-                autoConversationMulti = d.autoConversationMulti;
-                autoConversationGreen = d.autoConversationGreen;
-                autoConversationDelayTicks = d.autoConversationDelayTicks;
             }
             case "qol.fishing_helper" -> {
                 fishingHelperEnabled = d.fishingHelperEnabled;
@@ -2241,10 +2174,6 @@ final class QolUtilityConfig {
             return 5.0F;
         }
         return Math.max(3.0F, Math.min(20.0F, value));
-    }
-
-    private static int clampPingMs(int pingMs) {
-        return Math.max(1, Math.min(500, pingMs));
     }
 
     private static float clampScale(float value) {
