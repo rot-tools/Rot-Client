@@ -294,6 +294,18 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public void dungeonTerminalClickRecord(
+            AbstractContainerScreen<?> screen, int mouseX, int mouseY, int button) {
+        DungeonTerminalClickRuntime.record(screen, mouseX, mouseY, button);
+    }
+
+    @Override
+    public void dungeonTerminalClickRender(
+            AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
+        DungeonTerminalClickRuntime.render(screen, graphics);
+    }
+
+    @Override
     public boolean wardrobeMenuHandleInput(
             net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
             int code) {

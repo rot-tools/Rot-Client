@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (101 HUD/QoL parents) and **Rot Client+** (134 parents). Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, and the Diana suite have Plus-owned bytecode and catalog parents. Their moved settings survive in older profiles as opaque data. Etherwarp depth-off is Plus-only; Lite always respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Smooth Zoom from PR #24 is integrated. Dungeon ESP/solvers and other input/visual assists still need the [Lite release audit](MODRINTH_LITE_RELEASE.md) before public Modrinth upload. Minecraft runtime validation of this build is pending. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (100 HUD/QoL parents) and **Rot Client+** (134 parents). Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, and Terminal Click Trails have Plus-owned bytecode and catalog parents. Their moved settings survive in older profiles as opaque data. Etherwarp depth-off is Plus-only; Lite always respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Smooth Zoom from PR #24 is integrated. Dungeon ESP/solvers and other input/visual assists still need the [Lite release audit](MODRINTH_LITE_RELEASE.md) before public Modrinth upload. Minecraft runtime validation of this build is pending. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
@@ -21,8 +21,8 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,192** shared tests plus **163** Plus tests; 0 failures or errors. Shared and Plus client compilation, `verifyLegitJar`, and `clean build` pass. SHA-256: Rot Client `676A1E3B09C8244A0799BAEADD0FD9F095E9A2055211E5557B8568595D551D72`; Rot Client+ `1E5A234D3EA95BE7C40EBEB49B6B28F1121AAB920F0743701E9161837705EB43`. Prism Serveri (Plus active, Lite disabled) and Legit Instance (Lite active) copies match those hashes. Minecraft runtime validation remains pending. |
-| Current phase | Lite/Plus packaging separation is in progress for Modrinth. Dual catalog: Lite **101** parents across 13 populated groups / Plus **134** across 14 groups. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, and Etherwarp depth-off are Plus-only. Remaining unfair Lite visuals/solvers still need strip before public Lite publish. Existing runtime-pending features remain Ready for Runtime Test; mining tracker / M1 gemstone work stays paused. |
+| Automated baseline | Current working tree: **2,192** shared tests plus **164** Plus tests; 0 failures or errors. Shared and Plus client compilation, `verifyLegitJar`, and `clean build` pass. SHA-256: Rot Client `B32E09A84004556AA91A6D4DC31225CA89FDE582009B4065A55BF18A51688333`; Rot Client+ `04ECBD8BE2998ED3CBD01B128FDBDB423A547D5F7DF54CA697FEC74BBDE6A5E6`. Prism Serveri (Plus active, Lite disabled) and Legit Instance (Lite active) copies match those hashes. Minecraft runtime validation remains pending. |
+| Current phase | Lite/Plus packaging separation is in progress for Modrinth. Dual catalog: Lite **100** parents across 13 populated groups / Plus **134** across 14 groups. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, and Etherwarp depth-off are Plus-only. Remaining unfair Lite visuals/solvers still need strip before public Lite publish. Existing runtime-pending features remain Ready for Runtime Test; mining tracker / M1 gemstone work stays paused. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
 
@@ -108,7 +108,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The catalog lock (101 parents on Lite, 134 on Plus), evidence-state guards, status-badge layout, and
+- The catalog lock (100 parents on Lite, 134 on Plus), evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -176,7 +176,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 101 Lite / 134 Plus modules across GUI, Utilities, Render, HUD & Display,
+- QoL catalog wiring for 100 Lite / 134 Plus modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -353,7 +353,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: **101** wired parents in Rot Client and **134** in Rot Client+
+- QoL dashboard: **100** wired parents in Rot Client and **134** in Rot Client+
   across fourteen task-oriented groups, with automation-style development
   features disabled by default and scoped to the local Serveri / Plus JAR. No
   separate server-detection branch is planned.

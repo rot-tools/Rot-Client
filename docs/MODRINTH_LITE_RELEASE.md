@@ -11,7 +11,7 @@ runtime behavior.
   helpers, Term Sim, puzzle assists, and F7 solver paths where they expose
   information or interactions outside passive HUD/QoL. Keep ordinary dungeon
   status and map HUD behavior intact while splitting the large shared runtime.
-- Diana burrow/rare-mob visual assists, Diana Profit/Share, and Experiment Solver are Plus-owned. Revalidate their migrated settings in Minecraft.
+- Diana burrow/rare-mob visual assists, Diana Profit/Share, Experiment Solver, and Terminal Click Trails are Plus-owned. Revalidate their migrated settings in Minecraft.
 - Auto Sprint's input override is now Plus-only. Audit every remaining input,
   click, macro, movement, and see-through-block behavior in Lite. An option being off by default is not a
   release decision.

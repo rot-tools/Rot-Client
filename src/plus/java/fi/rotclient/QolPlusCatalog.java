@@ -495,6 +495,21 @@ public final class QolPlusCatalog {
                 setting("qol.experiment_solver.match_color", "Known Match Color", "Fill color for a revealed item whose twin is known.", SettingType.COLOR),
                 setting("qol.experiment_solver.powerup_color", "Powerup Color", "Fill color for Superpairs powerups.", SettingType.COLOR)));
         modules.add(module(
+                "qol.dungeon_term_click",
+                "Terminal Click Trails",
+                "Record left and right clicks in terminal GUIs and draw short trails.",
+                Group.DUNGEONS,
+                "F7",
+                false,
+                true,
+                true,
+                List.of("terminal click", "click trail"),
+                setting("qol.dungeon_term_click.radius", "Trail Radius", "Circle radius in GUI pixels.", SettingType.NUMBER),
+                setting("qol.dungeon_term_click.thickness", "Trail Thickness", "Trail stroke thickness.", SettingType.NUMBER),
+                setting("qol.dungeon_term_click.left_color", "Left Color", "Left-click trail color.", SettingType.COLOR),
+                setting("qol.dungeon_term_click.right_color", "Right Color", "Right-click trail color.", SettingType.COLOR)));
+
+        modules.add(module(
                 "qol.diana_burrows",
                 "Diana Burrows",
                 "Spade lava-trail guess (polynomial fit), START/MOB/TREASURE particle burrows, waypoints. Plus only.",

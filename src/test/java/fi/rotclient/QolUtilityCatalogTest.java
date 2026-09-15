@@ -123,7 +123,6 @@ final class QolUtilityCatalogTest {
                 "qol.dungeon_menus",
                 "qol.dungeon_carry",
                 "qol.dungeon_party_join",
-                "qol.dungeon_term_click",
                 "qol.dungeon_watcher",
                 "qol.hud_layout",
                 "qol.custom_cursor",
@@ -239,7 +238,7 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(13, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertEquals(12, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
@@ -254,7 +253,7 @@ final class QolUtilityCatalogTest {
                 .noneMatch(m -> m.id().equals("qol.dungeon_soulsand")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_term_click")));
+                .noneMatch(m -> m.id().equals("qol.dungeon_term_click")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_watcher")));
@@ -417,6 +416,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(101, moduleIds.size());
+        assertEquals(100, moduleIds.size());
     }
 }

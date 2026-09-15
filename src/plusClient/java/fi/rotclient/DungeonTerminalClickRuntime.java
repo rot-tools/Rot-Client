@@ -18,8 +18,8 @@ public final class DungeonTerminalClickRuntime {
     }
 
     public static void record(AbstractContainerScreen<?> screen, int mouseX, int mouseY, int button) {
-        DungeonAthenSettings athen = extras().athen();
-        if (!athen.termClickEnabled || screen == null) {
+        DungeonTerminalClickSettings settings = settings();
+        if (!settings.enabled() || screen == null) {
             return;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
@@ -33,8 +33,8 @@ public final class DungeonTerminalClickRuntime {
     }
 
     public static void render(AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
-        DungeonAthenSettings athen = extras().athen();
-        if (!athen.termClickEnabled || screen == null || graphics == null) {
+        DungeonTerminalClickSettings settings = settings();
+        if (!settings.enabled() || screen == null || graphics == null) {
             return;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
@@ -50,9 +50,9 @@ public final class DungeonTerminalClickRuntime {
                 iterator.remove();
                 continue;
             }
-            int color = trail.right ? athen.termClickRightColor : athen.termClickLeftColor;
-            int radius = Math.max(1, athen.termClickRadius);
-            int thickness = Math.max(1, athen.termClickThickness);
+            int color = trail.right ? settings.rightColor() : settings.leftColor();
+            int radius = Math.max(1, settings.radius());
+            int thickness = Math.max(1, settings.thickness());
             graphics.fill(
                     trail.x - radius,
                     trail.y - thickness,
@@ -68,7 +68,7 @@ public final class DungeonTerminalClickRuntime {
         }
     }
 
-    private static QolSkyblockExtras extras() {
-        return RotClientClient.qolConfigPublic().extras();
+    private static DungeonTerminalClickSettings settings() {
+        return DungeonTerminalClickSettings.from(RotClientClient.qolConfigPublic());
     }
 }
