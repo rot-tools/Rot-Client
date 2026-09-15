@@ -198,7 +198,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             CallbackInfo ci) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
         if (QolClientFlavorSupport.hooks().experimentShouldHideTooltip(screen)
-                || DungeonRuntime.shouldHideTerminalTooltip(screen)) {
+                || QolClientFlavorSupport.hooks().shouldHideTerminalTooltip(screen)) {
             ci.cancel();
             return;
         }
@@ -402,7 +402,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
                 slot)
                 || QolClientFlavorSupport.hooks().experimentShouldHideWrongSlot(
                         (AbstractContainerScreen<?>) (Object) this, slot)
-                || DungeonRuntime.shouldHideTerminalSlot(
+                || QolClientFlavorSupport.hooks().shouldHideTerminalSlot(
                         (AbstractContainerScreen<?>) (Object) this, slot)) {
             ci.cancel();
             return;

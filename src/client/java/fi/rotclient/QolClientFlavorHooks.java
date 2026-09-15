@@ -405,6 +405,15 @@ public interface QolClientFlavorHooks {
         return false;
     }
 
+    default boolean shouldHideTerminalTooltip(AbstractContainerScreen<?> screen) {
+        return false;
+    }
+
+    default boolean shouldHideTerminalSlot(AbstractContainerScreen<?> screen,
+                                           net.minecraft.world.inventory.Slot slot) {
+        return false;
+    }
+
     default boolean tryBreakerInstamine(BlockPos pos) {
         return false;
     }
