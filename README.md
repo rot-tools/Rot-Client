@@ -112,7 +112,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
-| **Fishing, foraging & garden** | Bite HUD, sea creatures, trophy, tree HUD. Farm Keys and foraging cheats are Rot Client+ |
+| **Fishing, foraging & garden** | Bite HUD, sea creatures, trophy, tree HUD. Sea-creature auto attack, Farm Keys, and foraging cheats are Rot Client+ |
 
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you

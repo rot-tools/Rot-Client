@@ -193,6 +193,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readBoolean(QolUtilityConfig config, String settingId) {
+        if ("qol.fishing_creatures.auto_attack".equals(settingId))
+            return FishingAutoAttackSettings.readBoolean(config, settingId);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.readBoolean(config, settingId);
         if (settingId == null) {
@@ -243,6 +245,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeBoolean(
             QolUtilityConfig config, String settingId, boolean value) {
+        if ("qol.fishing_creatures.auto_attack".equals(settingId))
+            return FishingAutoAttackSettings.writeBoolean(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.writeBoolean(config, settingId, value);
         if (settingId == null) {
@@ -291,6 +295,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Double readNumber(QolUtilityConfig config, String settingId) {
+        if ("qol.fishing_creatures.auto_delay".equals(settingId))
+            return FishingAutoAttackSettings.readNumber(config, settingId);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.readNumber(config, settingId);
         if (settingId == null) {
@@ -319,6 +325,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeNumber(
             QolUtilityConfig config, String settingId, double value) {
+        if ("qol.fishing_creatures.auto_delay".equals(settingId))
+            return FishingAutoAttackSettings.writeNumber(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.writeNumber(config, settingId, value);
         if (settingId == null) {
@@ -447,6 +455,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.fishing_creatures".equals(moduleId)) {
+            FishingAutoAttackSettings.reset(config);
+            return false; // Let the shared parent reset its other settings.
+        }
         if ("qol.dungeon_termsim".equals(moduleId)) {
             TermSimSettings.reset(config);
             return true;
@@ -555,6 +567,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
                 return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
         }
         return switch (settingId) {
+            case "qol.fishing_creatures.auto_delay" ->
+                    new QolNumberSettings.Spec(0.0D, 40.0D, 1.0D, true);
             case "qol.dungeon_termsim.ping" ->
                     new QolNumberSettings.Spec(0.0D, 500.0D, 50.0D, true);
             case "qol.dungeon_term_click.radius" ->

@@ -155,8 +155,6 @@ final class QolSkyblockExtras {
     int fishingCreaturesEspColor = 0xFF55FFFF;
     boolean fishingCreaturesShortenChat;
     boolean fishingCreaturesHideCommon;
-    boolean fishingCreaturesAutoAttack;
-    int fishingCreaturesAutoDelay = 4;
     boolean fishingCreaturesThunderSparks = true;
 
     boolean fishingHotspotsEnabled;
@@ -1327,7 +1325,6 @@ final class QolSkyblockExtras {
             case "qol.fishing_creatures.rare_esp" -> fishingCreaturesRareEsp;
             case "qol.fishing_creatures.shorten_chat" -> fishingCreaturesShortenChat;
             case "qol.fishing_creatures.hide_common" -> fishingCreaturesHideCommon;
-            case "qol.fishing_creatures.auto_attack" -> fishingCreaturesAutoAttack;
             case "qol.fishing_creatures.thunder_sparks" -> fishingCreaturesThunderSparks;
             case "qol.fishing_hotspots.circle" -> fishingHotspotsCircle;
             case "qol.fishing_hotspots.hide_particles" -> fishingHotspotsHideParticles;
@@ -1964,7 +1961,6 @@ final class QolSkyblockExtras {
             case "qol.fishing_creatures.rare_esp" -> fishingCreaturesRareEsp = value;
             case "qol.fishing_creatures.shorten_chat" -> fishingCreaturesShortenChat = value;
             case "qol.fishing_creatures.hide_common" -> fishingCreaturesHideCommon = value;
-            case "qol.fishing_creatures.auto_attack" -> fishingCreaturesAutoAttack = value;
             case "qol.fishing_creatures.thunder_sparks" -> fishingCreaturesThunderSparks = value;
             case "qol.fishing_hotspots.circle" -> fishingHotspotsCircle = value;
             case "qol.fishing_hotspots.hide_particles" -> fishingHotspotsHideParticles = value;
@@ -2585,7 +2581,6 @@ final class QolSkyblockExtras {
             case "qol.auto_dojo.control_predict" -> (double) autoDojoControlPredict;
             case "qol.auto_dojo.mastery_delay" -> (double) autoDojoMasteryDelay;
             case "qol.fishing_creatures.timer_length" -> (double) fishingCreaturesTimerLength;
-            case "qol.fishing_creatures.auto_delay" -> (double) fishingCreaturesAutoDelay;
             case "qol.dungeon_requeue.delay" -> (double) dungeonRequeueDelay;
             case "qol.dungeon_menus.party_cata" -> (double) dungeonMenusPartyCata;
             case "qol.dungeon_esp.opacity" -> (double) dungeonEspOpacity;
@@ -2706,8 +2701,6 @@ final class QolSkyblockExtras {
                     Math.max(0, Math.min(2000, (int) Math.round(value)));
             case "qol.fishing_creatures.timer_length" -> fishingCreaturesTimerLength =
                     FishingCreaturesPolicy.clampTimer((int) Math.round(value));
-            case "qol.fishing_creatures.auto_delay" -> fishingCreaturesAutoDelay =
-                    Math.max(1, Math.min(40, (int) Math.round(value)));
             case "qol.dungeon_requeue.delay" -> dungeonRequeueDelay =
                     Math.max(0, Math.min(200, (int) Math.round(value)));
             case "qol.dungeon_menus.party_cata" -> dungeonMenusPartyCata =
@@ -3314,8 +3307,6 @@ final class QolSkyblockExtras {
                 fishingCreaturesEspColor = d.fishingCreaturesEspColor;
                 fishingCreaturesShortenChat = d.fishingCreaturesShortenChat;
                 fishingCreaturesHideCommon = d.fishingCreaturesHideCommon;
-                fishingCreaturesAutoAttack = d.fishingCreaturesAutoAttack;
-                fishingCreaturesAutoDelay = d.fishingCreaturesAutoDelay;
                 fishingCreaturesThunderSparks = d.fishingCreaturesThunderSparks;
             }
             case "qol.fishing_hotspots" -> {

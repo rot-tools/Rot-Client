@@ -55,7 +55,7 @@ playtest remains pending.
 
 ## Fishing suite
 
-Six Fishing parents cover bite detect, sea creatures, hotspots, trophy, visuals, and tools. Bite detect is a nearby `!!!` hologram, not vanilla splash. Automation stays on the Serveri; party ping and auto-attack default off.
+Six Fishing parents cover bite detect, sea creatures, hotspots, trophy, visuals, and tools. Bite detect is a nearby `!!!` hologram, not vanilla splash. Sea-creature auto attack and its delay setting are Plus-owned; old values survive Lite profile saves as opaque data. Automation stays on the Serveri; party ping and auto attack default off.
 
 Correctness gates: hook timers only match SkyBlock `N` / `N.N` values up to 20s, hook nametags hide only next to your bobber, sea-creature tracking requires a health hologram marker, and auto-attack only fires on tracked live ids.
 
