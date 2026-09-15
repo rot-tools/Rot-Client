@@ -3070,59 +3070,6 @@ public final class DungeonRuntime {
         melodyWasOpen = melodyOpen;
     }
 
-    public static boolean shouldCancelBlockUse(BlockPos pos, boolean sneaking) {
-        if (pos == null) {
-            return false;
-        }
-        QolSkyblockExtras extras = extras();
-        if (!extras.dungeonF7Enabled) {
-            return false;
-        }
-        if (DungeonF7Policy.blockWrongArrow(
-                pos.getX(), pos.getY(), pos.getZ(),
-                extras.dungeonF7ArrowAlign && extras.dungeonF7ArrowBlockWrong,
-                sneaking,
-                false,
-                arrowClicks)) {
-            return true;
-        }
-        EmberDungeonPolicy.IntVec next = simon.nextButton();
-        if (DungeonF7Policy.blockWrongSimon(
-                pos.getX(), pos.getY(), pos.getZ(),
-                extras.dungeonF7Simon && extras.dungeonF7SimonBlockWrong,
-                sneaking,
-                next)) {
-            return true;
-        }
-        Minecraft client = Minecraft.getInstance();
-        LocalPlayer player = client == null ? null : client.player;
-        boolean holdingRelicOrMenu = player != null && (
-                DungeonF7Policy.holdingRelicOrMenu(player.getMainHandItem().getHoverName().getString())
-                        || DungeonF7Policy.holdingRelicOrMenu(player.getOffhandItem().getHoverName().getString()));
-        if (EmberDungeonPolicy.blockRelicClick(
-                extras.dungeonF7RelicBlockWrong,
-                lastRelic,
-                holdingRelicOrMenu,
-                pos.getX(),
-                pos.getY(),
-                pos.getZ())) {
-            return true;
-        }
-        if (!lastRelic.isBlank()
-                && EmberDungeonPolicy.correctRelicCauldron(lastRelic, pos.getX(), pos.getY(), pos.getZ())) {
-            lastRelic = "";
-            relicPickupAt = 0L;
-        }
-        return false;
-    }
-
-    public static boolean shouldCancelEntityUse(Entity entity, boolean sneaking) {
-        if (!(entity instanceof ItemFrame frame)) {
-            return false;
-        }
-        return shouldCancelBlockUse(frame.blockPosition(), sneaking);
-    }
-
     public static void onBlockUsed(BlockPos pos) {
         if (pos == null) {
             return;
@@ -3443,49 +3390,6 @@ public final class DungeonRuntime {
         }
         clickSolved(screen, new DungeonPolicy.TerminalClick(click.get().slot(), button));
         return true;
-    }
-
-    public static boolean tryBreakerInstamine(BlockPos pos) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null || client.level == null || pos == null) {
-            return false;
-        }
-        QolSkyblockExtras extras = extras();
-        var stack = client.player.getMainHandItem();
-        String name = stack.getHoverName().getString();
-        String id = SkyBlockItemIdentity.skyBlockId(stack);
-        boolean holding = TempleDungeonPolicy.isDungeonBreakerItem(name, id);
-        int charges = DungeonPolicy.breakerCharges(InventoryChromeRuntime.loreLines(stack)).orElse(0);
-        boolean fatigue = client.player.hasEffect(MobEffects.MINING_FATIGUE);
-        if (!DungeonAthenPortPolicy.shouldInstamineBreaker(
-                extras.dungeonF7Enabled,
-                extras.athen().breakerInstamine,
-                holding,
-                fatigue,
-                charges,
-                fullBlockId(client, pos))) {
-            return false;
-        }
-        client.level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
-        return true;
-    }
-
-    public static boolean shouldSkipBreakerSecretMine(BlockPos pos) {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || client.player == null || client.level == null || pos == null) {
-            return false;
-        }
-        QolSkyblockExtras extras = extras();
-        if (!extras.dungeonF7Enabled || !extras.dungeonF7BreakerPreventSecrets) {
-            return false;
-        }
-        var stack = client.player.getMainHandItem();
-        String name = stack.getHoverName().getString();
-        String id = SkyBlockItemIdentity.skyBlockId(stack);
-        if (!TempleDungeonPolicy.isDungeonBreakerItem(name, id)) {
-            return false;
-        }
-        return TempleDungeonPolicy.shouldBlockBreakerOnSecret(true, true, fullBlockId(client, pos));
     }
 
     static void resetSplitPersonalBests() {

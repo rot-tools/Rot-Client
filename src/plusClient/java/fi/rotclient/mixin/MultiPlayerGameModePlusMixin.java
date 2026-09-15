@@ -1,5 +1,6 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.DungeonPlusInputRuntime;
 import fi.rotclient.QolClientFlavorSupport;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -24,6 +25,10 @@ abstract class MultiPlayerGameModePlusMixin {
             BlockPos pos,
             Direction face,
             CallbackInfoReturnable<Boolean> cir) {
+        if (DungeonPlusInputRuntime.shouldSkipBreakerSecretMine(pos)) {
+            cir.setReturnValue(false);
+            return;
+        }
         if (QolClientFlavorSupport.hooks().tryBreakerInstamine(pos)) {
             cir.setReturnValue(false);
         }
