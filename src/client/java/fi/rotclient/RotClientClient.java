@@ -1028,7 +1028,7 @@ public final class RotClientClient implements ClientModInitializer {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildCommandTree(
             String rootName,
             String legacyAlias) {
-        return literal(rootName)
+        LiteralArgumentBuilder<FabricClientCommandSource> root = literal(rootName)
                 .executes(context -> runCommand(
                         context.getSource(),
                         legacyAlias,
@@ -1090,43 +1090,6 @@ public final class RotClientClient implements ClientModInitializer {
                                         context.getSource(),
                                         legacyAlias,
                                         RotClientClient::shadowStatus))))
-                .then(literal("autoclicker")
-                        .then(literal("add")
-                                .then(literal("left")
-                                        .executes(context -> runCommand(
-                                                context.getSource(),
-                                                legacyAlias,
-                                                source -> QolClientFlavorSupport.hooks().autoClickerAdd(
-                                                        true,
-                                                        text -> source.sendFeedback(Component.literal(text))))))
-                                .then(literal("right")
-                                        .executes(context -> runCommand(
-                                                context.getSource(),
-                                                legacyAlias,
-                                                source -> QolClientFlavorSupport.hooks().autoClickerAdd(
-                                                        false,
-                                                        text -> source.sendFeedback(Component.literal(text)))))))
-                        .then(literal("remove")
-                                .then(literal("left")
-                                        .executes(context -> runCommand(
-                                                context.getSource(),
-                                                legacyAlias,
-                                                source -> QolClientFlavorSupport.hooks().autoClickerRemove(
-                                                        true,
-                                                        text -> source.sendFeedback(Component.literal(text))))))
-                                .then(literal("right")
-                                        .executes(context -> runCommand(
-                                                context.getSource(),
-                                                legacyAlias,
-                                                source -> QolClientFlavorSupport.hooks().autoClickerRemove(
-                                                        false,
-                                                        text -> source.sendFeedback(Component.literal(text)))))))
-                        .then(literal("list")
-                                .executes(context -> runCommand(
-                                        context.getSource(),
-                                        legacyAlias,
-                                        source -> QolClientFlavorSupport.hooks().autoClickerList(
-                                                text -> source.sendFeedback(Component.literal(text)))))))
                 .then(literal("bazaarsearch")
                         .executes(context -> runCommand(
                                 context.getSource(),
@@ -1335,16 +1298,6 @@ public final class RotClientClient implements ClientModInitializer {
                                         source -> openTermSimPing(
                                                 source,
                                                 IntegerArgumentType.getInteger(context, "ping"))))))
-                .then(literal("superboom")
-                        .then(literal("add")
-                                .executes(context -> runCommand(
-                                        context.getSource(), legacyAlias, RotClientClient::superboomAdd)))
-                        .then(literal("remove")
-                                .executes(context -> runCommand(
-                                        context.getSource(), legacyAlias, RotClientClient::superboomRemove)))
-                        .then(literal("list")
-                                .executes(context -> runCommand(
-                                        context.getSource(), legacyAlias, RotClientClient::superboomList))))
                 .then(literal("dcarry")
                         .executes(context -> runCommand(
                                 context.getSource(), legacyAlias, RotClientClient::dungeonCarryManager))
@@ -1522,8 +1475,10 @@ public final class RotClientClient implements ClientModInitializer {
                                                         source,
                                                         DoubleArgumentType.getDouble(
                                                                 context, "mining"),
-                                                        DoubleArgumentType.getDouble(
-                                                                context, "material")))))));
+                                                                DoubleArgumentType.getDouble(
+                                                                        context, "material")))))));
+        QolClientFlavorSupport.hooks().contributeCommands(root, legacyAlias);
+        return root;
     }
 
     private static int slayerHelp(FabricClientCommandSource source) {
@@ -1630,52 +1585,6 @@ public final class RotClientClient implements ClientModInitializer {
                             + " · " + carry.completed() + "/" + carry.total()));
         }
         return 1;
-    }
-
-    private static int superboomAdd(FabricClientCommandSource source) {
-        String blockId = lookedBlockId();
-        if (blockId.isBlank()) {
-            source.sendError(Component.literal("Look at a block first. Usage: /rot superboom add"));
-            return 0;
-        }
-        DungeonAthenSettings athen = qolConfigPublic().extras().athen();
-        athen.superboomExtraBlocks = DungeonAthenPortPolicy.addExtraBlock(athen.superboomExtraBlocks, blockId);
-        TrackerStore.save(CONFIG);
-        source.sendFeedback(Component.literal("Superboom extra block added: " + DungeonLeftoverPolicy.path(blockId)));
-        return 1;
-    }
-
-    private static int superboomRemove(FabricClientCommandSource source) {
-        String blockId = lookedBlockId();
-        if (blockId.isBlank()) {
-            source.sendError(Component.literal("Look at a block first. Usage: /rot superboom remove"));
-            return 0;
-        }
-        DungeonAthenSettings athen = qolConfigPublic().extras().athen();
-        athen.superboomExtraBlocks = DungeonAthenPortPolicy.removeExtraBlock(athen.superboomExtraBlocks, blockId);
-        TrackerStore.save(CONFIG);
-        source.sendFeedback(Component.literal("Superboom extra block removed: " + DungeonLeftoverPolicy.path(blockId)));
-        return 1;
-    }
-
-    private static int superboomList(FabricClientCommandSource source) {
-        String csv = qolConfigPublic().extras().athen().superboomExtraBlocks;
-        if (csv == null || csv.isBlank()) {
-            source.sendFeedback(Component.literal(
-                    "No extra Superboom blocks. Defaults still include cracked stone bricks and crypt walls."));
-            return 1;
-        }
-        source.sendFeedback(Component.literal("Superboom extra blocks: " + csv));
-        return 1;
-    }
-
-    private static String lookedBlockId() {
-        Minecraft client = Minecraft.getInstance();
-        if (client == null || !(client.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)
-                || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
-            return "";
-        }
-        return DungeonRuntime.lookedBlockId(client, hit.getBlockPos());
     }
 
     private static int dungeonCarryManager(FabricClientCommandSource source) {
@@ -4175,13 +4084,13 @@ private static int toggle(FabricClientCommandSource source) {
                 Other:
                 /rot slayer status | carry ...
                 /rot termsim [ping]
-                /rot superboom add|remove|list
                 /rot dcarry add|remove|list|history
                 /rot toggle|reset|status
 
                 Old aliases /rotclient, /miningtracker, /miningui still open
                 the dashboard and print a deprecation notice."""
                         .trim()));
+        QolClientFlavorSupport.hooks().commandHelp(source);
         return 1;
     }
 

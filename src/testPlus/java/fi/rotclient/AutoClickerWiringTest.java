@@ -29,13 +29,32 @@ final class AutoClickerWiringTest {
     }
 
     @Test
-    void rotclientCommandTreeIncludesAutoClickerWhitelist() throws Exception {
-        String source = Files.readString(Path.of(
+    void plusContributesAutoClickerAndSuperboomCommands() throws Exception {
+        String shared = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/RotClientClient.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(source.contains("literal(\"autoclicker\")"));
-        assertTrue(source.contains("autoClickerAdd"));
-        assertTrue(source.contains("autoClickerList"));
+        String plus = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/RotClientPlusCommands.java"),
+                StandardCharsets.UTF_8);
+        assertFalse(shared.contains("literal(\"autoclicker\")"));
+        assertFalse(shared.contains("literal(\"superboom\")"));
+        assertTrue(shared.contains("contributeCommands(root, legacyAlias)"));
+        assertTrue(plus.contains("literal(\"autoclicker\")"));
+        assertTrue(plus.contains("literal(\"superboom\")"));
+        assertTrue(plus.contains("autoClickerAdd"));
+        assertTrue(plus.contains("superboomAdd"));
+
+        var root = net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("rot");
+        RotClientPlusCommands.contribute(root, null);
+        var commands = root.build();
+        var clicker = commands.getChild("autoclicker");
+        var superboom = commands.getChild("superboom");
+        assertTrue(clicker.getChild("add").getChild("left") != null);
+        assertTrue(clicker.getChild("remove").getChild("right") != null);
+        assertTrue(clicker.getChild("list") != null);
+        assertTrue(superboom.getChild("add") != null);
+        assertTrue(superboom.getChild("remove") != null);
+        assertTrue(superboom.getChild("list") != null);
     }
 
     @Test
