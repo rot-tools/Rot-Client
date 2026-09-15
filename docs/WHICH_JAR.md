@@ -8,7 +8,7 @@ enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **108** HUD / QoL parents |
+| Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **106** HUD / QoL parents |
 | Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **133** parents (current full client) |
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify

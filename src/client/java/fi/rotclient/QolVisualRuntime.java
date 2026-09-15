@@ -510,11 +510,11 @@ public final class QolVisualRuntime {
     }
 
     public static void renderTrajectoryGizmos() {
-        TrajectoryRuntime.renderGizmos();
+        QolClientFlavorSupport.hooks().renderTrajectoryGizmos();
     }
 
     public static void renderWorldScannerGizmos() {
-        WorldScannerRuntime.renderGizmos();
+        QolClientFlavorSupport.hooks().renderWorldScannerGizmos();
     }
 
     public static void renderWaypointGizmos() {

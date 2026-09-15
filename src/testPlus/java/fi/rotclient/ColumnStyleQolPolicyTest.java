@@ -92,6 +92,20 @@ final class ColumnStyleQolPolicyTest {
         assertTrue(CommissionDisplayPolicy.parseTabLines(List.of(
                 "Fairy Souls: 50/250",
                 "Minions: 3/10")).isEmpty());
+
+        List<CommissionDisplayPolicy.Commission> current = CommissionDisplayPolicy.parseTabLines(List.of(
+                "Commission Progress",
+                "• Mithril Miner: 40 %",
+                "Titanium Miner - COMPLETED",
+                "Goblin Slayer 100%",
+                "HOTM:",
+                "Tier: 7"));
+        assertEquals(3, current.size());
+        assertEquals("Mithril Miner", current.get(0).name());
+        assertEquals(40.0F, current.get(0).progressPercent(), 0.01F);
+        assertTrue(current.get(1).done());
+        assertEquals("Goblin Slayer", current.get(2).name());
+        assertTrue(current.get(2).done());
     }
 
     @Test

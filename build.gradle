@@ -217,6 +217,15 @@ tasks.register('verifyLegitJar') {
 				'AutoClickerRuntime',
 				'FreecamRuntime',
 				'CameraFreecamMixin',
+				'TrajectoryRuntime',
+				'WorldScannerRuntime',
+				'GhostsRuntime',
+				'SlayerAutomationRuntime',
+				'DianaAutomationRuntime',
+				'MiningAutomationRuntime',
+				'ForagingAutomationRuntime',
+				'DungeonRequeueRuntime',
+				'MapArtOverrideRuntime',
 				'rotclient.plus.mixins.json'
 		]
 		def found = []

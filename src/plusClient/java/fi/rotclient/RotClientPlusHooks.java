@@ -102,6 +102,38 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public void trajectoryTick(Minecraft client) {
+        TrajectoryRuntime.tick(client);
+    }
+
+    @Override
+    public void renderTrajectoryGizmos() {
+        TrajectoryRuntime.renderGizmos();
+    }
+
+    @Override
+    public void worldScannerTick(Minecraft client) {
+        WorldScannerRuntime.tick(client);
+    }
+
+    @Override
+    public void worldScannerClear() {
+        WorldScannerRuntime.clear();
+    }
+
+    @Override
+    public void worldScannerOnChunkLoad(
+            net.minecraft.client.multiplayer.ClientLevel level,
+            net.minecraft.world.level.chunk.LevelChunk chunk) {
+        WorldScannerRuntime.onChunkLoad(level, chunk);
+    }
+
+    @Override
+    public void renderWorldScannerGizmos() {
+        WorldScannerRuntime.renderGizmos();
+    }
+
+    @Override
     public void slayerAutomationTick(Minecraft client) {
         SlayerAutomationRuntime.tick(client);
     }

@@ -26,14 +26,14 @@ import java.util.Optional;
  * (lerp of xo/yo/zo), and each step uses vanilla world clip instead of
  * per-voxel collision shapes so the line stays glued while jumping.
  */
-final class TrajectoryRuntime {
+public final class TrajectoryRuntime {
     private static int chargeTicks;
     private static int lastChargeTicks;
 
     private TrajectoryRuntime() {
     }
 
-    static void tick(Minecraft client) {
+    public static void tick(Minecraft client) {
         lastChargeTicks = chargeTicks;
         if (client == null || client.player == null) {
             chargeTicks = 0;
@@ -43,7 +43,7 @@ final class TrajectoryRuntime {
         chargeTicks = player.isUsingItem() ? player.getTicksUsingItem() : 0;
     }
 
-    static void renderGizmos() {
+    public static void renderGizmos() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.trajectoriesEnabled) {
             return;

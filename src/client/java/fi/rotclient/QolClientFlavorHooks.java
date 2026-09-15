@@ -53,6 +53,26 @@ public interface QolClientFlavorHooks {
     default void renderWorldGizmos() {
     }
 
+    default void trajectoryTick(Minecraft client) {
+    }
+
+    default void renderTrajectoryGizmos() {
+    }
+
+    default void worldScannerTick(Minecraft client) {
+    }
+
+    default void worldScannerClear() {
+    }
+
+    default void worldScannerOnChunkLoad(
+            net.minecraft.client.multiplayer.ClientLevel level,
+            net.minecraft.world.level.chunk.LevelChunk chunk) {
+    }
+
+    default void renderWorldScannerGizmos() {
+    }
+
     default void slayerAutomationTick(Minecraft client) {
     }
 

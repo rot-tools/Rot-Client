@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Crystal Hollows structure scan + named waypoints. Chunk work is queued and
  * section palettes skip empty / irrelevant 16³ cubes so the game does not hitch.
  */
-final class WorldScannerRuntime {
+public final class WorldScannerRuntime {
     private static final Map<String, WorldScannerPolicy.Hit> WAYPOINTS =
             new ConcurrentHashMap<>();
     private static final Map<Long, Integer> FLUID_ESP = new ConcurrentHashMap<>();
@@ -40,7 +40,7 @@ final class WorldScannerRuntime {
     private WorldScannerRuntime() {
     }
 
-    static void clear() {
+    public static void clear() {
         WAYPOINTS.clear();
         FLUID_ESP.clear();
         PENDING.clear();
@@ -50,7 +50,7 @@ final class WorldScannerRuntime {
         fluidRefreshTicks = 0;
     }
 
-    static void onChunkLoad(ClientLevel level, LevelChunk chunk) {
+    public static void onChunkLoad(ClientLevel level, LevelChunk chunk) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!WorldScannerPolicy.shouldScan(
                 qol.worldScannerEnabled,
@@ -61,7 +61,7 @@ final class WorldScannerRuntime {
         enqueue(chunk);
     }
 
-    static void tick(Minecraft client) {
+    public static void tick(Minecraft client) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         boolean enabled = qol.worldScannerEnabled;
         boolean inHollows = inCrystalHollows();
@@ -95,7 +95,7 @@ final class WorldScannerRuntime {
         refreshFluidsIfDue(client, qol);
     }
 
-    static void renderGizmos() {
+    public static void renderGizmos() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.worldScannerEnabled) {
             return;

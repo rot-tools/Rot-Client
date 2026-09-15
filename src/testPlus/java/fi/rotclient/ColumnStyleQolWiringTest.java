@@ -179,7 +179,7 @@ final class ColumnStyleQolWiringTest {
     @Test
     void worldScannerUsesPerTargetEsp() throws Exception {
         String source = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/WorldScannerRuntime.java"),
+                "src/plusClient/java/fi/rotclient/WorldScannerRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("WorldScannerEspSettings.idForHit"));
         assertTrue(source.contains("target.tracer"));

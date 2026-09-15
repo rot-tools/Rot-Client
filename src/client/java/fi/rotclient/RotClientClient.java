@@ -565,7 +565,7 @@ public final class RotClientClient implements ClientModInitializer {
                     });
             ClientBoundaryGuard.run(
                     "WORLD_SCANNER",
-                    () -> WorldScannerRuntime.tick(client));
+                    () -> QolClientFlavorSupport.hooks().worldScannerTick(client));
             ClientBoundaryGuard.run(
                     "FISHING_HELPER",
                     () -> FishingHelperRuntime.tick(client));
@@ -595,7 +595,7 @@ public final class RotClientClient implements ClientModInitializer {
                     () -> DungeonRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "TRAJECTORIES",
-                    () -> TrajectoryRuntime.tick(client));
+                    () -> QolClientFlavorSupport.hooks().trajectoryTick(client));
             ClientBoundaryGuard.run(
                     "CHAT_COMMANDS",
                     () -> ChatCommandsRuntime.tick(client));
@@ -772,7 +772,7 @@ public final class RotClientClient implements ClientModInitializer {
             CURRENT_SESSION.pauseForOffline(now);
             CURRENT_SESSION.flushIfDirty(now, true);
             onShadowWorldChanged();
-            WorldScannerRuntime.clear();
+            QolClientFlavorSupport.hooks().worldScannerClear();
             MiningLeftoverRuntime.clear();
             DianaRuntime.clear();
             ForagingRuntime.clear();
@@ -792,7 +792,7 @@ public final class RotClientClient implements ClientModInitializer {
                         () -> {
                             if (world instanceof net.minecraft.client.multiplayer.ClientLevel level
                                     && chunk instanceof net.minecraft.world.level.chunk.LevelChunk loaded) {
-                                WorldScannerRuntime.onChunkLoad(level, loaded);
+                                QolClientFlavorSupport.hooks().worldScannerOnChunkLoad(level, loaded);
                             }
                         }));
         ClientReceiveMessageEvents.GAME.register((message, overlay) ->
