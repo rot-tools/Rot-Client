@@ -168,6 +168,28 @@ final class DungeonAthenPortPolicyTest {
     }
 
     @Test
+    void skyCryptHttpFailureCannotBeMistakenForMissingPlayerStats() {
+        String profile = "{\"secrets_found\":50000}";
+        var success = DungeonProfileStatsService.response(200, profile, "F7");
+        assertFalse(success.failed());
+        assertTrue(success.stats().isPresent());
+
+        for (int status : List.of(403, 429, 500)) {
+            var failure = DungeonProfileStatsService.response(status, profile, "F7");
+            assertTrue(failure.failed());
+            assertEquals("SkyCrypt HTTP " + status, failure.failure());
+            assertTrue(failure.stats().isEmpty());
+        }
+
+        assertEquals("SkyCrypt invalid response",
+                DungeonProfileStatsService.response(200, "<html>error</html>", "F7").failure());
+        assertEquals("SkyCrypt empty response",
+                DungeonProfileStatsService.response(200, "", "F7").failure());
+        assertEquals("SkyCrypt error response",
+                DungeonProfileStatsService.response(200, "{\"error\":\"rate limited\"}", "F7").failure());
+    }
+
+    @Test
     void breakerInstamineSkipsSecrets() {
         assertTrue(DungeonAthenPortPolicy.shouldInstamineBreaker(
                 true, true, true, true, 3, "minecraft:stone"));
