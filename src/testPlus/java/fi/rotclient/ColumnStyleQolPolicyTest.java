@@ -191,24 +191,30 @@ final class ColumnStyleQolPolicyTest {
 
     @Test
     void qolConfigRoundTripsNewSettings() {
-        QolUtilityConfig config = new QolUtilityConfig();
-        config.writeBoolean("qol.auto_conversation.green", false);
-        assertFalse(config.readBoolean("qol.auto_conversation.green"));
-        assertTrue(config.writeNumber("qol.fishing_helper.pull_delay", 6));
-        assertEquals(6.0D, config.readNumber("qol.fishing_helper.pull_delay"));
-        assertTrue(config.writeColor("qol.item_rarity.legendary", 0xFF112233));
-        assertEquals(0xFF112233, config.readColor("qol.item_rarity.legendary"));
-        assertTrue(config.writeKeybind("qol.missing_enchants.keybind", ""));
-        assertEquals("", config.readKeybind("qol.missing_enchants.keybind"));
-        config.writeBoolean("qol.world_scanner.target.fairy.enabled", false);
-        assertFalse(config.worldScannerFairyGrottos);
-        assertFalse(config.readBoolean("qol.world_scanner.target.fairy.enabled"));
-        assertTrue(config.writeEnum("qol.world_scanner.target.divan.style", "Outline"));
-        assertEquals("Outline", config.readEnum("qol.world_scanner.target.divan.style"));
-        assertTrue(config.writeColor("qol.world_scanner.target.divan.color", 0xFF00FF00));
-        assertEquals(0xFF00FF00, config.readColor("qol.world_scanner.target.divan.color"));
-        assertEquals(80.0F, config.pose("commission")[1], 0.01F);
-        assertTrue(config.resetModuleToDefaults("qol.auto_conversation"));
-        assertTrue(config.autoConversationGreen);
+        QolFlavorExtension previous = QolFlavorSupport.extension();
+        QolFlavorSupport.install(new RotClientPlusExtension());
+        try {
+            QolUtilityConfig config = new QolUtilityConfig();
+            config.writeBoolean("qol.auto_conversation.green", false);
+            assertFalse(config.readBoolean("qol.auto_conversation.green"));
+            assertTrue(config.writeNumber("qol.fishing_helper.pull_delay", 6));
+            assertEquals(6.0D, config.readNumber("qol.fishing_helper.pull_delay"));
+            assertTrue(config.writeColor("qol.item_rarity.legendary", 0xFF112233));
+            assertEquals(0xFF112233, config.readColor("qol.item_rarity.legendary"));
+            assertTrue(config.writeKeybind("qol.missing_enchants.keybind", ""));
+            assertEquals("", config.readKeybind("qol.missing_enchants.keybind"));
+            config.writeBoolean("qol.world_scanner.target.fairy.enabled", false);
+            assertFalse(config.worldScannerFairyGrottos);
+            assertFalse(config.readBoolean("qol.world_scanner.target.fairy.enabled"));
+            assertTrue(config.writeEnum("qol.world_scanner.target.divan.style", "Outline"));
+            assertEquals("Outline", config.readEnum("qol.world_scanner.target.divan.style"));
+            assertTrue(config.writeColor("qol.world_scanner.target.divan.color", 0xFF00FF00));
+            assertEquals(0xFF00FF00, config.readColor("qol.world_scanner.target.divan.color"));
+            assertEquals(80.0F, config.pose("commission")[1], 0.01F);
+            assertTrue(config.resetModuleToDefaults("qol.auto_conversation"));
+            assertTrue(config.readBoolean("qol.auto_conversation.green"));
+        } finally {
+            QolFlavorSupport.install(previous);
+        }
     }
 }

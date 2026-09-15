@@ -1,8 +1,5 @@
 package fi.rotclient;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 /** Plus-owned Secret Hitboxes settings stored in opaque edition fields. */
 record SecretHitboxesSettings(
         boolean enabled,
@@ -29,34 +26,19 @@ record SecretHitboxesSettings(
     }
 
     static boolean read(QolUtilityConfig config, String key, boolean fallback) {
-        JsonObject fields = fields(config);
-        JsonElement value = fields.get(key);
-        return value != null && value.isJsonPrimitive()
-                && value.getAsJsonPrimitive().isBoolean()
-                ? value.getAsBoolean() : fallback;
+        return PlusOpaqueSettings.bool(config, key, fallback);
     }
 
     static void write(QolUtilityConfig config, String key, boolean value) {
-        fields(config).addProperty(key, value);
+        PlusOpaqueSettings.write(config, key, value);
     }
 
     static void reset(QolUtilityConfig config) {
-        JsonObject fields = fields(config);
-        fields.remove("secretHitboxesEnabled");
-        fields.remove("secretHitboxesOnlyDungeons");
-        fields.remove("secretHitboxesLever");
-        fields.remove("secretHitboxesOldLever");
-        fields.remove("secretHitboxesButton");
-        fields.remove("secretHitboxesFlatButton");
-        fields.remove("secretHitboxesSkull");
-        fields.remove("secretHitboxesChests");
-        fields.remove("secretHitboxesOnlyTrappedChests");
-    }
-
-    private static JsonObject fields(QolUtilityConfig config) {
-        if (config.extensionFields == null) {
-            config.extensionFields = new JsonObject();
-        }
-        return config.extensionFields;
+        PlusOpaqueSettings.reset(config,
+                "secretHitboxesEnabled", "secretHitboxesOnlyDungeons",
+                "secretHitboxesLever", "secretHitboxesOldLever",
+                "secretHitboxesButton", "secretHitboxesFlatButton",
+                "secretHitboxesSkull", "secretHitboxesChests",
+                "secretHitboxesOnlyTrappedChests");
     }
 }

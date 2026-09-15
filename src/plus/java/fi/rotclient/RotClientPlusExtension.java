@@ -41,7 +41,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean isGameplayCheatModule(String moduleId) {
-        return "qol.secret_hitboxes".equals(moduleId);
+        return "qol.secret_hitboxes".equals(moduleId)
+                || "qol.inventory_walk".equals(moduleId);
     }
 
     @Override
@@ -93,6 +94,12 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            return AutoConversationSettings.from(config).enabled();
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            return InventoryWalkSettings.from(config).enabled();
+        }
         if ("qol.secret_hitboxes".equals(moduleId)) {
             return SecretHitboxesSettings.from(config).enabled();
         }
@@ -105,6 +112,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            AutoConversationSettings.write(config, "autoConversationEnabled", enabled);
+            return true;
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            InventoryWalkSettings.enabled(config, enabled);
+            return true;
+        }
         if ("qol.secret_hitboxes".equals(moduleId)) {
             SecretHitboxesSettings.write(config, "secretHitboxesEnabled", enabled);
             return true;
@@ -122,6 +137,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.auto_conversation.multi" -> AutoConversationSettings.from(config).multi();
+            case "qol.auto_conversation.green" -> AutoConversationSettings.from(config).green();
             case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.from(config).onlyDungeons();
             case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.from(config).lever();
             case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.from(config).oldLever();
@@ -148,6 +165,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return false;
         }
         switch (settingId) {
+            case "qol.auto_conversation.multi" -> AutoConversationSettings.write(config, "autoConversationMulti", value);
+            case "qol.auto_conversation.green" -> AutoConversationSettings.write(config, "autoConversationGreen", value);
             case "qol.secret_hitboxes.only_dungeons" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyDungeons", value);
             case "qol.secret_hitboxes.lever" -> SecretHitboxesSettings.write(config, "secretHitboxesLever", value);
             case "qol.secret_hitboxes.old_lever" -> SecretHitboxesSettings.write(config, "secretHitboxesOldLever", value);
@@ -176,6 +195,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return null;
         }
         return switch (settingId) {
+            case "qol.auto_conversation.delay" -> (double) AutoConversationSettings.from(config).delayTicks();
+            case "qol.inventory_walk.ping" -> (double) InventoryWalkSettings.from(config).pingMs();
             case "qol.auto_clicker.cps" -> (double) config.autoClickerCps;
             case "qol.auto_clicker.left_cps" -> (double) config.autoClickerLeftCps;
             case "qol.auto_clicker.right_cps" -> (double) config.autoClickerRightCps;
@@ -190,6 +211,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return false;
         }
         switch (settingId) {
+            case "qol.auto_conversation.delay" -> AutoConversationSettings.delayTicks(config, (int) Math.round(value));
+            case "qol.inventory_walk.ping" -> InventoryWalkSettings.pingMs(config, (int) Math.round(value));
             case "qol.auto_clicker.cps" ->
                     config.autoClickerCps = AutoClickerPolicy.clampCps((float) value);
             case "qol.auto_clicker.left_cps" ->
@@ -231,6 +254,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.auto_conversation".equals(moduleId)) {
+            AutoConversationSettings.reset(config);
+            return true;
+        }
+        if ("qol.inventory_walk".equals(moduleId)) {
+            InventoryWalkSettings.reset(config);
+            return true;
+        }
         if ("qol.secret_hitboxes".equals(moduleId)) {
             SecretHitboxesSettings.reset(config);
             return true;

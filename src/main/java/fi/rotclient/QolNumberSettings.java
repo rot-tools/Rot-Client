@@ -144,8 +144,7 @@ public final class QolNumberSettings {
                             WorldScannerPolicy.MAX_ESP_RANGE,
                             1.0D,
                             true);
-            case "qol.auto_conversation.delay",
-                 "qol.fishing_helper.pull_delay",
+            case "qol.fishing_helper.pull_delay",
                  "qol.fishing_helper.pull_variance",
                  "qol.fishing_helper.recast_delay",
                  "qol.fishing_helper.recast_variance",

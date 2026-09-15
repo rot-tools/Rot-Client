@@ -290,7 +290,6 @@ public final class QolUtilityCatalog {
         return switch (id) {
             case "qol.cheater_wardrobe",
                     "qol.farm_keys",
-                    "qol.inventory_walk",
                     "qol.freecam",
                     "qol.camera",
                     "qol.diana_share",

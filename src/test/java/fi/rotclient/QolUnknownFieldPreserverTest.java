@@ -17,10 +17,20 @@ final class QolUnknownFieldPreserverTest {
         JsonObject unknown = JsonParser.parseString(
                 "{\"enabled\":true,\"options\":[1,\"keep\"]}").getAsJsonObject();
         qol.add("futureEditionModule", unknown);
+        qol.addProperty("inventoryWalkEnabled", true);
+        qol.addProperty("inventoryWalkPingMs", 320);
+        qol.addProperty("autoConversationEnabled", true);
+        qol.addProperty("autoConversationMulti", false);
+        qol.addProperty("autoConversationDelayTicks", 9);
         qol.addProperty("commissionDisplayTitle", "Known field");
 
         TrackerConfig loaded = TrackerStore.fromJson(original);
         assertEquals(unknown, loaded.qolUtilities.extensionFields.get("futureEditionModule"));
+        assertTrue(loaded.qolUtilities.extensionFields.get("inventoryWalkEnabled").getAsBoolean());
+        assertEquals(320, loaded.qolUtilities.extensionFields.get("inventoryWalkPingMs").getAsInt());
+        assertTrue(loaded.qolUtilities.extensionFields.get("autoConversationEnabled").getAsBoolean());
+        assertFalse(loaded.qolUtilities.extensionFields.get("autoConversationMulti").getAsBoolean());
+        assertEquals(9, loaded.qolUtilities.extensionFields.get("autoConversationDelayTicks").getAsInt());
         assertFalse(loaded.qolUtilities.extensionFields.has("commissionDisplayTitle"));
         assertTrue(qol.has("futureEditionModule"));
         assertFalse(qol.getAsJsonObject("extensionFields").has("futureEditionModule"));
@@ -28,6 +38,10 @@ final class QolUnknownFieldPreserverTest {
         JsonObject saved = TrackerStore.toJson(loaded);
         assertEquals(unknown, saved.getAsJsonObject("qolUtilities")
                 .getAsJsonObject("extensionFields").get("futureEditionModule"));
+        assertEquals(320, saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields").get("inventoryWalkPingMs").getAsInt());
+        assertEquals(9, saved.getAsJsonObject("qolUtilities")
+                .getAsJsonObject("extensionFields").get("autoConversationDelayTicks").getAsInt());
         assertEquals(unknown, TrackerStore.fromJson(saved).qolUtilities
                 .extensionFields.get("futureEditionModule"));
     }

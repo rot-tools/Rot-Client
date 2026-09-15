@@ -82,8 +82,9 @@ public final class InventoryWalkRuntime {
             }
             return;
         }
+        InventoryWalkSettings settings = InventoryWalkSettings.from(qol);
         boolean apply = InventoryWalkPolicy.shouldApplyMovement(
-                qol.inventoryWalkEnabled,
+                settings.enabled(),
                 true,
                 screen.isPauseScreen(),
                 textFieldFocused(screen),
@@ -91,7 +92,7 @@ public final class InventoryWalkRuntime {
                 System.currentTimeMillis(),
                 lastPing,
                 clickTime,
-                qol.inventoryWalkPingMs);
+                settings.pingMs());
         KeyMapping[] keys = movementKeys(client);
         if (!apply) {
             release(keys);
@@ -172,7 +173,8 @@ public final class InventoryWalkRuntime {
     }
 
     private static boolean walkEnabled(Minecraft client) {
-        return client != null && RotClientClient.qolConfigPublic().inventoryWalkEnabled;
+        return client != null && InventoryWalkSettings.from(
+                RotClientClient.qolConfigPublic()).enabled();
     }
 
     private static boolean screenOpen(Minecraft client) {

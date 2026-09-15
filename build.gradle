@@ -212,6 +212,8 @@ tasks.register('verifyLegitJar') {
 				'qol.auto_clicker',
 				'qol.secret_hitboxes',
 				'secretHitboxes',
+				'qol.inventory_walk',
+				'qol.auto_conversation',
 				'AutoClickerRuntime',
 				'FreecamRuntime',
 				'CameraFreecamMixin',
