@@ -86,6 +86,64 @@ final class HudLayoutLandingPolicyTest {
         assertEquals(
                 "qol.player_display.health_hud",
                 HudLayoutLandingPolicy.disableForPose("health").settingId());
+
+        HudLayoutLandingPolicy.Disable carry =
+                HudLayoutLandingPolicy.disableForPose(
+                        "dungeon_carry");
+
+        assertNotNull(carry);
+        assertEquals(
+                "qol.dungeon_carry.display",
+                carry.settingId());
+        assertFalse(
+                carry.moduleToggle());
+
+        HudLayoutLandingPolicy.Disable watcher =
+                HudLayoutLandingPolicy.disableForPose(
+                        "dungeon_watcher");
+
+        assertNotNull(watcher);
+        assertEquals(
+                "qol.dungeon_watcher.blood_timers",
+                watcher.settingId());
+        assertFalse(
+                watcher.moduleToggle());
+
+        QolUtilityConfig qol =
+                new QolUtilityConfig();
+
+        DungeonAthenSettings athen =
+                qol.extras().athen();
+
+        athen.carryEnabled = true;
+        athen.carryDisplay = true;
+        athen.watcherEnabled = true;
+        athen.watcherBloodTimers = true;
+
+        assertTrue(
+                HudLayoutLandingPolicy.hide(
+                        qol,
+                        carry.settingId(),
+                        carry.moduleToggle()));
+
+        assertTrue(
+                athen.carryEnabled);
+
+        assertFalse(
+                athen.carryDisplay);
+
+        assertTrue(
+                HudLayoutLandingPolicy.hide(
+                        qol,
+                        watcher.settingId(),
+                        watcher.moduleToggle()));
+
+        assertTrue(
+                athen.watcherEnabled);
+
+        assertFalse(
+                athen.watcherBloodTimers);
+
         assertNotNull(HudLayoutLandingPolicy.disableForPose("mining_tracker"));
         assertEquals("qol.wardrobe_keybinds",
                 HudLayoutLandingPolicy.disableForPose("wardrobe").settingId());

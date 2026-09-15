@@ -4941,12 +4941,15 @@ final class QolUtilityDashboard {
                                 true);
                     }
 
-                    RotClientUiDraw.drawToggle(
+                    RotClientUiDraw.drawAnimatedToggle(
                             graphics,
                             toggleX,
                             y + 16,
                             on,
-                            hover);
+                            hover,
+                            "hud-layout-toggle:"
+                                    + row.settingId(),
+                            accentColor());
 
                     y +=
                             HudLayoutLandingPolicy.ROW_HEIGHT

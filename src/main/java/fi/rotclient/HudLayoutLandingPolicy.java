@@ -101,17 +101,17 @@ public final class HudLayoutLandingPolicy {
                 MiningTrackerCatalogPolicy.POWDER,
                 "Mining"));
         addExtra(grouped, extra(
-                "qol.dungeon_carry",
+                "qol.dungeon_carry.display",
                 "Dungeon Carry Display",
                 "Active dungeon-floor carry progress. Settings match Modules → Dungeon Carry Tracker.",
-                true,
+                false,
                 "qol.dungeon_carry",
                 "Dungeons"));
         addExtra(grouped, extra(
-                "qol.dungeon_watcher",
+                "qol.dungeon_watcher.blood_timers",
                 "Blood Timers",
                 "Watcher speak/move/spawn timers. Settings match Modules → Watcher Helper.",
-                true,
+                false,
                 "qol.dungeon_watcher",
                 "Dungeons"));
         addExtra(grouped, extra(
@@ -268,8 +268,15 @@ public final class HudLayoutLandingPolicy {
             case "fishing" -> new Disable("qol.fishing_helper.hook_timer_hud", false);
             case "mining" -> new Disable("qol.mining_helpers.ability_hud", false);
             case "dungeon" -> new Disable("qol.dungeon_hud", true);
-            case "dungeon_carry" -> new Disable("qol.dungeon_carry", true);
-            case "dungeon_watcher" -> new Disable("qol.dungeon_watcher", true);
+            case "dungeon_carry" ->
+                    new Disable(
+                            "qol.dungeon_carry.display",
+                            false);
+
+            case "dungeon_watcher" ->
+                    new Disable(
+                            "qol.dungeon_watcher.blood_timers",
+                            false);
             case "slayer" -> new Disable("qol.slayer_display", true);
             case "slayer_progress" -> new Disable("qol.slayer_progress", true);
             case "slayer_rng" -> new Disable("qol.slayer_drops.rng_hud", false);

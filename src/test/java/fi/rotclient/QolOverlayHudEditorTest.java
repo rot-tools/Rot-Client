@@ -72,6 +72,139 @@ final class QolOverlayHudEditorTest {
     }
 
     @Test
+    void hiddenDungeonCarryAndBloodTimerPreviewsRemainFullyEditable() {
+        TrackerConfig tracker =
+                new TrackerConfig();
+
+        DungeonAthenSettings athen =
+                tracker.qolUtilities
+                        .extras()
+                        .athen();
+
+        athen.carryEnabled = false;
+        athen.carryDisplay = true;
+        athen.watcherEnabled = false;
+        athen.watcherBloodTimers = true;
+
+        tracker.qolUtilities.setPose(
+                "dungeon_carry",
+                20.0F,
+                160.0F);
+
+        tracker.qolUtilities.setPose(
+                "dungeon_watcher",
+                20.0F,
+                240.0F);
+
+        QolOverlayHud overlay =
+                new QolOverlayHud(
+                        tracker);
+
+        overlay.setEditorOpen(
+                true);
+
+        assertTrue(
+                overlay.editorElementLabels()
+                        .contains(
+                                "Dungeon Carry Display"));
+
+        assertTrue(
+                overlay.editorElementLabels()
+                        .contains(
+                                "Blood Timers"));
+
+        assertEquals(
+                "dungeon_carry",
+                overlay.elementAt(
+                        25.0D,
+                        165.0D));
+
+        assertTrue(
+                overlay.beginDrag(
+                        25.0D,
+                        165.0D));
+
+        assertEquals(
+                "Dungeon Carry Display",
+                overlay.selectedElementLabel());
+
+        assertTrue(
+                overlay.centerSelectedHorizontally(
+                        400));
+
+        assertEquals(
+                122.0F,
+                tracker.qolUtilities
+                        .pose("dungeon_carry")[0],
+                0.01F);
+
+        assertTrue(
+                overlay.resetSelectedPosition());
+
+        float[] defaultCarry =
+                new QolUtilityConfig()
+                        .pose(
+                                "dungeon_carry");
+
+        assertEquals(
+                defaultCarry[0],
+                tracker.qolUtilities
+                        .pose("dungeon_carry")[0],
+                0.01F);
+
+        assertEquals(
+                defaultCarry[1],
+                tracker.qolUtilities
+                        .pose("dungeon_carry")[1],
+                0.01F);
+
+        assertEquals(
+                "dungeon_watcher",
+                overlay.elementAt(
+                        25.0D,
+                        245.0D));
+
+        assertTrue(
+                overlay.beginDrag(
+                        25.0D,
+                        245.0D));
+
+        assertEquals(
+                "Blood Timers",
+                overlay.selectedElementLabel());
+
+        assertTrue(
+                overlay.centerSelectedHorizontally(
+                        400));
+
+        assertEquals(
+                122.0F,
+                tracker.qolUtilities
+                        .pose("dungeon_watcher")[0],
+                0.01F);
+
+        assertTrue(
+                overlay.resetSelectedPosition());
+
+        float[] defaultWatcher =
+                new QolUtilityConfig()
+                        .pose(
+                                "dungeon_watcher");
+
+        assertEquals(
+                defaultWatcher[0],
+                tracker.qolUtilities
+                        .pose("dungeon_watcher")[0],
+                0.01F);
+
+        assertEquals(
+                defaultWatcher[1],
+                tracker.qolUtilities
+                        .pose("dungeon_watcher")[1],
+                0.01F);
+    }
+
+    @Test
     void wheelOverAHudScalesThatElement() {
         TrackerConfig tracker = new TrackerConfig();
         tracker.qolUtilities.playerDisplayEnabled = true;
