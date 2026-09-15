@@ -282,8 +282,6 @@ public final class QolNumberSettings {
                     new Spec(1.0D, 60.0D, 1.0D, true);
             case "qol.dungeon_esp.secret_clicked_seconds" ->
                     new Spec(1.0D, 120.0D, 1.0D, true);
-            case "qol.dungeon_termsim.ping" ->
-                    new Spec(0.0D, 500.0D, 50.0D, true);
             case "qol.dungeon_esp.trigger_delay" ->
                     new Spec(0.0D, 1000.0D, 50.0D, true);
             case "qol.dungeon_hud.cheater_darken_factor" ->

@@ -4417,8 +4417,8 @@ final class QolUtilityDashboard {
             TrackerStore.save(config);
             return;
         }
-        if ("qol.dungeon_termsim.open".equals(settingId)) {
-            TermSimRuntime.openFromCommand(-1);
+        if (QolClientFlavorSupport.hooks().handleDashboardAction(settingId)) {
+            TrackerStore.save(config);
             return;
         }
         if ("qol.dungeon_hud.reset_split_pbs".equals(settingId)) {

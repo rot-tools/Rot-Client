@@ -35,9 +35,9 @@ public final class TermSimRuntime {
     }
 
     public static void openHub() {
-        QolSkyblockExtras extras = extras();
-        java.util.Map<TermSimPolicy.Kind, Integer> pbs = extras.dungeonTermSimShowPbs
-                ? DungeonLeftoverPolicy.parsePersonalBests(extras.dungeonTermSimPbs)
+        TermSimSettings settings = settings();
+        java.util.Map<TermSimPolicy.Kind, Integer> pbs = settings.showPbs()
+                ? TermSimPersonalBestPolicy.parsePersonalBests(settings.pbs())
                 : java.util.Map.of();
         open(TermSimPolicy.hub(pbs));
         practiceStarted = 0L;
@@ -94,18 +94,16 @@ public final class TermSimRuntime {
     }
 
     static void openFromCommand(int pingMillis) {
-        QolSkyblockExtras extras = extras();
-        if (!extras.dungeonTermSimEnabled) {
-            extras.dungeonTermSimEnabled = true;
-        }
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        if (!TermSimSettings.from(config).enabled()) TermSimSettings.enabled(config, true);
         if (pingMillis >= 0) {
-            extras.dungeonTermSimPing = Math.max(0, Math.min(500, pingMillis));
+            TermSimSettings.ping(config, pingMillis);
         }
         openHub();
     }
 
     private static void requestClick(TermSimScreen screen, int slot, int button) {
-        int delay = TermSimPolicy.pingTicks(extras().dungeonTermSimPing);
+        int delay = TermSimPolicy.pingTicks(settings().ping());
         if (delay <= 0) {
             applyClick(screen, slot, button);
             return;
@@ -124,7 +122,7 @@ public final class TermSimRuntime {
         }
         if (layout.kind() == TermSimPolicy.Kind.HUB) {
             if (slot == TermSimPolicy.HUB_RESET) {
-                extras().dungeonTermSimPbs = "";
+                TermSimSettings.pbs(RotClientClient.qolConfigPublic(), "");
                 TermSimScreen.playClick();
                 openHub();
                 return;
@@ -160,10 +158,10 @@ public final class TermSimRuntime {
             return;
         }
         int millis = (int) Math.max(1L, System.currentTimeMillis() - practiceStarted);
-        QolSkyblockExtras extras = extras();
-        var pbs = DungeonLeftoverPolicy.parsePersonalBests(extras.dungeonTermSimPbs);
-        if (DungeonLeftoverPolicy.recordPersonalBest(pbs, kind, millis)) {
-            extras.dungeonTermSimPbs = DungeonLeftoverPolicy.writePersonalBests(pbs);
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        var pbs = TermSimPersonalBestPolicy.parsePersonalBests(TermSimSettings.from(config).pbs());
+        if (TermSimPersonalBestPolicy.recordPersonalBest(pbs, kind, millis)) {
+            TermSimSettings.pbs(config, TermSimPersonalBestPolicy.writePersonalBests(pbs));
         }
     }
 
@@ -178,7 +176,7 @@ public final class TermSimRuntime {
         client.gui.setScreen(TermSimScreen.create(next));
     }
 
-    private static QolSkyblockExtras extras() {
-        return RotClientClient.qolConfigPublic().extras();
+    private static TermSimSettings settings() {
+        return TermSimSettings.from(RotClientClient.qolConfigPublic());
     }
 }

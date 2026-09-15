@@ -18,6 +18,12 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
+    public void registerStandaloneCommands(
+            com.mojang.brigadier.CommandDispatcher<
+                    net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> dispatcher) {
+        RotClientPlusCommands.registerStandalone(dispatcher);
+    }
+    @Override
     public void contributeCommands(
             com.mojang.brigadier.builder.LiteralArgumentBuilder<
                     net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> root,
@@ -300,6 +306,19 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public boolean termSimIsOpen() { return TermSimRuntime.isOpen(); }
+
+    @Override
+    public void termSimClick(int slot, int button) { TermSimRuntime.click(slot, button); }
+
+    @Override
+    public boolean termSimOnSlotClicked(AbstractContainerScreen<?> screen,
+                                        net.minecraft.world.inventory.Slot slot, int button) {
+        return screen instanceof TermSimScreen termSim
+                && TermSimRuntime.onSlotClicked(termSim, slot, button);
+    }
+
+    @Override
     public void dungeonTerminalClickRender(
             AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
         DungeonTerminalClickRuntime.render(screen, graphics);
@@ -378,6 +397,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void plusModuleKeybindTick(Minecraft client) {
         PlusModuleKeybindRuntime.tick(client);
+        TermSimKeybindRuntime.tick(client);
     }
 
     @Override
@@ -527,6 +547,10 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public boolean handleDashboardAction(String settingId) {
+        if ("qol.dungeon_termsim.open".equals(settingId)) {
+            TermSimRuntime.openFromCommand(-1);
+            return true;
+        }
         if ("qol.auto_sell.add_defaults".equals(settingId)) {
             return AutoSellRuntime.addDefaults();
         }

@@ -92,7 +92,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** currently ships **100** HUD/QoL parents. **Rot Client+** ships
+**Rot Client** currently ships **99** HUD/QoL parents. **Rot Client+** ships
 **134**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
@@ -108,7 +108,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Render** | Fullbright, viewmodel, player size, eye-height fix, and legacy textures. **Plus:** Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers are Rot Client+ |
-| **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+ |
+| **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+ |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
@@ -159,7 +159,7 @@ The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/Min
 | `/rot slayer ...` | Slayer status, stats, and carry list |
 | `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history |
 | `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (Rot Client+) |
-| `/rot termsim [ping]` | Local terminal simulator hub |
+| `/rot termsim [ping]` | Rot Client+ local terminal simulator hub |
 | `/rot autoclicker ...` | Auto Clicker item whitelist (Rot Client+) |
 | `/rot fortune auto\|<mining> [material]` | Material Fortune input |
 

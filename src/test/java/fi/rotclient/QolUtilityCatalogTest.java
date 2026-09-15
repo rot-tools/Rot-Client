@@ -117,7 +117,6 @@ final class QolUtilityCatalogTest {
                 "qol.dungeon_announce",
                 "qol.dungeon_leap",
                 "qol.dungeon_terminals",
-                "qol.dungeon_termsim",
                 "qol.dungeon_puzzles",
                 "qol.dungeon_f7",
                 "qol.dungeon_menus",
@@ -230,7 +229,6 @@ final class QolUtilityCatalogTest {
                 .anyMatch(m -> m.id().equals("qol.dungeon_hud")));
         assertEquals("HUD", QolUtilityCatalog.findById("qol.dungeon_hud").section());
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_terminals").section());
-        assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertEquals("Kuudra", QolUtilityCatalog.findById("qol.iota").section());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.KUUDRA)
                 .stream()
@@ -238,7 +236,7 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(12, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertEquals(11, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
@@ -368,7 +366,6 @@ final class QolUtilityCatalogTest {
                         && !id.equals("qol.dungeon_carry.open_manager")
                         && !id.equals("qol.slayer_stats.reset_session")
                         && !id.equals("qol.slayer_drops.open_filter_editor")
-                        && !id.equals("qol.dungeon_termsim.open")
                         && !id.equals("qol.dungeon_hud.reset_split_pbs")
                         && !id.equals("qol.dungeon_hud.reset_kuudra_pbs")
                         && !id.equals("qol.dungeon_f7.reset_term_pbs")
@@ -416,6 +413,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(100, moduleIds.size());
+        assertEquals(99, moduleIds.size());
     }
 }

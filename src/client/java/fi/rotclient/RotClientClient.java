@@ -996,12 +996,7 @@ public final class RotClientClient implements ClientModInitializer {
                             context.getSource(),
                             "miningui",
                             RotClientClient::openMiningUi)));
-            dispatcher.register(literal("termsim")
-                    .executes(context -> openTermSim(context.getSource()))
-                    .then(argument("ping", IntegerArgumentType.integer(0, 500))
-                            .executes(context -> openTermSimPing(
-                                    context.getSource(),
-                                    IntegerArgumentType.getInteger(context, "ping")))));
+            QolClientFlavorSupport.hooks().registerStandaloneCommands(dispatcher);
         });
     }
 
@@ -1288,16 +1283,6 @@ public final class RotClientClient implements ClientModInitializer {
                                                         source -> slayerCarryComplete(
                                                                 source,
                                                                 StringArgumentType.getString(context, "player"))))))))
-                .then(literal("termsim")
-                        .executes(context -> runCommand(
-                                context.getSource(), legacyAlias, RotClientClient::openTermSim))
-                        .then(argument("ping", IntegerArgumentType.integer(0, 500))
-                                .executes(context -> runCommand(
-                                        context.getSource(),
-                                        legacyAlias,
-                                        source -> openTermSimPing(
-                                                source,
-                                                IntegerArgumentType.getInteger(context, "ping"))))))
                 .then(literal("dcarry")
                         .executes(context -> runCommand(
                                 context.getSource(), legacyAlias, RotClientClient::dungeonCarryManager))
@@ -4043,21 +4028,6 @@ private static int toggle(FabricClientCommandSource source) {
         return 1;
     }
 
-    private static int openTermSim(FabricClientCommandSource source) {
-        return openTermSimPing(source, -1);
-    }
-
-    private static int openTermSimPing(FabricClientCommandSource source, int ping) {
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null) {
-            source.sendError(Component.literal("Join the world before opening Terminal Simulator."));
-            return 0;
-        }
-        TermSimRuntime.openFromCommand(ping);
-        source.sendFeedback(Component.literal("Opened Terminal Simulator. Auto Terms still solves real F7 chests."));
-        return 1;
-    }
-
     private static int rotClientHelp(FabricClientCommandSource source) {
         source.sendFeedback(Component.literal(
                 """
@@ -4083,7 +4053,6 @@ private static int toggle(FabricClientCommandSource source) {
 
                 Other:
                 /rot slayer status | carry ...
-                /rot termsim [ping]
                 /rot dcarry add|remove|list|history
                 /rot toggle|reset|status
 

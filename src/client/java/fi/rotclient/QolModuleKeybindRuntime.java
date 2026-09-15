@@ -7,8 +7,6 @@ import net.minecraft.client.Minecraft;
  * otherwise only stored in extras.
  */
 public final class QolModuleKeybindRuntime {
-    private static boolean termSimWasDown;
-
     private static boolean boardWasDown;
 
     private QolModuleKeybindRuntime() {
@@ -27,19 +25,9 @@ public final class QolModuleKeybindRuntime {
         QolSkyblockExtras extras = qol.extras();
         long window = client.getWindow().handle();
         QolClientFlavorSupport.hooks().plusModuleKeybindTick(client);
-        termSimWasDown = fireOpen(
-                window, extras.dungeonTermSimKeybind, termSimWasDown, extras.dungeonTermSimEnabled);
         boardWasDown = fire(
                 window, extras.board().keybind, boardWasDown,
                 CustomScoreboardPolicy.MODULE_ID, "Custom Scoreboard");
-    }
-
-    private static boolean fireOpen(long window, String keyName, boolean wasDown, boolean enabled) {
-        boolean down = QolKeybindNames.isBoundDown(window, keyName);
-        if (down && !wasDown && enabled) {
-            TermSimRuntime.openHub();
-        }
-        return down;
     }
 
     private static boolean fire(
@@ -59,7 +47,6 @@ public final class QolModuleKeybindRuntime {
     }
 
     private static void reset() {
-        termSimWasDown = false;
         boardWasDown = false;
     }
 }

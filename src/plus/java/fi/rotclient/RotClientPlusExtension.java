@@ -111,6 +111,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.dungeon_termsim".equals(moduleId)) return TermSimSettings.from(config).enabled();
         if ("qol.dungeon_term_click".equals(moduleId)) {
             return DungeonTerminalClickSettings.from(config).enabled();
         }
@@ -146,6 +147,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.dungeon_termsim".equals(moduleId)) {
+            TermSimSettings.enabled(config, enabled);
+            return true;
+        }
         if ("qol.dungeon_term_click".equals(moduleId)) {
             DungeonTerminalClickSettings.enabled(config, enabled);
             return true;
@@ -188,6 +193,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readBoolean(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.readBoolean(config, settingId);
         if (settingId == null) {
             return null;
         }
@@ -236,6 +243,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeBoolean(
             QolUtilityConfig config, String settingId, boolean value) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.writeBoolean(config, settingId, value);
         if (settingId == null) {
             return false;
         }
@@ -282,6 +291,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Double readNumber(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.readNumber(config, settingId);
         if (settingId == null) {
             return null;
         }
@@ -308,6 +319,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeNumber(
             QolUtilityConfig config, String settingId, double value) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.writeNumber(config, settingId, value);
         if (settingId == null) {
             return false;
         }
@@ -338,6 +351,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String readKeybind(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.readKeybind(config, settingId);
         if (settingId == null) {
             return null;
         }
@@ -347,6 +362,16 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             case "qol.auto_clicker.right_keybind" -> config.autoClickerRightKeybind;
             default -> null;
         };
+    }
+
+    @Override
+    public String readText(QolUtilityConfig config, String settingId) {
+        return TermSimSettings.readText(config, settingId);
+    }
+
+    @Override
+    public boolean writeText(QolUtilityConfig config, String settingId, String value) {
+        return TermSimSettings.writeText(config, settingId, value);
     }
 
     @Override
@@ -406,6 +431,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeKeybind(
             QolUtilityConfig config, String settingId, String value) {
+        if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
+            return TermSimSettings.writeKeybind(config, settingId, value);
         String stored = value == null ? "" : value.trim();
         switch (settingId == null ? "" : settingId) {
             case "qol.mob_highlight.add_key" -> MobHighlightSettings.addKey(config, stored);
@@ -420,6 +447,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.dungeon_termsim".equals(moduleId)) {
+            TermSimSettings.reset(config);
+            return true;
+        }
         if ("qol.dungeon_term_click".equals(moduleId)) {
             DungeonTerminalClickSettings.reset(config);
             return true;
@@ -524,6 +555,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
                 return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
         }
         return switch (settingId) {
+            case "qol.dungeon_termsim.ping" ->
+                    new QolNumberSettings.Spec(0.0D, 500.0D, 50.0D, true);
             case "qol.dungeon_term_click.radius" ->
                     new QolNumberSettings.Spec(1.0D, 16.0D, 1.0D, true);
             case "qol.dungeon_term_click.thickness" ->

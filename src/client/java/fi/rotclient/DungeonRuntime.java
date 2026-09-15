@@ -1677,8 +1677,8 @@ public final class DungeonRuntime {
             AbstractContainerScreen<?> screen,
             QolSkyblockExtras extras,
             DungeonPolicy.TerminalClick click) {
-        if (TermSimRuntime.isOpen()) {
-            TermSimRuntime.click(click.slot(), click.button());
+        if (QolClientFlavorSupport.hooks().termSimIsOpen()) {
+            QolClientFlavorSupport.hooks().termSimClick(click.slot(), click.button());
             armTerminalCooldown(extras);
             lastTerminalSlot = click.slot();
             autoClickedThisTick = true;

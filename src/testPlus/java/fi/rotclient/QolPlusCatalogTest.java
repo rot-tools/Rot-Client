@@ -11,6 +11,7 @@ final class QolPlusCatalogTest {
     void plusCatalogIncludesMapArtOverride() {
         assertTrue(QolFlavorSupport.isPlus());
         assertEquals(134, QolUtilityCatalog.modules().size());
+        assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
         assertNotNull(QolUtilityCatalog.findById("qol.auto_sprint"));
         assertNotNull(QolUtilityCatalog.findById("qol.experiment_solver"));

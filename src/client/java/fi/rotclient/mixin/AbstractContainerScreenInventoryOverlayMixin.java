@@ -21,8 +21,6 @@ import fi.rotclient.StallMarketRuntime;
 import fi.rotclient.SlayerRuntime;
 import fi.rotclient.SlotBindsRuntime;
 import fi.rotclient.StorageOverlayRuntime;
-import fi.rotclient.TermSimRuntime;
-import fi.rotclient.TermSimScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -466,8 +464,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ci.cancel();
             return;
         }
-        if (screen instanceof TermSimScreen termSim
-                && TermSimRuntime.onSlotClicked(termSim, slot, button)) {
+        if (QolClientFlavorSupport.hooks().termSimOnSlotClicked(screen, slot, button)) {
             ci.cancel();
             return;
         }

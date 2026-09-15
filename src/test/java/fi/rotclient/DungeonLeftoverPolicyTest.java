@@ -1,7 +1,6 @@
 package fi.rotclient;
 
 import java.util.ArrayDeque;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,14 +160,5 @@ final class DungeonLeftoverPolicyTest {
                 DungeonLeftoverPolicy.splitEvent("Party > Henri: extra stats later"));
     }
 
-    @Test
-    void termSimPersonalBestsKeepFasterTimes() {
-        Map<TermSimPolicy.Kind, Integer> pbs = new EnumMap<>(TermSimPolicy.Kind.class);
-        assertTrue(DungeonLeftoverPolicy.recordPersonalBest(pbs, TermSimPolicy.Kind.PANES, 3200));
-        assertFalse(DungeonLeftoverPolicy.recordPersonalBest(pbs, TermSimPolicy.Kind.PANES, 4000));
-        assertTrue(DungeonLeftoverPolicy.recordPersonalBest(pbs, TermSimPolicy.Kind.PANES, 2100));
-        String stored = DungeonLeftoverPolicy.writePersonalBests(pbs);
-        assertEquals(2100, DungeonLeftoverPolicy.parsePersonalBests(stored).get(TermSimPolicy.Kind.PANES));
-        assertTrue(DungeonLeftoverPolicy.hubSlotName(TermSimPolicy.Kind.PANES, pbs).contains("2.10s"));
-    }
+
 }

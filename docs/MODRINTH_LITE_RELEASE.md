@@ -8,10 +8,10 @@ runtime behavior.
 ## Edition audit still required
 
 - Move or remove the shared Dungeon ESP/solvers, terminal overlays and click
-  helpers, Term Sim, puzzle assists, and F7 solver paths where they expose
+  helpers, puzzle assists, and F7 solver paths where they expose
   information or interactions outside passive HUD/QoL. Keep ordinary dungeon
   status and map HUD behavior intact while splitting the large shared runtime.
-- Diana burrow/rare-mob visual assists, Diana Profit/Share, Experiment Solver, and Terminal Click Trails are Plus-owned. Revalidate their migrated settings in Minecraft.
+- Diana burrow/rare-mob visual assists, Diana Profit/Share, Experiment Solver, Terminal Click Trails, and Terminal Simulator are Plus-owned. Revalidate their migrated settings in Minecraft.
 - Auto Sprint's input override is now Plus-only. Audit every remaining input,
   click, macro, movement, and see-through-block behavior in Lite. An option being off by default is not a
   release decision.
