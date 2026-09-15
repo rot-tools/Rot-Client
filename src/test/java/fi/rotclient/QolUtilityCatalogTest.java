@@ -422,6 +422,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(108, moduleIds.size());
+        assertEquals(109, moduleIds.size());
     }
 }

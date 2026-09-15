@@ -1195,6 +1195,44 @@ public final class QolUtilityCatalog {
                 setting("qol.name_hider.custom_name", "Custom Name", "Click, type an alias, Enter to save. Right-click to clear. Used when Mode is Custom.", SettingType.TEXT, "alias", "nick")));
 
         modules.add(module(
+                "qol.zoom",
+                "Smooth Zoom",
+                "Hold a configurable key to smoothly magnify the world without changing your Minecraft FOV setting.",
+                Group.RENDER,
+                "Camera",
+                false,
+                true,
+                true,
+                List.of(
+                        "zoom",
+                        "smooth zoom",
+                        "optifine zoom",
+                        "camera",
+                        "magnify",
+                        "fov"),
+                setting(
+                        "qol.zoom.keybind",
+                        "Zoom Key",
+                        "Hold this key to zoom. Defaults to C and can also be bound to a mouse button.",
+                        SettingType.KEYBIND,
+                        "c",
+                        "hold"),
+                setting(
+                        "qol.zoom.amount",
+                        "Zoom Amount",
+                        "Magnification strength.",
+                        SettingType.NUMBER,
+                        "magnification",
+                        "strength"),
+                setting(
+                        "qol.zoom.speed",
+                        "Zoom Speed",
+                        "Controls how quickly the camera eases into and out of zoom.",
+                        SettingType.NUMBER,
+                        "transition",
+                        "smoothness")));
+
+        modules.add(module(
                 "qol.render_optimizer",
                 "Render Optimizer",
                 "Skip drawing noisy local entities and overlays you do not need. Render-only; other players still see the world normally.",
