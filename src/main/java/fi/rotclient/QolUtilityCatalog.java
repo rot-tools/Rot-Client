@@ -595,17 +595,15 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.fishing_hotspots",
                 "Fishing Hotspots",
-                "Hotspot circles plus hotspot-radar flame guess.",
+                "Observed hotspot circles and despawn warning.",
                 Group.FISHING,
                 "World",
                 false,
                 true,
                 true,
-                List.of("hotspot", "radar", "fishing speed"),
+                List.of("hotspot", "fishing speed"),
                 setting("qol.fishing_hotspots.circle", "Hotspot Circles", "Outline hotspot nametag locations.", SettingType.TOGGLE),
                 setting("qol.fishing_hotspots.hide_particles", "Hide Hotspot Particles", "Suppress flame/dust near a known hotspot.", SettingType.TOGGLE),
-                setting("qol.fishing_hotspots.radar", "Radar Solver", "Guess hotspot direction from still flame particles while holding a radar.", SettingType.TOGGLE),
-                setting("qol.fishing_hotspots.tracer", "Radar Tracer", "Draw the guessed radar line.", SettingType.TOGGLE),
                 setting("qol.fishing_hotspots.despawn", "Despawn Warning", "Title when a nearby hotspot nametag disappears.", SettingType.TOGGLE),
                 setting("qol.fishing_hotspots.color", "Hotspot Color", "Circle and tracer color.", SettingType.COLOR)));
 

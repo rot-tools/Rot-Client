@@ -48,8 +48,6 @@ public final class FishingSuiteRuntime {
     private static String titleText = "";
     private static long lastCapNotifyAt;
     private static long lastTimerNotifyAt;
-    private static List<FishingHotspotPolicy.Point> radarTrail = List.of();
-    private static FishingHotspotPolicy.RadarGuess radarGuess;
     private static final List<FishingHotspotPolicy.Circle> HOTSPOTS = new ArrayList<>();
     private static String totemLine = "";
     private static String hookTimerLine = "";
@@ -77,8 +75,7 @@ public final class FishingSuiteRuntime {
         lastTrophy = "";
         titleTicks = 0;
         titleText = "";
-        radarTrail = List.of();
-        radarGuess = null;
+        QolClientFlavorSupport.hooks().fishingRadarClear();
         HOTSPOTS.clear();
         totemLine = "";
         hookTimerLine = "";
@@ -307,18 +304,7 @@ public final class FishingSuiteRuntime {
                         .setAlwaysOnTop();
             }
         }
-        if (extras.fishingHotspotsEnabled
-                && extras.fishingHotspotsTracer
-                && radarGuess != null) {
-            Gizmos.line(
-                    eye,
-                    new Vec3(
-                            radarGuess.x() + radarGuess.dx(),
-                            radarGuess.y() + radarGuess.dy(),
-                            radarGuess.z() + radarGuess.dz()),
-                    extras.fishingHotspotsColor)
-                    .setAlwaysOnTop();
-        }
+        QolClientFlavorSupport.hooks().fishingRadarRenderGizmos();
         if (extras.fishingTrophyEnabled && extras.fishingTrophyGeyser && geyser != null) {
             AABB box = new AABB(
                     geyser.x() - 2.0D,
@@ -379,23 +365,7 @@ public final class FishingSuiteRuntime {
             geyser = new FishingHotspotPolicy.Point(x, y, z);
             geyserTicks = 80;
         }
-        if (!extras.fishingHotspotsEnabled || !extras.fishingHotspotsRadar) {
-            return;
-        }
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null) {
-            return;
-        }
-        String held = SkyBlockItemIdentity.skyBlockId(client.player.getMainHandItem());
-        if (held == null || !held.toUpperCase().contains("HOTSPOT_RADAR")) {
-            return;
-        }
-        if (!FishingHotspotPolicy.isRadarFlame(key, xs, ys, zs)) {
-            return;
-        }
-        radarTrail = FishingHotspotPolicy.pushRadar(
-                radarTrail, new FishingHotspotPolicy.Point(x, y, z));
-        radarGuess = FishingHotspotPolicy.guess(radarTrail);
+        QolClientFlavorSupport.hooks().fishingRadarObserve(key, x, y, z, xs, ys, zs);
     }
 
     public static boolean shouldHideParticle(ParticleOptions options, double x, double y, double z) {

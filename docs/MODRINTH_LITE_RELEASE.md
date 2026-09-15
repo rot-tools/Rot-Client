@@ -15,8 +15,8 @@ runtime behavior.
 - Auto Sprint's input override is now Plus-only. Audit every remaining input,
   click, macro, movement, and see-through-block behavior in Lite. An option being off by default is not a
   release decision.
-- Sea-creature auto attack and delay settings are Plus-owned. Review fishing
-  radar/tracer and other world-information assists alongside the mining and
+- Sea-creature auto attack/delay and fishing hotspot radar/tracer are Plus-owned.
+  Review other world-information assists alongside the mining and
   foraging helper settings in the broader Lite visual audit.
 - Re-run `verifyLegitJar` with forbidden identifiers and class names for each
   newly separated module. Test old-profile migration and Plus behavior after

@@ -193,6 +193,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readBoolean(QolUtilityConfig config, String settingId) {
+        if (settingId != null && settingId.startsWith("qol.fishing_hotspots."))
+            return FishingHotspotRadarSettings.readBoolean(config, settingId);
         if ("qol.fishing_creatures.auto_attack".equals(settingId))
             return FishingAutoAttackSettings.readBoolean(config, settingId);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
@@ -245,6 +247,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeBoolean(
             QolUtilityConfig config, String settingId, boolean value) {
+        if (settingId != null && settingId.startsWith("qol.fishing_hotspots."))
+            return FishingHotspotRadarSettings.writeBoolean(config, settingId, value);
         if ("qol.fishing_creatures.auto_attack".equals(settingId))
             return FishingAutoAttackSettings.writeBoolean(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
@@ -455,6 +459,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.fishing_hotspots".equals(moduleId)) {
+            FishingHotspotRadarSettings.reset(config);
+            return false; // Reset the remaining shared hotspot settings as well.
+        }
         if ("qol.fishing_creatures".equals(moduleId)) {
             FishingAutoAttackSettings.reset(config);
             return false; // Let the shared parent reset its other settings.

@@ -18,6 +18,17 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
+    public void fishingRadarClear() { FishingHotspotRadarRuntime.clear(); }
+
+    @Override
+    public void fishingRadarObserve(String particleId, double x, double y, double z,
+                                    double xSpeed, double ySpeed, double zSpeed) {
+        FishingHotspotRadarRuntime.observe(particleId, x, y, z, xSpeed, ySpeed, zSpeed);
+    }
+
+    @Override
+    public void fishingRadarRenderGizmos() { FishingHotspotRadarRuntime.renderGizmos(); }
+    @Override
     public void registerStandaloneCommands(
             com.mojang.brigadier.CommandDispatcher<
                     net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> dispatcher) {
