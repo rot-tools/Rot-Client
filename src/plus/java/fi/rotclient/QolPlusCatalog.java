@@ -579,6 +579,9 @@ public final class QolPlusCatalog {
             return List.of();
         }
         return switch (moduleId) {
+            case "qol.fishing_hotspots" -> List.of(
+                    setting("qol.fishing_hotspots.radar", "Radar Solver", "Guess hotspot direction from still flame particles while holding a radar.", SettingType.TOGGLE),
+                    setting("qol.fishing_hotspots.tracer", "Radar Tracer", "Draw the guessed radar line.", SettingType.TOGGLE));
             case "qol.fishing_helper" -> List.of(
                     setting("qol.fishing_helper.auto_pull", "Auto Pull", "Right-click when a !!! hologram appears near the hook.", SettingType.TOGGLE),
                     setting("qol.fishing_helper.pull_delay", "Delay", "Ticks to wait after a bite before pulling.", SettingType.NUMBER, "1", "ticks"),

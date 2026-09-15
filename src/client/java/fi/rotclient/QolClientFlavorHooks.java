@@ -81,6 +81,13 @@ public interface QolClientFlavorHooks {
     default void renderWorldScannerGizmos() {
     }
 
+    default void fishingRadarClear() { }
+
+    default void fishingRadarObserve(String particleId, double x, double y, double z,
+                                     double xSpeed, double ySpeed, double zSpeed) { }
+
+    default void fishingRadarRenderGizmos() { }
+
     default void slayerAutomationTick(Minecraft client) {
     }
 

@@ -160,8 +160,6 @@ final class QolSkyblockExtras {
     boolean fishingHotspotsEnabled;
     boolean fishingHotspotsCircle = true;
     boolean fishingHotspotsHideParticles;
-    boolean fishingHotspotsRadar;
-    boolean fishingHotspotsTracer = true;
     boolean fishingHotspotsDespawn = true;
     int fishingHotspotsColor = 0xFFFFAA00;
 
@@ -1328,8 +1326,6 @@ final class QolSkyblockExtras {
             case "qol.fishing_creatures.thunder_sparks" -> fishingCreaturesThunderSparks;
             case "qol.fishing_hotspots.circle" -> fishingHotspotsCircle;
             case "qol.fishing_hotspots.hide_particles" -> fishingHotspotsHideParticles;
-            case "qol.fishing_hotspots.radar" -> fishingHotspotsRadar;
-            case "qol.fishing_hotspots.tracer" -> fishingHotspotsTracer;
             case "qol.fishing_hotspots.despawn" -> fishingHotspotsDespawn;
             case "qol.fishing_trophy.titles" -> fishingTrophyTitles;
             case "qol.fishing_trophy.filter_chat" -> fishingTrophyFilterChat;
@@ -1964,8 +1960,6 @@ final class QolSkyblockExtras {
             case "qol.fishing_creatures.thunder_sparks" -> fishingCreaturesThunderSparks = value;
             case "qol.fishing_hotspots.circle" -> fishingHotspotsCircle = value;
             case "qol.fishing_hotspots.hide_particles" -> fishingHotspotsHideParticles = value;
-            case "qol.fishing_hotspots.radar" -> fishingHotspotsRadar = value;
-            case "qol.fishing_hotspots.tracer" -> fishingHotspotsTracer = value;
             case "qol.fishing_hotspots.despawn" -> fishingHotspotsDespawn = value;
             case "qol.fishing_trophy.titles" -> fishingTrophyTitles = value;
             case "qol.fishing_trophy.filter_chat" -> fishingTrophyFilterChat = value;
@@ -3313,8 +3307,6 @@ final class QolSkyblockExtras {
                 fishingHotspotsEnabled = d.fishingHotspotsEnabled;
                 fishingHotspotsCircle = d.fishingHotspotsCircle;
                 fishingHotspotsHideParticles = d.fishingHotspotsHideParticles;
-                fishingHotspotsRadar = d.fishingHotspotsRadar;
-                fishingHotspotsTracer = d.fishingHotspotsTracer;
                 fishingHotspotsDespawn = d.fishingHotspotsDespawn;
                 fishingHotspotsColor = d.fishingHotspotsColor;
             }

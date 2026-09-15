@@ -58,15 +58,8 @@ final class FishingSuitePolicyTest {
     }
 
     @Test
-    void hotspotRadarAndToolsParse() {
+    void hotspotAndToolsParse() {
         assertTrue(FishingHotspotPolicy.isHotspotNametag("§6Fishing Hotspot"));
-        assertTrue(FishingHotspotPolicy.isRadarFlame("minecraft:flame", 0, 0, 0));
-        assertFalse(FishingHotspotPolicy.isRadarFlame("minecraft:flame", 1, 0, 0));
-        var guess = FishingHotspotPolicy.guess(List.of(
-                new FishingHotspotPolicy.Point(0, 64, 0),
-                new FishingHotspotPolicy.Point(1, 64, 0),
-                new FishingHotspotPolicy.Point(4, 64, 0)));
-        assertNotNull(guess);
         assertTrue(FishingToolsPolicy.isThunderBottleId("THUNDER_IN_A_BOTTLE_EMPTY"));
         assertTrue(FishingToolsPolicy.isEmptyThunderBottle("THUNDER_IN_A_BOTTLE_EMPTY"));
         assertTrue(FishingToolsPolicy.isBottleChargedChat(
