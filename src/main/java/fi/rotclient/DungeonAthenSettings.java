@@ -88,7 +88,6 @@ final class DungeonAthenSettings {
     String s4right = "Healer";
     String s4left = "Healer";
 
-    String termSimIp = "";
 
     boolean pfShowStats;
     boolean pfStack = true;
@@ -476,7 +475,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_terminals.click_sound" ->
                     termClickSound == null || termClickSound.isBlank()
                             ? "block.note_block.pling" : termClickSound;
-            case "qol.dungeon_termsim.ip" -> safe(termSimIp);
             case "qol.dungeon_carry.webhook_url" ->
                     DungeonCarryPolicy.sanitizeWebhookUrl(carryWebhookUrl);
             case "qol.dungeon_party_join.required_pb" ->
@@ -509,7 +507,6 @@ final class DungeonAthenSettings {
             case "qol.dungeon_f7.superboom_blocks" -> superboomExtraBlocks = stored;
             case "qol.dungeon_terminals.click_sound" ->
                     termClickSound = stored.isBlank() ? "block.note_block.pling" : stored;
-            case "qol.dungeon_termsim.ip" -> termSimIp = stored;
             case "qol.dungeon_carry.webhook_url" ->
                     carryWebhookUrl = DungeonCarryPolicy.sanitizeWebhookUrl(stored);
             case "qol.dungeon_party_join.required_pb" ->
@@ -602,7 +599,6 @@ final class DungeonAthenSettings {
             case "qol.info_tooltips" -> qualityStyle = d.qualityStyle;
             case "qol.dungeon_f7" -> copyF7(d);
             case "qol.dungeon_terminals" -> copyTerms(d);
-            case "qol.dungeon_termsim" -> termSimIp = d.termSimIp;
             case "qol.dungeon_menus" -> copyMenus(d);
             case "qol.dungeon_carry" -> copyCarry(d);
             case "qol.dungeon_hover_terms" -> {
@@ -623,7 +619,6 @@ final class DungeonAthenSettings {
             case "qol.info_tooltips",
                  "qol.dungeon_f7",
                  "qol.dungeon_terminals",
-                 "qol.dungeon_termsim",
                  "qol.dungeon_menus",
                  "qol.dungeon_carry",
                  "qol.dungeon_hover_terms",

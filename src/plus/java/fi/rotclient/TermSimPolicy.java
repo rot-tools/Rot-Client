@@ -149,18 +149,18 @@ public final class TermSimPolicy {
         }
         slots[HUB_RESET] = new Slot(HUB_RESET, "black_dye", "Reset PBs!");
         slots[HUB_PANES] = new Slot(HUB_PANES, "lime_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.PANES, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.PANES, pbs));
         slots[HUB_RUBIX] = new Slot(HUB_RUBIX, "red_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.RUBIX, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.RUBIX, pbs));
         slots[HUB_NUMBERS] = new Slot(HUB_NUMBERS, "cyan_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.NUMBERS, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.NUMBERS, pbs));
         slots[HUB_RANDOM] = new Slot(HUB_RANDOM, "white_dye", "Random");
         slots[HUB_STARTS] = new Slot(HUB_STARTS, "pink_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.STARTS_WITH, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.STARTS_WITH, pbs));
         slots[HUB_SELECT] = new Slot(HUB_SELECT, "brown_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.SELECT_ALL, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.SELECT_ALL, pbs));
         slots[HUB_MELODY] = new Slot(HUB_MELODY, "purple_dye",
-                DungeonLeftoverPolicy.hubSlotName(Kind.MELODY, pbs));
+                TermSimPersonalBestPolicy.hubSlotName(Kind.MELODY, pbs));
         return new Layout(Kind.HUB, titleFor(Kind.HUB), 27, Arrays.asList(slots), "", "", null);
     }
 

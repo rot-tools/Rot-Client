@@ -480,11 +480,6 @@ final class QolSkyblockExtras {
     int dungeonTerminalsMelodyColumnColor = 0x80FF00FF;
     int dungeonTerminalsMelodyIndicatorColor = 0x80FF7400;
     int dungeonTerminalsMelodyWrongColor = 0x80FF0000;
-    boolean dungeonTermSimEnabled;
-    String dungeonTermSimKeybind = "";
-    int dungeonTermSimPing;
-    boolean dungeonTermSimShowPbs = true;
-    String dungeonTermSimPbs = "";
     boolean dungeonRequeueEnabled;
     int dungeonRequeueDelay = DungeonPolicy.DEFAULT_REQUEUE_DELAY_TICKS;
     boolean dungeonPuzzlesEnabled;
@@ -1106,7 +1101,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_announce" -> dungeonAnnounceEnabled;
             case "qol.dungeon_leap" -> dungeonLeapEnabled;
             case "qol.dungeon_terminals" -> dungeonTerminalsEnabled;
-            case "qol.dungeon_termsim" -> dungeonTermSimEnabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled;
             case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled;
             case "qol.dungeon_f7" -> dungeonF7Enabled;
@@ -1197,7 +1191,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_announce" -> dungeonAnnounceEnabled = enabled;
             case "qol.dungeon_leap" -> dungeonLeapEnabled = enabled;
             case "qol.dungeon_terminals" -> dungeonTerminalsEnabled = enabled;
-            case "qol.dungeon_termsim" -> dungeonTermSimEnabled = enabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled = enabled;
             case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled = enabled;
             case "qol.dungeon_f7" -> dungeonF7Enabled = enabled;
@@ -1669,7 +1662,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.compact_profit" -> dungeonMenusCompactProfit;
             case "qol.dungeon_menus.close_chest" -> dungeonMenusCloseChest;
             case "qol.farm_keys.lock_camera" -> farmKeysLockCamera;
-            case "qol.dungeon_termsim.show_pbs" -> dungeonTermSimShowPbs;
             case "qol.camera.clip" -> cameraClip;
             case "qol.camera.custom_distance" -> cameraCustomDistance;
             case "qol.slayer_display.kill_time" -> slayerDisplayKillTime;
@@ -2312,7 +2304,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.compact_profit" -> dungeonMenusCompactProfit = value;
             case "qol.dungeon_menus.close_chest" -> dungeonMenusCloseChest = value;
             case "qol.farm_keys.lock_camera" -> farmKeysLockCamera = value;
-            case "qol.dungeon_termsim.show_pbs" -> dungeonTermSimShowPbs = value;
             case "qol.camera.clip" -> cameraClip = value;
             case "qol.camera.custom_distance" -> cameraCustomDistance = value;
             case "qol.ghosts.show_powered" -> ghostsShowPowered = value;
@@ -2585,7 +2576,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.relic_look_time" -> (double) dungeonF7RelicLookTime;
             case "qol.dungeon_f7.relic_spawn_ticks" -> (double) dungeonF7RelicSpawnTicks;
             case "qol.dungeon_f7.auto_i4_rotation" -> (double) dungeonF7AutoI4Rotation;
-            case "qol.dungeon_termsim.ping" -> (double) dungeonTermSimPing;
             case "qol.dungeon_esp.trigger_delay" -> (double) dungeonEspTriggerDelay;
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor;
             case "qol.dungeon_hud.map_scale" -> (double) dungeonHudMapScale;
@@ -2698,8 +2688,6 @@ final class QolSkyblockExtras {
                     DungeonF7Policy.clampRelicSpawnTicks((int) Math.round(value));
             case "qol.dungeon_f7.auto_i4_rotation" -> dungeonF7AutoI4Rotation =
                     DungeonF7Policy.clampI4RotationMs((int) Math.round(value));
-            case "qol.dungeon_termsim.ping" -> dungeonTermSimPing =
-                    Math.max(0, Math.min(500, (int) Math.round(value)));
             case "qol.dungeon_esp.trigger_delay" -> dungeonEspTriggerDelay =
                     DungeonLeftoverPolicy.clampTriggerDelay((int) Math.round(value));
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor =
@@ -3670,14 +3658,6 @@ final class QolSkyblockExtras {
                 dungeonTerminalsMelodyWrongColor = d.dungeonTerminalsMelodyWrongColor;
                 athen().copyModule(moduleId, d.athen());
             }
-            case "qol.dungeon_termsim" -> {
-                dungeonTermSimEnabled = d.dungeonTermSimEnabled;
-                dungeonTermSimKeybind = d.dungeonTermSimKeybind;
-                dungeonTermSimPing = d.dungeonTermSimPing;
-                dungeonTermSimShowPbs = d.dungeonTermSimShowPbs;
-                dungeonTermSimPbs = d.dungeonTermSimPbs;
-                athen().copyModule(moduleId, d.athen());
-            }
             case "qol.dungeon_requeue" -> {
                 dungeonRequeueEnabled = d.dungeonRequeueEnabled;
                 dungeonRequeueDelay = d.dungeonRequeueDelay;
@@ -4467,7 +4447,6 @@ final class QolSkyblockExtras {
             case "qol.auto_sell.keybind" -> autoSellKeybind == null ? "" : autoSellKeybind;
             case "qol.ghosts.keybind" -> ghostsKeybind == null ? "" : ghostsKeybind;
             case "qol.freecam.keybind" -> freecamKeybind == null ? "" : freecamKeybind;
-            case "qol.dungeon_termsim.keybind" -> dungeonTermSimKeybind == null ? "" : dungeonTermSimKeybind;
             case "qol.dungeon_esp.ghost_keybind" -> dungeonEspGhostKeybind == null ? "" : dungeonEspGhostKeybind;
             case "qol.farm_keys.attack" -> farmKeysAttack == null ? "" : farmKeysAttack;
             case "qol.farm_keys.jump" -> farmKeysJump == null ? "" : farmKeysJump;
@@ -4499,7 +4478,6 @@ final class QolSkyblockExtras {
             case "qol.auto_sell.keybind" -> autoSellKeybind = stored;
             case "qol.ghosts.keybind" -> ghostsKeybind = stored;
             case "qol.freecam.keybind" -> freecamKeybind = stored;
-            case "qol.dungeon_termsim.keybind" -> dungeonTermSimKeybind = stored;
             case "qol.dungeon_esp.ghost_keybind" -> dungeonEspGhostKeybind = stored;
             case "qol.farm_keys.attack" -> farmKeysAttack = stored;
             case "qol.farm_keys.jump" -> farmKeysJump = stored;

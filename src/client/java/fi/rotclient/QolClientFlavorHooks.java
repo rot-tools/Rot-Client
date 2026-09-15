@@ -187,6 +187,14 @@ public interface QolClientFlavorHooks {
             AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
     }
 
+    default boolean termSimIsOpen() { return false; }
+
+    default void termSimClick(int slot, int button) { }
+
+    default boolean termSimOnSlotClicked(
+            AbstractContainerScreen<?> screen, net.minecraft.world.inventory.Slot slot,
+            int button) { return false; }
+
     default boolean wardrobeMenuHandleInput(
             net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
             int code) {
@@ -367,6 +375,11 @@ public interface QolClientFlavorHooks {
             com.mojang.brigadier.builder.LiteralArgumentBuilder<
                     net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> root,
             String legacyAlias) {
+    }
+
+    default void registerStandaloneCommands(
+            com.mojang.brigadier.CommandDispatcher<
+                    net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> dispatcher) {
     }
 
     default void commandHelp(

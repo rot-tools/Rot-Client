@@ -1,19 +1,35 @@
 package fi.rotclient;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
 
 /** Commands contributed only by the Plus client edition. */
 final class RotClientPlusCommands {
     private RotClientPlusCommands() {
     }
 
+    static void registerStandalone(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        dispatcher.register(literal("termsim")
+                .executes(context -> openTermSim(context.getSource(), null, -1))
+                .then(argument("ping", IntegerArgumentType.integer(0, 500))
+                        .executes(context -> openTermSim(context.getSource(), null,
+                                IntegerArgumentType.getInteger(context, "ping")))));
+    }
+
     static void contribute(LiteralArgumentBuilder<FabricClientCommandSource> root,
                            String legacyAlias) {
+        root.then(literal("termsim")
+                .executes(context -> openTermSim(context.getSource(), legacyAlias, -1))
+                .then(argument("ping", IntegerArgumentType.integer(0, 500))
+                        .executes(context -> openTermSim(context.getSource(), legacyAlias,
+                                IntegerArgumentType.getInteger(context, "ping")))));
         root.then(literal("autoclicker")
                 .then(literal("add")
                         .then(literal("left").executes(context -> autoClicker(
@@ -39,7 +55,19 @@ final class RotClientPlusCommands {
     static void help(FabricClientCommandSource source) {
         source.sendFeedback(Component.literal(
                 "Rot Client+ commands: /rot autoclicker add|remove left|right, "
-                        + "/rot autoclicker list, /rot superboom add|remove|list"));
+                        + "/rot autoclicker list, /rot superboom add|remove|list, /rot termsim [ping]"));
+    }
+
+    private static int openTermSim(FabricClientCommandSource source,
+                                   String legacyAlias, int ping) {
+        notice(source, legacyAlias);
+        if (Minecraft.getInstance().player == null) {
+            source.sendError(Component.literal("Join the world before opening Terminal Simulator."));
+            return 0;
+        }
+        TermSimRuntime.openFromCommand(ping);
+        source.sendFeedback(Component.literal("Opened Terminal Simulator. Auto Terms still solves real F7 chests."));
+        return 1;
     }
 
     private static int autoClicker(FabricClientCommandSource source,

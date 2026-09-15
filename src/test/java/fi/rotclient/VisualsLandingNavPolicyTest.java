@@ -23,7 +23,7 @@ final class VisualsLandingNavPolicyTest {
         assertFalse(QolUtilityCatalog.modulesOnGroupPage(QolUtilityCatalog.Group.HUD_DISPLAY)
                 .stream()
                 .anyMatch(module -> VisualsLandingNavPolicy.hiddenFromGroupPage(module.id())));
-        assertEquals(100, QolUtilityCatalog.modules().size());
+        assertEquals(99, QolUtilityCatalog.modules().size());
     }
 
     @Test

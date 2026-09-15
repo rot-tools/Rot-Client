@@ -13,7 +13,7 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **134** Rot Client+ catalog entries (and the **100** Lite subset) are wired
+All **134** Rot Client+ catalog entries (and the **99** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
@@ -29,7 +29,7 @@ children and their executable implementations exist only in Plus source sets.
 | Combat | Hide Players; Etherwarp preview (occluded). **Plus:** Trajectories; Mob Highlight; Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
 | Events | Empty on Rot Client. **Plus:** Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Enderman Laser Hider; Attunement Display; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras. **Plus:** Dagger Swap; Auto Soulcry; Auto Start | Wired · automated tested · runtime matrix pending |
-| Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Term Sim; Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Watcher Helper. **Plus:** Terminal Click Trails; Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
+| Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Watcher Helper. **Plus:** Term Sim; Terminal Click Trails; Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
 | Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain. **Plus:** World Scanner | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
@@ -67,7 +67,7 @@ World Scanner worm-lava spots stay on Mining (`qol.world_scanner.worm`).
 
 Existing Dungeons parents keep saved configs. Superboom is click-triggered with extra walls via `/rot superboom`. Auto Terms uses millisecond delays and First/Random/Closest/Furthest order. Queue Terms drops stale clicks after 800 ms. Breaker instamine, chest-close delays, and Item Quality `#cur/#max/#floor` stay on the existing cards.
 
-New cards: Dungeon Carry Tracker (`/rot dcarry`), Hover Terms, Party Finder Join Stats (SkyCrypt `sky.shiiyu.moe`, not starred.foo), Soulsand Triggerbot, Terminal Click Trails, Watcher Helper. Cheat-tagged options stay off until opt-in. Terminal Simulator stays local `/rot termsim`.
+New cards: Dungeon Carry Tracker (`/rot dcarry`), Hover Terms, Party Finder Join Stats (SkyCrypt `sky.shiiyu.moe`, not starred.foo), Soulsand Triggerbot, Terminal Click Trails, Watcher Helper. Cheat-tagged options stay off until opt-in. Rot Client+ Terminal Simulator stays local `/rot termsim`.
 
 ## Daily Reward Claim
 

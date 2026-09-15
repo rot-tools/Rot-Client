@@ -860,6 +860,8 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.protect_list" ->
                     inventoryOverlayProtectList == null ? "" : inventoryOverlayProtectList;
             default -> {
+                String flavored = QolFlavorSupport.extension().readText(this, settingId);
+                if (flavored != null) yield flavored;
                 String extra = extras().readText(settingId);
                 yield extra == null ? "" : extra;
             }
@@ -894,6 +896,7 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.protect_list" ->
                     inventoryOverlayProtectList = value == null ? "" : value;
             default -> {
+                if (QolFlavorSupport.extension().writeText(this, settingId, value)) return true;
                 return extras().writeText(settingId, value);
             }
         }

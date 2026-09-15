@@ -1577,24 +1577,6 @@ public final class QolUtilityCatalog {
                 dungeonClassSetting("qol.dungeon_terminals.s4_left_lever", "S4 Left Lever")));
 
         modules.add(module(
-                "qol.dungeon_termsim",
-                "Terminal Simulator",
-                "Local F7 terminal practice with Hypixel-style window titles and personal-best times.",
-                Group.DUNGEONS,
-                "F7",
-                false,
-                true,
-                true,
-                List.of("termsim", "terminal sim", "practice"),
-                setting("qol.dungeon_termsim.open", "Open Hub", "Open the Terminal Simulator menu.", SettingType.ACTION),
-                setting("qol.dungeon_termsim.keybind", "Keybind", "Open the hub while in-game.", SettingType.KEYBIND),
-                setting("qol.dungeon_termsim.ping", "Ping", "Simulated round-trip delay in milliseconds.", SettingType.NUMBER),
-                setting("qol.dungeon_termsim.show_pbs", "Show PBs", "Show local personal-best times on hub dyes.", SettingType.TOGGLE),
-                setting("qol.dungeon_termsim.ip", "Remote IP", "Stored only. Rot Client keeps the local /rot termsim hub and does not connect to a remote simulator.", SettingType.TEXT)));
-
-
-
-        modules.add(module(
                 "qol.dungeon_puzzles",
                 "Dungeon Puzzles",
                 "Oruo quiz answers and a/b/c boxes, Three Weirdos truth chest, Blaze HP order, Ice Fill, Ice Path, Water Board, Boulder, TP Maze, Creeper Beams and Tic Tac Toe.",
