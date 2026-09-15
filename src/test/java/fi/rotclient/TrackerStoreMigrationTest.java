@@ -907,7 +907,7 @@ final class TrackerStoreMigrationTest {
     }
 
     @Test
-    void missingSecretHitboxKeysRestorePlayableDefaults() {
+    void liteDoesNotRestoreMissingPlusSecretHitboxKeys() {
         JsonObject json = TrackerStore.toJson(new TrackerConfig());
         JsonObject qol = json.getAsJsonObject("qolUtilities");
         qol.remove("secretHitboxesLever");
@@ -916,10 +916,13 @@ final class TrackerStoreMigrationTest {
         qol.addProperty("secretHitboxesChests", false);
 
         TrackerConfig restored = TrackerStore.fromJson(json);
-        assertTrue(restored.qolUtilities.secretHitboxesLever);
-        assertTrue(restored.qolUtilities.secretHitboxesButton);
-        assertTrue(restored.qolUtilities.secretHitboxesSkull);
+        assertFalse(restored.qolUtilities.secretHitboxesLever);
+        assertFalse(restored.qolUtilities.secretHitboxesButton);
+        assertFalse(restored.qolUtilities.secretHitboxesSkull);
         assertFalse(restored.qolUtilities.secretHitboxesChests);
+        assertFalse(qol.has("secretHitboxesLever"));
+        assertFalse(qol.has("secretHitboxesButton"));
+        assertFalse(qol.has("secretHitboxesSkull"));
 
         TrackerConfig explicitOff = new TrackerConfig();
         explicitOff.qolUtilities.secretHitboxesLever = false;

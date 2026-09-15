@@ -72,6 +72,11 @@ final class TrackerStore {
     static TrackerConfig fromJson(JsonObject root) {
         if (root == null) return normalizedDefault();
 
+        // Edition migrations operate on a copy; callers and backups retain
+        // the original serialized document.
+        root = root.deepCopy();
+        QolFlavorSupport.extension().migrateConfigJson(root);
+
         int sourceVersion = intValue(root, "dataVersion", 0);
         TrackerConfig config;
         try {
@@ -146,7 +151,6 @@ final class TrackerStore {
             }
         }
 
-        restorePlayableSecretHitboxDefaults(config, root);
         restorePlayableInventoryOverlayDefaults(config, root);
 
         config.normalize();
@@ -154,32 +158,6 @@ final class TrackerStore {
             config.dataVersion = sourceVersion;
         }
         return config;
-    }
-
-    /**
-     * Gson writes missing primitive booleans as {@code false}, which would
-     * wipe the playable Secret Hitboxes defaults (lever/button/skull on).
-     * Restore those defaults only when the key was absent.
-     */
-    private static void restorePlayableSecretHitboxDefaults(
-            TrackerConfig config, JsonObject root) {
-        if (config.qolUtilities == null) {
-            config.qolUtilities = new QolUtilityConfig();
-        }
-        JsonObject qolJson = null;
-        if (root.has("qolUtilities") && root.get("qolUtilities").isJsonObject()) {
-            qolJson = root.getAsJsonObject("qolUtilities");
-        }
-        QolUtilityConfig qol = config.qolUtilities;
-        if (qolJson == null || !qolJson.has("secretHitboxesLever")) {
-            qol.secretHitboxesLever = true;
-        }
-        if (qolJson == null || !qolJson.has("secretHitboxesButton")) {
-            qol.secretHitboxesButton = true;
-        }
-        if (qolJson == null || !qolJson.has("secretHitboxesSkull")) {
-            qol.secretHitboxesSkull = true;
-        }
     }
 
     /**

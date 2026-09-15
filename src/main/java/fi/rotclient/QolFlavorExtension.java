@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -110,6 +111,10 @@ public interface QolFlavorExtension {
     }
 
     default void loadPersistence() {
+    }
+
+    /** Edition-specific migration before the shared config is decoded. */
+    default void migrateConfigJson(JsonObject root) {
     }
 
     default void savePersistence() {

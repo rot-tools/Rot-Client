@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -227,6 +228,17 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public void loadPersistence() {
         QolPlusConfigStore.migrateFromSharedIfNeeded();
+    }
+
+    @Override
+    public void migrateConfigJson(JsonObject root) {
+        if (root == null) return;
+        JsonObject qol = root.has("qolUtilities") && root.get("qolUtilities").isJsonObject()
+                ? root.getAsJsonObject("qolUtilities") : new JsonObject();
+        if (!qol.has("secretHitboxesLever")) qol.addProperty("secretHitboxesLever", true);
+        if (!qol.has("secretHitboxesButton")) qol.addProperty("secretHitboxesButton", true);
+        if (!qol.has("secretHitboxesSkull")) qol.addProperty("secretHitboxesSkull", true);
+        root.add("qolUtilities", qol);
     }
 
     @Override
