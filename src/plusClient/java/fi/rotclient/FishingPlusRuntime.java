@@ -93,16 +93,18 @@ final class FishingPlusRuntime {
         if (creatureAutoDelay > 0) {
             creatureAutoDelay--;
         }
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        QolSkyblockExtras extras = config.extras();
+        FishingAutoAttackSettings settings = FishingAutoAttackSettings.from(config);
         if (FishingAutomationPolicy.shouldAutoAttack(
                 extras.fishingCreaturesEnabled,
-                extras.fishingCreaturesAutoAttack,
+                settings.enabled(),
                 lookingAtTrackedCreature,
                 screenOpen)
                 && creatureAutoDelay <= 0) {
             ClickPulseHelper.pulseAttack(client);
             creatureAutoDelay = FishingAutomationPolicy.clampAutoDelay(
-                    extras.fishingCreaturesAutoDelay);
+                    settings.delayTicks());
         }
     }
 

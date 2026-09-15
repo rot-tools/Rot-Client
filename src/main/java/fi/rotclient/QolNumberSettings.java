@@ -146,8 +146,7 @@ public final class QolNumberSettings {
             case "qol.fishing_helper.pull_delay",
                  "qol.fishing_helper.pull_variance",
                  "qol.fishing_helper.recast_delay",
-                 "qol.fishing_helper.recast_variance",
-                 "qol.fishing_creatures.auto_delay" ->
+                 "qol.fishing_helper.recast_variance" ->
                     new Spec(0.0D, 40.0D, 1.0D, true);
             case "qol.fishing_creatures.timer_length" ->
                     new Spec(30.0D, FishingCreaturesPolicy.MAX_TIMER_SECONDS, 1.0D, true);
