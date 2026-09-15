@@ -161,7 +161,7 @@ final class AutoClickerWiringTest {
     @Test
     void worldScannerQueuesLoadedChunksInsteadOfFullRescan() throws Exception {
         String policy = Files.readString(Path.of(
-                "src/main/java/fi/rotclient/WorldScannerPolicy.java"),
+                "src/plus/java/fi/rotclient/WorldScannerPolicy.java"),
                 StandardCharsets.UTF_8);
         assertTrue(policy.contains("shouldRescanLoadedChunks"));
         assertTrue(policy.contains("SCAN_CHUNKS_PER_TICK"));

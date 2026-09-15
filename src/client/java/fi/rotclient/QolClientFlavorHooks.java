@@ -53,6 +53,13 @@ public interface QolClientFlavorHooks {
     default void renderWorldGizmos() {
     }
 
+    default void mobHighlightTick(Minecraft client) {
+    }
+
+    default boolean etherwarpOcclusion(QolUtilityConfig config) {
+        return true;
+    }
+
     default void trajectoryTick(Minecraft client) {
     }
 

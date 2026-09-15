@@ -218,7 +218,7 @@ final class ColumnStyleQolPolicyTest {
             assertTrue(config.writeKeybind("qol.missing_enchants.keybind", ""));
             assertEquals("", config.readKeybind("qol.missing_enchants.keybind"));
             config.writeBoolean("qol.world_scanner.target.fairy.enabled", false);
-            assertFalse(config.worldScannerFairyGrottos);
+            assertFalse(config.readBoolean("qol.world_scanner.fairy"));
             assertFalse(config.readBoolean("qol.world_scanner.target.fairy.enabled"));
             assertTrue(config.writeEnum("qol.world_scanner.target.divan.style", "Outline"));
             assertEquals("Outline", config.readEnum("qol.world_scanner.target.divan.style"));

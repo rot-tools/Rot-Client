@@ -99,6 +99,17 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void renderWorldGizmos() {
         GhostsRuntime.renderGizmos();
+        MobHighlightRuntime.renderGizmos();
+    }
+
+    @Override
+    public void mobHighlightTick(Minecraft client) {
+        MobHighlightRuntime.tick(client);
+    }
+
+    @Override
+    public boolean etherwarpOcclusion(QolUtilityConfig config) {
+        return PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
     }
 
     @Override

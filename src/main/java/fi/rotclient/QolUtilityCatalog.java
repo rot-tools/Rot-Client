@@ -1864,7 +1864,6 @@ public final class QolUtilityCatalog {
                         EtherwarpPredictor.RENDER_STYLES, "outline"),
                 setting("qol.etherwarp.full_block", "Full Block", "Highlight the whole destination cube instead of a thin top face.", SettingType.TOGGLE),
                 setting("qol.etherwarp.use_server_position", "Use Server Position", "Use server-authoritative position.", SettingType.TOGGLE),
-                setting("qol.etherwarp.depth", "Depth", "Respect depth vs visible-through.", SettingType.TOGGLE),
                 setting("qol.etherwarp.sounds", "Sounds", "Local feedback sounds.", SettingType.TOGGLE),
                 setting("qol.etherwarp.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
@@ -1941,22 +1940,6 @@ public final class QolUtilityCatalog {
                 setting("qol.item_rarity.mythic", "Mythic Color", "Slot tint for Mythic rarity. RGB picker with alpha.", SettingType.COLOR),
                 setting("qol.item_rarity.divine", "Divine Color", "Slot tint for Divine rarity. RGB picker with alpha.", SettingType.COLOR),
                 setting("qol.item_rarity.special", "Special Color", "Slot tint for Special rarity items. RGB picker with alpha.", SettingType.COLOR)));
-
-        modules.add(module(
-                "qol.mob_highlight",
-                "Mob Highlight",
-                "Highlight named mobs. Look at one and press Add Entity to remember it.",
-                Group.COMBAT,
-                "ESP",
-                false,
-                true,
-                true,
-                List.of("mob highlight", "esp", "tracer"),
-                setting("qol.mob_highlight.highlight_key", "Highlight Key", "Require the add key instead of always highlighting.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.add_key", "Key To Add Entity", "Look at a nametag and press to add/remove it.", SettingType.KEYBIND),
-                setting("qol.mob_highlight.depth", "Depth Check", "Hide boxes behind blocks.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.tracers", "Tracers", "Draw a line to highlighted mobs.", SettingType.TOGGLE),
-                setting("qol.mob_highlight.color", "Color", "Box and tracer color for remembered nametags. RGB picker.", SettingType.COLOR)));
 
         modules.add(module(
                 "qol.slayer_display",

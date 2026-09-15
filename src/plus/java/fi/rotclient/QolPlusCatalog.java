@@ -446,6 +446,21 @@ public final class QolPlusCatalog {
                 setting("qol.camera.clip", "Camera Clip", "Let third-person camera pass through blocks.", SettingType.TOGGLE, "cheat"),
                 setting("qol.camera.custom_distance", "Custom Distance", "Replace vanilla third-person distance.", SettingType.TOGGLE, "cheat"),
                 setting("qol.camera.distance", "Distance", "Third-person camera distance when Custom Distance is on. Default is 4.", SettingType.NUMBER)));
+        modules.add(module(
+                "qol.mob_highlight",
+                "Mob Highlight",
+                "Highlight named mobs. Look at one and press Add Entity to remember it. Plus ESP assist.",
+                Group.COMBAT,
+                "ESP",
+                false,
+                true,
+                true,
+                List.of("mob highlight", "esp", "tracer"),
+                setting("qol.mob_highlight.highlight_key", "Highlight Key", "Require the add key instead of always highlighting.", SettingType.TOGGLE),
+                setting("qol.mob_highlight.add_key", "Key To Add Entity", "Look at a nametag and press to add/remove it.", SettingType.KEYBIND),
+                setting("qol.mob_highlight.depth", "Depth Check", "Hide boxes behind blocks.", SettingType.TOGGLE),
+                setting("qol.mob_highlight.tracers", "Tracers", "Draw a line to highlighted mobs.", SettingType.TOGGLE),
+                setting("qol.mob_highlight.color", "Color", "Box and tracer color for remembered nametags. RGB picker.", SettingType.COLOR)));
         return List.copyOf(modules);
     }
 
@@ -579,6 +594,7 @@ public final class QolPlusCatalog {
                     setting("qol.experiment_solver.block_wrong_clicks", "Block Wrong Clicks", "Swallow clicks on puzzle slots that are not the next correct slot.", SettingType.TOGGLE)
             );
             case "qol.etherwarp" -> List.of(
+                    setting("qol.etherwarp.depth", "Depth Check", "Allow destination highlights through blocks when off. Plus only.", SettingType.TOGGLE, "cheat"),
                     setting("qol.etherwarp.left_click_warp", "Left Click Warp", "Left-click an Etherwarp item to use it.", SettingType.TOGGLE, "lcew"),
                     setting("qol.etherwarp.shift_automatically", "Shift Automatically", "Hold sneak briefly when left-click warping while standing.", SettingType.TOGGLE)
             );

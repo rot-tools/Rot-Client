@@ -82,7 +82,6 @@ final class QolUtilityCatalogTest {
                 "qol.foraging_audio",
                 "qol.foraging_helpers",
                 "qol.item_rarity",
-                "qol.mob_highlight",
                 "qol.viewmodel",
                 "qol.item_scale",
                 "qol.animation_fix",
@@ -286,7 +285,7 @@ final class QolUtilityCatalogTest {
                 .noneMatch(m -> m.id().equals("qol.trajectories")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
-                .anyMatch(m -> m.id().equals("qol.mob_highlight")));
+                .noneMatch(m -> m.id().equals("qol.mob_highlight")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.SLAYER)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.slayer_display")));
@@ -424,6 +423,6 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(107, moduleIds.size());
+        assertEquals(106, moduleIds.size());
     }
 }

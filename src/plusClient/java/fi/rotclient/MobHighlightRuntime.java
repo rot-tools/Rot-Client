@@ -30,24 +30,25 @@ public final class MobHighlightRuntime {
 
     static void tick(Minecraft client) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.mobHighlightEnabled || client == null || client.getWindow() == null) {
+        MobHighlightSettings settings = MobHighlightSettings.from(qol);
+        if (!settings.enabled() || client == null || client.getWindow() == null) {
             addKeyWasDown = false;
             MATCHED_IDS.clear();
             return;
         }
         long window = client.getWindow().handle();
-        boolean down = QolKeybindNames.isBoundDown(window, qol.mobHighlightAddKey);
+        boolean down = QolKeybindNames.isBoundDown(window, settings.addKey());
         if (down && !addKeyWasDown) {
-            toggleLookedAt(client, qol);
+            toggleLookedAt(client, qol, settings);
         }
         addKeyWasDown = down;
-        refreshMatches(client, qol);
+        refreshMatches(client, settings);
     }
 
-    private static void refreshMatches(Minecraft client, QolUtilityConfig qol) {
+    private static void refreshMatches(Minecraft client, MobHighlightSettings settings) {
         LocalPlayer player = client.player;
         if (player == null || client.level == null
-                || qol.mobHighlightNames == null || qol.mobHighlightNames.isEmpty()) {
+                || settings.names().isEmpty()) {
             MATCHED_IDS.clear();
             return;
         }
@@ -65,7 +66,7 @@ public final class MobHighlightRuntime {
                 continue;
             }
             String name = entityName(entity);
-            if (MobHighlightPolicy.matches(name, qol.mobHighlightNames)) {
+            if (MobHighlightPolicy.matches(name, settings.names())) {
                 MATCHED_IDS.add(entity.getId());
             }
         }
@@ -73,15 +74,16 @@ public final class MobHighlightRuntime {
 
     public static void renderGizmos() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        MobHighlightSettings settings = MobHighlightSettings.from(qol);
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
-        if (!qol.mobHighlightEnabled || player == null || client.level == null) {
+        if (!settings.enabled() || player == null || client.level == null) {
             return;
         }
-        boolean keyUnbound = qol.mobHighlightAddKey == null || qol.mobHighlightAddKey.isBlank();
+        boolean keyUnbound = settings.addKey().isBlank();
         boolean keyHeld = client.getWindow() != null
-                && QolKeybindNames.isBoundDown(client.getWindow().handle(), qol.mobHighlightAddKey);
-        if (qol.mobHighlightRequireKey && !keyUnbound && !keyHeld) {
+                && QolKeybindNames.isBoundDown(client.getWindow().handle(), settings.addKey());
+        if (settings.requireKey() && !keyUnbound && !keyHeld) {
             return;
         }
         if (MATCHED_IDS.isEmpty()) {
@@ -102,23 +104,24 @@ public final class MobHighlightRuntime {
             var props = Gizmos.cuboid(
                     box,
                     GizmoStyle.strokeAndFill(
-                            qol.mobHighlightColor, 2.0F, withAlpha(qol.mobHighlightColor, 0x44)));
-            if (!qol.mobHighlightDepth) {
+                            settings.color(), 2.0F, withAlpha(settings.color(), 0x44)));
+            if (!settings.depth()) {
                 props.setAlwaysOnTop();
             }
-            if (qol.mobHighlightTracers) {
+            if (settings.tracers()) {
                 var line = Gizmos.line(
                         eye,
                         box.getCenter(),
-                        qol.mobHighlightColor);
-                if (!qol.mobHighlightDepth) {
+                        settings.color());
+                if (!settings.depth()) {
                     line.setAlwaysOnTop();
                 }
             }
         }
     }
 
-    private static void toggleLookedAt(Minecraft client, QolUtilityConfig qol) {
+    private static void toggleLookedAt(
+            Minecraft client, QolUtilityConfig qol, MobHighlightSettings settings) {
         if (client.hitResult == null || client.hitResult.getType() != HitResult.Type.ENTITY) {
             return;
         }
@@ -127,12 +130,12 @@ public final class MobHighlightRuntime {
         if (name.isBlank()) {
             return;
         }
-        if (MobHighlightPolicy.matches(name, qol.mobHighlightNames)) {
-            qol.mobHighlightNames = new ArrayList<>(
-                    MobHighlightPolicy.removeName(qol.mobHighlightNames, name));
+        if (MobHighlightPolicy.matches(name, settings.names())) {
+            MobHighlightSettings.names(qol,
+                    MobHighlightPolicy.removeName(settings.names(), name));
         } else {
-            qol.mobHighlightNames = new ArrayList<>(
-                    MobHighlightPolicy.addName(qol.mobHighlightNames, name));
+            MobHighlightSettings.names(qol,
+                    MobHighlightPolicy.addName(settings.names(), name));
         }
         TrackerStore.save(RotClientClient.trackerConfig());
     }

@@ -586,7 +586,7 @@ public final class RotClientClient implements ClientModInitializer {
                     () -> ForagingRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "MOB_HIGHLIGHT",
-                    () -> MobHighlightRuntime.tick(client));
+                    () -> QolClientFlavorSupport.hooks().mobHighlightTick(client));
             ClientBoundaryGuard.run(
                     "SLAYER_RUNTIME",
                     () -> SlayerRuntime.tick(client));

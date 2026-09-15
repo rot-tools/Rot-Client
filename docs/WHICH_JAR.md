@@ -9,26 +9,27 @@ enable the one you want.
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
 | Legit | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **106** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **133** parents (current full client) |
+| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **134** parents (current full client) |
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 `SHA256SUMS.txt` when you download from GitHub.
 
 ## Rot Client (legit)
 
-Use this when you want overlays, HUDs, waypoints, visual ESP, trackers, Term
-Sim, World Scanner, puzzle/terminal **overlays**, Storage/Inventory, Custom
-Scoreboard, Fullbright, and user-driven configuration tools. Plus automation
-policies, runtimes, mixins, and assets are **not in this JAR**.
+This is the HUD/QoL playtest edition. Trajectories, World Scanner, and Mob
+Highlight are Plus-only. Etherwarp destination boxes respect block occlusion
+in Lite, including when an older profile saved depth check off. Dungeon
+ESP/solvers, Diana burrows, and Experiment Solver still require an edition
+audit before a public Lite release.
 
-The common config schema deliberately retains inert compatibility fields for
-switching editions. Lite does not publish their Plus catalog cards and has no
-executable implementation route to them. `verifyLegitJar` checks the packaged
-archive for every separated Plus implementation and identifier.
+Older profiles retain moved Plus settings as opaque JSON so switching editions
+does not erase them. `verifyLegitJar` checks the packaged archive for the
+implementation classes and identifiers already separated. Automated checks
+do not replace a Lite Minecraft runtime playtest.
 
 ## Rot Client+ (automation)
 
-This is the full 133-module client. Clickers, wardrobe automation, Ghosts,
+This is the full 134-module client. Clickers, wardrobe automation, Ghosts,
 Escrow Fix, Free Camera, Inventory Walk, auto terminals, Farm Keys, and the
 other cheat-tagged options stay **opt-in and off by default**. Do not use
 those features on Hypixel.

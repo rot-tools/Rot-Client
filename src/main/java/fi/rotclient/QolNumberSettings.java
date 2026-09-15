@@ -143,21 +143,6 @@ public final class QolNumberSettings {
                             true);
             case "qol.wardrobe_keybinds.delay_variance" ->
                     new Spec(0.0D, 5.0D, 1.0D, true);
-            case "qol.trajectories.range" ->
-                    new Spec(
-                            TrajectoryPredictor.MIN_RANGE,
-                            TrajectoryPredictor.MAX_RANGE,
-                            1.0D,
-                            true);
-            case "qol.trajectories.width" -> new Spec(0.1D, 5.0D, 0.1D, true);
-            case "qol.trajectories.box_size" -> new Spec(0.5D, 3.0D, 0.1D, true);
-            case "qol.trajectories.plane_size" -> new Spec(0.5D, 8.0D, 0.1D, true);
-            case "qol.world_scanner.esp_range" ->
-                    new Spec(
-                            WorldScannerPolicy.MIN_ESP_RANGE,
-                            WorldScannerPolicy.MAX_ESP_RANGE,
-                            1.0D,
-                            true);
             case "qol.fishing_helper.pull_delay",
                  "qol.fishing_helper.pull_variance",
                  "qol.fishing_helper.recast_delay",
@@ -356,21 +341,9 @@ public final class QolNumberSettings {
                             true);
             default -> {
                 Spec athen = DungeonAthenSettings.numberSpec(settingId);
-                yield athen != null ? athen : dynamicWorldScannerSpec(settingId);
+                yield athen;
             }
         };
     }
 
-    private static Spec dynamicWorldScannerSpec(String settingId) {
-        if (!settingId.startsWith("qol.world_scanner.target.")) {
-            return null;
-        }
-        if (settingId.endsWith(".opacity")) {
-            return new Spec(0.0D, 1.0D, 0.01D, true);
-        }
-        if (settingId.endsWith(".name_scale")) {
-            return new Spec(0.5D, 2.0D, 0.05D, true);
-        }
-        return null;
-    }
 }

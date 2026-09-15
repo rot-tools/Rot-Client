@@ -8,7 +8,6 @@ import fi.rotclient.ForagingRuntime;
 import fi.rotclient.QolClientFlavorSupport;
 import fi.rotclient.IotaKuudraRuntime;
 import fi.rotclient.MiningLeftoverRuntime;
-import fi.rotclient.MobHighlightRuntime;
 import fi.rotclient.QolVisualRuntime;
 import fi.rotclient.SlayerRuntime;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -31,7 +30,6 @@ abstract class LevelRendererEtherwarpMixin {
         ClientBoundaryGuard.run("WORLD_SCANNER_GIZMOS", () -> QolVisualRuntime.renderWorldScannerGizmos());
         ClientBoundaryGuard.run("WAYPOINT_GIZMOS", () -> QolVisualRuntime.renderWaypointGizmos());
         ClientBoundaryGuard.run("IOTA_KUUDRA_GIZMOS", () -> IotaKuudraRuntime.renderGizmos());
-        ClientBoundaryGuard.run("MOB_HIGHLIGHT_GIZMOS", () -> MobHighlightRuntime.renderGizmos());
         ClientBoundaryGuard.run("SLAYER_GIZMOS", () -> SlayerRuntime.renderGizmos());
         ClientBoundaryGuard.run("DUNGEON_GIZMOS", () -> DungeonRuntime.renderGizmos());
         ClientBoundaryGuard.run("FISHING_GIZMOS", () -> FishingSuiteRuntime.renderGizmos());

@@ -82,7 +82,7 @@ final class RenderHotPathWiringTest {
                 StandardCharsets.UTF_8);
         assertFalse(assist.contains("entitiesForRendering"));
         String highlight = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/MobHighlightRuntime.java"),
+                "src/plusClient/java/fi/rotclient/MobHighlightRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(highlight.contains("MATCHED_IDS"));
         assertTrue(highlight.contains("EntityLerpPolicy.renderOffset"));

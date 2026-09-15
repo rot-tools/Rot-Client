@@ -39,7 +39,8 @@ final class ColumnStyleQolWiringTest {
                 "src/client/java/fi/rotclient/CommissionDisplayRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(commissionRuntime.contains("rotclient$getNameForDisplay"));
-        assertTrue(client.contains("MobHighlightRuntime.tick"));
+        assertTrue(client.contains("QolClientFlavorSupport.hooks().mobHighlightTick"));
+        assertTrue(plus.contains("MobHighlightRuntime.tick"));
         assertTrue(client.contains("MenuKeybindRuntime.tick"));
         assertFalse(client.contains("WardrobeAutoEquipRuntime.tick"));
         assertTrue(plus.contains("WardrobeAutoEquipRuntime.tick"));

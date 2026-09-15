@@ -72,34 +72,7 @@ final class QolUtilityConfig {
     String nameHiderMode = NameHiderPolicy.MODE_SCRAMBLE;
     String nameHiderCustomName = "";
 
-    boolean trajectoriesEnabled;
-    boolean trajectoriesBows = true;
-    boolean trajectoriesPearls = true;
-    boolean trajectoriesBoxes = true;
-    boolean trajectoriesLines = true;
-    boolean trajectoriesDepth = true;
-    int trajectoriesRange = TrajectoryPredictor.DEFAULT_RANGE;
-    float trajectoriesWidth = 1.0F;
-    float trajectoriesBoxSize = 0.5F;
-    int trajectoriesColor = 0xFF00AAAA;
-    boolean trajectoriesPlane;
-    boolean trajectoriesEntities = true;
-    float trajectoriesPlaneSize = 2.0F;
 
-    boolean worldScannerEnabled;
-    boolean worldScannerOnlyHollows = true;
-    boolean worldScannerCrystals = true;
-    boolean worldScannerMobSpots = true;
-    boolean worldScannerFairyGrottos = true;
-    boolean worldScannerDragonNest;
-    boolean worldScannerWormFishing;
-    boolean worldScannerLavaEsp;
-    boolean worldScannerWaterEsp;
-    boolean worldScannerRatHitboxes = true;
-    boolean worldScannerChatCoords;
-    int worldScannerEspRange = WorldScannerPolicy.DEFAULT_ESP_RANGE;
-    java.util.Map<String, WorldScannerEspSettings.Target> worldScannerTargets =
-            WorldScannerEspSettings.defaults();
 
 
     boolean fishingHelperEnabled;
@@ -148,13 +121,6 @@ final class QolUtilityConfig {
     int itemRarityDivine = ItemRarityPolicy.DEFAULT_DIVINE;
     int itemRaritySpecial = ItemRarityPolicy.DEFAULT_SPECIAL;
 
-    boolean mobHighlightEnabled;
-    boolean mobHighlightRequireKey;
-    String mobHighlightAddKey = "";
-    boolean mobHighlightDepth = true;
-    boolean mobHighlightTracers = true;
-    int mobHighlightColor = 0xFFFF55FF;
-    java.util.List<String> mobHighlightNames = new java.util.ArrayList<>();
 
     boolean customTooltipEnabled;
     boolean customTooltipInfinite = true;
@@ -223,7 +189,6 @@ final class QolUtilityConfig {
     String etherwarpRenderStyle = "Outline";
     boolean etherwarpUseServerPosition = true;
     boolean etherwarpFullBlock = true;
-    boolean etherwarpDepth = true;
     boolean etherwarpSounds = true;
     String etherwarpKeybind = "";
 
@@ -459,8 +424,6 @@ final class QolUtilityConfig {
             case "qol.skill_levels" -> skillLevelsEnabled;
             case "qol.pet_hud" -> petHudEnabled;
             case "qol.name_hider" -> nameHiderEnabled;
-            case "qol.trajectories" -> trajectoriesEnabled;
-            case "qol.world_scanner" -> worldScannerEnabled;
             case "qol.fishing_helper" -> fishingHelperEnabled;
             case "qol.item_tooltips" ->
                     missingEnchantsEnabled
@@ -470,7 +433,6 @@ final class QolUtilityConfig {
             case "qol.missing_enchants" -> missingEnchantsEnabled;
             case "qol.commission_display" -> commissionDisplayEnabled;
             case "qol.item_rarity" -> itemRarityEnabled;
-            case "qol.mob_highlight" -> mobHighlightEnabled;
             case "qol.custom_tooltip" -> customTooltipEnabled;
             case "qol.fullbright", "qol.auto_sprint", "qol.camera" -> false;
             default -> {
@@ -505,8 +467,6 @@ final class QolUtilityConfig {
             case "qol.skill_levels" -> skillLevelsEnabled = enabled;
             case "qol.pet_hud" -> petHudEnabled = enabled;
             case "qol.name_hider" -> nameHiderEnabled = enabled;
-            case "qol.trajectories" -> trajectoriesEnabled = enabled;
-            case "qol.world_scanner" -> worldScannerEnabled = enabled;
             case "qol.fishing_helper" -> fishingHelperEnabled = enabled;
             case "qol.item_tooltips" -> {
                 missingEnchantsEnabled = enabled;
@@ -517,7 +477,6 @@ final class QolUtilityConfig {
             case "qol.missing_enchants" -> missingEnchantsEnabled = enabled;
             case "qol.commission_display" -> commissionDisplayEnabled = enabled;
             case "qol.item_rarity" -> itemRarityEnabled = enabled;
-            case "qol.mob_highlight" -> mobHighlightEnabled = enabled;
             case "qol.custom_tooltip" -> customTooltipEnabled = enabled;
             default -> {
                 if (!QolFlavorSupport.extension().writeModuleEnabled(this, moduleId, enabled)) {
@@ -539,10 +498,6 @@ final class QolUtilityConfig {
     Boolean readBoolean(String settingId) {
         if (settingId == null) {
             return null;
-        }
-        Boolean target = readWorldScannerTargetBoolean(settingId);
-        if (target != null) {
-            return target;
         }
         return switch (settingId) {
             case "qol.render_optimizer.hide_falling_blocks" -> hideFallingBlocks;
@@ -567,28 +522,10 @@ final class QolUtilityConfig {
             case "qol.etherwarp.show_failed" -> etherwarpShowFailed;
             case "qol.etherwarp.use_server_position" -> etherwarpUseServerPosition;
             case "qol.etherwarp.full_block" -> etherwarpFullBlock;
-            case "qol.etherwarp.depth" -> etherwarpDepth;
             case "qol.etherwarp.sounds" -> etherwarpSounds;
             case "qol.click_gui.chat_notifications" -> clickGuiChatNotifications;
             case "qol.click_gui.rounded_bottoms" -> clickGuiRoundedBottoms;
             case "qol.click_gui.developer_message" -> clickGuiDeveloperMessage;
-            case "qol.trajectories.bows" -> trajectoriesBows;
-            case "qol.trajectories.pearls" -> trajectoriesPearls;
-            case "qol.trajectories.lines" -> trajectoriesLines;
-            case "qol.trajectories.boxes" -> trajectoriesBoxes;
-            case "qol.trajectories.depth" -> trajectoriesDepth;
-            case "qol.trajectories.plane" -> trajectoriesPlane;
-            case "qol.trajectories.entities" -> trajectoriesEntities;
-            case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows;
-            case "qol.world_scanner.crystals" -> worldScannerCrystals;
-            case "qol.world_scanner.mob_spots" -> worldScannerMobSpots;
-            case "qol.world_scanner.fairy" -> worldScannerFairyGrottos;
-            case "qol.world_scanner.dragon" -> worldScannerDragonNest;
-            case "qol.world_scanner.worm" -> worldScannerWormFishing;
-            case "qol.world_scanner.lava_esp" -> worldScannerLavaEsp;
-            case "qol.world_scanner.water_esp" -> worldScannerWaterEsp;
-            case "qol.world_scanner.rat_hitboxes" -> worldScannerRatHitboxes;
-            case "qol.world_scanner.chat" -> worldScannerChatCoords;
             case "qol.wardrobe_keybinds.disable_unequip" -> wardrobeDisableUnequip;
             case "qol.wardrobe_keybinds.cancel_all" -> wardrobeCancelAll;
             case "qol.wardrobe_keybinds.cancel_render" -> wardrobeCancelRender;
@@ -652,9 +589,6 @@ final class QolUtilityConfig {
             case "qol.etherwarp.left_click_warp" -> etherwarpLeftClickWarp;
             case "qol.etherwarp.shift_automatically" -> etherwarpShiftAutomatically;
             case "qol.item_rarity.hotbar" -> itemRarityHotbar;
-            case "qol.mob_highlight.highlight_key" -> mobHighlightRequireKey;
-            case "qol.mob_highlight.depth" -> mobHighlightDepth;
-            case "qol.mob_highlight.tracers" -> mobHighlightTracers;
             case "qol.custom_tooltip.infinite" -> customTooltipInfinite;
             case "qol.custom_tooltip.horizontal" -> customTooltipHorizontal;
             case "qol.custom_tooltip.vertical" -> customTooltipVertical;
@@ -687,9 +621,6 @@ final class QolUtilityConfig {
         if (settingId == null) {
             return;
         }
-        if (writeWorldScannerTargetBoolean(settingId, value)) {
-            return;
-        }
         switch (settingId) {
             case "qol.render_optimizer.hide_falling_blocks" -> hideFallingBlocks = value;
             case "qol.render_optimizer.hide_lightning" -> hideLightning = value;
@@ -713,30 +644,12 @@ final class QolUtilityConfig {
             case "qol.etherwarp.show_failed" -> etherwarpShowFailed = value;
             case "qol.etherwarp.use_server_position" -> etherwarpUseServerPosition = value;
             case "qol.etherwarp.full_block" -> etherwarpFullBlock = value;
-            case "qol.etherwarp.depth" -> etherwarpDepth = value;
             case "qol.etherwarp.sounds" -> etherwarpSounds = value;
             case "qol.etherwarp.left_click_warp" -> etherwarpLeftClickWarp = value;
             case "qol.etherwarp.shift_automatically" -> etherwarpShiftAutomatically = value;
             case "qol.click_gui.chat_notifications" -> clickGuiChatNotifications = value;
             case "qol.click_gui.rounded_bottoms" -> clickGuiRoundedBottoms = value;
             case "qol.click_gui.developer_message" -> clickGuiDeveloperMessage = value;
-            case "qol.trajectories.bows" -> trajectoriesBows = value;
-            case "qol.trajectories.pearls" -> trajectoriesPearls = value;
-            case "qol.trajectories.lines" -> trajectoriesLines = value;
-            case "qol.trajectories.boxes" -> trajectoriesBoxes = value;
-            case "qol.trajectories.depth" -> trajectoriesDepth = value;
-            case "qol.trajectories.plane" -> trajectoriesPlane = value;
-            case "qol.trajectories.entities" -> trajectoriesEntities = value;
-            case "qol.world_scanner.only_hollows" -> worldScannerOnlyHollows = value;
-            case "qol.world_scanner.crystals" -> worldScannerCrystals = value;
-            case "qol.world_scanner.mob_spots" -> worldScannerMobSpots = value;
-            case "qol.world_scanner.fairy" -> worldScannerFairyGrottos = value;
-            case "qol.world_scanner.dragon" -> worldScannerDragonNest = value;
-            case "qol.world_scanner.worm" -> worldScannerWormFishing = value;
-            case "qol.world_scanner.lava_esp" -> worldScannerLavaEsp = value;
-            case "qol.world_scanner.water_esp" -> worldScannerWaterEsp = value;
-            case "qol.world_scanner.rat_hitboxes" -> worldScannerRatHitboxes = value;
-            case "qol.world_scanner.chat" -> worldScannerChatCoords = value;
             case "qol.wardrobe_keybinds.disable_unequip" -> wardrobeDisableUnequip = value;
             case "qol.wardrobe_keybinds.cancel_all" -> wardrobeCancelAll = value;
             case "qol.wardrobe_keybinds.cancel_render" -> wardrobeCancelRender = value;
@@ -806,9 +719,6 @@ final class QolUtilityConfig {
             case "qol.fishing_helper.hide_hook_nametag" -> fishingHelperHideHookNametag = value;
             case "qol.commission_display.colored_percent" -> commissionDisplayColoredPercent = value;
             case "qol.item_rarity.hotbar" -> itemRarityHotbar = value;
-            case "qol.mob_highlight.highlight_key" -> mobHighlightRequireKey = value;
-            case "qol.mob_highlight.depth" -> mobHighlightDepth = value;
-            case "qol.mob_highlight.tracers" -> mobHighlightTracers = value;
             case "qol.custom_tooltip.infinite" -> customTooltipInfinite = value;
             case "qol.custom_tooltip.horizontal" -> customTooltipHorizontal = value;
             case "qol.custom_tooltip.vertical" -> customTooltipVertical = value;
@@ -842,10 +752,6 @@ final class QolUtilityConfig {
         if (settingId == null) {
             return "";
         }
-        String target = readWorldScannerTargetEnum(settingId);
-        if (target != null) {
-            return target;
-        }
         return switch (settingId) {
             case "qol.performance_hud.direction" -> performanceDirection;
             case "qol.etherwarp.render_style" -> EtherwarpPredictor.normalizeRenderStyle(etherwarpRenderStyle);
@@ -867,6 +773,8 @@ final class QolUtilityConfig {
             case "qol.command_keybinds.activation" ->
                     RingPolicy.normalizeActivation(commandBindActivation);
             default -> {
+                String flavor = QolFlavorSupport.extension().readEnum(this, settingId);
+                if (flavor != null) yield flavor;
                 String extra = extras().readEnum(settingId);
                 yield extra == null ? "" : extra;
             }
@@ -914,10 +822,13 @@ final class QolUtilityConfig {
             case "qol.command_keybinds.activation" ->
                     commandBindActivation = RingPolicy.normalizeActivation(value);
             default -> {
+                if (QolFlavorSupport.extension().writeEnum(this, settingId, value)) {
+                    return true;
+                }
                 if (extras().writeEnum(settingId, value)) {
                     return true;
                 }
-                return writeWorldScannerTargetEnum(settingId, value);
+                return false;
             }
         }
         return true;
@@ -993,10 +904,6 @@ final class QolUtilityConfig {
         if (settingId == null) {
             return null;
         }
-        Double target = readWorldScannerTargetNumber(settingId);
-        if (target != null) {
-            return target;
-        }
         return switch (settingId) {
             case "qol.zoom.amount" -> (double) zoomAmount;
             case "qol.zoom.speed" -> (double) zoomSpeed;
@@ -1006,11 +913,6 @@ final class QolUtilityConfig {
             case "qol.player_size.z" -> (double) playerSizeZ;
             case "qol.no_cursor_reset.unhook_timeout" -> (double) noCursorUnhookTimeoutMs;
             case "qol.slot_binds.line_width" -> (double) slotBindLineWidth;
-            case "qol.trajectories.range" -> (double) trajectoriesRange;
-            case "qol.trajectories.width" -> (double) trajectoriesWidth;
-            case "qol.trajectories.box_size" -> (double) trajectoriesBoxSize;
-            case "qol.trajectories.plane_size" -> (double) trajectoriesPlaneSize;
-            case "qol.world_scanner.esp_range" -> (double) worldScannerEspRange;
             case "qol.chat_commands.previous_server_time" -> (double) chatPreviousServerSeconds;
             case "qol.fishing_helper.pull_delay" -> (double) fishingHelperPullDelay;
             case "qol.fishing_helper.pull_variance" -> (double) fishingHelperPullVariance;
@@ -1085,15 +987,6 @@ final class QolUtilityConfig {
             case "qol.command_keybinds.length_limit" ->
                     commandBindLengthLimit =
                             RingPolicy.clampLengthLimit((int) Math.round(value));
-            case "qol.trajectories.range" ->
-                    trajectoriesRange = TrajectoryPredictor.clampRange((int) Math.round(value));
-            case "qol.trajectories.width" -> trajectoriesWidth = (float) clamp(value, 0.1D, 5.0D);
-            case "qol.trajectories.box_size" ->
-                    trajectoriesBoxSize = (float) clamp(value, 0.5D, 3.0D);
-            case "qol.trajectories.plane_size" ->
-                    trajectoriesPlaneSize = (float) clamp(value, 0.5D, 8.0D);
-            case "qol.world_scanner.esp_range" ->
-                    worldScannerEspRange = WorldScannerPolicy.clampEspRange((int) Math.round(value));
             case "qol.chat_commands.previous_server_time" ->
                     chatPreviousServerSeconds = SkyBlockUtilityPolicy.clampPreviousServerSeconds((int) Math.round(value));
             case "qol.fishing_helper.pull_delay" ->
@@ -1121,7 +1014,7 @@ final class QolUtilityConfig {
                 if (extras().writeNumber(settingId, value)) {
                     return true;
                 }
-                return writeWorldScannerTargetNumber(settingId, value);
+                return false;
             }
         }
         return true;
@@ -1145,7 +1038,6 @@ final class QolUtilityConfig {
             case "qol.player_display.vitality_color" -> playerDisplayVitalityColor;
             case "qol.player_display.ehp_color" -> playerDisplayEhpColor;
             case "qol.player_display.speed_color" -> playerDisplaySpeedColor;
-            case "qol.trajectories.color" -> trajectoriesColor;
             case "qol.skill_levels.level_color" -> skillLevelsColor;
             case "qol.skill_levels.max_color" -> skillLevelsMaxColor;
             case "qol.item_rarity.common" -> itemRarityCommon;
@@ -1156,7 +1048,6 @@ final class QolUtilityConfig {
             case "qol.item_rarity.mythic" -> itemRarityMythic;
             case "qol.item_rarity.divine" -> itemRarityDivine;
             case "qol.item_rarity.special" -> itemRaritySpecial;
-            case "qol.mob_highlight.color" -> mobHighlightColor;
             case "qol.player_size.player_animals_collar" -> playerAnimalsCollarColor;
             case "qol.custom_tooltip.border_color" -> customTooltipBorderColor;
             case "qol.custom_tooltip.background_color" -> customTooltipBackgroundColor;
@@ -1166,8 +1057,10 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.chrome_hotbar" -> inventoryChromeHotbar;
             case "qol.inventory_overlay.chrome_border" -> inventoryChromeBorder;
             default -> {
+                Integer flavor = QolFlavorSupport.extension().readColor(this, settingId);
+                if (flavor != null) yield flavor;
                 Integer extra = extras().readColor(settingId);
-                yield extra != null ? extra : readWorldScannerTargetColor(settingId);
+                yield extra;
             }
         };
     }
@@ -1190,7 +1083,6 @@ final class QolUtilityConfig {
             case "qol.player_display.vitality_color" -> playerDisplayVitalityColor = argb;
             case "qol.player_display.ehp_color" -> playerDisplayEhpColor = argb;
             case "qol.player_display.speed_color" -> playerDisplaySpeedColor = argb;
-            case "qol.trajectories.color" -> trajectoriesColor = argb;
             case "qol.skill_levels.level_color" -> skillLevelsColor = argb;
             case "qol.skill_levels.max_color" -> skillLevelsMaxColor = argb;
             case "qol.item_rarity.common" -> itemRarityCommon = argb;
@@ -1201,7 +1093,6 @@ final class QolUtilityConfig {
             case "qol.item_rarity.mythic" -> itemRarityMythic = argb;
             case "qol.item_rarity.divine" -> itemRarityDivine = argb;
             case "qol.item_rarity.special" -> itemRaritySpecial = argb;
-            case "qol.mob_highlight.color" -> mobHighlightColor = argb;
             case "qol.player_size.player_animals_collar" -> playerAnimalsCollarColor = argb;
             case "qol.custom_tooltip.border_color" -> customTooltipBorderColor = argb;
             case "qol.custom_tooltip.background_color" -> customTooltipBackgroundColor = argb;
@@ -1211,10 +1102,13 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay.chrome_hotbar" -> inventoryChromeHotbar = argb;
             case "qol.inventory_overlay.chrome_border" -> inventoryChromeBorder = argb;
             default -> {
+                if (QolFlavorSupport.extension().writeColor(this, settingId, argb)) {
+                    return true;
+                }
                 if (extras().writeColor(settingId, argb)) {
                     return true;
                 }
-                return writeWorldScannerTargetColor(settingId, argb);
+                return false;
             }
         }
         return true;
@@ -1268,7 +1162,6 @@ final class QolUtilityConfig {
             case "qol.slot_binds.bind_set_key" -> slotBindSetKey;
             case "qol.waypoints.keybind" -> waypointsKeybind;
             case "qol.missing_enchants.keybind" -> missingEnchantsKeybind;
-            case "qol.mob_highlight.add_key" -> mobHighlightAddKey;
             case "qol.custom_tooltip.horizontal_key" -> customTooltipHorizontalKey;
             case "qol.custom_tooltip.only_name_key" -> customTooltipOnlyNameKey;
             default -> {
@@ -1328,7 +1221,6 @@ final class QolUtilityConfig {
             case "qol.slot_binds.bind_set_key" -> slotBindSetKey = stored;
             case "qol.waypoints.keybind" -> waypointsKeybind = stored;
             case "qol.missing_enchants.keybind" -> missingEnchantsKeybind = stored;
-            case "qol.mob_highlight.add_key" -> mobHighlightAddKey = stored;
             case "qol.custom_tooltip.horizontal_key" -> customTooltipHorizontalKey = stored;
             case "qol.custom_tooltip.only_name_key" -> customTooltipOnlyNameKey = stored;
             default -> {
@@ -1473,7 +1365,6 @@ final class QolUtilityConfig {
         wardrobeClickDelay = Math.max(0, Math.min(8, wardrobeClickDelay));
         wardrobeCloseDelay = Math.max(0, Math.min(8, wardrobeCloseDelay));
         wardrobeDelayVariance = Math.max(0, Math.min(5, wardrobeDelayVariance));
-        ensureWorldScannerTargets();
     }
 
     void migrateLegacyDefaultPalette() {
@@ -1889,8 +1780,8 @@ final class QolUtilityConfig {
                 etherwarpRenderStyle = d.etherwarpRenderStyle;
                 etherwarpUseServerPosition = d.etherwarpUseServerPosition;
                 etherwarpFullBlock = d.etherwarpFullBlock;
-                etherwarpDepth = d.etherwarpDepth;
                 etherwarpSounds = d.etherwarpSounds;
+                QolFlavorSupport.extension().resetModule(this, moduleId);
                 etherwarpKeybind = d.etherwarpKeybind;
                 etherwarpLeftClickWarp = d.etherwarpLeftClickWarp;
                 etherwarpShiftAutomatically = d.etherwarpShiftAutomatically;
@@ -1938,36 +1829,6 @@ final class QolUtilityConfig {
                 nameHiderMode = d.nameHiderMode;
                 nameHiderCustomName = d.nameHiderCustomName;
             }
-            case "qol.trajectories" -> {
-                trajectoriesEnabled = d.trajectoriesEnabled;
-                trajectoriesBows = d.trajectoriesBows;
-                trajectoriesPearls = d.trajectoriesPearls;
-                trajectoriesBoxes = d.trajectoriesBoxes;
-                trajectoriesLines = d.trajectoriesLines;
-                trajectoriesDepth = d.trajectoriesDepth;
-                trajectoriesRange = d.trajectoriesRange;
-                trajectoriesWidth = d.trajectoriesWidth;
-                trajectoriesBoxSize = d.trajectoriesBoxSize;
-                trajectoriesColor = d.trajectoriesColor;
-                trajectoriesPlane = d.trajectoriesPlane;
-                trajectoriesEntities = d.trajectoriesEntities;
-                trajectoriesPlaneSize = d.trajectoriesPlaneSize;
-            }
-            case "qol.world_scanner" -> {
-                worldScannerEnabled = d.worldScannerEnabled;
-                worldScannerOnlyHollows = d.worldScannerOnlyHollows;
-                worldScannerCrystals = d.worldScannerCrystals;
-                worldScannerMobSpots = d.worldScannerMobSpots;
-                worldScannerFairyGrottos = d.worldScannerFairyGrottos;
-                worldScannerDragonNest = d.worldScannerDragonNest;
-                worldScannerWormFishing = d.worldScannerWormFishing;
-                worldScannerLavaEsp = d.worldScannerLavaEsp;
-                worldScannerWaterEsp = d.worldScannerWaterEsp;
-                worldScannerRatHitboxes = d.worldScannerRatHitboxes;
-                worldScannerChatCoords = d.worldScannerChatCoords;
-                worldScannerEspRange = d.worldScannerEspRange;
-                worldScannerTargets = WorldScannerEspSettings.defaults();
-            }
             case "qol.fishing_helper" -> {
                 fishingHelperEnabled = d.fishingHelperEnabled;
                 fishingHelperAutoPull = d.fishingHelperAutoPull;
@@ -2014,15 +1875,6 @@ final class QolUtilityConfig {
                 itemRarityMythic = d.itemRarityMythic;
                 itemRarityDivine = d.itemRarityDivine;
                 itemRaritySpecial = d.itemRaritySpecial;
-            }
-            case "qol.mob_highlight" -> {
-                mobHighlightEnabled = d.mobHighlightEnabled;
-                mobHighlightRequireKey = d.mobHighlightRequireKey;
-                mobHighlightAddKey = d.mobHighlightAddKey;
-                mobHighlightDepth = d.mobHighlightDepth;
-                mobHighlightTracers = d.mobHighlightTracers;
-                mobHighlightColor = d.mobHighlightColor;
-                mobHighlightNames = new java.util.ArrayList<>();
             }
             case "qol.item_tooltips" -> {
                 missingEnchantsEnabled = d.missingEnchantsEnabled;
@@ -2077,130 +1929,6 @@ final class QolUtilityConfig {
                 return extras().resetModule(moduleId);
             }
         }
-        return true;
-    }
-
-    void ensureWorldScannerTargets() {
-        Map<String, WorldScannerEspSettings.Target> defaults = WorldScannerEspSettings.defaults();
-        if (worldScannerTargets == null) {
-            worldScannerTargets = defaults;
-            return;
-        }
-        for (WorldScannerEspSettings.Spec spec : WorldScannerEspSettings.TARGETS) {
-            worldScannerTargets.putIfAbsent(spec.id(), defaults.get(spec.id()));
-        }
-    }
-
-    WorldScannerEspSettings.Target worldScannerTarget(String id) {
-        ensureWorldScannerTargets();
-        return worldScannerTargets.computeIfAbsent(
-                id, key -> new WorldScannerEspSettings.Target(WorldScannerEspSettings.defaultColor(key)));
-    }
-
-    private Boolean readWorldScannerTargetBoolean(String settingId) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null) {
-            return null;
-        }
-        WorldScannerEspSettings.Target target = worldScannerTarget(parts[0]);
-        return switch (parts[1]) {
-            case "enabled" -> target.enabled;
-            case "tracer" -> target.tracer;
-            case "name" -> target.displayName;
-            case "chat" -> target.chatCoords;
-            case "notify" -> target.notify;
-            default -> null;
-        };
-    }
-
-    private boolean writeWorldScannerTargetBoolean(String settingId, boolean value) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null) {
-            return false;
-        }
-        WorldScannerEspSettings.Target target = worldScannerTarget(parts[0]);
-        switch (parts[1]) {
-            case "enabled" -> {
-                target.enabled = value;
-                if ("fairy".equals(parts[0])) {
-                    worldScannerFairyGrottos = value;
-                } else if ("dragon".equals(parts[0])) {
-                    worldScannerDragonNest = value;
-                } else if ("worm".equals(parts[0])) {
-                    worldScannerWormFishing = value;
-                }
-            }
-            case "tracer" -> target.tracer = value;
-            case "name" -> target.displayName = value;
-            case "chat" -> target.chatCoords = value;
-            case "notify" -> target.notify = value;
-            default -> {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String readWorldScannerTargetEnum(String settingId) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null || !"style".equals(parts[1])) {
-            return null;
-        }
-        return WorldScannerEspSettings.normalizeStyle(worldScannerTarget(parts[0]).highlightStyle);
-    }
-
-    private boolean writeWorldScannerTargetEnum(String settingId, String value) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null || !"style".equals(parts[1])) {
-            return false;
-        }
-        worldScannerTarget(parts[0]).highlightStyle = WorldScannerEspSettings.normalizeStyle(value);
-        return true;
-    }
-
-    private Double readWorldScannerTargetNumber(String settingId) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null) {
-            return null;
-        }
-        WorldScannerEspSettings.Target target = worldScannerTarget(parts[0]);
-        return switch (parts[1]) {
-            case "name_scale" -> (double) target.nameScale;
-            case "opacity" -> (double) target.backgroundOpacity;
-            default -> null;
-        };
-    }
-
-    private boolean writeWorldScannerTargetNumber(String settingId, double value) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null) {
-            return false;
-        }
-        WorldScannerEspSettings.Target target = worldScannerTarget(parts[0]);
-        switch (parts[1]) {
-            case "name_scale" -> target.nameScale = (float) clamp(value, 0.5D, 2.0D);
-            case "opacity" -> target.backgroundOpacity = (float) clamp(value, 0.0D, 1.0D);
-            default -> {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private Integer readWorldScannerTargetColor(String settingId) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null || !"color".equals(parts[1])) {
-            return null;
-        }
-        return worldScannerTarget(parts[0]).colorArgb;
-    }
-
-    private boolean writeWorldScannerTargetColor(String settingId, int argb) {
-        String[] parts = WorldScannerEspSettings.splitSetting(settingId);
-        if (parts == null || !"color".equals(parts[1])) {
-            return false;
-        }
-        worldScannerTarget(parts[0]).colorArgb = argb;
         return true;
     }
 

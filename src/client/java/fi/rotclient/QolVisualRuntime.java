@@ -503,7 +503,8 @@ public final class QolVisualRuntime {
                         plane.maxY(),
                         plane.maxZ()),
                 style);
-        if (!EtherwarpPredictor.depthRespectsOcclusion(qol.etherwarpDepth)) {
+        if (!EtherwarpPredictor.depthRespectsOcclusion(
+                QolClientFlavorSupport.hooks().etherwarpOcclusion(qol))) {
             props.setAlwaysOnTop();
         }
         maybePlaySound(qol, player, hit);
