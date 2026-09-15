@@ -282,7 +282,6 @@ public final class HudLayoutLandingPolicy {
             case "slayer_rng" -> new Disable("qol.slayer_drops.rng_hud", false);
             case "slayer_profit" -> new Disable("qol.slayer_drops.profit_hud", false);
             case "slayer_stats" -> new Disable("qol.slayer_stats", true);
-            case "diana" -> new Disable("qol.diana_burrows", true);
             case "foraging" -> new Disable("qol.foraging_trees.progress_hud", false);
             case "wardrobe" -> new Disable("qol.wardrobe_keybinds", true);
             case "slayer_carry" -> new Disable("qol.slayer_carry", true);
@@ -300,7 +299,7 @@ public final class HudLayoutLandingPolicy {
                 if (setting == null || setting.isBlank()) {
                     yield null;
                 }
-                yield new Disable(setting, false);
+                yield new Disable(setting, QolUtilityCatalog.findById(setting) != null);
             }
         };
     }

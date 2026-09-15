@@ -24,8 +24,7 @@ final class RotClientOmniboxPolicyTest {
     void suggestionsStayInsideTheModCatalog() {
         List<RotClientSettingsIndex.Entry> results =
                 RotClientOmniboxPolicy.suggest("auto sprint");
-        assertFalse(results.isEmpty());
-        assertEquals("qol.auto_sprint", results.get(0).id());
+        assertTrue(results.isEmpty());
         assertTrue(RotClientOmniboxPolicy.suggest("https://google.com").isEmpty());
     }
 

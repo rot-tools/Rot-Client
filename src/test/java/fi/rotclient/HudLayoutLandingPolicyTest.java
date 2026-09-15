@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 final class HudLayoutLandingPolicyTest {
     @Test
     void groupsVanillaAndRotOverlaysAndKeepsLiteCatalogStable() {
-        assertEquals(106, QolUtilityCatalog.modules().size());
+        assertEquals(101, QolUtilityCatalog.modules().size());
         assertFalse(HudLayoutLandingPolicy.sections().isEmpty());
         assertTrue(HudLayoutLandingPolicy.sections().stream()
                 .anyMatch(section -> "Vanilla / Hypixel".equals(section.title())));
@@ -155,7 +155,7 @@ final class HudLayoutLandingPolicyTest {
         for (String poseId : new String[] {
                 "performance", "health", "mana", "overflow", "defense", "vitality", "ehp",
                 "speed", "pet", "commission", "wardrobe", "fishing", "mining",
-                "diana", "foraging", "iota_arrows", "kuudra_alerts", "stall_bin", "slayer",
+                "foraging", "iota_arrows", "kuudra_alerts", "stall_bin", "slayer",
                 "slayer_progress", "slayer_rng", "slayer_profit", "slayer_stats", "slayer_carry",
                 "slayer_cocoon", "slayer_attunement", "slayer_vengeance", "dungeon",
                 "dungeon_carry", "dungeon_watcher", "custom_scoreboard"

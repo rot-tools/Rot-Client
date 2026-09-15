@@ -7,7 +7,6 @@ import fi.rotclient.DungeonPolicy;
 import fi.rotclient.PrizeSpinRuntime;
 import fi.rotclient.DungeonRuntime;
 import fi.rotclient.DungeonTerminalClickRuntime;
-import fi.rotclient.ExperimentSolverRuntime;
 import fi.rotclient.InventoryChromeRuntime;
 import fi.rotclient.InventoryButtonsRuntime;
 import fi.rotclient.ItemRarityRuntime;
@@ -201,7 +200,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             int mouseY,
             CallbackInfo ci) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
-        if (ExperimentSolverRuntime.shouldHideTooltip(screen)
+        if (QolClientFlavorSupport.hooks().experimentShouldHideTooltip(screen)
                 || DungeonRuntime.shouldHideTerminalTooltip(screen)) {
             ci.cancel();
             return;
@@ -404,7 +403,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
         if (InventoryChromeRuntime.shouldHideOffhandSlot(
                 (AbstractContainerScreen<?>) (Object) this,
                 slot)
-                || ExperimentSolverRuntime.shouldHideWrongSlot(
+                || QolClientFlavorSupport.hooks().experimentShouldHideWrongSlot(
                         (AbstractContainerScreen<?>) (Object) this, slot)
                 || DungeonRuntime.shouldHideTerminalSlot(
                         (AbstractContainerScreen<?>) (Object) this, slot)) {
@@ -464,7 +463,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ci.cancel();
             return;
         }
-        if (ExperimentSolverRuntime.shouldBlockClick(screen, slotId)) {
+        if (QolClientFlavorSupport.hooks().experimentShouldBlockClick(screen, slotId)) {
             ci.cancel();
             return;
         }
@@ -493,7 +492,7 @@ abstract class AbstractContainerScreenInventoryOverlayMixin {
             ci.cancel();
             return;
         }
-        ExperimentSolverRuntime.onSlotClicked(screen, slotId);
+        QolClientFlavorSupport.hooks().experimentSlotClicked(screen, slotId);
         if (slot != null) {
             IotaKuudraRuntime.onChestSlotClicked(screen, slot);
         }

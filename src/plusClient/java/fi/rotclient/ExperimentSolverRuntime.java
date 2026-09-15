@@ -49,20 +49,20 @@ public final class ExperimentSolverRuntime {
         }
         ExperimentSolverPolicy.SlotUpdate update = snapshot(slotIndex, stack);
         POLICY.updatePhase(update);
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        ExperimentSolverSettings settings = ExperimentSolverSettings.from(RotClientClient.qolConfigPublic());
         switch (experiment) {
             case CHRONOMATRON -> {
-                if (extras.experimentChronomatron) {
+                if (settings.chronomatron()) {
                     POLICY.onChronomatronSlot(update);
                 }
             }
             case ULTRASEQUENCER -> {
-                if (extras.experimentUltrasequencer) {
+                if (settings.ultrasequencer()) {
                     POLICY.onUltrasequencerSlot(update, containerSnapshot(screen));
                 }
             }
             case SUPERPAIRS -> {
-                if (extras.experimentSuperpairs) {
+                if (settings.superpairs()) {
                     POLICY.onSuperpairsSlot(update);
                 }
             }
@@ -100,13 +100,13 @@ public final class ExperimentSolverRuntime {
         if (highlight == null) {
             return 0;
         }
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        ExperimentSolverSettings settings = ExperimentSolverSettings.from(RotClientClient.qolConfigPublic());
         return switch (highlight) {
-            case FIRST -> extras.experimentFirstColor;
-            case SECOND -> extras.experimentSecondColor;
-            case MATCHED -> extras.experimentMatchedColor;
-            case MATCH -> extras.experimentMatchColor;
-            case POWERUP -> extras.experimentPowerupColor;
+            case FIRST -> settings.firstColor();
+            case SECOND -> settings.secondColor();
+            case MATCHED -> settings.matchedColor();
+            case MATCH -> settings.matchColor();
+            case POWERUP -> settings.powerupColor();
         };
     }
 
@@ -117,11 +117,11 @@ public final class ExperimentSolverRuntime {
         if (!enabled() || screen != boundScreen || slotIndex < 0) {
             return false;
         }
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (experiment == ExperimentSolverPolicy.Experiment.CHRONOMATRON && !extras.experimentChronomatron) {
+        ExperimentSolverSettings settings = ExperimentSolverSettings.from(RotClientClient.qolConfigPublic());
+        if (experiment == ExperimentSolverPolicy.Experiment.CHRONOMATRON && !settings.chronomatron()) {
             return false;
         }
-        if (experiment == ExperimentSolverPolicy.Experiment.ULTRASEQUENCER && !extras.experimentUltrasequencer) {
+        if (experiment == ExperimentSolverPolicy.Experiment.ULTRASEQUENCER && !settings.ultrasequencer()) {
             return false;
         }
         return QolClientFlavorSupport.hooks().experimentShouldBlockWrongClick(
@@ -149,17 +149,17 @@ public final class ExperimentSolverRuntime {
         if (!enabled() || screen != boundScreen || experiment == ExperimentSolverPolicy.Experiment.NONE) {
             return false;
         }
-        return RotClientClient.qolConfigPublic().extras().experimentHideTooltip;
+        return ExperimentSolverSettings.from(RotClientClient.qolConfigPublic()).hideTooltip();
     }
 
     public static boolean shouldHideWrongSlot(AbstractContainerScreen<?> screen, Slot slot) {
         if (!enabled() || screen != boundScreen || slot == null || highlights.isEmpty()) {
             return false;
         }
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        ExperimentSolverSettings settings = ExperimentSolverSettings.from(RotClientClient.qolConfigPublic());
         boolean hide = switch (experiment) {
-            case CHRONOMATRON -> extras.experimentHideWrongChrono;
-            case ULTRASEQUENCER -> extras.experimentHideWrongUltra;
+            case CHRONOMATRON -> settings.hideWrongChrono();
+            case ULTRASEQUENCER -> settings.hideWrongUltra();
             default -> false;
         };
         if (!hide || slot.index < 0 || slot.index >= 54) {
@@ -169,7 +169,7 @@ public final class ExperimentSolverRuntime {
     }
 
     private static boolean enabled() {
-        return RotClientClient.qolConfigPublic().extras().experimentSolverEnabled;
+        return ExperimentSolverSettings.from(RotClientClient.qolConfigPublic()).enabled();
     }
 
     private static void bind(AbstractContainerScreen<?> screen) {
@@ -184,8 +184,8 @@ public final class ExperimentSolverRuntime {
     }
 
     private static boolean onPrivateIsland() {
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (!extras.experimentPrivateIslandOnly) {
+        ExperimentSolverSettings settings = ExperimentSolverSettings.from(RotClientClient.qolConfigPublic());
+        if (!settings.privateIslandOnly()) {
             return true;
         }
         return SkyBlockSidebar.text().contains("Your Island");

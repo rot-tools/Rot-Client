@@ -96,7 +96,7 @@ final class QolOverlayHud {
         if (MiningLeftoverRuntime.hudVisible(qol)) {
             renderMiningLeftover(graphics, font, qol);
         }
-        if (DianaRuntime.hudVisible(qol)) {
+        if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)) {
             renderDiana(graphics, font, qol);
         }
         if (ForagingRuntime.hudVisible(qol)) {
@@ -132,7 +132,7 @@ final class QolOverlayHud {
             int x = (client.getWindow().getGuiScaledWidth() - w) / 2;
             RotClientUiDraw.text(graphics, font, miningTitle, x, 42, 0xFFFFAA00, true);
         }
-        String dianaTitle = DianaRuntime.overlayTitle();
+        String dianaTitle = QolClientFlavorSupport.hooks().dianaOverlayTitle();
         if (!dianaTitle.isBlank()) {
             int w = font.width(dianaTitle);
             int x = (client.getWindow().getGuiScaledWidth() - w) / 2;
@@ -647,11 +647,11 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = DianaRuntime.hudLines(qol);
+        List<String> lines = QolClientFlavorSupport.hooks().dianaHudLines(qol);
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
-        if (!DianaRuntime.hudVisible(qol) && lines.isEmpty()) {
+        if (!QolClientFlavorSupport.hooks().dianaHudVisible(qol) && lines.isEmpty()) {
             return;
         }
         drawStyledHudLines(graphics, font, "diana", lines, 168);
@@ -1411,7 +1411,7 @@ final class QolOverlayHud {
         if (dungeonWatcherEditorVisible(qol)) labels.add("Blood Timers");
         if (FishingSuiteRuntime.hudVisible(qol)) labels.add("Fishing HUD");
         if (MiningLeftoverRuntime.hudVisible(qol)) labels.add("Mining HUD");
-        if (DianaRuntime.hudVisible(qol)) labels.add("Diana HUD");
+        if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)) labels.add("Diana HUD");
         if (ForagingRuntime.hudVisible(qol)) labels.add("Foraging HUD");
         if (IotaRuntime.hudVisible(qol)) labels.add("Arrow Tracker");
         if (IotaKuudraRuntime.hudVisible(qol)) labels.add("Kuudra Alerts");
@@ -1602,7 +1602,7 @@ final class QolOverlayHud {
                 && inside(mouseX, mouseY, "mining", 180, 64)) {
             return "mining";
         }
-        if (DianaRuntime.hudVisible(qol)
+        if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)
                 && inside(mouseX, mouseY, "diana", 180, 64)) {
             return "diana";
         }
@@ -2177,7 +2177,7 @@ final class QolOverlayHud {
         if (dungeonWatcherEditorVisible(qol)) return "dungeon_watcher";
         if (FishingSuiteRuntime.hudVisible(qol)) return "fishing";
         if (MiningLeftoverRuntime.hudVisible(qol)) return "mining";
-        if (DianaRuntime.hudVisible(qol)) return "diana";
+        if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)) return "diana";
         if (ForagingRuntime.hudVisible(qol)) return "foraging";
         if (IotaRuntime.hudVisible(qol)) return "iota_arrows";
         if (IotaKuudraRuntime.hudVisible(qol)) return "kuudra_alerts";
@@ -2218,7 +2218,7 @@ final class QolOverlayHud {
             case "dungeon_watcher" -> dungeonWatcherEditorVisible(qol);
             case "fishing" -> FishingSuiteRuntime.hudVisible(qol);
             case "mining" -> MiningLeftoverRuntime.hudVisible(qol);
-            case "diana" -> DianaRuntime.hudVisible(qol);
+            case "diana" -> QolClientFlavorSupport.hooks().dianaHudVisible(qol);
             case "foraging" -> ForagingRuntime.hudVisible(qol);
             case "iota_arrows" -> IotaRuntime.hudVisible(qol);
             case "kuudra_alerts" -> IotaKuudraRuntime.hudVisible(qol);

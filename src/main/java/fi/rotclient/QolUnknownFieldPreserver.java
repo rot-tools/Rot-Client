@@ -18,6 +18,13 @@ final class QolUnknownFieldPreserver {
                             && !field.isSynthetic())
                     .map(java.lang.reflect.Field::getName)
                     .collect(Collectors.toUnmodifiableSet());
+    private static final Set<String> KNOWN_EXTRA_FIELDS =
+            Arrays.stream(QolSkyblockExtras.class.getDeclaredFields())
+                    .filter(field -> !Modifier.isStatic(field.getModifiers())
+                            && !Modifier.isTransient(field.getModifiers())
+                            && !field.isSynthetic())
+                    .map(java.lang.reflect.Field::getName)
+                    .collect(Collectors.toUnmodifiableSet());
 
     private QolUnknownFieldPreserver() {
     }
@@ -33,6 +40,20 @@ final class QolUnknownFieldPreserver {
             }
         }
         qol.add("extensionFields", opaque);
+        preserveExtras(object(qol, "extras"));
+    }
+
+    private static void preserveExtras(JsonObject extras) {
+        if (extras == null) return;
+        JsonObject opaque = extras.has("extensionFields")
+                && extras.get("extensionFields").isJsonObject()
+                ? extras.getAsJsonObject("extensionFields") : new JsonObject();
+        for (var field : extras.entrySet()) {
+            if (!KNOWN_EXTRA_FIELDS.contains(field.getKey()) && !opaque.has(field.getKey())) {
+                opaque.add(field.getKey(), field.getValue().deepCopy());
+            }
+        }
+        extras.add("extensionFields", opaque);
     }
 
     static void preserveProfiles(JsonObject root) {

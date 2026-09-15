@@ -60,9 +60,6 @@ public final class HudElementCatalog {
                 || id.contains("glacite") || id.contains("hotm")) {
             return "mining";
         }
-        if (id.contains("diana")) {
-            return "diana";
-        }
         if (id.contains("dungeon_carry")) {
             return "dungeon_carry";
         }

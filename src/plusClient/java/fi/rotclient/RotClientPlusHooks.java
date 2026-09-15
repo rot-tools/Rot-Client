@@ -211,11 +211,13 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             Minecraft client,
             boolean moduleEnabled,
             boolean autoWarpEnabled,
-            DianaPolicy.WarpPoint warp,
+            Object warp,
             long now,
             long lastSpadeUseAt) {
-        DianaAutomationRuntime.maybeAutoWarp(
-                client, moduleEnabled, autoWarpEnabled, warp, now, lastSpadeUseAt);
+        if (warp instanceof DianaPolicy.WarpPoint point) {
+            DianaAutomationRuntime.maybeAutoWarp(
+                    client, moduleEnabled, autoWarpEnabled, point, now, lastSpadeUseAt);
+        }
     }
 
     @Override
@@ -223,16 +225,72 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             Minecraft client,
             boolean moduleEnabled,
             boolean partyShareEnabled,
-            DianaPolicy.RareMob mob,
+            Object mob,
             net.minecraft.core.BlockPos position,
             long now) {
-        DianaAutomationRuntime.maybePartyShare(
-                client, moduleEnabled, partyShareEnabled, mob, position, now);
+        if (mob instanceof DianaPolicy.RareMob rareMob) {
+            DianaAutomationRuntime.maybePartyShare(
+                    client, moduleEnabled, partyShareEnabled, rareMob, position, now);
+        }
     }
 
     @Override
     public void dianaAutomationReset() {
         DianaAutomationRuntime.reset();
+    }
+
+    @Override
+    public boolean dianaHudVisible(QolUtilityConfig config) {
+        return DianaRuntime.hudVisible(config);
+    }
+
+    @Override
+    public java.util.List<String> dianaHudLines(QolUtilityConfig config) {
+        return DianaRuntime.hudLines(config);
+    }
+
+    @Override
+    public String dianaOverlayTitle() {
+        return DianaRuntime.overlayTitle();
+    }
+
+    @Override
+    public boolean dianaAllowGameMessage(Component message) {
+        return DianaRuntime.allowGameMessage(message);
+    }
+
+    @Override
+    public void dianaOnChat(Component message) {
+        DianaRuntime.onChat(message);
+    }
+
+    @Override
+    public void dianaTick(Minecraft client) {
+        DianaRuntime.tick(client);
+    }
+
+    @Override
+    public void dianaClear() {
+        DianaRuntime.clear();
+    }
+
+    @Override
+    public void dianaObserveParticlePacket(String type, double x, double y, double z,
+                                           int count, float speed, float xDist,
+                                           float yDist, float zDist) {
+        DianaRuntime.observeParticlePacket(type, x, y, z, count, speed,
+                xDist, yDist, zDist);
+    }
+
+    @Override
+    public boolean dianaShouldMuteSound(String id, float pitch, float volume,
+                                        boolean locationZero) {
+        return DianaRuntime.shouldMuteSound(id, pitch, volume, locationZero);
+    }
+
+    @Override
+    public void dianaRenderGizmos() {
+        DianaRuntime.renderGizmos();
     }
 
     @Override
@@ -255,8 +313,54 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public boolean experimentShouldBlockWrongClick(boolean solverWouldBlock) {
-        return RotClientClient.qolConfigPublic().extras().experimentBlockWrongClicks
+        return ExperimentSolverSettings.from(RotClientClient.qolConfigPublic()).blockWrongClicks()
                 && solverWouldBlock;
+    }
+
+    @Override
+    public boolean experimentEnabled() {
+        return ExperimentSolverSettings.from(RotClientClient.qolConfigPublic()).enabled();
+    }
+
+    @Override
+    public void experimentSlotUpdate(int slot, ItemStack stack) {
+        ExperimentSolverRuntime.onSlotUpdate(slot, stack);
+    }
+
+    @Override
+    public void experimentContainerRefresh() {
+        ExperimentSolverRuntime.onContainerRefresh();
+    }
+
+    @Override
+    public void experimentScreenClosed() {
+        ExperimentSolverRuntime.onScreenClosed();
+    }
+
+    @Override
+    public int experimentHighlightColor(AbstractContainerScreen<?> screen, int slot) {
+        return ExperimentSolverRuntime.highlightColor(screen, slot);
+    }
+
+    @Override
+    public boolean experimentShouldBlockClick(AbstractContainerScreen<?> screen, int slot) {
+        return ExperimentSolverRuntime.shouldBlockClick(screen, slot);
+    }
+
+    @Override
+    public void experimentSlotClicked(AbstractContainerScreen<?> screen, int slot) {
+        ExperimentSolverRuntime.onSlotClicked(screen, slot);
+    }
+
+    @Override
+    public boolean experimentShouldHideTooltip(AbstractContainerScreen<?> screen) {
+        return ExperimentSolverRuntime.shouldHideTooltip(screen);
+    }
+
+    @Override
+    public boolean experimentShouldHideWrongSlot(AbstractContainerScreen<?> screen,
+                                                 net.minecraft.world.inventory.Slot slot) {
+        return ExperimentSolverRuntime.shouldHideWrongSlot(screen, slot);
     }
 
     @Override

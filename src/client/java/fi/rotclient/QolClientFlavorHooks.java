@@ -123,7 +123,7 @@ public interface QolClientFlavorHooks {
             Minecraft client,
             boolean moduleEnabled,
             boolean autoWarpEnabled,
-            DianaPolicy.WarpPoint warp,
+            Object warp,
             long now,
             long lastSpadeUseAt) {
     }
@@ -132,12 +132,50 @@ public interface QolClientFlavorHooks {
             Minecraft client,
             boolean moduleEnabled,
             boolean partyShareEnabled,
-            DianaPolicy.RareMob mob,
+            Object mob,
             BlockPos position,
             long now) {
     }
 
     default void dianaAutomationReset() {
+    }
+
+    default boolean dianaHudVisible(QolUtilityConfig config) {
+        return false;
+    }
+
+    default List<String> dianaHudLines(QolUtilityConfig config) {
+        return List.of();
+    }
+
+    default String dianaOverlayTitle() {
+        return "";
+    }
+
+    default boolean dianaAllowGameMessage(Component message) {
+        return true;
+    }
+
+    default void dianaOnChat(Component message) {
+    }
+
+    default void dianaTick(Minecraft client) {
+    }
+
+    default void dianaClear() {
+    }
+
+    default void dianaObserveParticlePacket(String type, double x, double y, double z,
+                                            int count, float speed, float xDist,
+                                            float yDist, float zDist) {
+    }
+
+    default boolean dianaShouldMuteSound(String id, float pitch, float volume,
+                                         boolean locationZero) {
+        return false;
+    }
+
+    default void dianaRenderGizmos() {
     }
 
     default boolean wardrobeMenuHandleInput(
@@ -155,6 +193,47 @@ public interface QolClientFlavorHooks {
     }
 
     default boolean experimentShouldBlockWrongClick(boolean solverWouldBlock) {
+        return false;
+    }
+
+    default boolean experimentEnabled() {
+        return false;
+    }
+
+    default void experimentSlotUpdate(int slot, ItemStack stack) {
+    }
+
+    default void experimentContainerRefresh() {
+    }
+
+    default void experimentScreenClosed() {
+    }
+
+    default int experimentHighlightColor(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            int slot) {
+        return 0;
+    }
+
+    default boolean experimentShouldBlockClick(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            int slot) {
+        return false;
+    }
+
+    default void experimentSlotClicked(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            int slot) {
+    }
+
+    default boolean experimentShouldHideTooltip(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen) {
+        return false;
+    }
+
+    default boolean experimentShouldHideWrongSlot(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
+            net.minecraft.world.inventory.Slot slot) {
         return false;
     }
 

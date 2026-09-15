@@ -12,7 +12,7 @@ final class DianaWiringTest {
     @Test
     void runtimeSourceHasTickChatHudGizmoAndParticleHooks() throws Exception {
         String source = Files.readString(
-                Path.of("src/client/java/fi/rotclient/DianaRuntime.java"),
+                Path.of("src/plusClient/java/fi/rotclient/DianaRuntime.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("static void tick(Minecraft client)"));
         assertTrue(source.contains("static void onChat(Component message)"));
@@ -38,7 +38,7 @@ final class DianaWiringTest {
         assertTrue(source.contains("dianaShareAutoWarp"));
         assertFalse(source.contains("live Hypixel production"));
         String policy = Files.readString(
-                Path.of("src/main/java/fi/rotclient/DianaPolicy.java"),
+                Path.of("src/plus/java/fi/rotclient/DianaPolicy.java"),
                 StandardCharsets.UTF_8);
         assertTrue(policy.contains("classifyParticle"));
         assertTrue(policy.contains("guessBurrow"));
@@ -63,6 +63,10 @@ final class DianaWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(mixin.contains("method = \"handleParticleEvent\""));
         assertFalse(mixin.contains("handleParticles"));
-        assertTrue(mixin.contains("DianaRuntime.observeParticlePacket"));
+        assertTrue(mixin.contains("dianaObserveParticlePacket"));
+        String hooks = Files.readString(
+                Path.of("src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(hooks.contains("DianaRuntime.observeParticlePacket"));
     }
 }

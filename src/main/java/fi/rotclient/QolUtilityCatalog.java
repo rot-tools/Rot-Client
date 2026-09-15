@@ -273,10 +273,7 @@ public final class QolUtilityCatalog {
         return false;
     }
 
-    /**
-     * Gameplay automation and other illegal helpers. Auto Sprint stays off this
-     * list: it only holds vanilla sprint, it does not click or solve for you.
-     */
+    /** Gameplay automation and other unfair assists. */
     static boolean isGameplayCheatId(String id) {
         if (id == null || id.isBlank()) {
             return false;
@@ -284,7 +281,7 @@ public final class QolUtilityCatalog {
         if (id.endsWith("_cheats")) {
             return true;
         }
-        if (id.startsWith("qol.auto_") && !id.equals("qol.auto_sprint")) {
+        if (id.startsWith("qol.auto_")) {
             return true;
         }
         return switch (id) {
@@ -292,7 +289,6 @@ public final class QolUtilityCatalog {
                     "qol.farm_keys",
                     "qol.freecam",
                     "qol.camera",
-                    "qol.diana_share",
                     "qol.slayer_auto_start",
                     "qol.slayer_auto_soulcry",
                     "qol.slayer_dagger_swap",
@@ -547,18 +543,6 @@ public final class QolUtilityCatalog {
                 setting("qol.pet_keybinds.disable_unequip", "Disable Unequip", "Prevent accidental pet unequip.", SettingType.TOGGLE),
                 setting("qol.pet_keybinds.close_if_equipped", "Close If Already Equipped", "Close pets UI if already equipped.", SettingType.TOGGLE),
                 setting("qol.pet_keybinds.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
-
-        modules.add(module(
-                "qol.auto_sprint",
-                "Auto Sprint",
-                "Keep sprinting while moving forward.",
-                Group.UTILITIES,
-                "Movement",
-                false,
-                true,
-                true,
-                List.of("sprint", "run", "ctrl"),
-                setting("qol.auto_sprint.keybind", "Keybind", "Optional shortcut.", SettingType.KEYBIND)));
 
 
 
@@ -1867,54 +1851,6 @@ public final class QolUtilityCatalog {
                 setting("qol.etherwarp.sounds", "Sounds", "Local feedback sounds.", SettingType.TOGGLE),
                 setting("qol.etherwarp.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
-        modules.add(module(
-                "qol.diana_burrows",
-                "Diana Burrows",
-                "Spade lava-trail guess (polynomial fit), START/MOB/TREASURE particle burrows, waypoints. Serveri.",
-                Group.EVENTS,
-                "Diana",
-                false,
-                true,
-                true,
-                List.of("diana", "burrow", "griffin", "spade", "mayor"),
-                setting("qol.diana_burrows.guess", "Spade Guess", "Polynomial guess from Ancestral Spade ding lava particles.", SettingType.TOGGLE),
-                setting("qol.diana_burrows.particles", "Particle Burrows", "Classify nearby START / MOB / TREASURE from particle combos.", SettingType.TOGGLE),
-                setting("qol.diana_burrows.waypoints", "Waypoints", "Box guessed and found burrows.", SettingType.TOGGLE),
-                setting("qol.diana_burrows.mute_spade", "Mute Bugged Spade", "Mute non-real music.* while digging (mutes the bugged spade sound).", SettingType.TOGGLE),
-                setting("qol.diana_burrows.fix_chat", "Filter Duplicate Chat", "Hide duplicate Griffin burrow chat within 400ms.", SettingType.TOGGLE),
-                setting("qol.diana_burrows.guess_color", "Guess Color", "Guess waypoint color.", SettingType.COLOR),
-                setting("qol.diana_burrows.start_color", "Start Color", "Start burrow color.", SettingType.COLOR),
-                setting("qol.diana_burrows.mob_color", "Mob Color", "Mob burrow color.", SettingType.COLOR),
-                setting("qol.diana_burrows.treasure_color", "Treasure Color", "Treasure burrow color.", SettingType.COLOR),
-                setting("qol.diana_burrows.open_hud_editor", "Edit Diana HUD", "Move the Diana HUD.", SettingType.ACTION, "position")));
-
-        modules.add(module(
-                "qol.diana_mobs",
-                "Diana Mobs",
-                "Nametag ESP for Inquisitor and rare mythologicals, plus Griffin pet warning when digging without Griffin.",
-                Group.EVENTS,
-                "Diana",
-                false,
-                true,
-                true,
-                List.of("inquisitor", "griffin", "minos", "diana"),
-                setting("qol.diana_mobs.rare_esp", "Rare ESP", "Box Inquisitor / Sphinx / Manticore / King Minos nametags.", SettingType.TOGGLE),
-                setting("qol.diana_mobs.griffin_warn", "Griffin Warning", "Title if you dig without a Griffin pet.", SettingType.TOGGLE),
-                setting("qol.diana_mobs.esp_color", "ESP Color", "Rare mob box color.", SettingType.COLOR)));
-
-        modules.add(module(
-                "qol.diana_profit",
-                "Diana Profit",
-                "Session-local drop HUD from dug chat (Crown of Greed, relics, coins). Not the mining Current Session ledger.",
-                Group.EVENTS,
-                "Diana",
-                false,
-                true,
-                true,
-                List.of("diana", "profit", "daedalus", "crown of greed"),
-                setting("qol.diana_profit.hud", "Drop HUD", "Show session Diana drops.", SettingType.TOGGLE),
-                setting("qol.diana_profit.open_hud_editor", "Edit Diana HUD", "Move the Diana HUD.", SettingType.ACTION, "position")));
-
 
 
         modules.add(module(
@@ -2539,29 +2475,6 @@ public final class QolUtilityCatalog {
                 true,
                 List.of("calendar", "date", "event", "starts in", "minister"),
                 setting("qol.calendar_date.minister", "Minister In Calendar", "Show the current minister on Calendar and Events tooltips.", SettingType.TOGGLE)));
-
-        modules.add(module(
-                "qol.experiment_solver",
-                "Experiments Solver",
-                "Track Chronomatron, Ultrasequencer, and Superpairs solutions in the Experimentation Table.",
-                Group.INTERFACE,
-                "Menus",
-                false,
-                true,
-                true,
-                List.of("experiment", "chronomatron", "ultrasequencer", "superpairs", "enchanting"),
-                setting("qol.experiment_solver.chronomatron", "Chronomatron", "Remember and highlight the Chronomatron sequence.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.ultrasequencer", "Ultrasequencer", "Remember and highlight the Ultrasequencer order.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.superpairs", "Superpairs", "Remember revealed Superpairs items and their matches.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.hide_tooltip", "Hide Tooltips", "Hide item tooltips while an experiment GUI is open.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.hide_wrong_chronomatron", "Hide Wrong Chronomatron", "Hide Chronomatron slots that are not the next clicks.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.hide_wrong_ultrasequencer", "Hide Wrong Ultrasequencer", "Hide Ultrasequencer slots that are not the next clicks.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.private_island_only", "Private Island Only", "Only solve while the sidebar says Your Island.", SettingType.TOGGLE),
-                setting("qol.experiment_solver.first_color", "Next Slot Color", "Fill color for the next slot to click.", SettingType.COLOR),
-                setting("qol.experiment_solver.second_color", "Second Slot Color", "Fill color for the slot after next.", SettingType.COLOR),
-                setting("qol.experiment_solver.matched_color", "Matched Color", "Fill color for a Superpairs pair revealed together.", SettingType.COLOR),
-                setting("qol.experiment_solver.match_color", "Known Match Color", "Fill color for a revealed item whose twin is known.", SettingType.COLOR),
-                setting("qol.experiment_solver.powerup_color", "Powerup Color", "Fill color for Superpairs powerups.", SettingType.COLOR)));
 
 
 

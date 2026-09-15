@@ -16,6 +16,7 @@
     "KeyboardHandlerWardrobeMixin",
     "KeyboardInputEtherwarpMixin",
     "KeyboardInputFreecamMixin",
+    "LocalPlayerAutoSprintMixin",
     "BlockDisplayRendererFoxMixin",
     "DisplayEntityRenderStateFoxMixin",
     "DisplayItemDisplayAccessor",

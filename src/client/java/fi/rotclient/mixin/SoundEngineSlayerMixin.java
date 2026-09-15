@@ -1,6 +1,6 @@
 package fi.rotclient.mixin;
 
-import fi.rotclient.DianaRuntime;
+import fi.rotclient.QolClientFlavorSupport;
 import fi.rotclient.FishingSuiteRuntime;
 import fi.rotclient.ForagingRuntime;
 import fi.rotclient.IotaRuntime;
@@ -40,7 +40,7 @@ abstract class SoundEngineSlayerMixin {
                 || FishingSuiteRuntime.shouldSuppressSound(id, pitch)
                 || ForagingRuntime.shouldMuteSound(id, volume)
                 || IotaRuntime.shouldMuteSound(id)
-                || DianaRuntime.shouldMuteSound(
+                || QolClientFlavorSupport.hooks().dianaShouldMuteSound(
                         id,
                         pitch,
                         volume,

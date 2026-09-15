@@ -4,9 +4,8 @@ import fi.rotclient.ChatCommandsRuntime;
 import fi.rotclient.RingKeybindsRuntime;
 import fi.rotclient.ClientThreadGuard;
 import fi.rotclient.DiagnosticRecorder;
-import fi.rotclient.DianaRuntime;
-import fi.rotclient.ExperimentSolverRuntime;
 import fi.rotclient.IotaRuntime;
+import fi.rotclient.QolClientFlavorSupport;
 import fi.rotclient.QolVisualRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -101,7 +100,7 @@ abstract class ClientPacketListenerMixin {
         }
         var type = packet.getParticle().getType();
         var key = BuiltInRegistries.PARTICLE_TYPE.getKey(type);
-        DianaRuntime.observeParticlePacket(
+        QolClientFlavorSupport.hooks().dianaObserveParticlePacket(
                 key == null ? "" : key.toString(),
                 packet.getX(),
                 packet.getY(),
@@ -117,7 +116,7 @@ abstract class ClientPacketListenerMixin {
     private void rotclient$inventorySlotPacket(ClientboundContainerSetSlotPacket packet, CallbackInfo ci) {
         if (!onClientThread()) return;
         fi.rotclient.RotClientClient.onInventoryPacket("slot-packet");
-        ExperimentSolverRuntime.onSlotUpdate(packet.getSlot(), packet.getItem());
+        QolClientFlavorSupport.hooks().experimentSlotUpdate(packet.getSlot(), packet.getItem());
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 
@@ -127,7 +126,7 @@ abstract class ClientPacketListenerMixin {
         fi.rotclient.ClientBoundaryGuard.run("STORAGE_CONTENT_PACKET", () ->
                 fi.rotclient.StorageOverlayRuntime.onContainerContent(packet.containerId(), packet.items().size()));
         fi.rotclient.RotClientClient.onInventoryPacket("content-packet");
-        ExperimentSolverRuntime.onContainerRefresh();
+        QolClientFlavorSupport.hooks().experimentContainerRefresh();
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 
@@ -148,7 +147,7 @@ abstract class ClientPacketListenerMixin {
             return;
         }
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerClosed();
-        ExperimentSolverRuntime.onScreenClosed();
+        QolClientFlavorSupport.hooks().experimentScreenClosed();
     }
 
     @Inject(method = "handleEntityEvent", at = @At("HEAD"))

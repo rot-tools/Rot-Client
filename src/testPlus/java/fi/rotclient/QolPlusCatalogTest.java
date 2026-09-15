@@ -12,6 +12,13 @@ final class QolPlusCatalogTest {
         assertTrue(QolFlavorSupport.isPlus());
         assertEquals(134, QolUtilityCatalog.modules().size());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
+        assertNotNull(QolUtilityCatalog.findById("qol.auto_sprint"));
+        assertNotNull(QolUtilityCatalog.findById("qol.experiment_solver"));
+        assertNotNull(QolUtilityCatalog.findById("qol.diana_burrows"));
+        assertNotNull(QolUtilityCatalog.findById("qol.diana_mobs"));
+        assertNotNull(QolUtilityCatalog.findById("qol.diana_profit"));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.diana_burrows")));
+        assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_sprint")));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));
         assertNotNull(QolUtilityCatalog.findById("qol.freecam"));
         assertNotNull(QolUtilityCatalog.findById("qol.farm_keys"));

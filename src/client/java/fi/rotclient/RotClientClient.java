@@ -580,7 +580,7 @@ public final class RotClientClient implements ClientModInitializer {
                     () -> MiningLeftoverRuntime.tick(client));
             ClientBoundaryGuard.run(
                     "DIANA",
-                    () -> DianaRuntime.tick(client));
+                    () -> QolClientFlavorSupport.hooks().dianaTick(client));
             ClientBoundaryGuard.run(
                     "FORAGING",
                     () -> ForagingRuntime.tick(client));
@@ -757,7 +757,7 @@ public final class RotClientClient implements ClientModInitializer {
             StallMarketRuntime.clear();
             SlotBindsRuntime.clearPending();
             MiningLeftoverRuntime.clear();
-            DianaRuntime.clear();
+            QolClientFlavorSupport.hooks().dianaClear();
             ForagingRuntime.clear();
             FishingSuiteRuntime.clear();
             InventoryChromeRuntime.loadCache();
@@ -774,7 +774,7 @@ public final class RotClientClient implements ClientModInitializer {
             onShadowWorldChanged();
             QolClientFlavorSupport.hooks().worldScannerClear();
             MiningLeftoverRuntime.clear();
-            DianaRuntime.clear();
+            QolClientFlavorSupport.hooks().dianaClear();
             ForagingRuntime.clear();
             FishingSuiteRuntime.clear();
             ChatCommandsRuntime.clear();
@@ -845,7 +845,7 @@ public final class RotClientClient implements ClientModInitializer {
                                 QolClientFlavorSupport.hooks().onChat(message);
                                 FishingSuiteRuntime.onChat(message);
                                 MiningLeftoverRuntime.onChat(message, overlay);
-                                DianaRuntime.onChat(message);
+                                QolClientFlavorSupport.hooks().dianaOnChat(message);
                                 ForagingRuntime.onChat(message);
                             }
                         }));
@@ -869,7 +869,7 @@ public final class RotClientClient implements ClientModInitializer {
                 MiningLeftoverRuntime.onChat(message, false);
                 return false;
             }
-            if (!DianaRuntime.allowGameMessage(message)) {
+            if (!QolClientFlavorSupport.hooks().dianaAllowGameMessage(message)) {
                 return false;
             }
             if (!ForagingRuntime.allowGameMessage(message)) {
