@@ -3088,61 +3088,6 @@ public final class DungeonRuntime {
         noteClickedSecret(pos);
     }
 
-    public static boolean shouldHideTerminalTooltip(AbstractContainerScreen<?> screen) {
-        return terminalOverlayActive(screen) && extras().dungeonTerminalsStopTooltips;
-    }
-
-    public static boolean shouldHideTerminalSlot(AbstractContainerScreen<?> screen, Slot slot) {
-        if (slot == null || !terminalOverlayActive(screen) || !extras().dungeonTerminalsHideClicked) {
-            return false;
-        }
-        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(titleOf(screen));
-        if (terminal == DungeonPolicy.Terminal.NONE || terminal == DungeonPolicy.Terminal.MELODY) {
-            return false;
-        }
-        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
-                terminal, titleOf(screen), snapshot(screen));
-        if (live.isEmpty()) {
-            return false;
-        }
-        List<DungeonPolicy.TerminalClick> clicks = pinglessRemaining(terminal, live);
-        return DungeonF7Policy.shouldHideClickedSlot(
-                true,
-                DungeonF7Policy.chestTerminalSlot(slot.index),
-                slot.getItem() == null || slot.getItem().isEmpty(),
-                DungeonF7Policy.slotInSolution(clicks, slot.index));
-    }
-
-    public static boolean shouldCancelTerminalSlot(AbstractContainerScreen<?> screen, int slot) {
-        if (screen == null || !extras().dungeonTerminalsEnabled) {
-            return false;
-        }
-        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(titleOf(screen));
-        if (terminal == DungeonPolicy.Terminal.NONE) {
-            return false;
-        }
-        if (DungeonF7Policy.chestTerminalSlot(slot) && terminalFirstClickPending()) {
-            return true;
-        }
-        QolSkyblockExtras extras = extras();
-        if (!extras.dungeonTerminalsBlockWrongSlots) {
-            return false;
-        }
-        Minecraft client = Minecraft.getInstance();
-        boolean sneaking = client != null && client.player != null && client.player.isShiftKeyDown();
-        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
-                terminal, titleOf(screen), snapshot(screen));
-        if (live.isEmpty()) {
-            return false;
-        }
-        List<DungeonPolicy.TerminalClick> clicks = pinglessRemaining(terminal, live);
-        return DungeonF7Policy.shouldBlockWrongTerminalSlot(
-                true,
-                sneaking,
-                DungeonF7Policy.chestTerminalSlot(slot),
-                DungeonF7Policy.slotInSolution(clicks, slot));
-    }
-
     public static void noteTerminalSlotClick(AbstractContainerScreen<?> screen, int slot) {
         if (screen == null) {
             return;

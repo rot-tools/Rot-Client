@@ -13,7 +13,9 @@ runtime behavior.
   status and map HUD behavior intact while splitting the large shared runtime.
   F7 wrong-click cancellation and Dungeon Breaker block rewriting/secret-skip
   hooks now compile from Plus only; the shared F7 solver state and the four
-  dungeon catalog parents still need separation.
+  dungeon catalog parents still need separation. Terminal wrong-slot blocking,
+  clicked-slot hiding, and solver tooltip suppression also compile from Plus;
+  the visible Lite terminal overlay and its solver policy remain in scope.
 - Diana burrow/rare-mob visual assists, Diana Profit/Share, Experiment Solver, Terminal Click Trails, and Terminal Simulator are Plus-owned. Revalidate their migrated settings in Minecraft.
 - Auto Sprint's input override is now Plus-only. Audit every remaining input,
   click, macro, movement, and see-through-block behavior in Lite. An option being off by default is not a

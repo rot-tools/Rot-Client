@@ -13,12 +13,15 @@ final class DungeonF7ImproveExistingWiringTest {
     void solverSoundsDragonsAndRelicsStayOnExistingParents() throws Exception {
         String runtime = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
-        assertTrue(runtime.contains("melodyLeapName = name"));
-        assertTrue(runtime.contains("shouldHideTerminalTooltip"));
-        assertTrue(runtime.contains("shouldHideTerminalSlot"));
-        assertTrue(runtime.contains("shouldCancelTerminalSlot"));
         String plusInput = Files.readString(Path.of(
                 "src/plusClient/java/fi/rotclient/DungeonPlusInputRuntime.java"), StandardCharsets.UTF_8);
+        assertTrue(runtime.contains("melodyLeapName = name"));
+        assertTrue(plusInput.contains("shouldHideTerminalTooltip"));
+        assertTrue(plusInput.contains("shouldHideTerminalSlot"));
+        assertTrue(!runtime.contains("shouldHideTerminalTooltip"));
+        assertTrue(!runtime.contains("shouldHideTerminalSlot"));
+        assertTrue(plusInput.contains("shouldCancelTerminalSlot"));
+        assertTrue(!runtime.contains("shouldCancelTerminalSlot"));
         assertTrue(plusInput.contains("shouldCancelEntityUse"));
         assertTrue(!runtime.contains("shouldCancelEntityUse"));
         assertTrue(runtime.contains("dungeonF7DragonTracers"));
@@ -33,7 +36,8 @@ final class DungeonF7ImproveExistingWiringTest {
         String mixin = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/AbstractContainerScreenInventoryOverlayMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(mixin.contains("DungeonRuntime.shouldHideTerminalTooltip"));
+        assertTrue(mixin.contains("QolClientFlavorSupport.hooks().shouldHideTerminalTooltip"));
+        assertTrue(mixin.contains("QolClientFlavorSupport.hooks().shouldHideTerminalSlot"));
         assertTrue(mixin.contains("QolClientFlavorSupport.hooks().shouldCancelTerminalSlot"));
         int detect = mixin.indexOf("DungeonPolicy.detectTerminal(");
         int enqueue = mixin.indexOf("DungeonRuntime.enqueueTerminalClick(");

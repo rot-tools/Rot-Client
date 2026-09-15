@@ -659,7 +659,17 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public boolean shouldCancelTerminalSlot(AbstractContainerScreen<?> screen, int slot) {
-        return DungeonRuntime.shouldCancelTerminalSlot(screen, slot);
+        return DungeonPlusInputRuntime.shouldCancelTerminalSlot(screen, slot);
+    }
+
+    @Override
+    public boolean shouldHideTerminalTooltip(AbstractContainerScreen<?> screen) {
+        return DungeonPlusInputRuntime.shouldHideTerminalTooltip(screen);
+    }
+
+    @Override
+    public boolean shouldHideTerminalSlot(AbstractContainerScreen<?> screen, net.minecraft.world.inventory.Slot slot) {
+        return DungeonPlusInputRuntime.shouldHideTerminalSlot(screen, slot);
     }
 
     @Override

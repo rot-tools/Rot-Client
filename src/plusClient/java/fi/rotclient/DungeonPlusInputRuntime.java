@@ -1,11 +1,15 @@
 package fi.rotclient;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.inventory.Slot;
+
+import java.util.List;
 
 /** Input cancellation and client-side block rewriting used only by Rot Client+. */
 public final class DungeonPlusInputRuntime {
@@ -107,5 +111,62 @@ public final class DungeonPlusInputRuntime {
         }
         return TempleDungeonPolicy.shouldBlockBreakerOnSecret(
                 true, true, DungeonRuntime.fullBlockId(client, pos));
+    }
+
+    public static boolean shouldCancelTerminalSlot(AbstractContainerScreen<?> screen, int slot) {
+        if (screen == null || !DungeonRuntime.extras().dungeonTerminalsEnabled) {
+            return false;
+        }
+        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(DungeonRuntime.titleOf(screen));
+        if (terminal == DungeonPolicy.Terminal.NONE) {
+            return false;
+        }
+        if (DungeonF7Policy.chestTerminalSlot(slot) && DungeonRuntime.terminalFirstClickPending()) {
+            return true;
+        }
+        QolSkyblockExtras extras = DungeonRuntime.extras();
+        if (!extras.dungeonTerminalsBlockWrongSlots) {
+            return false;
+        }
+        Minecraft client = Minecraft.getInstance();
+        boolean sneaking = client != null && client.player != null && client.player.isShiftKeyDown();
+        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
+                terminal, DungeonRuntime.titleOf(screen), DungeonRuntime.snapshot(screen));
+        if (live.isEmpty()) {
+            return false;
+        }
+        List<DungeonPolicy.TerminalClick> clicks = DungeonRuntime.pinglessRemaining(terminal, live);
+        return DungeonF7Policy.shouldBlockWrongTerminalSlot(
+                true,
+                sneaking,
+                DungeonF7Policy.chestTerminalSlot(slot),
+                DungeonF7Policy.slotInSolution(clicks, slot));
+    }
+
+    public static boolean shouldHideTerminalTooltip(AbstractContainerScreen<?> screen) {
+        return DungeonRuntime.terminalOverlayActive(screen)
+                && DungeonRuntime.extras().dungeonTerminalsStopTooltips;
+    }
+
+    public static boolean shouldHideTerminalSlot(AbstractContainerScreen<?> screen, Slot slot) {
+        if (slot == null || !DungeonRuntime.terminalOverlayActive(screen)
+                || !DungeonRuntime.extras().dungeonTerminalsHideClicked) {
+            return false;
+        }
+        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(DungeonRuntime.titleOf(screen));
+        if (terminal == DungeonPolicy.Terminal.NONE || terminal == DungeonPolicy.Terminal.MELODY) {
+            return false;
+        }
+        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
+                terminal, DungeonRuntime.titleOf(screen), DungeonRuntime.snapshot(screen));
+        if (live.isEmpty()) {
+            return false;
+        }
+        List<DungeonPolicy.TerminalClick> clicks = DungeonRuntime.pinglessRemaining(terminal, live);
+        return DungeonF7Policy.shouldHideClickedSlot(
+                true,
+                DungeonF7Policy.chestTerminalSlot(slot.index),
+                slot.getItem() == null || slot.getItem().isEmpty(),
+                DungeonF7Policy.slotInSolution(clicks, slot.index));
     }
 }
