@@ -92,7 +92,8 @@ final class DungeonPlusRuntime {
         if (extras.dungeonF7Enabled && extras.dungeonF7RelicLook) {
             relicLook(client, extras, now);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7AutoSuperboom) {
+        if (extras.dungeonF7Enabled
+                && SuperboomSettings.from(RotClientClient.qolConfigPublic()).enabled()) {
             autoSuperboom(client, extras);
         }
         if (extras.dungeonEspEnabled && extras.dungeonEspGhostBlock) {
@@ -115,7 +116,8 @@ final class DungeonPlusRuntime {
             superboomSwapBackTicks--;
         } else if (superboomSwapBackTicks == 0) {
             superboomSwapBackTicks = -1;
-            if (superboomOriginalSlot >= 0 && extras.dungeonF7SuperboomSwapBack) {
+            if (superboomOriginalSlot >= 0
+                    && SuperboomSettings.from(RotClientClient.qolConfigPublic()).swapBack()) {
                 client.player.getInventory().setSelectedSlot(superboomOriginalSlot);
             }
             superboomOriginalSlot = -1;
@@ -637,6 +639,7 @@ final class DungeonPlusRuntime {
     }
 
     static void autoSuperboom(Minecraft client, QolSkyblockExtras extras) {
+        SuperboomSettings settings = SuperboomSettings.from(RotClientClient.qolConfigPublic());
         boolean attackDown = client.options != null && client.options.keyAttack.isDown();
         if (!attackDown) {
             superboomAttackHeld = false;
@@ -649,7 +652,7 @@ final class DungeonPlusRuntime {
         }
         superboomAttackHeld = true;
         String id = blockId(client, hit.getBlockPos());
-        if (!DungeonAthenPortPolicy.isSuperboomWall(id, extras.athen().superboomExtraBlocks)) {
+        if (!DungeonAthenPortPolicy.isSuperboomWall(id, settings.extraBlocks())) {
             return;
         }
         LocalPlayer player = client.player;
@@ -661,20 +664,20 @@ final class DungeonPlusRuntime {
             return;
         }
         int selected = player.getInventory().getSelectedSlot();
-        if (extras.dungeonF7SuperboomSwapBack && superboomOriginalSlot < 0) {
+        if (settings.swapBack() && superboomOriginalSlot < 0) {
             superboomOriginalSlot = selected;
         }
         player.getInventory().setSelectedSlot(slot);
         client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
         player.swing(InteractionHand.MAIN_HAND);
         int delay = DungeonAthenPortPolicy.randomBetween(
-                extras.athen().superboomMinDelay, extras.athen().superboomMaxDelay);
+                settings.minDelay(), settings.maxDelay());
         superboomCooldown = Math.max(1, delay);
-        if (extras.dungeonF7SuperboomSwapBack) {
+        if (settings.swapBack()) {
             superboomSwapBackTicks = DungeonAthenPortPolicy.randomBetween(
-                    extras.athen().superboomSwapBackMin, extras.athen().superboomSwapBackMax);
+                    settings.swapBackMin(), settings.swapBackMax());
             int target = DungeonAthenPortPolicy.superboomTargetSlot(
-                    extras.athen().superboomSwapTo, selected, extras.athen().superboomCustomSlot);
+                    settings.swapTo(), selected, settings.customSlot());
             superboomOriginalSlot = target;
         } else {
             player.getInventory().setSelectedSlot(selected);

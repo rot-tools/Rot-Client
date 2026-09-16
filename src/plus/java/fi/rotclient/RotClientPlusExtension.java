@@ -237,6 +237,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.cheater_wardrobe.")) {
             return CheaterWardrobeSettings.readBoolean(config, settingId);
         }
+        if (settingId.startsWith("qol.dungeon_f7.superboom_")
+                || "qol.dungeon_f7.auto_superboom".equals(settingId)) {
+            return SuperboomSettings.readBoolean(config, settingId);
+        }
         return switch (settingId) {
             case "qol.mob_highlight.highlight_key" -> MobHighlightSettings.from(config).requireKey();
             case "qol.etherwarp.depth" -> PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
@@ -290,6 +294,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.cheater_wardrobe.")) {
             return CheaterWardrobeSettings.writeBoolean(config, settingId, value);
         }
+        if (settingId.startsWith("qol.dungeon_f7.superboom_")
+                || "qol.dungeon_f7.auto_superboom".equals(settingId)) {
+            return SuperboomSettings.writeBoolean(config, settingId, value);
+        }
         switch (settingId) {
             case "qol.mob_highlight.highlight_key", "qol.mob_highlight.depth",
                  "qol.mob_highlight.tracers" -> MobHighlightSettings.writeBoolean(config, settingId, value);
@@ -336,6 +344,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.cheater_wardrobe.")) {
             return CheaterWardrobeSettings.readNumber(config, settingId);
         }
+        if (settingId.startsWith("qol.dungeon_f7.superboom_")) {
+            return SuperboomSettings.readNumber(config, settingId);
+        }
         return switch (settingId) {
             case "qol.trajectories.range" -> (double) TrajectoriesSettings.from(config).range();
             case "qol.trajectories.width" -> (double) TrajectoriesSettings.from(config).width();
@@ -368,6 +379,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         }
         if (settingId.startsWith("qol.cheater_wardrobe.")) {
             return CheaterWardrobeSettings.writeNumber(config, settingId, value);
+        }
+        if (settingId.startsWith("qol.dungeon_f7.superboom_")) {
+            return SuperboomSettings.writeNumber(config, settingId, value);
         }
         switch (settingId) {
             case "qol.trajectories.range", "qol.trajectories.width",
@@ -403,22 +417,26 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String readText(QolUtilityConfig config, String settingId) {
-        return TermSimSettings.readText(config, settingId);
+        String superboom = SuperboomSettings.readText(config, settingId);
+        return superboom != null ? superboom : TermSimSettings.readText(config, settingId);
     }
 
     @Override
     public boolean writeText(QolUtilityConfig config, String settingId, String value) {
-        return TermSimSettings.writeText(config, settingId, value);
+        return SuperboomSettings.writeText(config, settingId, value)
+                || TermSimSettings.writeText(config, settingId, value);
     }
 
     @Override
     public String readEnum(QolUtilityConfig config, String settingId) {
-        return WorldScannerSettings.readEnum(config, settingId);
+        String superboom = SuperboomSettings.readEnum(config, settingId);
+        return superboom != null ? superboom : WorldScannerSettings.readEnum(config, settingId);
     }
 
     @Override
     public boolean writeEnum(QolUtilityConfig config, String settingId, String value) {
-        return WorldScannerSettings.writeEnum(config, settingId, value);
+        return SuperboomSettings.writeEnum(config, settingId, value)
+                || WorldScannerSettings.writeEnum(config, settingId, value);
     }
 
     @Override
@@ -486,6 +504,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if ("qol.dungeon_f7".equals(moduleId)) {
+            SuperboomSettings.reset(config);
+            return false;
+        }
         if ("qol.fishing_hotspots".equals(moduleId)) {
             FishingHotspotRadarSettings.reset(config);
             return false; // Reset the remaining shared hotspot settings as well.
@@ -600,6 +622,15 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
                 return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
         }
         return switch (settingId) {
+            case "qol.dungeon_f7.superboom_delay" ->
+                    new QolNumberSettings.Spec(1.0D, 10.0D, 1.0D, true);
+            case "qol.dungeon_f7.superboom_min_delay",
+                 "qol.dungeon_f7.superboom_max_delay",
+                 "qol.dungeon_f7.superboom_swap_back_min",
+                 "qol.dungeon_f7.superboom_swap_back_max" ->
+                    new QolNumberSettings.Spec(1.0D, 5.0D, 1.0D, true);
+            case "qol.dungeon_f7.superboom_custom_slot" ->
+                    new QolNumberSettings.Spec(1.0D, 9.0D, 1.0D, true);
             case "qol.cheater_wardrobe.click_delay",
                  "qol.cheater_wardrobe.close_delay" ->
                     new QolNumberSettings.Spec(0.0D, 8.0D, 1.0D, true);

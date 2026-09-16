@@ -105,9 +105,10 @@ final class RotClientPlusCommands {
             source.sendError(Component.literal("Look at a block first. Usage: /rot superboom add"));
             return 0;
         }
-        DungeonAthenSettings athen = RotClientClient.qolConfigPublic().extras().athen();
-        athen.superboomExtraBlocks = DungeonAthenPortPolicy.addExtraBlock(
-                athen.superboomExtraBlocks, blockId);
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        String blocks = DungeonAthenPortPolicy.addExtraBlock(
+                SuperboomSettings.from(config).extraBlocks(), blockId);
+        SuperboomSettings.writeText(config, "qol.dungeon_f7.superboom_blocks", blocks);
         TrackerStore.save(RotClientClient.trackerConfig());
         source.sendFeedback(Component.literal("Superboom extra block added: "
                 + DungeonLeftoverPolicy.path(blockId)));
@@ -120,9 +121,10 @@ final class RotClientPlusCommands {
             source.sendError(Component.literal("Look at a block first. Usage: /rot superboom remove"));
             return 0;
         }
-        DungeonAthenSettings athen = RotClientClient.qolConfigPublic().extras().athen();
-        athen.superboomExtraBlocks = DungeonAthenPortPolicy.removeExtraBlock(
-                athen.superboomExtraBlocks, blockId);
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        String blocks = DungeonAthenPortPolicy.removeExtraBlock(
+                SuperboomSettings.from(config).extraBlocks(), blockId);
+        SuperboomSettings.writeText(config, "qol.dungeon_f7.superboom_blocks", blocks);
         TrackerStore.save(RotClientClient.trackerConfig());
         source.sendFeedback(Component.literal("Superboom extra block removed: "
                 + DungeonLeftoverPolicy.path(blockId)));
@@ -130,7 +132,7 @@ final class RotClientPlusCommands {
     }
 
     private static int superboomList(FabricClientCommandSource source) {
-        String csv = RotClientClient.qolConfigPublic().extras().athen().superboomExtraBlocks;
+        String csv = SuperboomSettings.from(RotClientClient.qolConfigPublic()).extraBlocks();
         if (csv == null || csv.isBlank()) {
             source.sendFeedback(Component.literal(
                     "No extra Superboom blocks. Defaults still include cracked stone bricks and crypt walls."));

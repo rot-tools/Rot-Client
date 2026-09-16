@@ -504,9 +504,6 @@ final class QolSkyblockExtras {
     int dungeonF7RelicLookTime = 150;
     boolean dungeonF7BreakerPreventSecrets = true;
     boolean dungeonF7BreakerCharges = true;
-    boolean dungeonF7AutoSuperboom;
-    boolean dungeonF7SuperboomSwapBack;
-    int dungeonF7SuperboomDelay = 2;
     int dungeonF7GateColor = 0x80F97316;
     int dungeonF7I4Color = 0xFF22C55E;
     boolean dungeonF7TitleCrystal = true;
@@ -1622,8 +1619,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.relic_block_wrong" -> dungeonF7RelicBlockWrong;
             case "qol.dungeon_f7.breaker_prevent_secrets" -> dungeonF7BreakerPreventSecrets;
             case "qol.dungeon_f7.breaker_charges" -> dungeonF7BreakerCharges;
-            case "qol.dungeon_f7.auto_superboom" -> dungeonF7AutoSuperboom;
-            case "qol.dungeon_f7.superboom_swap_back" -> dungeonF7SuperboomSwapBack;
             case "qol.dungeon_menus.salvage" -> dungeonMenusSalvage;
             case "qol.dungeon_menus.party_finder" -> dungeonMenusPartyFinder;
             case "qol.dungeon_menus.chest_profit" -> dungeonMenusChestProfit;
@@ -2258,8 +2253,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_f7.relic_block_wrong" -> dungeonF7RelicBlockWrong = value;
             case "qol.dungeon_f7.breaker_prevent_secrets" -> dungeonF7BreakerPreventSecrets = value;
             case "qol.dungeon_f7.breaker_charges" -> dungeonF7BreakerCharges = value;
-            case "qol.dungeon_f7.auto_superboom" -> dungeonF7AutoSuperboom = value;
-            case "qol.dungeon_f7.superboom_swap_back" -> dungeonF7SuperboomSwapBack = value;
             case "qol.dungeon_menus.salvage" -> dungeonMenusSalvage = value;
             case "qol.dungeon_menus.party_finder" -> dungeonMenusPartyFinder = value;
             case "qol.dungeon_menus.chest_profit" -> dungeonMenusChestProfit = value;
@@ -2543,7 +2536,6 @@ final class QolSkyblockExtras {
             case "qol.dungeon_hud.map_scale" -> (double) dungeonHudMapScale;
             case "qol.dungeon_hud.chest_warning_count" -> (double) dungeonHudChestWarningCount;
             case "qol.dungeon_esp.secret_clicked_seconds" -> (double) dungeonEspSecretClickedSeconds;
-            case "qol.dungeon_f7.superboom_delay" -> (double) dungeonF7SuperboomDelay;
             case "qol.auto_dojo.control_predict" -> (double) autoDojoControlPredict;
             case "qol.auto_dojo.mastery_delay" -> (double) autoDojoMasteryDelay;
             case "qol.fishing_creatures.timer_length" -> (double) fishingCreaturesTimerLength;
@@ -2653,8 +2645,6 @@ final class QolSkyblockExtras {
                     DungeonBladePolicy.clampChestWarning((int) Math.round(value));
             case "qol.dungeon_esp.secret_clicked_seconds" -> dungeonEspSecretClickedSeconds =
                     TempleDungeonPolicy.clampSecretStaySeconds((int) Math.round(value));
-            case "qol.dungeon_f7.superboom_delay" -> dungeonF7SuperboomDelay =
-                    Math.max(1, Math.min(10, (int) Math.round(value)));
             case "qol.auto_dojo.control_predict" -> autoDojoControlPredict =
                     Math.max(1, Math.min(20, (int) Math.round(value)));
             case "qol.auto_dojo.mastery_delay" -> autoDojoMasteryDelay =
@@ -3719,9 +3709,6 @@ final class QolSkyblockExtras {
                 dungeonF7RelicBlockWrong = d.dungeonF7RelicBlockWrong;
                 dungeonF7BreakerPreventSecrets = d.dungeonF7BreakerPreventSecrets;
                 dungeonF7BreakerCharges = d.dungeonF7BreakerCharges;
-                dungeonF7AutoSuperboom = d.dungeonF7AutoSuperboom;
-                dungeonF7SuperboomSwapBack = d.dungeonF7SuperboomSwapBack;
-                dungeonF7SuperboomDelay = d.dungeonF7SuperboomDelay;
                 dungeonF7GateColor = d.dungeonF7GateColor;
                 dungeonF7I4Color = d.dungeonF7I4Color;
                 athen().copyModule(moduleId, d.athen());

@@ -27,9 +27,11 @@ runtime behavior.
 - Cheater Wardrobe typed settings, slot binds, dashboard routing, and hidden
   equip runtime are Plus-owned; legacy profile values remain opaque to Lite.
   Revalidate migrated binds, delays, reset behavior, and the shared wardrobe
-  HUD in Minecraft. Superboom still leaves typed F7 settings in Lite, while its
-  click-trigger/timed swap-back runtime state is Plus-only. Move those remaining
-  settings while retaining old profile data and ordinary dungeon HUD behavior.
+  HUD in Minecraft. Superboom typed F7 settings and its click-trigger/timed
+  swap-back runtime state are Plus-owned, with legacy profile values retained
+  as opaque data. Revalidate its delays, custom slot, extra-block commands and
+  reset behavior in Plus. Superboom policy helpers remain part of the broader
+  shared dungeon-source audit.
   Review other world-information assists alongside the mining and
   foraging helper settings in the broader Lite visual audit.
 - Re-run `verifyLegitJar` with forbidden identifiers and class names for each
