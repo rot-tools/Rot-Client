@@ -5,8 +5,7 @@ import java.util.List;
 
 /**
  * ServiceLoader provider that adds Plus catalog modules/settings and HUD bits.
- * Config field storage stays on {@link QolUtilityConfig} / {@link QolSkyblockExtras};
- * this class only supplies Plus-only specs and catalog rows.
+ * Plus settings use the shared opaque compatibility slot; Lite does not own them.
  */
 public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
@@ -110,6 +109,19 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     }
 
     @Override
+    public float[] readPose(QolUtilityConfig config, String poseId) {
+        return "auto_clicker".equals(poseId) ? AutoClickerSettings.pose(config) : null;
+    }
+
+    @Override
+    public boolean writePose(QolUtilityConfig config, String poseId,
+                             float x, float y, float scale) {
+        if (!"auto_clicker".equals(poseId)) return false;
+        AutoClickerSettings.pose(config, x, y);
+        return true;
+    }
+
+    @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
         if ("qol.dungeon_termsim".equals(moduleId)) return TermSimSettings.from(config).enabled();
         if ("qol.dungeon_term_click".equals(moduleId)) {
@@ -139,7 +151,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return SecretHitboxesSettings.from(config).enabled();
         }
         if ("qol.auto_clicker".equals(moduleId)) {
-            return config.autoClickerEnabled;
+            return AutoClickerSettings.from(config).enabled();
         }
         return null;
     }
@@ -185,7 +197,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return true;
         }
         if ("qol.auto_clicker".equals(moduleId)) {
-            config.autoClickerEnabled = enabled;
+            AutoClickerSettings.enabled(config, enabled);
             return true;
         }
         return false;
@@ -211,6 +223,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.readBoolean(config, settingId);
         }
+        if (settingId.startsWith("qol.auto_clicker.")) {
+            return AutoClickerSettings.readBoolean(config, settingId);
+        }
         return switch (settingId) {
             case "qol.mob_highlight.highlight_key" -> MobHighlightSettings.from(config).requireKey();
             case "qol.etherwarp.depth" -> PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
@@ -233,13 +248,6 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.from(config).skull();
             case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.from(config).chests();
             case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.from(config).onlyTrappedChests();
-            case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly;
-            case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled;
-            case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking;
-            case "qol.auto_clicker.block_breaker" -> config.autoClickerBlockBreaker;
-            case "qol.auto_clicker.terminator_only" -> config.autoClickerTerminatorOnly;
-            case "qol.auto_clicker.enable_left" -> config.autoClickerEnableLeft;
-            case "qol.auto_clicker.enable_right" -> config.autoClickerEnableRight;
             default -> null;
         };
     }
@@ -265,6 +273,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.writeBoolean(config, settingId, value);
         }
+        if (settingId.startsWith("qol.auto_clicker.")) {
+            return AutoClickerSettings.writeBoolean(config, settingId, value);
+        }
         switch (settingId) {
             case "qol.mob_highlight.highlight_key", "qol.mob_highlight.depth",
                  "qol.mob_highlight.tracers" -> MobHighlightSettings.writeBoolean(config, settingId, value);
@@ -283,13 +294,6 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             case "qol.secret_hitboxes.skull" -> SecretHitboxesSettings.write(config, "secretHitboxesSkull", value);
             case "qol.secret_hitboxes.chests" -> SecretHitboxesSettings.write(config, "secretHitboxesChests", value);
             case "qol.secret_hitboxes.only_trapped" -> SecretHitboxesSettings.write(config, "secretHitboxesOnlyTrappedChests", value);
-            case "qol.auto_clicker.whitelist_only" -> config.autoClickerWhitelistOnly = value;
-            case "qol.auto_clicker.cps_hud" -> config.autoClickerCpsHudEnabled = value;
-            case "qol.auto_clicker.allow_breaking" -> config.autoClickerAllowBreaking = value;
-            case "qol.auto_clicker.block_breaker" -> config.autoClickerBlockBreaker = value;
-            case "qol.auto_clicker.terminator_only" -> config.autoClickerTerminatorOnly = value;
-            case "qol.auto_clicker.enable_left" -> config.autoClickerEnableLeft = value;
-            case "qol.auto_clicker.enable_right" -> config.autoClickerEnableRight = value;
             default -> {
                 return false;
             }
@@ -312,6 +316,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.readNumber(config, settingId);
         }
+        if (settingId.startsWith("qol.auto_clicker.")) {
+            return AutoClickerSettings.readNumber(config, settingId);
+        }
         return switch (settingId) {
             case "qol.trajectories.range" -> (double) TrajectoriesSettings.from(config).range();
             case "qol.trajectories.width" -> (double) TrajectoriesSettings.from(config).width();
@@ -319,9 +326,6 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             case "qol.trajectories.plane_size" -> (double) TrajectoriesSettings.from(config).planeSize();
             case "qol.auto_conversation.delay" -> (double) AutoConversationSettings.from(config).delayTicks();
             case "qol.inventory_walk.ping" -> (double) InventoryWalkSettings.from(config).pingMs();
-            case "qol.auto_clicker.cps" -> (double) config.autoClickerCps;
-            case "qol.auto_clicker.left_cps" -> (double) config.autoClickerLeftCps;
-            case "qol.auto_clicker.right_cps" -> (double) config.autoClickerRightCps;
             default -> null;
         };
     }
@@ -342,18 +346,15 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.world_scanner.")) {
             return WorldScannerSettings.writeNumber(config, settingId, value);
         }
+        if (settingId.startsWith("qol.auto_clicker.")) {
+            return AutoClickerSettings.writeNumber(config, settingId, value);
+        }
         switch (settingId) {
             case "qol.trajectories.range", "qol.trajectories.width",
                  "qol.trajectories.box_size", "qol.trajectories.plane_size" ->
                     TrajectoriesSettings.writeNumber(config, settingId, value);
             case "qol.auto_conversation.delay" -> AutoConversationSettings.delayTicks(config, (int) Math.round(value));
             case "qol.inventory_walk.ping" -> InventoryWalkSettings.pingMs(config, (int) Math.round(value));
-            case "qol.auto_clicker.cps" ->
-                    config.autoClickerCps = AutoClickerPolicy.clampCps((float) value);
-            case "qol.auto_clicker.left_cps" ->
-                    config.autoClickerLeftCps = AutoClickerPolicy.clampCps((float) value);
-            case "qol.auto_clicker.right_cps" ->
-                    config.autoClickerRightCps = AutoClickerPolicy.clampCps((float) value);
             default -> {
                 return false;
             }
@@ -368,10 +369,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId == null) {
             return null;
         }
+        if (settingId.startsWith("qol.auto_clicker.")) {
+            return AutoClickerSettings.readKeybind(config, settingId);
+        }
         return switch (settingId) {
             case "qol.mob_highlight.add_key" -> MobHighlightSettings.from(config).addKey();
-            case "qol.auto_clicker.left_keybind" -> config.autoClickerLeftKeybind;
-            case "qol.auto_clicker.right_keybind" -> config.autoClickerRightKeybind;
             default -> null;
         };
     }
@@ -445,11 +447,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             QolUtilityConfig config, String settingId, String value) {
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.writeKeybind(config, settingId, value);
+        if (settingId != null && settingId.startsWith("qol.auto_clicker."))
+            return AutoClickerSettings.writeKeybind(config, settingId, value);
         String stored = value == null ? "" : value.trim();
         switch (settingId == null ? "" : settingId) {
             case "qol.mob_highlight.add_key" -> MobHighlightSettings.addKey(config, stored);
-            case "qol.auto_clicker.left_keybind" -> config.autoClickerLeftKeybind = stored;
-            case "qol.auto_clicker.right_keybind" -> config.autoClickerRightKeybind = stored;
             default -> {
                 return false;
             }
@@ -511,22 +513,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (!"qol.auto_clicker".equals(moduleId)) {
             return false;
         }
-        QolUtilityConfig defaults = new QolUtilityConfig();
-        config.autoClickerEnabled = defaults.autoClickerEnabled;
-        config.autoClickerCpsHudEnabled = defaults.autoClickerCpsHudEnabled;
-        config.autoClickerWhitelistOnly = defaults.autoClickerWhitelistOnly;
-        config.autoClickerAllowBreaking = defaults.autoClickerAllowBreaking;
-        config.autoClickerBlockBreaker = defaults.autoClickerBlockBreaker;
-        config.autoClickerTerminatorOnly = defaults.autoClickerTerminatorOnly;
-        config.autoClickerCps = defaults.autoClickerCps;
-        config.autoClickerEnableLeft = defaults.autoClickerEnableLeft;
-        config.autoClickerEnableRight = defaults.autoClickerEnableRight;
-        config.autoClickerLeftCps = defaults.autoClickerLeftCps;
-        config.autoClickerRightCps = defaults.autoClickerRightCps;
-        config.autoClickerLeftKeybind = defaults.autoClickerLeftKeybind;
-        config.autoClickerRightKeybind = defaults.autoClickerRightKeybind;
-        config.autoClickerLeftWhitelist = new java.util.ArrayList<>(defaults.autoClickerLeftWhitelist);
-        config.autoClickerRightWhitelist = new java.util.ArrayList<>(defaults.autoClickerRightWhitelist);
+        AutoClickerSettings.reset(config);
         return true;
     }
 

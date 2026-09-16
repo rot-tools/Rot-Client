@@ -30,7 +30,8 @@ final class AutoClickerRuntime {
 
     static void tick(Minecraft client) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.autoClickerEnabled || client == null) {
+        AutoClickerSettings settings = AutoClickerSettings.from(qol);
+        if (!settings.enabled() || client == null) {
             releaseSyntheticAttack(client);
             resetAccumulators();
             return;
@@ -56,21 +57,21 @@ final class AutoClickerRuntime {
         boolean physicalLeft = isMappingHeld(client, client.options.keyAttack);
         boolean physicalRight = isMappingHeld(client, client.options.keyUse);
         boolean leftHeld = resolveActivationHeld(
-                window, qol.autoClickerLeftKeybind, physicalLeft)
+                window, settings.leftKeybind(), physicalLeft)
                 || IotaRuntime.leftClickLatched();
         boolean rightHeld = resolveActivationHeld(
-                window, qol.autoClickerRightKeybind, physicalRight)
+                window, settings.rightKeybind(), physicalRight)
                 || IotaRuntime.rightClickLatched();
         boolean targetingBreakableBlock = isTargetingBreakableBlock(client);
 
-        if (qol.autoClickerTerminatorOnly) {
+        if (settings.terminatorOnly()) {
             releaseSyntheticAttack(client);
             if (AutoClickerPolicy.shouldTerminatorLeftClick(
                     true,
                     true,
                     physicalRight,
                     skyBlockId)) {
-                float cps = AutoClickerPolicy.clampCps(qol.autoClickerCps);
+                float cps = settings.cps();
                 rightAccumulator = AutoClickerPolicy.tickAccumulation(
                         rightAccumulator,
                         cps,
@@ -90,29 +91,29 @@ final class AutoClickerRuntime {
 
         boolean autoLeftClickActive = AutoClickerPolicy.shouldAutoLeftClick(
                 true,
-                qol.autoClickerEnableLeft,
+                settings.enableLeft(),
                 leftHeld,
-                qol.autoClickerBlockBreaker,
-                qol.autoClickerWhitelistOnly,
-                qol.autoClickerLeftWhitelist,
+                settings.blockBreaker(),
+                settings.whitelistOnly(),
+                settings.leftWhitelist(),
                 heldIdentity,
                 skyBlockId,
                 targetingBreakableBlock,
-                qol.autoClickerAllowBreaking);
+                settings.allowBreaking());
         if (AutoClickerPolicy.shouldHoldBlockBreaking(
                 autoLeftClickActive,
                 targetingBreakableBlock,
-                qol.autoClickerAllowBreaking)) {
+                settings.allowBreaking())) {
             holdAttackForBlockBreaking(client);
             leftAccumulator = 0.0D;
         } else if (autoLeftClickActive) {
             releaseSyntheticAttack(client);
             float cps = AutoClickerPolicy.resolveLeftCps(
-                    qol.autoClickerEnableLeft,
-                    qol.autoClickerEnableRight,
-                    qol.autoClickerCps,
-                    qol.autoClickerLeftCps,
-                    qol.autoClickerRightCps);
+                    settings.enableLeft(),
+                    settings.enableRight(),
+                    settings.cps(),
+                    settings.leftCps(),
+                    settings.rightCps());
             leftAccumulator = AutoClickerPolicy.tickAccumulation(
                     leftAccumulator,
                     cps,
@@ -130,21 +131,21 @@ final class AutoClickerRuntime {
 
         if (AutoClickerPolicy.shouldAutoRightClick(
                 true,
-                qol.autoClickerEnableRight,
+                settings.enableRight(),
                 rightHeld,
-                qol.autoClickerBlockBreaker,
-                qol.autoClickerTerminatorOnly,
+                settings.blockBreaker(),
+                settings.terminatorOnly(),
                 physicalRight,
-                qol.autoClickerWhitelistOnly,
-                qol.autoClickerRightWhitelist,
+                settings.whitelistOnly(),
+                settings.rightWhitelist(),
                 heldIdentity,
                 skyBlockId)) {
             float cps = AutoClickerPolicy.resolveRightCps(
-                    qol.autoClickerEnableLeft,
-                    qol.autoClickerEnableRight,
-                    qol.autoClickerCps,
-                    qol.autoClickerLeftCps,
-                    qol.autoClickerRightCps);
+                    settings.enableLeft(),
+                    settings.enableRight(),
+                    settings.cps(),
+                    settings.leftCps(),
+                    settings.rightCps());
             rightAccumulator = AutoClickerPolicy.tickAccumulation(
                     rightAccumulator,
                     cps,

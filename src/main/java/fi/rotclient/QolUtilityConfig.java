@@ -28,23 +28,6 @@ final class QolUtilityConfig {
     boolean etherwarpEnabled;
     boolean clickGuiEnabled = true;
 
-    // Auto Clicker (Serveri)
-    boolean autoClickerEnabled;
-    boolean autoClickerCpsHudEnabled;
-    boolean autoClickerWhitelistOnly;
-    boolean autoClickerAllowBreaking;
-    boolean autoClickerBlockBreaker = true;
-    boolean autoClickerTerminatorOnly = true;
-    float autoClickerCps = 5.0F;
-    boolean autoClickerEnableLeft = true;
-    boolean autoClickerEnableRight = true;
-    float autoClickerLeftCps = 5.0F;
-    float autoClickerRightCps = 5.0F;
-    String autoClickerLeftKeybind = "";
-    String autoClickerRightKeybind = "";
-    java.util.List<String> autoClickerLeftWhitelist = new java.util.ArrayList<>();
-    java.util.List<String> autoClickerRightWhitelist = new java.util.ArrayList<>();
-
     boolean inventoryOverlayEnabled = true;
     boolean inventoryOverlayEquipment = true;
     boolean inventoryOverlayHideRecipeBook = true;
@@ -372,8 +355,6 @@ final class QolUtilityConfig {
     float slayerAttunementHudY = 400.0F;
     float slayerVengeanceHudX = 652.0F;
     float slayerVengeanceHudY = 436.0F;
-    float autoClickerHudX = 12.0F;
-    float autoClickerHudY = 382.0F;
     float dungeonHudX = 172.0F;
     float dungeonHudY = 12.0F;
 
@@ -1358,8 +1339,6 @@ final class QolUtilityConfig {
         slayerAttunementHudY = clampPos(slayerAttunementHudY);
         slayerVengeanceHudX = clampPos(slayerVengeanceHudX);
         slayerVengeanceHudY = clampPos(slayerVengeanceHudY);
-        autoClickerHudX = clampPos(autoClickerHudX);
-        autoClickerHudY = clampPos(autoClickerHudY);
         dungeonHudX = clampPos(dungeonHudX);
         dungeonHudY = clampPos(dungeonHudY);
         wardrobePingMs = Math.max(10, Math.min(1000, wardrobePingMs));
@@ -1386,6 +1365,8 @@ final class QolUtilityConfig {
     }
 
     float[] pose(String elementId) {
+        float[] flavored = QolFlavorSupport.extension().readPose(this, elementId);
+        if (flavored != null) return flavored;
         return switch (elementId == null ? "" : elementId) {
             case "performance" -> new float[] {performanceHudX, performanceHudY, performanceHudScale};
             case "health" -> new float[] {healthHudX, healthHudY, 1.0F};
@@ -1407,7 +1388,6 @@ final class QolUtilityConfig {
             case "slayer_cocoon" -> new float[] {slayerCocoonHudX, slayerCocoonHudY, 1.0F};
             case "slayer_attunement" -> new float[] {slayerAttunementHudX, slayerAttunementHudY, 1.0F};
             case "slayer_vengeance" -> new float[] {slayerVengeanceHudX, slayerVengeanceHudY, 1.0F};
-            case "auto_clicker" -> new float[] {autoClickerHudX, autoClickerHudY, 1.0F};
             case "dungeon" -> new float[] {dungeonHudX, dungeonHudY, 1.0F};
             case "dungeon_carry" -> new float[] {extras().athen().carryHudX, extras().athen().carryHudY, 1.0F};
             case "dungeon_watcher" -> new float[] {extras().athen().watcherHudX, extras().athen().watcherHudY, 1.0F};
@@ -1425,6 +1405,7 @@ final class QolUtilityConfig {
     }
 
     void setPose(String elementId, float x, float y) {
+        if (QolFlavorSupport.extension().writePose(this, elementId, x, y, 1.0F)) return;
         switch (elementId == null ? "" : elementId) {
             case "performance" -> {
                 performanceHudX = clampPos(x);
@@ -1505,10 +1486,6 @@ final class QolUtilityConfig {
             case "slayer_vengeance" -> {
                 slayerVengeanceHudX = clampPos(x);
                 slayerVengeanceHudY = clampPos(y);
-            }
-            case "auto_clicker" -> {
-                autoClickerHudX = clampPos(x);
-                autoClickerHudY = clampPos(y);
             }
             case "dungeon" -> {
                 dungeonHudX = clampPos(x);

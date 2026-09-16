@@ -210,6 +210,12 @@ tasks.register('verifyLegitJar') {
 		}
 		def forbiddenText = [
 				'qol.auto_clicker',
+				'autoClickerEnabled',
+				'autoClickerCpsHudEnabled',
+				'autoClickerLeftWhitelist',
+				'autoClickerRightWhitelist',
+				'autoClickerHudX',
+				'autoClickerHudY',
 				'qol.secret_hitboxes',
 				'secretHitboxes',
 				'qol.inventory_walk',

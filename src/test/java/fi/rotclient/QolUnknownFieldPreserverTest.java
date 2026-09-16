@@ -18,6 +18,10 @@ final class QolUnknownFieldPreserverTest {
                 "{\"enabled\":true,\"options\":[1,\"keep\"]}").getAsJsonObject();
         qol.add("futureEditionModule", unknown);
         qol.addProperty("inventoryWalkEnabled", true);
+        qol.addProperty("autoClickerEnabled", true);
+        qol.addProperty("autoClickerCpsHudEnabled", true);
+        qol.add("autoClickerLeftWhitelist", JsonParser.parseString("[\"Terminator\"]"));
+        qol.addProperty("autoClickerHudX", 74.0F);
         qol.addProperty("inventoryWalkPingMs", 320);
         qol.addProperty("autoConversationEnabled", true);
         qol.addProperty("autoConversationMulti", false);
@@ -45,6 +49,11 @@ final class QolUnknownFieldPreserverTest {
         TrackerConfig loaded = TrackerStore.fromJson(original);
         assertEquals(unknown, loaded.qolUtilities.extensionFields.get("futureEditionModule"));
         assertTrue(loaded.qolUtilities.extensionFields.get("inventoryWalkEnabled").getAsBoolean());
+        assertTrue(loaded.qolUtilities.extensionFields.get("autoClickerEnabled").getAsBoolean());
+        assertEquals("Terminator", loaded.qolUtilities.extensionFields
+                .getAsJsonArray("autoClickerLeftWhitelist").get(0).getAsString());
+        assertEquals(74.0F, loaded.qolUtilities.extensionFields
+                .get("autoClickerHudX").getAsFloat());
         assertEquals(320, loaded.qolUtilities.extensionFields.get("inventoryWalkPingMs").getAsInt());
         assertTrue(loaded.qolUtilities.extensionFields.get("autoConversationEnabled").getAsBoolean());
         assertFalse(loaded.qolUtilities.extensionFields.get("autoConversationMulti").getAsBoolean());

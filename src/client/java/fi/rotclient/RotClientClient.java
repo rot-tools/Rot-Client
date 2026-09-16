@@ -3635,10 +3635,6 @@ private static int toggle(FabricClientCommandSource source) {
         TrackerStore.save(CONFIG);
     }
 
-    public static boolean isAutoClickerEnabled() {
-        return qolConfig().autoClickerEnabled;
-    }
-
     public static boolean isCameraEnabled() {
         return CONFIG.cameraEnabled;
     }

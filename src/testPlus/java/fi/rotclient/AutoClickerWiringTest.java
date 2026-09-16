@@ -145,7 +145,7 @@ final class AutoClickerWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("shouldTerminatorLeftClick"));
         assertTrue(source.contains("performLeftClick"));
-        assertTrue(source.contains("autoClickerTerminatorOnly"));
+        assertTrue(source.contains("settings.terminatorOnly()"));
     }
 
     @Test

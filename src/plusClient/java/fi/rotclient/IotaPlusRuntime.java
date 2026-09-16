@@ -59,7 +59,7 @@ final class IotaPlusRuntime {
     }
 
     private static void tickStandaloneClicker(Minecraft client, QolSkyblockExtras extras) {
-        if (RotClientClient.qolConfigPublic().autoClickerEnabled) {
+        if (AutoClickerSettings.from(RotClientClient.qolConfigPublic()).enabled()) {
             IotaRuntime.leftAccumulator = 0.0D;
             IotaRuntime.rightAccumulator = 0.0D;
             return;
