@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Migrate non-raw GLFW constants
-        run: python3 tools/port_26_3_input_constants.py
+      - name: Migrate input compatibility
+        run: |
+          python3 tools/port_26_3_input_constants.py
+          python3 tools/finalize_26_3_input_split.py
       - name: Commit migration
         run: |
           if git diff --quiet; then
@@ -25,7 +27,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src
-          git commit -m '[port-bot] Migrate 26.3 input constants'
+          git commit -m '[port-bot] Finish 26.3 input compatibility split'
           git push
 
   audit:
@@ -37,11 +39,8 @@ jobs:
           echo '===== GLFW REFERENCES ====='
           grep -R -n -E 'org\.lwjgl\.glfw|GLFW\.' src/main src/client src/test || true
           echo
+          echo '===== MAIN CLIENT-ONLY INPUT REFERENCES ====='
+          grep -R -n 'com.mojang.blaze3d.platform.InputConstants' src/main src/test || true
+          echo
           echo '===== QOL KEYBIND REFERENCES ====='
           grep -R -n 'QolKeybindNames' src/main src/client src/test src/plus src/plusClient src/testPlus || true
-          echo
-          echo '===== MENU POLICY REFERENCES ====='
-          grep -R -n 'MenuKeybindPolicy' src/main src/client src/test src/plus src/plusClient src/testPlus || true
-          echo
-          echo '===== RING POLICY REFERENCES ====='
-          grep -R -n 'RingPolicy' src/main src/client src/test src/plus src/plusClient src/testPlus || true
