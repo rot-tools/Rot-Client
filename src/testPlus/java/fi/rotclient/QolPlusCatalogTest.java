@@ -11,6 +11,17 @@ final class QolPlusCatalogTest {
     void plusCatalogIncludesMapArtOverride() {
         assertTrue(QolFlavorSupport.isPlus());
         assertEquals(134, QolUtilityCatalog.modules().size());
+        assertNotNull(QolUtilityCatalog.findById("qol.eye_height_fix"));
+        assertNotNull(QolUtilityCatalog.findById("qol.instant_sneak"));
+        assertNotNull(QolUtilityCatalog.findById("qol.item_count_fix"));
+        assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.hide_fog");
+        assertSettingPresent("qol.iota", "qol.iota.fix_fishing_hook");
+        assertSettingPresent("qol.mining_helpers", "qol.mining_helpers.break_reset");
+        assertSettingPresent("qol.dungeon_esp", "qol.dungeon_esp.hate_doors");
+        assertSettingPresent("qol.dungeon_esp", "qol.dungeon_esp.depth");
+        assertSettingPresent("qol.dungeon_terminals", "qol.dungeon_terminals.depth_test");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.hide_diorite");
+        assertSettingPresent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
         assertNotNull(QolUtilityCatalog.findById("qol.auto_sprint"));
@@ -36,5 +47,11 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.trajectories"));
         assertNotNull(QolUtilityCatalog.findById("qol.world_scanner"));
         assertEquals("Fox", QolUtilityCatalog.findById("qol.map_art_override").name());
+    }
+
+    private static void assertSettingPresent(String moduleId, String settingId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        assertNotNull(module, moduleId);
+        assertTrue(module.settings().stream().anyMatch(setting -> settingId.equals(setting.id())), settingId);
     }
 }

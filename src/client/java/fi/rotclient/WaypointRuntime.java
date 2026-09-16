@@ -103,7 +103,7 @@ public final class WaypointRuntime {
                             marker.y() + 1.0D,
                             marker.z() + 1.0D),
                     style);
-            box.setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(box);
             var beam = Gizmos.cuboid(
                     new AABB(
                             marker.x() + 0.4D,
@@ -113,7 +113,7 @@ public final class WaypointRuntime {
                             marker.y() + 32.0D,
                             marker.z() + 0.6D),
                     GizmoStyle.strokeAndFill(color, 1.5F, withAlpha(color, 0x33)));
-            beam.setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(beam);
         }
     }
 

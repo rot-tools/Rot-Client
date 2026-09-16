@@ -46,9 +46,9 @@ final class DungeonCarryRuntime {
                     box,
                     net.minecraft.gizmos.GizmoStyle.stroke(
                             athen.carryPlayerColor, (float) athen.carryLineWidth));
-            props.setAlwaysOnTop();
-            net.minecraft.gizmos.Gizmos.line(eye, box.getCenter(), athen.carryPlayerColor,
-                    (float) athen.carryLineWidth).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(props);
+            QolClientFlavorSupport.hooks().configurePlusGizmo(net.minecraft.gizmos.Gizmos.line(eye, box.getCenter(), athen.carryPlayerColor,
+                    (float) athen.carryLineWidth));
         }
     }
 

@@ -2126,7 +2126,7 @@ public final class DungeonRuntime {
                 String label = DungeonRoomDataPolicy.secretLabel(waypoint.kind());
                 if (!label.isBlank()) {
                     var text = Gizmos.billboardTextOverBlock(label, pos, 0, color, 0.035F);
-                    text.setAlwaysOnTop();
+                    QolClientFlavorSupport.hooks().configurePlusGizmo(text);
                 }
             }
         }
@@ -2306,13 +2306,13 @@ public final class DungeonRuntime {
                     blockBox(pos),
                     GizmoStyle.strokeAndFill(stroke, 2.0F, fillArgb));
             if (!athen.termDepthTest) {
-                props.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(props);
             }
             if (athen.termRenderText) {
                 var text = Gizmos.billboardTextOverBlock(
                         node.label(), pos, 0, color, 0.035F);
                 if (!athen.termDepthTest) {
-                    text.setAlwaysOnTop();
+                    QolClientFlavorSupport.hooks().configurePlusGizmo(text);
                 }
             }
         }
@@ -2869,16 +2869,16 @@ public final class DungeonRuntime {
     }
 
     static void box(
-            AABB box, int color, QolSkyblockExtras extras, Vec3 eye, boolean throughWalls) {
+            AABB box, int color, QolSkyblockExtras extras, Vec3 eye, boolean plusThroughWalls) {
         int fill = extras.dungeonEspFill
                 ? withAlpha(color, (int) Math.round(DungeonAssistPolicy.clampOpacity(extras.dungeonEspOpacity) * 2.55D))
                 : 0;
         var props = Gizmos.cuboid(box, GizmoStyle.strokeAndFill(color, 2.0F, fill));
-        if (throughWalls) {
-            props.setAlwaysOnTop();
+        if (QolFlavorSupport.isPlus() && plusThroughWalls) {
+            QolClientFlavorSupport.hooks().configurePlusGizmo(props);
         }
         if (extras.dungeonEspTracers) {
-            tracer(eye, box.getCenter(), color, extras, throughWalls);
+            tracer(eye, box.getCenter(), color, extras, plusThroughWalls);
         }
     }
 
@@ -2887,10 +2887,10 @@ public final class DungeonRuntime {
     }
 
     static void tracer(
-            Vec3 from, Vec3 to, int color, QolSkyblockExtras extras, boolean throughWalls) {
+            Vec3 from, Vec3 to, int color, QolSkyblockExtras extras, boolean plusThroughWalls) {
         var line = Gizmos.line(from, to, color);
-        if (throughWalls) {
-            line.setAlwaysOnTop();
+        if (QolFlavorSupport.isPlus() && plusThroughWalls) {
+            QolClientFlavorSupport.hooks().configurePlusGizmo(line);
         }
     }
 
@@ -2938,7 +2938,7 @@ public final class DungeonRuntime {
             var line = Gizmos.line(eye, entity.getBoundingBox().getCenter(),
                     extras.dungeonEspBloodLineColor);
             if (!extras.dungeonEspDepth) {
-                line.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(line);
             }
         }
     }

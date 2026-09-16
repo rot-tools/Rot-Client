@@ -505,7 +505,7 @@ public final class QolVisualRuntime {
                 style);
         if (!EtherwarpPredictor.depthRespectsOcclusion(
                 QolClientFlavorSupport.hooks().etherwarpOcclusion(qol))) {
-            props.setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(props);
         }
         maybePlaySound(qol, player, hit);
     }

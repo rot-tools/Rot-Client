@@ -151,7 +151,7 @@ final class DungeonAthenSettings {
             case "qol.dungeon_terminals.hide_title" -> termHideTitle;
             case "qol.dungeon_terminals.check_class" -> termCheckClass;
             case "qol.dungeon_terminals.render_text" -> termRenderText;
-            case "qol.dungeon_terminals.depth_test" -> termDepthTest;
+            case "qol.dungeon_terminals.depth_test" -> QolFlavorSupport.isPlus() ? termDepthTest : true;
             case "qol.dungeon_menus.pf_stats" -> pfShowStats;
             case "qol.dungeon_menus.pf_stack" -> pfStack;
             case "qol.dungeon_menus.pf_highlight" -> pfHighlight;
@@ -193,7 +193,7 @@ final class DungeonAthenSettings {
             case "qol.dungeon_terminals.hide_title" -> termHideTitle = value;
             case "qol.dungeon_terminals.check_class" -> termCheckClass = value;
             case "qol.dungeon_terminals.render_text" -> termRenderText = value;
-            case "qol.dungeon_terminals.depth_test" -> termDepthTest = value;
+            case "qol.dungeon_terminals.depth_test" -> termDepthTest = QolFlavorSupport.isPlus() ? value : true;
             case "qol.dungeon_menus.pf_stats" -> pfShowStats = value;
             case "qol.dungeon_menus.pf_stack" -> pfStack = value;
             case "qol.dungeon_menus.pf_highlight" -> pfHighlight = value;

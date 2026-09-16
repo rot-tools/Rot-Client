@@ -31,7 +31,11 @@
     "MouseHandlerFreecamMixin",
     "MouseHandlerInventoryWalkMixin",
     "MultiPlayerGameModePlusMixin",
-    "OptionsCameraMixin"
+    "OptionsCameraMixin",
+    "FogRendererMixin",
+    "CameraEyeHeightMixin",
+    "ItemStackCountFixMixin",
+    "FishingHookIotaMixin"
   ],
   "injectors": {
     "defaultRequire": 1

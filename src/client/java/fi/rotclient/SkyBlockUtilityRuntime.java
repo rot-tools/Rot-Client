@@ -204,8 +204,7 @@ public final class SkyBlockUtilityRuntime {
             if (corpses
                     && entity instanceof ArmorStand stand
                     && SkyBlockUtilityPolicy.isCorpseStand(stand.getName().getString())) {
-                Gizmos.cuboid(interpolatedBox(stand, partialTick, 0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F))
-                        .setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(interpolatedBox(stand, partialTick, 0.15D), GizmoStyle.stroke(0xFF55FFFF, 2.0F)));
             }
         }
     }

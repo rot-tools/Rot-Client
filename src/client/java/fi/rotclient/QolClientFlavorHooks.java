@@ -54,6 +54,52 @@ public interface QolClientFlavorHooks {
     default void renderWorldGizmos() {
     }
 
+    /**
+     * Plus-only world-overlay behavior.
+     *
+     * Lite intentionally leaves the gizmo depth-tested.
+     */
+    default void configurePlusGizmo(
+            net.minecraft.gizmos.GizmoProperties properties) {
+    }
+
+    default boolean shouldIgnoreServerBlockUpdate(
+            net.minecraft.core.BlockPos pos,
+            net.minecraft.world.level.block.state.BlockState state) {
+        return false;
+    }
+
+    default void filterLocalPlayerPoseMetadata(
+            net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket packet) {
+    }
+
+    default void hateDoorsClear() {
+    }
+
+    default void hateDoorsRemember(
+            BlockPos pos,
+            EmberDungeonPolicy.GlassTint tint) {
+    }
+
+    default void hateDoorsForget(BlockPos pos) {
+    }
+
+    default net.minecraft.world.level.block.state.BlockState hateDoorsRewrite(
+            BlockPos pos,
+            net.minecraft.world.level.block.state.BlockState original) {
+        return null;
+    }
+
+    default void hateDoorsScan(
+            Minecraft client,
+            QolSkyblockExtras extras) {
+    }
+
+    default net.minecraft.world.level.block.state.BlockState hateDoorsGlassState(
+            EmberDungeonPolicy.GlassTint tint) {
+        return null;
+    }
+
     default void mobHighlightTick(Minecraft client) {
     }
 

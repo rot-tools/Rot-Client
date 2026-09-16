@@ -17,6 +17,17 @@ final class QolUtilityCatalogTest {
         assertFalse(QolUtilityCatalog.modules().isEmpty());
         assertEquals(null, QolUtilityCatalog.findById("qol.auto_sprint"));
         assertEquals(null, QolUtilityCatalog.findById("qol.camera"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.eye_height_fix"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.instant_sneak"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.item_count_fix"));
+        assertSettingAbsent("qol.render_optimizer", "qol.render_optimizer.hide_fog");
+        assertSettingAbsent("qol.iota", "qol.iota.fix_fishing_hook");
+        assertSettingAbsent("qol.mining_helpers", "qol.mining_helpers.break_reset");
+        assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.hate_doors");
+        assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.depth");
+        assertSettingAbsent("qol.dungeon_terminals", "qol.dungeon_terminals.depth_test");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.hide_diorite");
+        assertSettingAbsent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertNotNull(QolUtilityCatalog.findById("qol.render_optimizer"));
         assertNotNull(QolUtilityCatalog.findById("qol.waypoints"));
         assertFalse(QolUtilityCatalog.findById("qol.waypoints").wip());
@@ -84,9 +95,6 @@ final class QolUtilityCatalogTest {
                 "qol.animation_fix",
                 "qol.disconnect_fix",
                 "qol.double_use_fix",
-                "qol.eye_height_fix",
-                "qol.instant_sneak",
-                "qol.item_count_fix",
                 "qol.active_pet_highlight",
                 "qol.anvil_helper",
                 "qol.calendar_date",
@@ -413,6 +421,12 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(99, moduleIds.size());
+        assertEquals(96, moduleIds.size());
+    }
+
+    private static void assertSettingAbsent(String moduleId, String settingId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        assertNotNull(module, moduleId);
+        assertTrue(module.settings().stream().noneMatch(setting -> settingId.equals(setting.id())), settingId);
     }
 }

@@ -1166,7 +1166,7 @@ public final class SlayerRuntime {
                 var props = Gizmos.cuboid(box, GizmoStyle.strokeAndFill(
                         color, width, withAlpha(color, 0x33)));
                 if (!settings.slayerHighlightsDepth) {
-                    props.setAlwaysOnTop();
+                    QolClientFlavorSupport.hooks().configurePlusGizmo(props);
                 }
                 if (SlayerHighlightPolicy.shouldDrawTargetLine(
                         role,
@@ -1181,7 +1181,7 @@ public final class SlayerRuntime {
                             color,
                             (float) settings.slayerHighlightsTargetLineWidth);
                     if (!settings.slayerHighlightsDepth) {
-                        line.setAlwaysOnTop();
+                        QolClientFlavorSupport.hooks().configurePlusGizmo(line);
                     }
                 }
                 drawn++;
@@ -1197,7 +1197,7 @@ public final class SlayerRuntime {
                 if (settings.slayerDropsGroundHighlight) {
                     var props = Gizmos.cuboid(interpolatedBox(item, partialTick, 0.15D),
                             GizmoStyle.strokeAndFill(0xFF51E6A8, 2.0F, 0x3351E6A8));
-                    if (!settings.slayerHighlightsDepth) props.setAlwaysOnTop();
+                    if (!settings.slayerHighlightsDepth) QolClientFlavorSupport.hooks().configurePlusGizmo(props);
                 }
                 if (settings.slayerDropsGroundLabels) {
                     SlayerRngCatalog.Entry entry = SlayerRngCatalog.byId(id).orElse(null);
@@ -1219,7 +1219,7 @@ public final class SlayerRuntime {
                             0,
                             0xFF51E6A8,
                             0.75F);
-                    text.setAlwaysOnTop();
+                    QolClientFlavorSupport.hooks().configurePlusGizmo(text);
                 }
             }
         }
@@ -1236,9 +1236,9 @@ public final class SlayerRuntime {
             }
             var props = Gizmos.cuboid(box, GizmoStyle.strokeAndFill(
                     marker.color(), 2.0F, withAlpha(marker.color(), 0x33)));
-            props.setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(props);
             if (marker.line()) {
-                Gizmos.line(eye, target, marker.lineColor(), marker.lineWidth()).setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(eye, target, marker.lineColor(), marker.lineWidth()));
             }
             if (marker.label() != null && !marker.label().isBlank()) {
                 var text = Gizmos.billboardTextOverBlock(
@@ -1247,7 +1247,7 @@ public final class SlayerRuntime {
                         0,
                         marker.color(),
                         0.85F);
-                text.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(text);
             }
         }
         if (settings.slayerVoidgloomEnabled
@@ -1259,12 +1259,12 @@ public final class SlayerRuntime {
                         new AABB(pos.x - 0.22D, pos.y, pos.z - 0.22D,
                                 pos.x + 0.22D, pos.y + beamTop, pos.z + 0.22D),
                         GizmoStyle.strokeAndFill(glyphColor, 1.8F, withAlpha(glyphColor, 0x55)));
-                pillar.setAlwaysOnTop();
-                Gizmos.line(
+                QolClientFlavorSupport.hooks().configurePlusGizmo(pillar);
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(
                         new Vec3(pos.x, pos.y, pos.z),
                         new Vec3(pos.x, pos.y + beamTop, pos.z),
                         glyphColor,
-                        4.0F).setAlwaysOnTop();
+                        4.0F));
             }
         }
         if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersIchorBeam) {
@@ -1274,7 +1274,7 @@ public final class SlayerRuntime {
                         new AABB(pos.x - 0.15D, pos.y, pos.z - 0.15D,
                                 pos.x + 0.15D, pos.y + 24.0D, pos.z + 0.15D),
                         GizmoStyle.strokeAndFill(color, 1.5F, withAlpha(color, 0x33)));
-                beam.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(beam);
             }
         }
         if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersEffigies) {
@@ -1284,12 +1284,12 @@ public final class SlayerRuntime {
                         new AABB(coord.x(), coord.y(), coord.z(),
                                 coord.x() + 1.0D, coord.y() + 1.0D, coord.z() + 1.0D),
                         GizmoStyle.strokeAndFill(color, 2.0F, withAlpha(color, 0x44)));
-                box.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(box);
                 var beam = Gizmos.cuboid(
                         new AABB(coord.x() + 0.4D, coord.y() - 6.0D, coord.z() + 0.4D,
                                 coord.x() + 0.6D, coord.y() + 16.0D, coord.z() + 0.6D),
                         GizmoStyle.strokeAndFill(color, 1.5F, withAlpha(color, 0x33)));
-                beam.setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(beam);
             }
         }
         if (settings.slayerVoidgloomEnabled && settings.slayerVoidgloomBeaconPath) {
@@ -1297,7 +1297,7 @@ public final class SlayerRuntime {
             float pathWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomLineWidth);
             for (List<Vec3> path : FLYING_BEACON_PATHS.values()) {
                 for (int i = 1; i < path.size(); i++) {
-                    Gizmos.line(path.get(i - 1), path.get(i), pathColor, pathWidth).setAlwaysOnTop();
+                    QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(path.get(i - 1), path.get(i), pathColor, pathWidth));
                 }
             }
         }

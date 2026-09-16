@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.2`** is a development playtest checkpoint. Lite is still being audited for Modrinth and Hypixel; do not treat this JAR as an approved public Lite release.
+> **`2.0.1+mc26.2`** is a development release candidate. Rot Client Lite is being prepared for Modrinth and CurseForge publication; Minecraft runtime smoke testing and server-rule validation remain pending.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,7 +48,7 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL playtest. Edition audit is still in progress. |
+| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL Modrinth/CurseForge release candidate. Minecraft smoke testing remains pending. |
 | `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Playtest JAR
@@ -92,7 +92,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** currently ships **99** HUD/QoL parents. **Rot Client+** ships
+**Rot Client** currently ships **96** HUD/QoL parents. **Rot Client+** ships
 **134**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
@@ -105,10 +105,10 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, Cheater Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+; Cheater Wardrobe settings and hidden-equip runtime are excluded from Lite |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
-| **Render** | Fullbright, viewmodel, player size, eye-height fix, and legacy textures. **Plus:** Fox, Ghosts, Free Camera, and clip camera |
+| **Render** | Fullbright, viewmodel, player size, and legacy textures. **Plus:** eye-height fix, Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers are Rot Client+ |
-| **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. F7 and terminal wrong-click blocking, clicked-slot/tooltip hiding, Dungeon Breaker client block rewriting, Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+; remaining Lite dungeon assists are under release audit |
+| **Dungeons** | HUD and map, visual ESP, terminals overlays, puzzles, F7 boxes/HUD, carry tracker, reward reels. F7 and terminal wrong-click blocking, clicked-slot/tooltip hiding, Dungeon Breaker client block rewriting, Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+; remaining Lite dungeon world overlays respect normal depth/occlusion behavior |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
@@ -116,7 +116,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you
-opt in separately. The remaining shared dungeon paths are under Lite audit.
+opt in separately. Shared Lite dungeon visuals retain normal depth/occlusion behavior; extended visibility behavior remains Plus-only.
 
 The Lite build is packaged from the shared policy/client source sets only.
 Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
@@ -124,8 +124,10 @@ Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
 classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
 from older profiles survive as opaque compatibility data. Auto Clicker's typed
 settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
-store them in its typed config. The remaining Lite
-edition audit is tracked in [Project State](docs/PROJECT_STATE.md).
+store them in its typed config. Publication validation is tracked in
+[Modrinth Lite Release](docs/MODRINTH_LITE_RELEASE.md),
+[CurseForge Lite Release](docs/CURSEFORGE_LITE_RELEASE.md), and
+[Project State](docs/PROJECT_STATE.md).
 
 Auto Superboom's settings, click-trigger state, extra-block commands, and timed
 hotbar swap-back run only in Rot Client+.

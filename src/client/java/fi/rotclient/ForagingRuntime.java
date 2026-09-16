@@ -665,11 +665,11 @@ public final class ForagingRuntime {
 
     private static void box(BlockPos pos, int color) {
         AABB aabb = new AABB(pos).inflate(0.02D);
-        Gizmos.cuboid(aabb, GizmoStyle.stroke(color, 1.5F)).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(aabb, GizmoStyle.stroke(color, 1.5F)));
     }
 
     private static void boxEntity(Entity entity, int color) {
-        Gizmos.cuboid(entity.getBoundingBox().inflate(0.08D), GizmoStyle.stroke(color, 1.5F)).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(entity.getBoundingBox().inflate(0.08D), GizmoStyle.stroke(color, 1.5F)));
     }
 
     static String blockId(BlockState state) {

@@ -133,7 +133,7 @@ public final class MiningAssistRuntime {
                 AABB box = new AABB(
                         pos.x(), pos.y(), pos.z(),
                         pos.x() + 1, pos.y() + 1, pos.z() + 1);
-                Gizmos.cuboid(box, GizmoStyle.stroke(0xFFFFAA00, 2.0F)).setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(0xFFFFAA00, 2.0F)));
             }
         }
         if (extras.miningHelpersWishingCompass && compassHit != null) {
@@ -144,7 +144,7 @@ public final class MiningAssistRuntime {
                     compassHit.x() + 0.4D,
                     compassHit.y() + 0.4D,
                     compassHit.z() + 0.4D);
-            Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FFFF, 2.5F)).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FFFF, 2.5F)));
         }
     }
 

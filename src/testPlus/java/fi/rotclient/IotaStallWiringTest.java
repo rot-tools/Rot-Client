@@ -69,7 +69,11 @@ final class IotaStallWiringTest {
         String json = Files.readString(Path.of(
                 "src/client/resources/rotclient.client.mixins.json"),
                 StandardCharsets.UTF_8);
-        assertTrue(json.contains("FishingHookIotaMixin"));
+        String plusJson = Files.readString(Path.of(
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
+                StandardCharsets.UTF_8);
+        assertFalse(json.contains("FishingHookIotaMixin"));
+        assertTrue(plusJson.contains("FishingHookIotaMixin"));
         assertTrue(json.contains("AbstractContainerScreenAccessor"));
         String packets = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/ClientPacketListenerMixin.java"),
@@ -78,7 +82,7 @@ final class IotaStallWiringTest {
         assertTrue(packets.contains("IotaRuntime.shouldMuteFishingCast"));
         assertTrue(packets.contains("IotaRuntime.shouldMuteTerminatorSound"));
         String hook = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/FishingHookIotaMixin.java"),
+                "src/plusClient/java/fi/rotclient/mixin/FishingHookIotaMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(hook.contains("onSyncedDataUpdated"));
         assertTrue(hook.contains("shouldFixFishingHook"));

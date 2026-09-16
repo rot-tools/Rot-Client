@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (99 HUD/QoL parents) and **Rot Client+** (134 parents). Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer have Plus-owned bytecode or settings and catalog entries. Sea-creature auto attack and delay settings are Plus-owned. F7 wrong-click cancellation, Dungeon Breaker block rewriting/secret-skip, terminal wrong-slot blocking, clicked-slot hiding, and solver tooltip suppression now compile only into Plus. Their moved settings survive in older profiles as opaque data. Etherwarp depth-off is Plus-only; Lite always respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Smooth Zoom from PR #24 is integrated. Dungeon ESP/solvers and other input/visual assists still need the [Lite release audit](MODRINTH_LITE_RELEASE.md) before public Modrinth upload. Minecraft runtime validation of this build is pending. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (96 HUD/QoL parents) and **Rot Client+** (134 parents). Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer have Plus-owned bytecode or settings and catalog entries. Sea-creature auto attack and delay settings are Plus-owned. F7 wrong-click cancellation, Dungeon Breaker block rewriting/secret-skip, terminal wrong-slot blocking, clicked-slot hiding, and solver tooltip suppression now compile only into Plus. Their moved settings survive in older profiles as opaque data. Etherwarp depth-off is Plus-only; Lite always respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Smooth Zoom from PR #24 is integrated. Final release checks are tracked in the [Modrinth](MODRINTH_LITE_RELEASE.md) and [CurseForge](CURSEFORGE_LITE_RELEASE.md) gates. Minecraft runtime validation of this build is pending. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
@@ -21,10 +21,10 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current working tree: **2,176** shared tests plus **182** Plus tests; 0 failures or errors. Shared and Plus client compilation, `verifyLegitJar`, and `clean build` pass. SHA-256: Rot Client `790A3BE6B4924BE98B090F8C929EB24505E2C2D5CD66D86DDD9C128B438F9B17`; Rot Client+ `94B980B2B69CA0E20BCFA5407A06FB87E0EAD41A9D8D29FB62CD7CDFDAF6E6A6`. Minecraft runtime validation remains pending. |
-| Current phase | Lite/Plus packaging separation is in progress for Modrinth. Dual catalog: Lite **99** parents across 13 populated groups / Plus **134** across 14 groups. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Etherwarp depth-off are Plus-only. Remaining unfair Lite visuals/solvers still need strip before public Lite publish. Existing runtime-pending features remain Ready for Runtime Test; mining tracker / M1 gemstone work stays paused. |
-| Latest edition split | Auto Clicker, Cheater Wardrobe, and Auto Superboom typed configuration are Plus-owned. Superboom enable/swap-back, delay ranges, custom slot and extra-block list resolve through Plus while legacy profile values survive as opaque `extensionFields`. Lite's verifier rejects the moved identifiers. Four shared dungeon parents and policy helpers remain in Lite audit scope. Minecraft runtime retest pending. |
-| Latest runtime split | Auto Superboom settings, click-trigger state, cooldown and timed hotbar swap-back now compile only in Plus. The Lite verifier rejects those identifiers. Larger shared dungeon solver/UI and policy paths remain in audit scope. |
+| Automated baseline | Current working tree: **2,176** shared tests plus **182** Plus tests; 0 failures or errors. Shared and Plus client compilation, `verifyLegitJar`, and `clean build` pass. SHA-256: Rot Client `C32275B128470463DBBB5AC6B0E57460D32E88EEA815ACEDA0AB5E4C61DF548A`; Rot Client+ `546A9B8B99BD0268DE01227873A73C1CA19D0E36D11317E7057EDDDCA7233414`. Minecraft runtime validation remains pending. |
+| Current phase | Lite/Plus packaging separation is complete for the current Modrinth/CurseForge release candidate. Dual catalog: Lite **96** parents across 13 populated groups / Plus **134** across 14 groups. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Etherwarp depth-off are Plus-only. Reviewed through-wall and state-mutating paths are now depth-safe or Plus-only; Minecraft smoke testing and release metadata remain. Existing runtime-pending features remain Ready for Runtime Test; mining tracker / M1 gemstone work stays paused. |
+| Latest edition split | Auto Clicker, Cheater Wardrobe, and Auto Superboom typed configuration are Plus-owned. Superboom enable/swap-back, delay ranges, custom slot and extra-block list resolve through Plus while legacy profile values survive as opaque `extensionFields`. Lite's verifier rejects the moved identifiers. Shared dungeon parents remain in Lite, while reviewed world-overlay visibility paths now respect normal occlusion in Lite. Minecraft runtime retest pending. |
+| Latest runtime split | Auto Superboom settings, click-trigger state, cooldown and timed hotbar swap-back now compile only in Plus. The Lite verifier rejects those identifiers. Shared dungeon solver/UI policy remains available where retained, with reviewed extended visibility/state-changing behavior separated into Plus. |
 | Network identity | Both editions use Fabric's normal client brand and registration behavior. The former shared hooks that rewrote the brand to `vanilla` and filtered Rot Client channels were removed for transparent server identification. |
 | Online data foundation | Generated item/Bazaar snapshots plus a mechanics registry covering all 25 official collection keys while retaining explicit unresolved fields; see `docs/skyblock-data.md` |
 | Next planned feature phase | QoL/runtime first: tooltip pan, HUD editor, dungeon/Slayer playtest. Mining tracker and gemstone matrix stay paused until reopened. |
@@ -111,7 +111,7 @@ Focused automated coverage verifies:
   offline price snapshot.
 - Bounded/cached chat rules reject risky regex constructs and bad replacement
   groups without breaking chat.
-- The catalog lock (99 parents on Lite, 134 on Plus), evidence-state guards, status-badge layout, and
+- The catalog lock (96 parents on Lite, 134 on Plus), evidence-state guards, status-badge layout, and
   configuration contracts for all newly exposed child settings.
 - Hotkey sequence parser/editor round trips, bundled item search and recursive
   recipe aggregation with cycle termination, museum-set gaps, deterministic
@@ -179,7 +179,7 @@ Focused automated coverage verifies:
   Displayed Magic Find is session context only.
 - Powder Chest Tracker presentation of Current Session `CHEST` / `CURRENCY` rows
   with an independent HUD.
-- QoL catalog wiring for 99 Lite / 134 Plus modules across GUI, Utilities, Render, HUD & Display,
+- QoL catalog wiring for 96 Lite / 134 Plus modules across GUI, Utilities, Render, HUD & Display,
   Interface, Combat, Dungeons, Mining, Slayer, and Fishing. Catalog, settings,
   runtime bridges/mixins, and focused automated contracts are present; the
   group-wide Minecraft matrix remains pending.
@@ -356,7 +356,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Rot Tools visual identity: branded icon, `RotClientTheme` palette, dashboard and HUD chrome (`2.0.0+mc26.2`).
 - Powder Chest Tracker Current Session projection and independent HUD.
 - Bounded MOB loot Current Session ingest (generic + Diana in catalog scope).
-- QoL dashboard: **99** wired parents in Rot Client and **134** in Rot Client+
+- QoL dashboard: **96** wired parents in Rot Client and **134** in Rot Client+
   across fourteen task-oriented groups, with automation-style development
   features disabled by default and scoped to the local Serveri / Plus JAR. No
   separate server-detection branch is planned.

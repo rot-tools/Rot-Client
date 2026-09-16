@@ -800,22 +800,22 @@ public final class IotaKuudraRuntime {
     }
 
     private static void drawBoth(AABB box, int color) {
-        Gizmos.cuboid(box, GizmoStyle.strokeAndFill(color, 2.0F, color)).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.strokeAndFill(color, 2.0F, color)));
     }
 
     private static void drawOutline(AABB box, int color) {
-        Gizmos.cuboid(box, GizmoStyle.stroke(color, 2.0F)).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(color, 2.0F)));
     }
 
     private static void drawFilled(AABB box, int color) {
-        Gizmos.cuboid(box, GizmoStyle.strokeAndFill(color, 1.0F, color)).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.strokeAndFill(color, 1.0F, color)));
     }
 
     private static void drawBeam(AABB box, int height, int color) {
         Vec3 bottom = new Vec3(
                 (box.minX + box.maxX) * 0.5D, box.minY, (box.minZ + box.maxZ) * 0.5D);
         Vec3 top = new Vec3(bottom.x, bottom.y + height, bottom.z);
-        Gizmos.line(bottom, top, color, 2.0F).setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(bottom, top, color, 2.0F));
     }
 
     private static void drawCircle(IotaKuudraPolicy.Vec3d center, double radius, int segments, int color) {
@@ -831,19 +831,19 @@ public final class IotaKuudraRuntime {
                 first = point;
             }
             if (previous != null) {
-                Gizmos.line(previous, point, color, 2.0F).setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(previous, point, color, 2.0F));
             }
             previous = point;
         }
         if (previous != null && first != null) {
-            Gizmos.line(previous, first, color, 2.0F).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.line(previous, first, color, 2.0F));
         }
     }
 
     private static void label(String text, double x, double y, double z, int color, float scale) {
         var props = Gizmos.billboardTextOverBlock(
                 text, BlockPos.containing(x, y, z), 0, color, scale);
-        props.setAlwaysOnTop();
+        QolClientFlavorSupport.hooks().configurePlusGizmo(props);
     }
 
     private static AABB aabb(IotaKuudraPolicy.Aabb box) {
