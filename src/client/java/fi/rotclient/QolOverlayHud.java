@@ -824,8 +824,7 @@ final class QolOverlayHud {
     }
 
     private static boolean autoClickerHudEnabled(QolUtilityConfig qol) {
-        return qol.autoClickerCpsHudEnabled
-                && QolClientFlavorSupport.hooks().autoClickerHud() != null;
+        return QolClientFlavorSupport.hooks().autoClickerHud() != null;
     }
 
     private void renderAutoClickerHud(

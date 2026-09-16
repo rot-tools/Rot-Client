@@ -576,24 +576,22 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             return 0;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        AutoClickerSettings settings = AutoClickerSettings.from(qol);
         String identity = SkyBlockItemIdentity.identify(client.player.getMainHandItem());
         if (identity.isBlank()) {
             feedback.accept("Auto Clicker: hold an item to whitelist first.");
             return 0;
         }
         java.util.List<String> list = left
-                ? AutoClickerWhitelist.ensureMutable(qol.autoClickerLeftWhitelist)
-                : AutoClickerWhitelist.ensureMutable(qol.autoClickerRightWhitelist);
-        if (left) {
-            qol.autoClickerLeftWhitelist = list;
-        } else {
-            qol.autoClickerRightWhitelist = list;
-        }
+                ? AutoClickerWhitelist.ensureMutable(settings.leftWhitelist())
+                : AutoClickerWhitelist.ensureMutable(settings.rightWhitelist());
         if (!AutoClickerWhitelist.add(list, identity)) {
             feedback.accept("Auto Clicker: already whitelisted on "
                     + (left ? "left" : "right") + ": " + identity);
             return 1;
         }
+        if (left) AutoClickerSettings.leftWhitelist(qol, list);
+        else AutoClickerSettings.rightWhitelist(qol, list);
         TrackerStore.save(RotClientClient.trackerConfig());
         feedback.accept("Auto Clicker: added to "
                 + (left ? "left" : "right") + " whitelist: " + identity);
@@ -608,15 +606,18 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
             return 0;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        AutoClickerSettings settings = AutoClickerSettings.from(qol);
         String identity = SkyBlockItemIdentity.identify(client.player.getMainHandItem());
         java.util.List<String> list = left
-                ? qol.autoClickerLeftWhitelist
-                : qol.autoClickerRightWhitelist;
+                ? AutoClickerWhitelist.ensureMutable(settings.leftWhitelist())
+                : AutoClickerWhitelist.ensureMutable(settings.rightWhitelist());
         if (!AutoClickerWhitelist.remove(list, identity)) {
             feedback.accept("Auto Clicker: not on "
                     + (left ? "left" : "right") + " whitelist: " + identity);
             return 0;
         }
+        if (left) AutoClickerSettings.leftWhitelist(qol, list);
+        else AutoClickerSettings.rightWhitelist(qol, list);
         TrackerStore.save(RotClientClient.trackerConfig());
         feedback.accept("Auto Clicker: removed from "
                 + (left ? "left" : "right") + " whitelist: " + identity);
@@ -626,8 +627,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public int autoClickerList(java.util.function.Consumer<String> feedback) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        feedback.accept("Auto Clicker left: " + formatWhitelist(qol.autoClickerLeftWhitelist));
-        feedback.accept("Auto Clicker right: " + formatWhitelist(qol.autoClickerRightWhitelist));
+        AutoClickerSettings settings = AutoClickerSettings.from(qol);
+        feedback.accept("Auto Clicker left: " + formatWhitelist(settings.leftWhitelist()));
+        feedback.accept("Auto Clicker right: " + formatWhitelist(settings.rightWhitelist()));
         return 1;
     }
 
@@ -641,7 +643,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public CpsHud autoClickerHud() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.autoClickerCpsHudEnabled) {
+        if (!AutoClickerSettings.from(qol).cpsHudEnabled()) {
             return null;
         }
         AutoClickerCpsMeter.Snapshot snapshot = AutoClickerRuntime.cpsSnapshot();

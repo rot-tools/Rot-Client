@@ -122,7 +122,9 @@ The Lite build is packaged from the shared policy/client source sets only.
 Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
 `plus` / `plusClient` source sets. `verifyLegitJar` rejects the separated
 classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
-from older profiles survive as opaque compatibility data. The remaining Lite
+from older profiles survive as opaque compatibility data. Auto Clicker's typed
+settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
+store them in its typed config. The remaining Lite
 edition audit is tracked in [Project State](docs/PROJECT_STATE.md).
 
 ### Fox (Rot Client+)

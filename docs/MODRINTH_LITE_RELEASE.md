@@ -21,6 +21,12 @@ runtime behavior.
   click, macro, movement, and see-through-block behavior in Lite. An option being off by default is not a
   release decision.
 - Sea-creature auto attack/delay and fishing hotspot radar/tracer are Plus-owned.
+- Auto Clicker typed config, whitelists, and HUD pose are Plus-owned; old root
+  values survive as opaque profile data. Revalidate the migrated whitelist,
+  CPS settings, enable state, and HUD position in Plus at Minecraft runtime.
+- Cheater Wardrobe and Superboom still leave typed settings or shared state in
+  Lite. Move them incrementally, retaining old profile data and ordinary
+  wardrobe/dungeon HUD behavior.
   Review other world-information assists alongside the mining and
   foraging helper settings in the broader Lite visual audit.
 - Re-run `verifyLegitJar` with forbidden identifiers and class names for each

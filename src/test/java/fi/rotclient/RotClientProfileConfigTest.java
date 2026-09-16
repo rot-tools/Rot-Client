@@ -72,7 +72,9 @@ final class RotClientProfileConfigTest {
         original.settings.autoSprintEnabled = true;
         original.settings.miningHudX = 222.0F;
         original.settings.qolUtilities.performanceHudEnabled = true;
-        original.settings.qolUtilities.autoClickerLeftWhitelist.add("Terminator");
+        com.google.gson.JsonArray legacyWhitelist = new com.google.gson.JsonArray();
+        legacyWhitelist.add("Terminator");
+        original.settings.qolUtilities.extensionFields.add("legacyPlusWhitelist", legacyWhitelist);
 
         RotClientProfile duplicate =
                 original.duplicate("Duplicate");
@@ -91,7 +93,7 @@ final class RotClientProfileConfigTest {
                 1,
                 duplicate.settings
                         .qolUtilities
-                        .autoClickerLeftWhitelist
+                        .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                         .size());
 
         duplicate.settings.autoSprintEnabled = false;
@@ -102,7 +104,7 @@ final class RotClientProfileConfigTest {
 
         duplicate.settings
                 .qolUtilities
-                .autoClickerLeftWhitelist
+                .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                 .add("Juju");
 
         assertTrue(original.settings.autoSprintEnabled);
@@ -116,7 +118,7 @@ final class RotClientProfileConfigTest {
                 1,
                 original.settings
                         .qolUtilities
-                        .autoClickerLeftWhitelist
+                        .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                         .size());
     }
 
@@ -168,27 +170,27 @@ final class RotClientProfileConfigTest {
         RotClientProfileSettings original =
                 RotClientProfileSettings.defaults();
 
-        original.qolUtilities
-                .autoClickerLeftWhitelist
-                .add("Original Item");
+        com.google.gson.JsonArray legacyWhitelist = new com.google.gson.JsonArray();
+        legacyWhitelist.add("Original Item");
+        original.qolUtilities.extensionFields.add("legacyPlusWhitelist", legacyWhitelist);
 
         RotClientProfileSettings copy =
                 original.copy();
 
         copy.qolUtilities
-                .autoClickerLeftWhitelist
+                .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                 .add("Copy Item");
 
         assertEquals(
                 1,
                 original.qolUtilities
-                        .autoClickerLeftWhitelist
+                        .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                         .size());
 
         assertEquals(
                 2,
                 copy.qolUtilities
-                        .autoClickerLeftWhitelist
+                        .extensionFields.getAsJsonArray("legacyPlusWhitelist")
                         .size());
     }
 
