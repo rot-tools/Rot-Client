@@ -40,6 +40,10 @@ runtime behavior.
 
 ## Validation before upload
 
+The shared network-concealment hooks have been removed: both editions now use
+Fabric's normal client brand and registration behavior. Keep this invariant in
+future builds and reject any reintroduction of mod or loader concealment.
+
 Build the two playable JARs with Java 25 and run `test`, `testPlus`, `check`,
 `clean build`, and `git diff --check`. Verify the SHA-256 of the actual copied
 files. Launch a Fabric 26.2 Prism instance with **only Lite enabled** and test
