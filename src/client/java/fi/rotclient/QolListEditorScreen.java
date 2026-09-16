@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -258,7 +258,7 @@ final class QolListEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (event.key() == InputConstants.KEY_ESCAPE) {
             if (typing) {
                 typing = false;
                 return true;
@@ -266,13 +266,13 @@ final class QolListEditorScreen extends Screen {
             closeToParent();
             return true;
         }
-        if (typing && event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+        if (typing && event.key() == InputConstants.KEY_BACKSPACE) {
             if (!typed.isEmpty()) {
                 typed = typed.substring(0, typed.offsetByCodePoints(typed.length(), -1));
             }
             return true;
         }
-        if (typing && (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_KP_ENTER)) {
+        if (typing && (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER)) {
             if (!typed.isBlank()) {
                 addLine(typed.trim());
                 typed = "";

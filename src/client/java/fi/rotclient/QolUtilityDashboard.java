@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -3563,27 +3563,27 @@ final class QolUtilityDashboard {
         if (enumSearchFocused
                 && openEnumSettingId != null
                 && !openEnumSettingId.isBlank()) {
-            if (glfwKey == GLFW.GLFW_KEY_ESCAPE) {
+            if (glfwKey == InputConstants.KEY_ESCAPE) {
                 openEnumSettingId = "";
                 enumQuery = "";
                 enumSearchFocused = false;
                 return true;
             }
-            if (glfwKey == GLFW.GLFW_KEY_BACKSPACE && !enumQuery.isEmpty()) {
+            if (glfwKey == InputConstants.KEY_BACKSPACE && !enumQuery.isEmpty()) {
                 enumQuery = enumQuery.substring(
                         0, enumQuery.offsetByCodePoints(enumQuery.length(), -1));
                 return true;
             }
-            return glfwKey == GLFW.GLFW_KEY_BACKSPACE;
+            return glfwKey == InputConstants.KEY_BACKSPACE;
         }
         if (capturingText()) {
-            if (glfwKey == GLFW.GLFW_KEY_ESCAPE || glfwKey == GLFW.GLFW_KEY_ENTER
-                    || glfwKey == GLFW.GLFW_KEY_KP_ENTER) {
+            if (glfwKey == InputConstants.KEY_ESCAPE || glfwKey == InputConstants.KEY_RETURN
+                    || glfwKey == InputConstants.KEY_NUMPADENTER) {
                 listeningTextSettingId = "";
                 TrackerStore.save(config);
                 return true;
             }
-            if (glfwKey == GLFW.GLFW_KEY_BACKSPACE) {
+            if (glfwKey == InputConstants.KEY_BACKSPACE) {
                 String current = qol().readText(listeningTextSettingId);
                 if (!current.isEmpty()) {
                     int next = current.offsetByCodePoints(current.length(), -1);
@@ -3597,7 +3597,7 @@ final class QolUtilityDashboard {
         if (listeningKeybindSettingId == null || listeningKeybindSettingId.isBlank()) {
             return false;
         }
-        if (glfwKey == GLFW.GLFW_KEY_ESCAPE) {
+        if (glfwKey == InputConstants.KEY_ESCAPE) {
             finishKeybindCapture("");
             return true;
         }
@@ -3735,7 +3735,7 @@ final class QolUtilityDashboard {
             }
 
             if (button
-                    == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                    == InputConstants.MOUSE_BUTTON_LEFT) {
 
                 closeDrawer();
 
@@ -3766,7 +3766,7 @@ final class QolUtilityDashboard {
                         contentTop);
 
         if (hudLayoutLanding
-                && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                && button == InputConstants.MOUSE_BUTTON_LEFT
                 && handleHudLayoutLandingClick(
                         mx,
                         my,
@@ -3779,7 +3779,7 @@ final class QolUtilityDashboard {
         }
 
         if (appearanceLanding
-                && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                && button == InputConstants.MOUSE_BUTTON_LEFT) {
 
             return handleAppearanceLandingClick(
                     mx,
@@ -3794,7 +3794,7 @@ final class QolUtilityDashboard {
         if (chipHit != null
                 && !hudLayoutLanding
                 && !appearanceLanding
-                && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                && button == InputConstants.MOUSE_BUTTON_LEFT) {
 
             if (pageFilter
                     != chipHit) {
@@ -4012,8 +4012,8 @@ final class QolUtilityDashboard {
         boolean hudHit = hasHud && QolUtilityUiMath.hitHudControl(
                 mx, my, cardX, cardY, QolUtilityUiMath.CARD_HEIGHT);
         QolUtilityUiMath.CardAction action = QolUtilityUiMath.moduleCardAction(
-                button == GLFW.GLFW_MOUSE_BUTTON_LEFT,
-                button == GLFW.GLFW_MOUSE_BUTTON_RIGHT,
+                button == InputConstants.MOUSE_BUTTON_LEFT,
+                button == InputConstants.MOUSE_BUTTON_RIGHT,
                 toggleHit,
                 hudHit,
                 settingsHit,
@@ -4043,7 +4043,7 @@ final class QolUtilityDashboard {
          * expands/collapses it. Toggle and HUD controls above have already
          * consumed their clicks.
          */
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (button == InputConstants.MOUSE_BUTTON_LEFT
                 && !module.settings().isEmpty()) {
 
             if (MiningTrackerCatalogPolicy.APPEARANCE.equals(module.id())) {
@@ -4067,8 +4067,8 @@ final class QolUtilityDashboard {
             int drawerY,
             int drawerW,
             int drawerH) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT
-                && button != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT
+                && button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return true;
         }
         if (!moduleInlineBodyRendering && QolUtilityUiMath.hitClose(mx, my, drawerX, drawerY, drawerW)) {
@@ -4095,7 +4095,7 @@ final class QolUtilityDashboard {
         if (hudDrawerShowsEnableRow(module)) {
             if (RotClientUiDraw.inside(
                     mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_ROW_HEIGHT)) {
-                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     setEnabled(module, !isEnabled(module));
                 }
                 return true;
@@ -4104,7 +4104,7 @@ final class QolUtilityDashboard {
         } else if (!moduleInlineBodyRendering && !hudDrawerOpen() && module.toggleable() && runtimeAvailable(module)) {
             if (RotClientUiDraw.inside(
                     mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_ROW_HEIGHT)) {
-                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     setEnabled(module, !isEnabled(module));
                 }
                 return true;
@@ -4144,31 +4144,31 @@ final class QolUtilityDashboard {
                     mx, my, rowX, rowY, rowW, Math.min(rowHeight, shown))) {
                 if (runtimeAvailable(module)) {
                     if (setting.type() == QolUtilityCatalog.SettingType.KEYBIND) {
-                        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                             if (qol().writeKeybind(setting.id(), "")) {
                                 TrackerStore.save(config);
                             }
                             listeningKeybindSettingId = "";
-                        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                             listeningTextSettingId = "";
                             listeningKeybindSettingId = setting.id();
                         }
                     } else if (setting.type() == QolUtilityCatalog.SettingType.TEXT) {
                         if (CustomScoreboardPolicy.isListTextSetting(setting.id())) {
-                            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                                 listeningTextSettingId = "";
                                 openBoardListEditor(setting.id());
                             }
-                        } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                        } else if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                             if (qol().writeText(setting.id(), "")) {
                                 TrackerStore.save(config);
                             }
                             listeningTextSettingId = "";
-                        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                        } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                             listeningKeybindSettingId = "";
                             listeningTextSettingId = setting.id();
                         }
-                    } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                    } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                         if (setting.type() == QolUtilityCatalog.SettingType.ENUM) {
                             if (setting.id().equals(openEnumSettingId)) {
                                 openEnumSettingId = "";
@@ -5217,7 +5217,7 @@ final class QolUtilityDashboard {
             int hitX,
             int trackTop,
             int trackBottom) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (button != InputConstants.MOUSE_BUTTON_LEFT
                 || !scroll.canScroll()
                 || !scrollbarHovered(mouseX, mouseY, hitX, trackTop, trackBottom)) {
             return false;

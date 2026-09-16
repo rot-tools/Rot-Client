@@ -3,7 +3,7 @@ package fi.rotclient;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.List;
 import java.util.Locale;
@@ -1929,7 +1929,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
             int bottom) {
 
         if (kind == Kind.NONE
-                || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                || button != InputConstants.MOUSE_BUTTON_LEFT) {
 
             return false;
         }
@@ -2539,12 +2539,12 @@ private MarketWatchItemCatalog.AuctionSuggestion
             return false;
         }
 
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             cancel();
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_TAB) {
+        if (key == InputConstants.KEY_TAB) {
             int fieldCount =
                     kind == Kind.AUCTION_HOUSE
                             ? 3
@@ -2561,7 +2561,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_BACKSPACE
+        if (key == InputConstants.KEY_BACKSPACE
                 && focusedField >= 0) {
 
             String current =
@@ -2590,8 +2590,8 @@ private MarketWatchItemCatalog.AuctionSuggestion
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_ENTER
-                || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_RETURN
+                || key == InputConstants.KEY_NUMPADENTER) {
 
             /*
              * Enter on search selects the first visible result.

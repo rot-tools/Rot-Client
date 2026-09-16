@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 final class ClickGuiKeyPolicyTest {
     @Test
@@ -42,10 +42,10 @@ final class ClickGuiKeyPolicyTest {
     @Test
     void defaultKeybindResolvesRightShift() {
         assertEquals(
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                InputConstants.KEY_RSHIFT,
                 QolKeybindNames.resolveGlfwKey("", "RIGHT_SHIFT"));
         assertEquals(
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                InputConstants.KEY_RSHIFT,
                 QolKeybindNames.resolveGlfwKey("right shift", "RIGHT_SHIFT"));
     }
 

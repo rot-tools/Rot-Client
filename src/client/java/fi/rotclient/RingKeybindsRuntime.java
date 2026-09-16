@@ -16,7 +16,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,14 +59,14 @@ public final class RingKeybindsRuntime {
     }
 
     public static boolean onKeyPress(int glfwKey, int action) {
-        if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) {
+        if (action != InputConstants.PRESS && action != InputConstants.REPEAT) {
             return false;
         }
         return handlePress(QolKeybindNames.formatGlfwKey(glfwKey), keyOf(glfwKey));
     }
 
     public static boolean onMousePress(int button, int action) {
-        if (action != GLFW.GLFW_PRESS) {
+        if (action != InputConstants.PRESS) {
             return false;
         }
         return handlePress(

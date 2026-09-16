@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.List;
 import java.util.Locale;
@@ -7942,13 +7942,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.LOADOUTS
                 && loadoutCreateOpen) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelLoadoutWizard();
                 return true;
             }
 
             if (loadoutNameFocused
-                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+                    && key == InputConstants.KEY_BACKSPACE) {
 
                 if (!loadoutNameInput.isEmpty()) {
                     int newLength =
@@ -7967,8 +7967,8 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 if (loadoutWizardStep
                         == LoadoutWizardStep.NAME) {
@@ -7992,13 +7992,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.LOADOUTS
                 && !loadoutDeleteLoadoutId.isBlank()) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelLoadoutDelete();
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 submitLoadoutDelete();
                 return true;
@@ -8013,13 +8013,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.LOADOUTS
                 && loadoutEditMode != LoadoutEditMode.NONE) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelLoadoutEdit();
                 return true;
             }
 
             if (loadoutEditNameFocused
-                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+                    && key == InputConstants.KEY_BACKSPACE) {
 
                 if (!loadoutEditNameInput.isEmpty()) {
                     int newLength =
@@ -8038,8 +8038,8 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 submitLoadoutEdit();
                 return true;
@@ -8053,13 +8053,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.PROFILES
                 && profileCreateOpen) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelProfileCreate();
                 return true;
             }
 
             if (profileNameFocused
-                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+                    && key == InputConstants.KEY_BACKSPACE) {
 
                 if (!profileNameInput.isEmpty()) {
                     int newLength =
@@ -8077,8 +8077,8 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 submitProfileCreate();
                 return true;
@@ -8092,13 +8092,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.PROFILES
                 && profileEditMode != ProfileEditMode.NONE) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelProfileEdit();
                 return true;
             }
 
             if (profileEditNameFocused
-                    && key == GLFW.GLFW_KEY_BACKSPACE) {
+                    && key == InputConstants.KEY_BACKSPACE) {
 
                 if (!profileEditNameInput.isEmpty()) {
                     int newLength =
@@ -8116,8 +8116,8 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 submitProfileEdit();
                 return true;
@@ -8131,13 +8131,13 @@ int selectorY = masterY + 10;
                 == RotClientWorkspaceRoute.PROFILES
                 && !profileDeleteProfileId.isBlank()) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 cancelProfileDelete();
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 submitProfileDelete();
                 return true;
@@ -8156,13 +8156,13 @@ int selectorY = masterY + 10;
          * Global dashboard shortcuts.
          */
         if (controlDown(event)) {
-            if (key == GLFW.GLFW_KEY_T) {
+            if (key == InputConstants.KEY_T) {
                 RotClientClient.workspace().addOverviewTab();
                 syncSelectedModuleFromWorkspace();
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_W) {
+            if (key == InputConstants.KEY_W) {
                 RotClientWorkspace workspace =
                         RotClientClient.workspace();
 
@@ -8173,7 +8173,7 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_TAB) {
+            if (key == InputConstants.KEY_TAB) {
                 cycleWorkspaceTab(
                         shiftDown(event)
                                 ? -1
@@ -8182,7 +8182,7 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_L) {
+            if (key == InputConstants.KEY_L) {
                 settingsSearchFocused = true;
                 return true;
             }
@@ -8194,13 +8194,13 @@ int selectorY = masterY + 10;
         if (settingsSearchFocused
                 && !trackerDropdownOpen) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 settingsSearchFocused = false;
                 settingsQuery = "";
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_BACKSPACE) {
+            if (key == InputConstants.KEY_BACKSPACE) {
                 if (!settingsQuery.isEmpty()) {
                     int newLength =
                             settingsQuery.offsetByCodePoints(
@@ -8216,8 +8216,8 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_ENTER
-                    || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
 
                 List<RotClientSettingsIndex.Entry> results =
                         RotClientOmniboxPolicy.suggest(
@@ -8239,12 +8239,12 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_DOWN) {
+            if (key == InputConstants.KEY_DOWN) {
                 omniboxHighlight++;
                 return true;
             }
 
-            if (key == GLFW.GLFW_KEY_UP) {
+            if (key == InputConstants.KEY_UP) {
                 omniboxHighlight =
                         Math.max(
                                 0,
@@ -8260,7 +8260,7 @@ int selectorY = masterY + 10;
          * Close an open QoL drawer with Escape.
          */
         if (selectedModule == DashboardModule.QOL_SETTINGS
-                && key == GLFW.GLFW_KEY_ESCAPE
+                && key == InputConstants.KEY_ESCAPE
                 && qolDashboard.isDrawerOpen()) {
 
             qolDashboard.closeDrawer();
@@ -8278,7 +8278,7 @@ int selectorY = masterY + 10;
         /*
          * Tracker dropdown controls.
          */
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             trackerDropdownOpen = false;
             trackerSearch = "";
             trackerDropdownHighlight = 0;
@@ -8286,7 +8286,7 @@ int selectorY = masterY + 10;
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_BACKSPACE) {
+        if (key == InputConstants.KEY_BACKSPACE) {
             if (!trackerSearch.isEmpty()) {
                 int newLength =
                         trackerSearch.offsetByCodePoints(
@@ -8308,7 +8308,7 @@ int selectorY = masterY + 10;
         List<TrackerSelection> options =
                 filteredTrackerSelections();
 
-        if (key == GLFW.GLFW_KEY_UP) {
+        if (key == InputConstants.KEY_UP) {
             if (!options.isEmpty()) {
                 trackerDropdownHighlight =
                         Math.max(
@@ -8322,7 +8322,7 @@ int selectorY = masterY + 10;
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_DOWN) {
+        if (key == InputConstants.KEY_DOWN) {
             if (!options.isEmpty()) {
                 trackerDropdownHighlight =
                         Math.min(
@@ -8336,8 +8336,8 @@ int selectorY = masterY + 10;
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_ENTER
-                || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_RETURN
+                || key == InputConstants.KEY_NUMPADENTER) {
 
             if (!options.isEmpty()) {
                 int selectedIndex =
@@ -8626,7 +8626,7 @@ int selectorY = masterY + 10;
         int panelX = panelX();
         int panelY = panelY();
         openInNewTabGesture = controlDown(event)
-                || event.button() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
+                || event.button() == InputConstants.MOUSE_BUTTON_MIDDLE;
 
         if (handleDashboardWindowClick(
                 event, doubleClick, logicalMouseX, logicalMouseY, panelX, panelY)) {
@@ -8634,13 +8634,13 @@ int selectorY = masterY + 10;
         }
 
         if (selectedModule == DashboardModule.QOL_SETTINGS
-                && (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
-                || event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT)) {
+                && (event.button() == InputConstants.MOUSE_BUTTON_LEFT
+                || event.button() == InputConstants.MOUSE_BUTTON_RIGHT)) {
             int contentLeft = panelX + SIDEBAR_WIDTH + CONTENT_INSET;
             int contentRight = panelX + panelW() - CONTENT_INSET;
             int contentTop = panelY + MASTER_Y;
             int contentBottom = qolContentBottom(panelY);
-            if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
+            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT
                     && inside(logicalMouseX, logicalMouseY,
                     qolDoneX(contentRight), qolDoneY(panelY),
                     QOL_FLOATING_DONE_WIDTH, BUTTON_HEIGHT)) {
@@ -8657,18 +8657,18 @@ int selectorY = masterY + 10;
                     contentBottom)) {
                 return true;
             }
-            if (event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
                 return true;
             }
         }
 
-        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT
-                && event.button() != GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT
+                && event.button() != InputConstants.MOUSE_BUTTON_MIDDLE) {
             return super.mouseClicked(event, doubleClick);
         }
 
         // Handle the open tracker dropdown before other controls.
-        if (trackerDropdownOpen && event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (trackerDropdownOpen && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int dropdownContentRight =
                     panelX + panelW() - CONTENT_INSET;
             int dropdownMasterY =
@@ -8743,7 +8743,7 @@ int selectorY = masterY + 10;
                 viewportHeight);
         int sidebarScrollbarX = panelX + SIDEBAR_WIDTH
                 - RotClientUiDraw.SCROLLBAR_HIT_WIDTH;
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT
                 && sidebarScroll.canScroll()
                 && logicalMouseX >= sidebarScrollbarX
                 && logicalMouseX < sidebarScrollbarX
@@ -9254,7 +9254,7 @@ if (trackerDropdownOpen) {
             MouseButtonEvent event,
             double dragX,
             double dragY) {
-        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return super.mouseDragged(event, dragX, dragY);
         }
         float uiScale = uiScale();
@@ -9360,7 +9360,7 @@ if (trackerDropdownOpen) {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return super.mouseReleased(event);
         }
         if (RotClientClient.workspace().activeRoute()
@@ -10381,7 +10381,7 @@ private void drawTrackerDropdown(
         List<RotClientWorkspaceTab> tabs = workspace.tabsView();
         RotClientTabStrip.Layout tabLayout = tabStripLayout(panelX, panelY);
 
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_MIDDLE) {
             int hitTab = RotClientTabStrip.hitTabIndex(
                     tabLayout, tabs.size(), tabStripScroll, mx, my);
             if (hitTab >= 0) {
@@ -10391,7 +10391,7 @@ private void drawTrackerDropdown(
             }
         }
 
-        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
 

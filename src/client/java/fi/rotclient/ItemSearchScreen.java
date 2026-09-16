@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.List;
 import java.util.Map;
@@ -557,7 +557,7 @@ final class ItemSearchScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == GLFW.GLFW_KEY_BACKSPACE && !query.isEmpty()) {
+        if (event.key() == InputConstants.KEY_BACKSPACE && !query.isEmpty()) {
             query = query.substring(0, query.offsetByCodePoints(query.length(), -1));
             selectedId = "";
             return true;

@@ -1,6 +1,6 @@
 package fi.rotclient;
 
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -236,12 +236,12 @@ public final class MenuKeybindPolicy {
             return false;
         }
         int expected = QolKeybindNames.resolveGlfwKey(configured, "");
-        return expected != GLFW.GLFW_KEY_UNKNOWN && expected == glfwKey;
+        return expected != InputConstants.UNKNOWN.getValue() && expected == glfwKey;
     }
 
     static int numberRowIndex(int glfwKey) {
-        if (glfwKey >= GLFW.GLFW_KEY_1 && glfwKey <= GLFW.GLFW_KEY_9) {
-            return glfwKey - GLFW.GLFW_KEY_1;
+        if (glfwKey >= InputConstants.KEY_1 && glfwKey <= InputConstants.KEY_9) {
+            return glfwKey - InputConstants.KEY_1;
         }
         return -1;
     }
@@ -251,13 +251,13 @@ public final class MenuKeybindPolicy {
         if (number >= 0) {
             return number;
         }
-        if (glfwKey == GLFW.GLFW_KEY_0) {
+        if (glfwKey == InputConstants.KEY_0) {
             return 9;
         }
-        if (glfwKey == GLFW.GLFW_KEY_MINUS) {
+        if (glfwKey == InputConstants.KEY_MINUS) {
             return 10;
         }
-        if (glfwKey == GLFW.GLFW_KEY_EQUAL) {
+        if (glfwKey == InputConstants.KEY_EQUALS) {
             return 11;
         }
         return -1;

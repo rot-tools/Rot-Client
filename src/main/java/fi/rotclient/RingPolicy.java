@@ -1,6 +1,6 @@
 package fi.rotclient;
 
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +104,7 @@ public final class RingPolicy {
         }
         int glfwLeft = QolKeybindNames.resolveGlfwKey(left, "");
         int glfwRight = QolKeybindNames.resolveGlfwKey(right, "");
-        return glfwLeft != GLFW.GLFW_KEY_UNKNOWN && glfwLeft == glfwRight;
+        return glfwLeft != InputConstants.UNKNOWN.getValue() && glfwLeft == glfwRight;
     }
 
     public static List<MacroDef> parseMacroList(

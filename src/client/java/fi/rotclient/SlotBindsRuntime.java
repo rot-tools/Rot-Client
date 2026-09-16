@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -184,8 +185,8 @@ public final class SlotBindsRuntime {
             return false;
         }
         long window = client.getWindow().handle();
-        return QolKeybindNames.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT)
-                || QolKeybindNames.isKeyDown(window, org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT);
+        return QolKeybindNames.isKeyDown(window, InputConstants.KEY_LSHIFT)
+                || QolKeybindNames.isKeyDown(window, InputConstants.KEY_RSHIFT);
     }
 
     private static int[] slotCenter(

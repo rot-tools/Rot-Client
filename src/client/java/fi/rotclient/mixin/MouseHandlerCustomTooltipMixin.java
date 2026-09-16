@@ -8,7 +8,7 @@ import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -40,8 +40,8 @@ abstract class MouseHandlerCustomTooltipMixin {
         }
         if (client != null && client.getWindow() != null) {
             long handle = client.getWindow().handle();
-            shift = QolKeybindNames.isKeyDown(handle, GLFW.GLFW_KEY_LEFT_SHIFT)
-                    || QolKeybindNames.isKeyDown(handle, GLFW.GLFW_KEY_RIGHT_SHIFT);
+            shift = QolKeybindNames.isKeyDown(handle, InputConstants.KEY_LSHIFT)
+                    || QolKeybindNames.isKeyDown(handle, InputConstants.KEY_RSHIFT);
         }
         CustomTooltipRuntime.mouseScrolled(horizontal, vertical, hovered, overlay, shift);
     }
