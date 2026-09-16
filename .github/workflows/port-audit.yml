@@ -5,12 +5,34 @@ on:
     branches:
       - feature/mc-26.3-support
 
+permissions:
+  contents: write
+
 jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[port-bot]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Migrate non-raw GLFW constants
+        run: python3 tools/port_26_3_input_constants.py
+      - name: Commit migration
+        run: |
+          if git diff --quiet; then
+            echo 'No migration changes'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src
+          git commit -m '[port-bot] Migrate 26.3 input constants'
+          git push
+
   audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: List GLFW references
+      - name: List remaining GLFW references
         run: |
           echo '===== GLFW REFERENCES ====='
-          grep -R -n -E 'org\.lwjgl\.glfw|GLFW\.' src || true
+          grep -R -n -E 'org\.lwjgl\.glfw|GLFW\.' src/main src/client src/test || true
