@@ -32,7 +32,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: List remaining GLFW references
+      - name: Audit remaining port boundaries
         run: |
           echo '===== GLFW REFERENCES ====='
           grep -R -n -E 'org\.lwjgl\.glfw|GLFW\.' src/main src/client src/test || true
+          echo
+          echo '===== QOL KEYBIND REFERENCES ====='
+          grep -R -n 'QolKeybindNames' src/main src/client src/test src/plus src/plusClient src/testPlus || true
+          echo
+          echo '===== MENU POLICY REFERENCES ====='
+          grep -R -n 'MenuKeybindPolicy' src/main src/client src/test src/plus src/plusClient src/testPlus || true
+          echo
+          echo '===== RING POLICY REFERENCES ====='
+          grep -R -n 'RingPolicy' src/main src/client src/test src/plus src/plusClient src/testPlus || true
