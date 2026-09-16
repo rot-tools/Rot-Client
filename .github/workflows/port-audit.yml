@@ -1,0 +1,16 @@
+name: 26.3 Port Audit
+
+on:
+  push:
+    branches:
+      - feature/mc-26.3-support
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: List GLFW references
+        run: |
+          echo '===== GLFW REFERENCES ====='
+          grep -R -n -E 'org\.lwjgl\.glfw|GLFW\.' src || true
