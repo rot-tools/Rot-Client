@@ -18,6 +18,7 @@ jobs:
         run: |
           python3 tools/port_26_3_input_constants.py
           python3 tools/finalize_26_3_input_split.py
+          python3 tools/port_26_3_raw_input.py
       - name: Commit migration
         run: |
           if git diff --quiet; then
@@ -27,7 +28,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src
-          git commit -m '[port-bot] Finish 26.3 input compatibility split'
+          git commit -m '[port-bot] Port remaining raw input to SDL3'
           git push
 
   audit:
