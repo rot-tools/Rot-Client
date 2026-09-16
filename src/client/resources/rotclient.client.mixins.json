@@ -19,8 +19,6 @@
     "ClientLevelNoRenderMixin",
     "ClientPacketListenerMixin",
     "ContainerScreenStorageOverlayMixin",
-    "ConnectionOutboundPrivacyMixin",
-    "FabricHooksPrivacyMixin",
     "FishingHookIotaMixin",
     "EntityRendererNameHiderMixin",
     "EntityRendererSuppressMixin",

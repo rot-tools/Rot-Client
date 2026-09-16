@@ -26,7 +26,7 @@ this integration.
 
 The mod does not intentionally upload tracker state, configuration, diagnostic files, chat, screenshots, coordinates, credentials, authentication tokens, or unrelated personal files. Rot Client does not use telemetry, cloud sync, or remote analytics.
 
-On multiplayer connections (Hypixel, Serveris, and other remote hosts), Rot Client scrubs outbound handshake traffic so servers do not receive the `rotclient` mod id in registered plugin channels and the client brand is sent as `vanilla` instead of `fabric`. Single-player integrated worlds are unchanged.
+On multiplayer connections, Rot Client uses Fabric's normal networking identity. It does not disguise the client brand or filter its own registration channels to conceal the installed mod from servers.
 
 The repository also includes manually invoked development tasks,
 `refreshSkyBlockData` and `auditSkyBlockMiningData`. When run without their
