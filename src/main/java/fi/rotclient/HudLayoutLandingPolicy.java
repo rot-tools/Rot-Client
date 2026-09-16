@@ -375,7 +375,7 @@ public final class HudLayoutLandingPolicy {
     public static boolean hide(QolUtilityConfig qol, String settingId, boolean moduleToggle) {
         boolean changed = HudLayerTogglePolicy.disable(qol, settingId, moduleToggle);
         if ("qol.wardrobe_keybinds".equals(settingId)
-                && HudLayerTogglePolicy.disable(qol, "qol.cheater_wardrobe", true)) {
+                && QolFlavorSupport.extension().disablePlusWardrobe(qol)) {
             changed = true;
         }
         return changed;

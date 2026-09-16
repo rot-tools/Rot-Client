@@ -40,6 +40,9 @@ final class QolUnknownFieldPreserverTest {
         JsonObject extras = qol.getAsJsonObject("extras");
         extras.addProperty("experimentSolverEnabled", true);
         extras.addProperty("experimentFirstColor", 0x80123456);
+        extras.addProperty("cheaterWardrobeEnabled", true);
+        extras.addProperty("cheaterWardrobeClickDelay", 4);
+        extras.addProperty("cheaterWardrobeSlot1", "R");
         extras.add("futureExtras", JsonParser.parseString("{\"value\":\"keep\"}"));
         JsonObject athen = extras.getAsJsonObject("athen");
         athen.addProperty("termClickEnabled", true);
@@ -73,6 +76,12 @@ final class QolUnknownFieldPreserverTest {
                 .get("experimentSolverEnabled").getAsBoolean());
         assertEquals(0x80123456, loaded.qolUtilities.extras().extensionFields
                 .get("experimentFirstColor").getAsInt());
+        assertTrue(loaded.qolUtilities.extras().extensionFields
+                .get("cheaterWardrobeEnabled").getAsBoolean());
+        assertEquals(4, loaded.qolUtilities.extras().extensionFields
+                .get("cheaterWardrobeClickDelay").getAsInt());
+        assertEquals("R", loaded.qolUtilities.extras().extensionFields
+                .get("cheaterWardrobeSlot1").getAsString());
         assertEquals("keep", loaded.qolUtilities.extras().extensionFields
                 .getAsJsonObject("futureExtras").get("value").getAsString());
         assertTrue(loaded.qolUtilities.extras().athen().extensionFields

@@ -169,15 +169,6 @@ public final class QolNumberSettings {
                     new Spec(ViewmodelPolicy.SWING_MIN, ViewmodelPolicy.SWING_MAX, 0.05D, true);
             case "qol.item_scale.scale" ->
                     new Spec(ItemScalePolicy.MIN, ItemScalePolicy.MAX, 0.05D, true);
-            case "qol.cheater_wardrobe.click_delay",
-                 "qol.cheater_wardrobe.close_delay" ->
-                    new Spec(
-                            0.0D,
-                            8.0D,
-                            1.0D,
-                            true);
-            case "qol.cheater_wardrobe.delay_variance" ->
-                    new Spec(0.0D, 5.0D, 1.0D, true);
             case "qol.slayer_highlights.boss_width",
                  "qol.slayer_highlights.miniboss_width",
                  "qol.slayer_highlights.demon_width",

@@ -450,43 +450,49 @@ if (loadoutDriven
     }
 
     private static boolean hiddenEquipEnabled(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
+        return CheaterWardrobeSettings.from(qol).enabled()
                 || (qol.wardrobeKeybindsEnabled && qol.wardrobeAutoEquip);
     }
 
     private static boolean moveEquip(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? !qol.extras().cheaterWardrobeStationaryOnly
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? !settings.stationaryOnly()
                 : qol.wardrobeMoveEquip;
     }
 
     private static boolean stationaryOnly(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? qol.extras().cheaterWardrobeStationaryOnly
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? settings.stationaryOnly()
                 : !qol.wardrobeMoveEquip;
     }
 
     private static boolean resetOpen(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? qol.extras().cheaterWardrobeResetOpen
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? settings.resetOpen()
                 : qol.wardrobeResetOpen;
     }
 
     private static int clickDelay(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? qol.extras().cheaterWardrobeClickDelay
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? settings.clickDelay()
                 : qol.wardrobeClickDelay;
     }
 
     private static int closeDelay(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? qol.extras().cheaterWardrobeCloseDelay
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? settings.closeDelay()
                 : qol.wardrobeCloseDelay;
     }
 
     private static int delayVariance(QolUtilityConfig qol) {
-        return qol.extras().cheaterWardrobeEnabled
-                ? qol.extras().cheaterWardrobeDelayVariance
+        CheaterWardrobeSettings settings = CheaterWardrobeSettings.from(qol);
+        return settings.enabled()
+                ? settings.delayVariance()
                 : qol.wardrobeDelayVariance;
     }
 
@@ -494,7 +500,7 @@ if (loadoutDriven
             Minecraft client,
             QolUtilityConfig qol,
             int key) {
-        if (qol.extras().cheaterWardrobeEnabled) {
+        if (CheaterWardrobeSettings.from(qol).enabled()) {
             OptionalInt direct = WardrobeKeybindPolicy.customSlotForKey(
                     key,
                     cheaterWardrobeSlotBinds(qol));
@@ -514,18 +520,7 @@ if (loadoutDriven
     }
 
     private static String[] cheaterWardrobeSlotBinds(QolUtilityConfig qol) {
-        QolSkyblockExtras extras = qol.extras();
-        return new String[] {
-            extras.cheaterWardrobeSlot1,
-            extras.cheaterWardrobeSlot2,
-            extras.cheaterWardrobeSlot3,
-            extras.cheaterWardrobeSlot4,
-            extras.cheaterWardrobeSlot5,
-            extras.cheaterWardrobeSlot6,
-            extras.cheaterWardrobeSlot7,
-            extras.cheaterWardrobeSlot8,
-            extras.cheaterWardrobeSlot9
-        };
+        return CheaterWardrobeSettings.from(qol).slotBinds();
     }
 
     private static String[] wardrobeCustomSlotBinds(QolUtilityConfig qol) {

@@ -533,6 +533,19 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public boolean plusWardrobeEnabled() {
+        return CheaterWardrobeSettings.from(RotClientClient.qolConfigPublic()).enabled();
+    }
+
+    @Override
+    public void disablePlusWardrobe() {
+        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        if (CheaterWardrobeSettings.from(qol).enabled()) {
+            CheaterWardrobeSettings.enabled(qol, false);
+        }
+    }
+
+    @Override
     public boolean loadoutPetAutoEquipBusy() {
         return RotClientPetAutoEquipRuntime.busy();
     }

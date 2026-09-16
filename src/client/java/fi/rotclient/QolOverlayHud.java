@@ -820,7 +820,8 @@ final class QolOverlayHud {
 
     private static boolean wardrobeHudEnabled(QolUtilityConfig qol) {
         return QolClientFlavorSupport.hooks().loadoutsEnabled()
-                && (qol.wardrobeKeybindsEnabled || qol.extras().cheaterWardrobeEnabled);
+                && (qol.wardrobeKeybindsEnabled
+                || QolClientFlavorSupport.hooks().plusWardrobeEnabled());
     }
 
     private static boolean autoClickerHudEnabled(QolUtilityConfig qol) {

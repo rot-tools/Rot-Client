@@ -103,7 +103,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global |
 | **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
-| **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+ |
+| **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, Cheater Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+; Cheater Wardrobe settings and hidden-equip runtime are excluded from Lite |
 | **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
 | **Render** | Fullbright, viewmodel, player size, eye-height fix, and legacy textures. **Plus:** Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |

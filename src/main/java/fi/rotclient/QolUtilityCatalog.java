@@ -285,8 +285,7 @@ public final class QolUtilityCatalog {
             return true;
         }
         return switch (id) {
-            case "qol.cheater_wardrobe",
-                    "qol.farm_keys",
+            case "qol.farm_keys",
                     "qol.freecam",
                     "qol.camera",
                     "qol.slayer_auto_start",

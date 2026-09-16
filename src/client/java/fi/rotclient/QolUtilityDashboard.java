@@ -5023,7 +5023,7 @@ final class QolUtilityDashboard {
             HudLayerTogglePolicy.toggle(qol(), row.settingId(), row.moduleToggle());
             if ("qol.wardrobe_keybinds".equals(row.settingId())
                     && !HudLayerTogglePolicy.isOn(qol(), row.settingId(), true)) {
-                HudLayerTogglePolicy.disable(qol(), "qol.cheater_wardrobe", true);
+                QolClientFlavorSupport.hooks().disablePlusWardrobe();
             }
             TrackerStore.save(config);
             return true;
@@ -5040,7 +5040,7 @@ final class QolUtilityDashboard {
         }
         if ("qol.wardrobe_keybinds".equals(row.settingId())) {
             return HudLayerTogglePolicy.isOn(qol(), row.settingId(), true)
-                    || HudLayerTogglePolicy.isOn(qol(), "qol.cheater_wardrobe", true);
+                    || QolClientFlavorSupport.hooks().plusWardrobeEnabled();
         }
         return HudLayerTogglePolicy.isOn(qol(), row.settingId(), row.moduleToggle());
     }

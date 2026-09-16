@@ -41,6 +41,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean isGameplayCheatModule(String moduleId) {
         return "qol.secret_hitboxes".equals(moduleId)
+                || "qol.cheater_wardrobe".equals(moduleId)
                 || "qol.inventory_walk".equals(moduleId)
                 || "qol.mob_highlight".equals(moduleId)
                 || "qol.auto_sprint".equals(moduleId)
@@ -123,6 +124,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        if ("qol.cheater_wardrobe".equals(moduleId)) {
+            return CheaterWardrobeSettings.from(config).enabled();
+        }
         if ("qol.dungeon_termsim".equals(moduleId)) return TermSimSettings.from(config).enabled();
         if ("qol.dungeon_term_click".equals(moduleId)) {
             return DungeonTerminalClickSettings.from(config).enabled();
@@ -159,6 +163,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if ("qol.cheater_wardrobe".equals(moduleId)) {
+            CheaterWardrobeSettings.enabled(config, enabled);
+            return true;
+        }
         if ("qol.dungeon_termsim".equals(moduleId)) {
             TermSimSettings.enabled(config, enabled);
             return true;
@@ -226,6 +234,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.auto_clicker.")) {
             return AutoClickerSettings.readBoolean(config, settingId);
         }
+        if (settingId.startsWith("qol.cheater_wardrobe.")) {
+            return CheaterWardrobeSettings.readBoolean(config, settingId);
+        }
         return switch (settingId) {
             case "qol.mob_highlight.highlight_key" -> MobHighlightSettings.from(config).requireKey();
             case "qol.etherwarp.depth" -> PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
@@ -276,6 +287,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.auto_clicker.")) {
             return AutoClickerSettings.writeBoolean(config, settingId, value);
         }
+        if (settingId.startsWith("qol.cheater_wardrobe.")) {
+            return CheaterWardrobeSettings.writeBoolean(config, settingId, value);
+        }
         switch (settingId) {
             case "qol.mob_highlight.highlight_key", "qol.mob_highlight.depth",
                  "qol.mob_highlight.tracers" -> MobHighlightSettings.writeBoolean(config, settingId, value);
@@ -319,6 +333,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.auto_clicker.")) {
             return AutoClickerSettings.readNumber(config, settingId);
         }
+        if (settingId.startsWith("qol.cheater_wardrobe.")) {
+            return CheaterWardrobeSettings.readNumber(config, settingId);
+        }
         return switch (settingId) {
             case "qol.trajectories.range" -> (double) TrajectoriesSettings.from(config).range();
             case "qol.trajectories.width" -> (double) TrajectoriesSettings.from(config).width();
@@ -349,6 +366,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         if (settingId.startsWith("qol.auto_clicker.")) {
             return AutoClickerSettings.writeNumber(config, settingId, value);
         }
+        if (settingId.startsWith("qol.cheater_wardrobe.")) {
+            return CheaterWardrobeSettings.writeNumber(config, settingId, value);
+        }
         switch (settingId) {
             case "qol.trajectories.range", "qol.trajectories.width",
                  "qol.trajectories.box_size", "qol.trajectories.plane_size" ->
@@ -371,6 +391,9 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
         }
         if (settingId.startsWith("qol.auto_clicker.")) {
             return AutoClickerSettings.readKeybind(config, settingId);
+        }
+        if (settingId.startsWith("qol.cheater_wardrobe.")) {
+            return CheaterWardrobeSettings.readKeybind(config, settingId);
         }
         return switch (settingId) {
             case "qol.mob_highlight.add_key" -> MobHighlightSettings.from(config).addKey();
@@ -449,6 +472,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return TermSimSettings.writeKeybind(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.auto_clicker."))
             return AutoClickerSettings.writeKeybind(config, settingId, value);
+        if (settingId != null && settingId.startsWith("qol.cheater_wardrobe."))
+            return CheaterWardrobeSettings.writeKeybind(config, settingId, value);
         String stored = value == null ? "" : value.trim();
         switch (settingId == null ? "" : settingId) {
             case "qol.mob_highlight.add_key" -> MobHighlightSettings.addKey(config, stored);
@@ -510,10 +535,23 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             SecretHitboxesSettings.reset(config);
             return true;
         }
+        if ("qol.cheater_wardrobe".equals(moduleId)) {
+            CheaterWardrobeSettings.reset(config);
+            return true;
+        }
         if (!"qol.auto_clicker".equals(moduleId)) {
             return false;
         }
         AutoClickerSettings.reset(config);
+        return true;
+    }
+
+    @Override
+    public boolean disablePlusWardrobe(QolUtilityConfig config) {
+        if (!CheaterWardrobeSettings.from(config).enabled()) {
+            return false;
+        }
+        CheaterWardrobeSettings.enabled(config, false);
         return true;
     }
 
@@ -562,6 +600,11 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
                 return new QolNumberSettings.Spec(0.5D, 2.0D, 0.05D, true);
         }
         return switch (settingId) {
+            case "qol.cheater_wardrobe.click_delay",
+                 "qol.cheater_wardrobe.close_delay" ->
+                    new QolNumberSettings.Spec(0.0D, 8.0D, 1.0D, true);
+            case "qol.cheater_wardrobe.delay_variance" ->
+                    new QolNumberSettings.Spec(0.0D, 5.0D, 1.0D, true);
             case "qol.fishing_creatures.auto_delay" ->
                     new QolNumberSettings.Spec(0.0D, 40.0D, 1.0D, true);
             case "qol.dungeon_termsim.ping" ->
