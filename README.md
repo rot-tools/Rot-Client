@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.2`** is a development release candidate. Rot Client Lite is being prepared for CurseForge publication; Minecraft runtime smoke testing and server-rule validation remain pending.
+> **`2.0.1+mc26.2`** is a development release candidate. Rot Client Lite is being prepared for Modrinth and CurseForge publication; Minecraft runtime smoke testing and server-rule validation remain pending.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,7 +48,7 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL CurseForge release candidate. Minecraft smoke testing remains pending. |
+| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL Modrinth/CurseForge release candidate. Minecraft smoke testing remains pending. |
 | `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Playtest JAR
@@ -92,7 +92,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** currently ships **99** HUD/QoL parents. **Rot Client+** ships
+**Rot Client** currently ships **96** HUD/QoL parents. **Rot Client+** ships
 **134**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
@@ -124,8 +124,9 @@ Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
 classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
 from older profiles survive as opaque compatibility data. Auto Clicker's typed
 settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
-store them in its typed config. CurseForge release validation is tracked in
-[CurseForge Lite Release](docs/CURSEFORGE_LITE_RELEASE.md) and
+store them in its typed config. Publication validation is tracked in
+[Modrinth Lite Release](docs/MODRINTH_LITE_RELEASE.md),
+[CurseForge Lite Release](docs/CURSEFORGE_LITE_RELEASE.md), and
 [Project State](docs/PROJECT_STATE.md).
 
 Auto Superboom's settings, click-trigger state, extra-block commands, and timed

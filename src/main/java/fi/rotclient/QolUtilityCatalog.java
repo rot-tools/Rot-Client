@@ -1130,8 +1130,6 @@ public final class QolUtilityCatalog {
                 setting("qol.mining_helpers.red_carpets", "Red Carpets", "Render Dwarven Mines wool carpets as red so paths stand out.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.fossil_excavator", "Fossil Excavator Heatmap", "Tint likely Fossil Excavator tiles from the current glass-pane board. Off by default.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.wishing_compass", "Wishing Compass Guess", "Record two compass uses and box their intersection in the Crystal Hollows. Off by default.", SettingType.TOGGLE),
-                setting("qol.mining_helpers.break_reset", "Break Reset Fix", "Ignore same-block mining updates that reset break progress.", SettingType.TOGGLE, "mining"),
-                setting("qol.mining_helpers.gemstone_desync", "Gemstone Desync Fix", "Ignore gemstone glass flicker while you are mining that block.", SettingType.TOGGLE, "gemstone"),
                 setting("qol.mining_helpers.open_hud_editor", "Edit Mining HUD", "Move the combined mining leftover HUD.", SettingType.ACTION, "position")));
 
         modules.add(module(
@@ -1237,7 +1235,6 @@ public final class QolUtilityCatalog {
                 setting("qol.render_optimizer.hide_boss_bar", "Hide Boss Bar", "Hide boss health bars.", SettingType.TOGGLE, "boss"),
                 setting("qol.render_optimizer.hide_armor_bar", "Hide Armor Bar", "Hide the vanilla armor icons.", SettingType.TOGGLE),
                 setting("qol.render_optimizer.hide_food_bar", "Hide Food Bar", "Hide the vanilla hunger icons.", SettingType.TOGGLE),
-                setting("qol.render_optimizer.hide_fog", "Hide Fog", "Push environmental fog out of view.", SettingType.TOGGLE, "fog"),
                 setting("qol.render_optimizer.hide_effect_display", "Hide Effect Display", "Hide status-effect icons.", SettingType.TOGGLE, "effects"),
                 setting("qol.render_optimizer.hide_recipe_book", "Hide Recipe Book", "Hide the inventory recipe-book button.", SettingType.TOGGLE),
                 setting("qol.render_optimizer.hide_selected_item_name", "Hide Selected Item Name", "Hide the hotbar item name popup.", SettingType.TOGGLE),
@@ -1405,7 +1402,6 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_esp.opacity", "Fill Opacity", "Fill strength 0-100. Default is 40.", SettingType.NUMBER, "opacity"),
                 setting("qol.dungeon_esp.simon", "Simon Says", "Highlight the F7 Simon start button.", SettingType.TOGGLE),
                 setting("qol.dungeon_esp.simon_color", "Simon Color", "Simon start-button color.", SettingType.COLOR),
-                setting("qol.dungeon_esp.hate_doors", "I Hate Doors", "Rewrite wither/blood/entrance door blocks to stained glass on the client.", SettingType.TOGGLE),
                 setting("qol.dungeon_esp.hate_wither", "Wither Doors", "Tint coal wither doors.", SettingType.TOGGLE),
                 setting("qol.dungeon_esp.hate_wither_glass", "Wither Glass", "Stained-glass tint for wither doors.", SettingType.ENUM, EmberDungeonPolicy.glassTintNames()),
                 setting("qol.dungeon_esp.hate_blood", "Blood Doors", "Tint blood doors.", SettingType.TOGGLE),
@@ -1424,8 +1420,7 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_esp.blood_line_color", "Blood Line Color", "Line from you to the blood mob.", SettingType.COLOR),
                 setting("qol.dungeon_esp.teammates", "Teammates", "Highlight other players in the dungeon.", SettingType.TOGGLE),
                 setting("qol.dungeon_esp.teammate_color", "Teammate Color", "Teammate box color.", SettingType.COLOR),
-                setting("qol.dungeon_esp.tracers", "Tracers", "Draw lines to dungeon ESP targets.", SettingType.TOGGLE),
-                setting("qol.dungeon_esp.depth", "Depth Check", "Hide boxes behind solid blocks.", SettingType.TOGGLE)));
+                setting("qol.dungeon_esp.tracers", "Tracers", "Draw lines to dungeon ESP targets.", SettingType.TOGGLE)));
 
         modules.add(module(
                 "qol.dungeon_announce",
@@ -1543,7 +1538,6 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_terminals.hitbox_color", "Hitbox Color", "Inactive terminal box color.", SettingType.COLOR),
                 setting("qol.dungeon_terminals.check_class", "Check Dungeon Class", "Only show waypoints assigned to your current dungeon class.", SettingType.TOGGLE),
                 setting("qol.dungeon_terminals.render_text", "Render Text", "Show S1 T1 / lever labels on waypoint boxes.", SettingType.TOGGLE),
-                setting("qol.dungeon_terminals.depth_test", "Depth Test", "Hide waypoint boxes behind blocks.", SettingType.TOGGLE),
                 setting("qol.dungeon_terminals.highlight_style", "Highlight Style", "Outline, filled, or both.", SettingType.ENUM, DungeonAthenPortPolicy.HIGHLIGHT_STYLES),
                 setting("qol.dungeon_terminals.waypoint_color", "Terminal Color", "P3 terminal waypoint color.", SettingType.COLOR),
                 setting("qol.dungeon_terminals.lever_color", "Lever Color", "P3 lever waypoint color.", SettingType.COLOR),
@@ -1683,7 +1677,6 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_f7.simon_second_color", "Second Color", "Second Simon button.", SettingType.COLOR),
                 setting("qol.dungeon_f7.simon_other_color", "Other Color", "Rest of the Simon sequence.", SettingType.COLOR),
                 setting("qol.dungeon_f7.simon_sounds", "Simon Sounds", "Play a local note when a Simon start or sequence button is used.", SettingType.TOGGLE),
-                setting("qol.dungeon_f7.hide_diorite", "I Hate Diorite", "Rewrite Maxor pillar diorite to stained glass on the client.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.arrow_align", "Arrow Align", "Show remaining clicks on the F7 arrow item-frame grid.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.i4", "I4 Helper", "Box remaining I4 sea lanterns at 64-68 126-130 50.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.i4_color", "Target Color", "Remaining I4 lantern color.", SettingType.COLOR),
@@ -1914,7 +1907,6 @@ public final class QolUtilityCatalog {
                 true,
                 List.of("slayer", "highlight", "boss", "miniboss", "demon", "esp"),
                 setting("qol.slayer_highlights.only_mine", "Only For Mine", "Highlight only entities owned by the local player. Every Slayer family stays on your own boss.", SettingType.TOGGLE),
-                setting("qol.slayer_highlights.depth", "Depth Check", "Hide highlights behind solid blocks.", SettingType.TOGGLE),
                 setting("qol.slayer_highlights.target_lines", "Target Lines", "Draw a line from your view to verified Slayer targets.", SettingType.TOGGLE, "tracer", "line"),
                 setting("qol.slayer_highlights.target_line_width", "Target Line Width", "Set the width of verified Slayer target lines.", SettingType.NUMBER, "tracer", "width"),
                 setting("qol.slayer_highlights.target_line_distance", "Target Line Distance", "Do not draw target lines beyond this many blocks.", SettingType.NUMBER, "tracer", "range"),
@@ -2372,39 +2364,6 @@ public final class QolUtilityCatalog {
                 List.of("dagger", "fishing rod", "double use")));
 
         modules.add(module(
-                "qol.eye_height_fix",
-                "Eye Height Fix",
-                "Visually revert sneaking eye height on islands without modern sneak support.",
-                Group.RENDER,
-                "Camera",
-                false,
-                true,
-                true,
-                List.of("eye height", "sneak")));
-
-        modules.add(module(
-                "qol.instant_sneak",
-                "Instant Sneak",
-                "Skip the smooth sneak/swim camera lerp.",
-                Group.RENDER,
-                "Camera",
-                false,
-                true,
-                true,
-                List.of("instant sneak", "sneak", "swim")));
-
-        modules.add(module(
-                "qol.item_count_fix",
-                "Item Count Fix",
-                "Keep the item count visible for unstackable SkyBlock stacks.",
-                Group.INTERFACE,
-                "Inventory",
-                false,
-                true,
-                true,
-                List.of("item count", "stack")));
-
-        modules.add(module(
                 "qol.active_pet_highlight",
                 "Active Pet Highlight",
                 "Highlight the spawned pet in the Pets menu with a thin outline so the pet icon stays visible.",
@@ -2588,7 +2547,6 @@ public final class QolUtilityCatalog {
                 List.of("kuudra", "party", "arrows", "toggle click"),
                 setting("qol.iota.party_join_sound", "Party Join Sound", "Play a note when someone joins the party.", SettingType.TOGGLE),
                 setting("qol.iota.limbo_alert", "Limbo Alert", "Party ping and dragon growl after the SkyBlock lobby kick line.", SettingType.TOGGLE),
-                setting("qol.iota.fix_fishing_hook", "Fix Fishing Hook", "Ignore the extra armor-stand owner that sticks the bobber.", SettingType.TOGGLE),
                 setting("qol.iota.mute_fishing_cast", "Mute Fishing Cast", "Mute the fishing-bobber throw sound.", SettingType.TOGGLE),
                 setting("qol.iota.mute_terminator", "Mute Terminator Cooldown", "Mute enderman-teleport cooldown sound and the ability-cooldown chat line while holding Terminator.", SettingType.TOGGLE, "terminator"),
                 setting("qol.iota.party_commands", "Party Commands", "Run party !commands from party chat.", SettingType.TOGGLE),

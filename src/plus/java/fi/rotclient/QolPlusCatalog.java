@@ -20,6 +20,36 @@ public final class QolPlusCatalog {
     public static List<ModuleDef> extraModules() {
         List<ModuleDef> modules = new ArrayList<>();
         modules.add(module(
+                "qol.eye_height_fix",
+                "Eye Height Fix",
+                "Visually revert sneaking eye height on islands without modern sneak support.",
+                Group.RENDER,
+                "Camera",
+                false,
+                true,
+                true,
+                List.of("eye height", "sneak")));
+        modules.add(module(
+                "qol.instant_sneak",
+                "Instant Sneak",
+                "Skip the smooth sneak/swim camera lerp.",
+                Group.RENDER,
+                "Camera",
+                false,
+                true,
+                true,
+                List.of("instant sneak", "sneak", "swim")));
+        modules.add(module(
+                "qol.item_count_fix",
+                "Item Count Fix",
+                "Keep the item count visible for unstackable SkyBlock stacks.",
+                Group.INTERFACE,
+                "Inventory",
+                false,
+                true,
+                true,
+                List.of("item count", "stack")));
+        modules.add(module(
                 "qol.dungeon_termsim",
                 "Terminal Simulator",
                 "Local F7 terminal practice with Hypixel-style window titles and personal-best times.",
@@ -579,6 +609,9 @@ public final class QolPlusCatalog {
             return List.of();
         }
         return switch (moduleId) {
+            case "qol.render_optimizer" -> List.of(
+                    setting("qol.render_optimizer.hide_fog", "Hide Fog", "Push environmental fog out of view.", SettingType.TOGGLE, "fog")
+            );
             case "qol.fishing_hotspots" -> List.of(
                     setting("qol.fishing_hotspots.radar", "Radar Solver", "Guess hotspot direction from still flame particles while holding a radar.", SettingType.TOGGLE),
                     setting("qol.fishing_hotspots.tracer", "Radar Tracer", "Draw the guessed radar line.", SettingType.TOGGLE));
@@ -605,7 +638,9 @@ public final class QolPlusCatalog {
                     setting("qol.mining_glacite.enter_party", "Enter Party Chat", "Also send the enter line on /pc. Cheat, off by default.", SettingType.TOGGLE, "cheat")
             );
             case "qol.mining_helpers" -> List.of(
-                    setting("qol.mining_helpers.call_king", "Call King", "Send /call mismyla after commission complete. Cheat, off by default.", SettingType.TOGGLE, "cheat")
+                    setting("qol.mining_helpers.call_king", "Call King", "Send /call mismyla after commission complete. Cheat, off by default.", SettingType.TOGGLE, "cheat"),
+                    setting("qol.mining_helpers.break_reset", "Break Reset Fix", "Ignore same-block mining updates that reset break progress.", SettingType.TOGGLE, "mining"),
+                    setting("qol.mining_helpers.gemstone_desync", "Gemstone Desync Fix", "Ignore gemstone glass flicker while you are mining that block.", SettingType.TOGGLE, "gemstone")
             );
             case "qol.dungeon_hud" -> List.of(
                     setting("qol.dungeon_hud.map_mode", "Map Mode", "Explored follows the Magical Map. Reveal Hidden hashes loaded rooms and paints them behind wither and blood doors.", SettingType.ENUM, DungeonMapPolicy.MAP_MODES, "cheat"),
@@ -614,6 +649,8 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_hud.cheater_darken_factor", "Darken Factor", "0-1 multiplier for hidden tiles.", SettingType.NUMBER)
             );
             case "qol.dungeon_esp" -> List.of(
+                    setting("qol.dungeon_esp.hate_doors", "I Hate Doors", "Rewrite wither/blood/entrance door blocks to stained glass on the client.", SettingType.TOGGLE),
+                    setting("qol.dungeon_esp.depth", "Depth Check", "Hide boxes behind solid blocks when enabled.", SettingType.TOGGLE),
                     setting("qol.dungeon_esp.secret_waypoints", "Secret Waypoints", "Box every shipped secret in the hashed room you are standing in, through walls. Chest/item/bat/essence/lever labels stay on top of blocks.", SettingType.TOGGLE),
                     setting("qol.dungeon_esp.ghost_block", "Ghost Block", "Client-side air the looked-at block. Cheat, off by default.", SettingType.TOGGLE, "cheat"),
                     setting("qol.dungeon_esp.ghost_uayor", "Ghost Confirm", "Required Use-at-your-own-risk gate before ghosting.", SettingType.TOGGLE, "cheat"),
@@ -630,6 +667,7 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_announce.auto_ult", "Auto Ultimate", "Send vanilla Q-drop (Hypixel class ultimate) on Maxor enrage, Goldor, Sadan giants and Livid start.", SettingType.TOGGLE, "cheat")
             );
             case "qol.dungeon_terminals" -> List.of(
+                    setting("qol.dungeon_terminals.depth_test", "Depth Test", "Hide waypoint boxes behind blocks when enabled.", SettingType.TOGGLE),
                     section("qol.dungeon_terminals.section_auto", "AUTO TERMS"),
                     setting("qol.dungeon_terminals.auto", "Auto Click", "Click solved terminal slots locally without waiting for the chest to update. Cheat.", SettingType.TOGGLE, "cheat"),
                     setting("qol.dungeon_terminals.delay", "Click Delay", "Legacy tick delay if min/max ms are equal to zero.", SettingType.NUMBER),
@@ -657,6 +695,7 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_terminals.resync_timeout", "Resync Timeout", "Retry predicted or queued clicks if the terminal does not update within this many milliseconds.", SettingType.NUMBER)
             );
             case "qol.dungeon_f7" -> List.of(
+                    setting("qol.dungeon_f7.hide_diorite", "I Hate Diorite", "Rewrite Maxor pillar diorite to stained glass on the client.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.simon_block_wrong", "Block Wrong Clicks", "Cancel clicks that are not the next Simon button. Sneak to override.", SettingType.TOGGLE, "cheat"),
                     setting("qol.dungeon_f7.simon_auto", "Auto Start", "Click the start button when looking at it.", SettingType.TOGGLE, "cheat"),
                     setting("qol.dungeon_f7.simon_trigger", "Simon Triggerbot", "Click the next Simon button when looking at it.", SettingType.TOGGLE, "cheat"),
@@ -712,9 +751,13 @@ public final class QolPlusCatalog {
                     setting("qol.etherwarp.shift_automatically", "Shift Automatically", "Hold sneak briefly when left-click warping while standing.", SettingType.TOGGLE)
             );
             case "qol.iota" -> List.of(
+                    setting("qol.iota.fix_fishing_hook", "Fix Fishing Hook", "Ignore the extra armor-stand owner that sticks the bobber.", SettingType.TOGGLE),
                     setting("qol.iota.auto_requeue", "Auto Requeue", "After Kuudra is defeated, join the same instance again. Serveri cheat.", SettingType.TOGGLE, "cheat"),
                     setting("qol.iota.toggle_left", "Toggle Left Click", "Latch left auto-click.", SettingType.KEYBIND, "left"),
                     setting("qol.iota.toggle_right", "Toggle Right Click", "Latch right auto-click.", SettingType.KEYBIND, "right")
+            );
+            case "qol.slayer_highlights" -> List.of(
+                    setting("qol.slayer_highlights.depth", "Depth Check", "Hide highlights behind solid blocks when enabled.", SettingType.TOGGLE)
             );
             case "qol.command_keybinds" -> List.of(
                     section("qol.command_keybinds.section_macros", "Macros"),
