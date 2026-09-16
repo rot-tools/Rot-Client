@@ -1,0 +1,64 @@
+name: Build Lite 26.3
+
+on:
+  push:
+    branches:
+      - feature/mc-26.3-support
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          validate-wrappers: true
+          cache-provider: basic
+
+      - name: Test and build Lite client
+        run: ./gradlew clean test compileClientJava jar verifyLegitJar --rerun-tasks --console=plain
+
+      - name: Collect playable Lite JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          jars=(build/libs/RotClient-*.jar)
+          playable=()
+          for jar in "${jars[@]}"; do
+            case "$jar" in
+              *-sources.jar|*-javadoc.jar|*-dev.jar|*-dev-unsigned.jar) ;;
+              *) playable+=("$jar") ;;
+            esac
+          done
+          if (( ${#playable[@]} != 1 )); then
+            echo "Expected exactly one playable Lite JAR."
+            ls -la build/libs || true
+            exit 1
+          fi
+          mkdir -p build/curseforge
+          cp "${playable[0]}" build/curseforge/
+          sha256sum "${playable[0]}" | sed 's#  build/libs/#  #' > build/curseforge/SHA256SUMS.txt
+          echo "Playable Lite 26.3 JAR: ${playable[0]}"
+
+      - name: Upload Lite 26.3 artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RotClient-Lite-mc26.3
+          path: build/curseforge/
+          if-no-files-found: error
