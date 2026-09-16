@@ -134,7 +134,7 @@ public final class CustomTooltipRuntime {
         boolean unbound = qol.customTooltipOnlyNameKey == null || qol.customTooltipOnlyNameKey.isBlank();
         boolean held = client != null
                 && client.getWindow() != null
-                && QolKeybindNames.isBoundDown(
+                && QolInputRuntime.isBoundDown(
                         client.getWindow().handle(), qol.customTooltipOnlyNameKey);
         return CustomTooltipPolicy.showOnlyName(qol.customTooltipEnabled, unbound, held);
     }

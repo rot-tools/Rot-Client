@@ -16,7 +16,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,7 @@ public final class RingKeybindsRuntime {
         }
         long window = client.getWindow() == null ? 0L : client.getWindow().handle();
         for (RingPolicy.DueSend send : SESSION.tick(name ->
-                QolKeybindNames.isBoundDown(window, name))) {
+                QolInputRuntime.isBoundDown(window, name))) {
             dispatch(client, qol, send);
         }
     }
@@ -62,7 +61,7 @@ public final class RingKeybindsRuntime {
         if (action != InputConstants.PRESS && action != InputConstants.REPEAT) {
             return false;
         }
-        return handlePress(QolKeybindNames.formatGlfwKey(glfwKey), keyOf(glfwKey));
+        return handlePress(QolInputRuntime.formatGlfwKey(glfwKey), keyOf(glfwKey));
     }
 
     public static boolean onMousePress(int button, int action) {
@@ -70,7 +69,7 @@ public final class RingKeybindsRuntime {
             return false;
         }
         return handlePress(
-                QolKeybindNames.formatMouseButton(button),
+                QolInputRuntime.formatMouseButton(button),
                 InputConstants.Type.MOUSE.getOrCreate(button));
     }
 
@@ -130,7 +129,7 @@ public final class RingKeybindsRuntime {
         boolean enforceLimit = client.getSingleplayerServer() == null || qol.commandBindRatelimitSp;
         RingPolicy.KeyPressResult result = SESSION.handleKey(
                 keyName,
-                name -> QolKeybindNames.isBoundDown(window, name),
+                name -> QolInputRuntime.isBoundDown(window, name),
                 hasVanillaConflict(client, vanillaKey),
                 SkyBlockAreaDetector.isInSkyblock(),
                 new RingPolicy.RateSettings(

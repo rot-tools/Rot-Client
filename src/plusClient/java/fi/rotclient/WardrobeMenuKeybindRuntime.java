@@ -56,7 +56,7 @@ final class WardrobeMenuKeybindRuntime {
         Minecraft client = Minecraft.getInstance();
         boolean overrideHeld = client != null
                 && client.getWindow() != null
-                && QolKeybindNames.isBoundDown(
+                && QolInputRuntime.isBoundDown(
                         client.getWindow().handle(), qol.wardrobeOverrideKey);
         boolean inventoryOrEscape = code == GLFW.GLFW_KEY_ESCAPE
                 || code == boundKeyValue(client == null ? null : client.options.keyInventory);

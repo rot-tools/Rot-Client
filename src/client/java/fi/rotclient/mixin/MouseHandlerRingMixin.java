@@ -1,5 +1,6 @@
 package fi.rotclient.mixin;
 
+import fi.rotclient.QolInputRuntime;
 import fi.rotclient.RingKeybindsRuntime;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -17,6 +18,7 @@ abstract class MouseHandlerRingMixin {
             int action,
             CallbackInfo ci) {
         int button = buttonInfo == null ? -1 : buttonInfo.button();
+        QolInputRuntime.updateMouseButton(button, action);
         if (RingKeybindsRuntime.onMousePress(button, action)) {
             ci.cancel();
         }

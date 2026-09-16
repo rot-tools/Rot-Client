@@ -568,7 +568,7 @@ final class HotkeySequenceEditorScreen extends Screen {
                 field = 0;
                 return true;
             }
-            String key = QolKeybindNames.formatGlfwKey(event.key());
+            String key = QolInputRuntime.formatGlfwKey(event.key());
             update(withKey(current(), key));
             field = 0;
             return true;

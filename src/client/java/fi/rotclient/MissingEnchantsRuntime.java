@@ -55,10 +55,10 @@ public final class MissingEnchantsRuntime {
             return;
         }
         boolean unbound = qol.missingEnchantsKeybind == null || qol.missingEnchantsKeybind.isBlank();
-        boolean held = QolKeybindNames.isBoundDown(
+        boolean held = QolInputRuntime.isBoundDown(
                 client.getWindow().handle(), qol.missingEnchantsKeybind);
-        boolean ctrl = QolKeybindNames.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LCONTROL)
-                || QolKeybindNames.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RCONTROL);
+        boolean ctrl = QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LCONTROL)
+                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RCONTROL);
         boolean pinned = !pinnedIdentity.isBlank()
                 && pinnedIdentity.equals(SkyBlockItemIdentity.identify(stack));
         if (!MissingEnchantsPolicy.shouldShow(true, unbound, held || ctrl || pinned)) {

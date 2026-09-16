@@ -2741,9 +2741,9 @@ public final class RotClientClient implements ClientModInitializer {
             return;
         }
         QolUtilityConfig qol = qolConfig();
-        int glfwKey = QolKeybindNames.resolveGlfwKey(
+        int glfwKey = QolInputRuntime.resolveGlfwKey(
                 qol.clickGuiKeybind, "RIGHT_SHIFT");
-        boolean down = QolKeybindNames.isKeyDown(
+        boolean down = QolInputRuntime.isKeyDown(
                 client.getWindow().handle(), glfwKey);
         boolean consuming = isTextInputConsuming(client);
         boolean open = isRotClientUiOpen();
@@ -2891,8 +2891,8 @@ public final class RotClientClient implements ClientModInitializer {
         Minecraft client = Minecraft.getInstance();
         boolean shift = client != null
                 && client.getWindow() != null
-                && (QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT)
-                || QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT));
+                && (QolInputRuntime.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT)
+                || QolInputRuntime.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT));
         if (!container) {
             CustomTooltipRuntime.clear();
         }

@@ -303,9 +303,9 @@ final class AutoClickerRuntime {
                 return isMouseDown(window, GLFW.GLFW_MOUSE_BUTTON_MIDDLE);
             }
             default -> {
-                int glfwKey = QolKeybindNames.resolveGlfwKey(token, "");
+                int glfwKey = QolInputRuntime.resolveGlfwKey(token, "");
                 if (glfwKey != GLFW.GLFW_KEY_UNKNOWN) {
-                    return QolKeybindNames.isKeyDown(window, glfwKey);
+                    return QolInputRuntime.isKeyDown(window, glfwKey);
                 }
                 return defaultMouseHeld;
             }

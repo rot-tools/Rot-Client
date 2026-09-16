@@ -3601,7 +3601,7 @@ final class QolUtilityDashboard {
             finishKeybindCapture("");
             return true;
         }
-        String name = QolKeybindNames.formatGlfwKey(glfwKey);
+        String name = QolInputRuntime.formatGlfwKey(glfwKey);
         if (!name.isBlank()) {
             finishKeybindCapture(name);
         }
@@ -3640,7 +3640,7 @@ final class QolUtilityDashboard {
         if (listeningKeybindSettingId == null || listeningKeybindSettingId.isBlank()) {
             return false;
         }
-        String name = QolKeybindNames.formatMouseButton(button);
+        String name = QolInputRuntime.formatMouseButton(button);
         if (!name.isBlank()) {
             finishKeybindCapture(name);
         }

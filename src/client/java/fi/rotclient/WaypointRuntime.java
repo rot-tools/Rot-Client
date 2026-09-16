@@ -127,7 +127,7 @@ public final class WaypointRuntime {
             pingWasDown = false;
             return;
         }
-        boolean down = QolKeybindNames.isBoundDown(
+        boolean down = QolInputRuntime.isBoundDown(
                 client.getWindow().handle(), qol.waypointsKeybind);
         if (down && !pingWasDown) {
             placeLookTarget(client);

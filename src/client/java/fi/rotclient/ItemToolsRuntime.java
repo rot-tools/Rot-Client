@@ -29,7 +29,7 @@ public final class ItemToolsRuntime {
         QolSkyblockExtras extras = config.extras();
         boolean down = config.isModuleEnabled("qol.storage_overlay")
                 && extras.storageItemSearch
-                && QolKeybindNames.isBoundDown(
+                && QolInputRuntime.isBoundDown(
                         client.getWindow().handle(), extras.storageItemSearchKeybind);
         if (down && !keyWasDown && !(client.gui.screen() instanceof ItemSearchScreen)) {
             Screen parent = client.gui.screen();

@@ -67,7 +67,7 @@ public final class StallMarketRuntime {
             return;
         }
         long window = client.getWindow().handle();
-        boolean down = QolKeybindNames.isBoundDown(window, extras.stallSearchKeybind);
+        boolean down = QolInputRuntime.isBoundDown(window, extras.stallSearchKeybind);
         if (down && !searchKeyWasDown) {
             searchHoveredOrHeld(client);
         }

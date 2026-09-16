@@ -37,7 +37,7 @@ public final class MobHighlightRuntime {
             return;
         }
         long window = client.getWindow().handle();
-        boolean down = QolKeybindNames.isBoundDown(window, settings.addKey());
+        boolean down = QolInputRuntime.isBoundDown(window, settings.addKey());
         if (down && !addKeyWasDown) {
             toggleLookedAt(client, qol, settings);
         }
@@ -82,7 +82,7 @@ public final class MobHighlightRuntime {
         }
         boolean keyUnbound = settings.addKey().isBlank();
         boolean keyHeld = client.getWindow() != null
-                && QolKeybindNames.isBoundDown(client.getWindow().handle(), settings.addKey());
+                && QolInputRuntime.isBoundDown(client.getWindow().handle(), settings.addKey());
         if (settings.requireKey() && !keyUnbound && !keyHeld) {
             return;
         }

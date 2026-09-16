@@ -44,13 +44,13 @@ final class IotaPlusRuntime {
             return;
         }
         long window = client.getWindow().handle();
-        boolean leftDown = QolKeybindNames.isBoundDown(window, extras.iotaToggleLeftKeybind);
+        boolean leftDown = QolInputRuntime.isBoundDown(window, extras.iotaToggleLeftKeybind);
         if (leftDown && !IotaRuntime.leftToggleWasDown) {
             IotaRuntime.leftLatched = !IotaRuntime.leftLatched;
             IotaRuntime.notify("Iota Toggle Left Click", IotaRuntime.leftLatched);
         }
         IotaRuntime.leftToggleWasDown = leftDown;
-        boolean rightDown = QolKeybindNames.isBoundDown(window, extras.iotaToggleRightKeybind);
+        boolean rightDown = QolInputRuntime.isBoundDown(window, extras.iotaToggleRightKeybind);
         if (rightDown && !IotaRuntime.rightToggleWasDown) {
             IotaRuntime.rightLatched = !IotaRuntime.rightLatched;
             IotaRuntime.notify("Iota Toggle Right Click", IotaRuntime.rightLatched);

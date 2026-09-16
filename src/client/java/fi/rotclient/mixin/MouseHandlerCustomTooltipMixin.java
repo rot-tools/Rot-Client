@@ -13,10 +13,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Wheel deltas for hover-box panning live on {@code MouseHandler.onScroll}.
@@ -40,8 +36,8 @@ abstract class MouseHandlerCustomTooltipMixin {
         }
         if (client != null && client.getWindow() != null) {
             long handle = client.getWindow().handle();
-            shift = QolKeybindNames.isKeyDown(handle, InputConstants.KEY_LSHIFT)
-                    || QolKeybindNames.isKeyDown(handle, InputConstants.KEY_RSHIFT);
+            shift = QolInputRuntime.isKeyDown(handle, InputConstants.KEY_LSHIFT)
+                    || QolInputRuntime.isKeyDown(handle, InputConstants.KEY_RSHIFT);
         }
         CustomTooltipRuntime.mouseScrolled(horizontal, vertical, hovered, overlay, shift);
     }

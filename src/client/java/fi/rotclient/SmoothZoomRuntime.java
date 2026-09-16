@@ -50,7 +50,7 @@ public final class SmoothZoomRuntime {
 
         boolean held =
                 canZoom
-                        && QolKeybindNames.isBoundDown(
+                        && QolInputRuntime.isBoundDown(
                                 client.getWindow().handle(),
                                 qol.zoomKeybind);
 

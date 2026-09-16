@@ -156,7 +156,7 @@ public final class ChatCommandsRuntime {
             toggleWasDown = false;
             return;
         }
-        boolean down = QolKeybindNames.isBoundDown(
+        boolean down = QolInputRuntime.isBoundDown(
                 client.getWindow().handle(), qol.chatCommandsKeybind);
         if (down && !toggleWasDown) {
             qol.chatCommandsEnabled = !qol.chatCommandsEnabled;
