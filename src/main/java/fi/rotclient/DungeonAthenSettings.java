@@ -8,13 +8,6 @@ import com.google.gson.JsonObject;
  */
 final class DungeonAthenSettings {
     JsonObject extensionFields = new JsonObject();
-    int superboomMinDelay = 1;
-    int superboomMaxDelay = 3;
-    int superboomSwapBackMin = 1;
-    int superboomSwapBackMax = 3;
-    String superboomSwapTo = "Original slot";
-    int superboomCustomSlot = 1;
-    String superboomExtraBlocks = "";
     boolean breakerInstamine;
 
     int closeChestMinDelay;
@@ -257,11 +250,6 @@ final class DungeonAthenSettings {
 
     Double readNumber(String id) {
         return switch (id) {
-            case "qol.dungeon_f7.superboom_min_delay" -> (double) superboomMinDelay;
-            case "qol.dungeon_f7.superboom_max_delay" -> (double) superboomMaxDelay;
-            case "qol.dungeon_f7.superboom_swap_back_min" -> (double) superboomSwapBackMin;
-            case "qol.dungeon_f7.superboom_swap_back_max" -> (double) superboomSwapBackMax;
-            case "qol.dungeon_f7.superboom_custom_slot" -> (double) superboomCustomSlot;
             case "qol.dungeon_menus.close_chest_min" -> (double) closeChestMinDelay;
             case "qol.dungeon_menus.close_chest_max" -> (double) closeChestMaxDelay;
             case "qol.dungeon_terminals.min_delay_ms" -> (double) termMinDelayMs;
@@ -287,16 +275,6 @@ final class DungeonAthenSettings {
     boolean writeNumber(String id, double value) {
         int rounded = (int) Math.round(value);
         switch (id) {
-            case "qol.dungeon_f7.superboom_min_delay" ->
-                    superboomMinDelay = DungeonAthenPortPolicy.clampSuperboomDelay(rounded);
-            case "qol.dungeon_f7.superboom_max_delay" ->
-                    superboomMaxDelay = DungeonAthenPortPolicy.clampSuperboomDelay(rounded);
-            case "qol.dungeon_f7.superboom_swap_back_min" ->
-                    superboomSwapBackMin = DungeonAthenPortPolicy.clampSuperboomDelay(rounded);
-            case "qol.dungeon_f7.superboom_swap_back_max" ->
-                    superboomSwapBackMax = DungeonAthenPortPolicy.clampSuperboomDelay(rounded);
-            case "qol.dungeon_f7.superboom_custom_slot" ->
-                    superboomCustomSlot = DungeonAthenPortPolicy.clampSlot(rounded);
             case "qol.dungeon_menus.close_chest_min" ->
                     closeChestMinDelay = DungeonAthenPortPolicy.clampChestDelay(rounded);
             case "qol.dungeon_menus.close_chest_max" ->
@@ -342,8 +320,6 @@ final class DungeonAthenSettings {
 
     String readEnum(String id) {
         return switch (id) {
-            case "qol.dungeon_f7.superboom_swap_to" ->
-                    DungeonAthenPortPolicy.normalizeSwapTo(superboomSwapTo);
             case "qol.dungeon_terminals.order" ->
                     DungeonAthenPortPolicy.normalizeTermOrder(termOrder);
             case "qol.dungeon_terminals.highlight_style" ->
@@ -379,8 +355,6 @@ final class DungeonAthenSettings {
 
     boolean writeEnum(String id, String value) {
         switch (id) {
-            case "qol.dungeon_f7.superboom_swap_to" ->
-                    superboomSwapTo = DungeonAthenPortPolicy.normalizeSwapTo(value);
             case "qol.dungeon_terminals.order" ->
                     termOrder = DungeonAthenPortPolicy.normalizeTermOrder(value);
             case "qol.dungeon_terminals.highlight_style" ->
@@ -471,7 +445,6 @@ final class DungeonAthenSettings {
             case "qol.info_tooltips.dungeon_quality_style" ->
                     qualityStyle == null || qualityStyle.isBlank()
                             ? DungeonAthenPortPolicy.DEFAULT_QUALITY_STYLE : qualityStyle;
-            case "qol.dungeon_f7.superboom_blocks" -> safe(superboomExtraBlocks);
             case "qol.dungeon_terminals.click_sound" ->
                     termClickSound == null || termClickSound.isBlank()
                             ? "block.note_block.pling" : termClickSound;
@@ -504,7 +477,6 @@ final class DungeonAthenSettings {
         switch (id) {
             case "qol.info_tooltips.dungeon_quality_style" ->
                     qualityStyle = stored.isBlank() ? DungeonAthenPortPolicy.DEFAULT_QUALITY_STYLE : stored;
-            case "qol.dungeon_f7.superboom_blocks" -> superboomExtraBlocks = stored;
             case "qol.dungeon_terminals.click_sound" ->
                     termClickSound = stored.isBlank() ? "block.note_block.pling" : stored;
             case "qol.dungeon_carry.webhook_url" ->
@@ -630,13 +602,6 @@ final class DungeonAthenSettings {
     }
 
     private void copyF7(DungeonAthenSettings d) {
-        superboomMinDelay = d.superboomMinDelay;
-        superboomMaxDelay = d.superboomMaxDelay;
-        superboomSwapBackMin = d.superboomSwapBackMin;
-        superboomSwapBackMax = d.superboomSwapBackMax;
-        superboomSwapTo = d.superboomSwapTo;
-        superboomCustomSlot = d.superboomCustomSlot;
-        superboomExtraBlocks = d.superboomExtraBlocks;
         breakerInstamine = d.breakerInstamine;
     }
 
@@ -758,13 +723,6 @@ final class DungeonAthenSettings {
             return null;
         }
         return switch (id) {
-            case "qol.dungeon_f7.superboom_min_delay",
-                 "qol.dungeon_f7.superboom_max_delay",
-                 "qol.dungeon_f7.superboom_swap_back_min",
-                 "qol.dungeon_f7.superboom_swap_back_max" ->
-                    new QolNumberSettings.Spec(1.0D, 5.0D, 1.0D, true);
-            case "qol.dungeon_f7.superboom_custom_slot" ->
-                    new QolNumberSettings.Spec(1.0D, 9.0D, 1.0D, true);
             case "qol.dungeon_menus.close_chest_min",
                  "qol.dungeon_menus.close_chest_max" ->
                     new QolNumberSettings.Spec(0.0D, 5.0D, 1.0D, true);

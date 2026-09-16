@@ -282,8 +282,6 @@ public final class QolNumberSettings {
                             DungeonMapPolicy.HUD_CELL_MAX,
                             1.0D,
                             true);
-            case "qol.dungeon_f7.superboom_delay" ->
-                    new Spec(1.0D, 10.0D, 1.0D, true);
             case "qol.auto_dojo.control_predict" ->
                     new Spec(1.0D, 20.0D, 1.0D, true);
             case "qol.auto_dojo.mastery_delay" ->
