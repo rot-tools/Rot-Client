@@ -147,4 +147,8 @@ public interface QolFlavorExtension {
     default boolean resetModule(QolUtilityConfig config, String moduleId) {
         return false;
     }
+
+    default boolean disablePlusWardrobe(QolUtilityConfig config) {
+        return false;
+    }
 }

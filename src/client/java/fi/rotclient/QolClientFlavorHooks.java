@@ -342,6 +342,13 @@ public interface QolClientFlavorHooks {
         return false;
     }
 
+    default boolean plusWardrobeEnabled() {
+        return false;
+    }
+
+    default void disablePlusWardrobe() {
+    }
+
     default boolean loadoutPetAutoEquipBusy() {
         return false;
     }

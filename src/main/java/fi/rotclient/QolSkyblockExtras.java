@@ -83,23 +83,6 @@ final class QolSkyblockExtras {
     int autoExperimentsSerumCount;
     boolean autoExperimentsGetMaxXp;
 
-    boolean cheaterWardrobeEnabled;
-    boolean cheaterWardrobeMoveEquip = true;
-    boolean cheaterWardrobeStationaryOnly = true;
-    boolean cheaterWardrobeResetOpen = true;
-    int cheaterWardrobeClickDelay = 1;
-    int cheaterWardrobeCloseDelay = 1;
-    int cheaterWardrobeDelayVariance = 1;
-    String cheaterWardrobeSlot1 = "";
-    String cheaterWardrobeSlot2 = "";
-    String cheaterWardrobeSlot3 = "";
-    String cheaterWardrobeSlot4 = "";
-    String cheaterWardrobeSlot5 = "";
-    String cheaterWardrobeSlot6 = "";
-    String cheaterWardrobeSlot7 = "";
-    String cheaterWardrobeSlot8 = "";
-    String cheaterWardrobeSlot9 = "";
-
     boolean escrowFixEnabled;
 
     boolean autoHarpEnabled;
@@ -1071,7 +1054,6 @@ final class QolSkyblockExtras {
             case "qol.anvil_helper" -> anvilHelperEnabled;
             case "qol.calendar_date" -> calendarDateEnabled;
             case "qol.auto_experiments" -> autoExperimentsEnabled;
-            case "qol.cheater_wardrobe" -> cheaterWardrobeEnabled;
             case "qol.escrow_fix" -> escrowFixEnabled;
             case "qol.auto_harp" -> autoHarpEnabled;
             case "qol.auto_gfs" -> autoGfsEnabled;
@@ -1161,7 +1143,6 @@ final class QolSkyblockExtras {
             case "qol.anvil_helper" -> anvilHelperEnabled = enabled;
             case "qol.calendar_date" -> calendarDateEnabled = enabled;
             case "qol.auto_experiments" -> autoExperimentsEnabled = enabled;
-            case "qol.cheater_wardrobe" -> cheaterWardrobeEnabled = enabled;
             case "qol.escrow_fix" -> escrowFixEnabled = enabled;
             case "qol.auto_harp" -> autoHarpEnabled = enabled;
             case "qol.auto_gfs" -> autoGfsEnabled = enabled;
@@ -1294,9 +1275,6 @@ final class QolSkyblockExtras {
             case "qol.render_optimizer.mob_icons" -> mobIcons;
             case "qol.auto_experiments.auto_close" -> autoExperimentsAutoClose;
             case "qol.auto_experiments.get_max_xp" -> autoExperimentsGetMaxXp;
-            case "qol.cheater_wardrobe.move_equip" -> cheaterWardrobeMoveEquip;
-            case "qol.cheater_wardrobe.stationary_only" -> cheaterWardrobeStationaryOnly;
-            case "qol.cheater_wardrobe.reset_open" -> cheaterWardrobeResetOpen;
             case "qol.auto_gfs.in_skyblock" -> autoGfsInSkyblock;
             case "qol.auto_gfs.in_kuudra" -> autoGfsInKuudra;
             case "qol.auto_gfs.in_dungeon" -> autoGfsInDungeon;
@@ -1929,9 +1907,6 @@ final class QolSkyblockExtras {
             case "qol.render_optimizer.mob_icons" -> mobIcons = value;
             case "qol.auto_experiments.auto_close" -> autoExperimentsAutoClose = value;
             case "qol.auto_experiments.get_max_xp" -> autoExperimentsGetMaxXp = value;
-            case "qol.cheater_wardrobe.move_equip" -> cheaterWardrobeMoveEquip = value;
-            case "qol.cheater_wardrobe.stationary_only" -> cheaterWardrobeStationaryOnly = value;
-            case "qol.cheater_wardrobe.reset_open" -> cheaterWardrobeResetOpen = value;
             case "qol.auto_gfs.in_skyblock" -> autoGfsInSkyblock = value;
             case "qol.auto_gfs.in_kuudra" -> autoGfsInKuudra = value;
             case "qol.auto_gfs.in_dungeon" -> autoGfsInDungeon = value;
@@ -2556,9 +2531,6 @@ final class QolSkyblockExtras {
             case "qol.auto_experiments.click_delay" -> (double) autoExperimentsClickDelay;
             case "qol.auto_experiments.delay_variety" -> (double) autoExperimentsDelayVariety;
             case "qol.auto_experiments.serum_count" -> (double) autoExperimentsSerumCount;
-            case "qol.cheater_wardrobe.click_delay" -> (double) cheaterWardrobeClickDelay;
-            case "qol.cheater_wardrobe.close_delay" -> (double) cheaterWardrobeCloseDelay;
-            case "qol.cheater_wardrobe.delay_variance" -> (double) cheaterWardrobeDelayVariance;
             case "qol.auto_gfs.timer_increments" -> (double) autoGfsTimerIncrements;
             case "qol.auto_sell.delay" -> (double) autoSellDelay;
             case "qol.dungeon_terminals.delay" -> (double) dungeonTerminalsDelay;
@@ -2657,12 +2629,6 @@ final class QolSkyblockExtras {
                     Math.max(0, Math.min(1000, (int) Math.round(value)));
             case "qol.auto_experiments.serum_count" -> autoExperimentsSerumCount =
                     Math.max(0, Math.min(3, (int) Math.round(value)));
-            case "qol.cheater_wardrobe.click_delay" -> cheaterWardrobeClickDelay =
-                    Math.max(0, Math.min(8, (int) Math.round(value)));
-            case "qol.cheater_wardrobe.close_delay" -> cheaterWardrobeCloseDelay =
-                    Math.max(0, Math.min(8, (int) Math.round(value)));
-            case "qol.cheater_wardrobe.delay_variance" -> cheaterWardrobeDelayVariance =
-                    Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.auto_gfs.timer_increments" -> autoGfsTimerIncrements =
                     Math.max(1, Math.min(60, (int) Math.round(value)));
             case "qol.auto_sell.delay" -> autoSellDelay =
@@ -3222,24 +3188,6 @@ final class QolSkyblockExtras {
                 autoExperimentsAutoClose = d.autoExperimentsAutoClose;
                 autoExperimentsSerumCount = d.autoExperimentsSerumCount;
                 autoExperimentsGetMaxXp = d.autoExperimentsGetMaxXp;
-            }
-            case "qol.cheater_wardrobe" -> {
-                cheaterWardrobeEnabled = d.cheaterWardrobeEnabled;
-                cheaterWardrobeMoveEquip = d.cheaterWardrobeMoveEquip;
-                cheaterWardrobeStationaryOnly = d.cheaterWardrobeStationaryOnly;
-                cheaterWardrobeResetOpen = d.cheaterWardrobeResetOpen;
-                cheaterWardrobeClickDelay = d.cheaterWardrobeClickDelay;
-                cheaterWardrobeCloseDelay = d.cheaterWardrobeCloseDelay;
-                cheaterWardrobeDelayVariance = d.cheaterWardrobeDelayVariance;
-                cheaterWardrobeSlot1 = d.cheaterWardrobeSlot1;
-                cheaterWardrobeSlot2 = d.cheaterWardrobeSlot2;
-                cheaterWardrobeSlot3 = d.cheaterWardrobeSlot3;
-                cheaterWardrobeSlot4 = d.cheaterWardrobeSlot4;
-                cheaterWardrobeSlot5 = d.cheaterWardrobeSlot5;
-                cheaterWardrobeSlot6 = d.cheaterWardrobeSlot6;
-                cheaterWardrobeSlot7 = d.cheaterWardrobeSlot7;
-                cheaterWardrobeSlot8 = d.cheaterWardrobeSlot8;
-                cheaterWardrobeSlot9 = d.cheaterWardrobeSlot9;
             }
             case "qol.escrow_fix" -> escrowFixEnabled = d.escrowFixEnabled;
             case "qol.auto_harp" -> autoHarpEnabled = d.autoHarpEnabled;
@@ -4417,15 +4365,6 @@ final class QolSkyblockExtras {
             return value == null ? "" : value;
         }
         return switch (settingId) {
-            case "qol.cheater_wardrobe.slot_1" -> cheaterWardrobeSlot1;
-            case "qol.cheater_wardrobe.slot_2" -> cheaterWardrobeSlot2;
-            case "qol.cheater_wardrobe.slot_3" -> cheaterWardrobeSlot3;
-            case "qol.cheater_wardrobe.slot_4" -> cheaterWardrobeSlot4;
-            case "qol.cheater_wardrobe.slot_5" -> cheaterWardrobeSlot5;
-            case "qol.cheater_wardrobe.slot_6" -> cheaterWardrobeSlot6;
-            case "qol.cheater_wardrobe.slot_7" -> cheaterWardrobeSlot7;
-            case "qol.cheater_wardrobe.slot_8" -> cheaterWardrobeSlot8;
-            case "qol.cheater_wardrobe.slot_9" -> cheaterWardrobeSlot9;
             case "qol.auto_gfs.keybind" -> autoGfsKeybind == null ? "" : autoGfsKeybind;
             case "qol.auto_sell.keybind" -> autoSellKeybind == null ? "" : autoSellKeybind;
             case "qol.ghosts.keybind" -> ghostsKeybind == null ? "" : ghostsKeybind;
@@ -4448,15 +4387,6 @@ final class QolSkyblockExtras {
             return true;
         }
         switch (settingId) {
-            case "qol.cheater_wardrobe.slot_1" -> cheaterWardrobeSlot1 = stored;
-            case "qol.cheater_wardrobe.slot_2" -> cheaterWardrobeSlot2 = stored;
-            case "qol.cheater_wardrobe.slot_3" -> cheaterWardrobeSlot3 = stored;
-            case "qol.cheater_wardrobe.slot_4" -> cheaterWardrobeSlot4 = stored;
-            case "qol.cheater_wardrobe.slot_5" -> cheaterWardrobeSlot5 = stored;
-            case "qol.cheater_wardrobe.slot_6" -> cheaterWardrobeSlot6 = stored;
-            case "qol.cheater_wardrobe.slot_7" -> cheaterWardrobeSlot7 = stored;
-            case "qol.cheater_wardrobe.slot_8" -> cheaterWardrobeSlot8 = stored;
-            case "qol.cheater_wardrobe.slot_9" -> cheaterWardrobeSlot9 = stored;
             case "qol.auto_gfs.keybind" -> autoGfsKeybind = stored;
             case "qol.auto_sell.keybind" -> autoSellKeybind = stored;
             case "qol.ghosts.keybind" -> ghostsKeybind = stored;
