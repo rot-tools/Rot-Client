@@ -182,9 +182,6 @@ public final class DungeonRuntime {
             new DungeonLeftoverPolicy.SplitSnapshot(0L, 0L, 0L, 0L, false, false, false);
     static KuudraSplitPolicy.Snapshot kuudra = KuudraSplitPolicy.Snapshot.idle();
     static List<String> chestProfitHud = List.of();
-    static int superboomCooldown;
-    static int superboomOriginalSlot = -1;
-    static int superboomSwapBackTicks = -1;
     static long triggerLastMs;
     static int ghostCooldown;
     static long crystalSpawnUntil;
@@ -210,7 +207,6 @@ public final class DungeonRuntime {
     static int goldorFrenzyTicks;
     static int purplePadTicks;
     static boolean autoClickedThisTick;
-    static boolean superboomAttackHeld;
     static int closeChestWait = -1;
     static long termQueueUpdatedAt;
     static long terminalClickUntil;
@@ -333,20 +329,8 @@ public final class DungeonRuntime {
         if (i4Cooldown > 0) {
             i4Cooldown--;
         }
-        if (superboomCooldown > 0) {
-            superboomCooldown--;
-        }
         if (ghostCooldown > 0) {
             ghostCooldown--;
-        }
-        if (superboomSwapBackTicks > 0) {
-            superboomSwapBackTicks--;
-        } else if (superboomSwapBackTicks == 0) {
-            superboomSwapBackTicks = -1;
-            if (superboomOriginalSlot >= 0 && extras.dungeonF7SuperboomSwapBack) {
-                client.player.getInventory().setSelectedSlot(superboomOriginalSlot);
-            }
-            superboomOriginalSlot = -1;
         }
         if (lividUntil > 0L && now >= lividUntil) {
             lividUntil = 0L;
@@ -980,7 +964,6 @@ public final class DungeonRuntime {
         closeChestArmed = false;
         closeChestWait = -1;
         closeChestTitle = "";
-        superboomAttackHeld = false;
         autoClickedThisTick = false;
         termQueueUpdatedAt = 0L;
         terminalClickUntil = 0L;
@@ -1003,10 +986,7 @@ public final class DungeonRuntime {
         melodyLeapName = "";
         relicLookStart = 0L;
         melodySkipQueue.clear();
-        superboomCooldown = 0;
         ghostCooldown = 0;
-        superboomSwapBackTicks = -1;
-        superboomOriginalSlot = -1;
         termQueue.clear();
         splits = new DungeonLeftoverPolicy.SplitSnapshot(0L, 0L, 0L, 0L, false, false, false);
         kuudra = KuudraSplitPolicy.Snapshot.idle();

@@ -127,6 +127,9 @@ settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
 store them in its typed config. The remaining Lite
 edition audit is tracked in [Project State](docs/PROJECT_STATE.md).
 
+Auto Superboom's click-trigger state and timed hotbar swap-back run only in
+Rot Client+; its remaining typed F7 settings are still under Lite audit.
+
 ### Fox (Rot Client+)
 
 **Fox** is a local visual module and is off by default. When

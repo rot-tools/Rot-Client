@@ -29,6 +29,11 @@ import java.util.Optional;
  * Plus-only dungeon automations. Shared {@link DungeonRuntime} keeps HUD/ESP.
  */
 final class DungeonPlusRuntime {
+    private static int superboomCooldown;
+    private static int superboomOriginalSlot = -1;
+    private static int superboomSwapBackTicks = -1;
+    private static boolean superboomAttackHeld;
+
     private DungeonPlusRuntime() {
     }
 
@@ -42,6 +47,13 @@ final class DungeonPlusRuntime {
         onPlusScreenOpened(screen);
     }
 
+    static void onWorldChanged() {
+        superboomCooldown = 0;
+        superboomOriginalSlot = -1;
+        superboomSwapBackTicks = -1;
+        superboomAttackHeld = false;
+    }
+
     static void onChat(Component message) {
         if (message != null) {
             onPlusChat(message.getString());
@@ -53,6 +65,7 @@ final class DungeonPlusRuntime {
             return;
         }
         QolSkyblockExtras extras = extras();
+        tickSuperboomSwapBack(client, extras);
         long now = System.currentTimeMillis();
         maybeCloseChest(client, extras);
         armRequeueFromScreen(client, extras);
@@ -93,6 +106,19 @@ final class DungeonPlusRuntime {
         } else if (!termQueue.isEmpty()) {
             termQueue.clear();
             melodySkipQueue.clear();
+        }
+    }
+
+    private static void tickSuperboomSwapBack(Minecraft client, QolSkyblockExtras extras) {
+        if (superboomCooldown > 0) superboomCooldown--;
+        if (superboomSwapBackTicks > 0) {
+            superboomSwapBackTicks--;
+        } else if (superboomSwapBackTicks == 0) {
+            superboomSwapBackTicks = -1;
+            if (superboomOriginalSlot >= 0 && extras.dungeonF7SuperboomSwapBack) {
+                client.player.getInventory().setSelectedSlot(superboomOriginalSlot);
+            }
+            superboomOriginalSlot = -1;
         }
     }
 

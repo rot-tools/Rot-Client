@@ -24,8 +24,9 @@ runtime behavior.
 - Auto Clicker typed config, whitelists, and HUD pose are Plus-owned; old root
   values survive as opaque profile data. Revalidate the migrated whitelist,
   CPS settings, enable state, and HUD position in Plus at Minecraft runtime.
-- Cheater Wardrobe and Superboom still leave typed settings or shared state in
-  Lite. Move them incrementally, retaining old profile data and ordinary
+- Cheater Wardrobe and Superboom still leave typed settings in Lite. The
+  Superboom click-trigger/timed swap-back state is Plus-only. Move the remaining
+  settings incrementally, retaining old profile data and ordinary
   wardrobe/dungeon HUD behavior.
   Review other world-information assists alongside the mining and
   foraging helper settings in the broader Lite visual audit.

@@ -94,6 +94,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void onWorldChanged() {
         AutoDojoRuntime.onWorldChanged();
+        DungeonPlusRuntime.onWorldChanged();
         FishingPlusRuntime.clear();
         EtherwarpPlusRuntime.clear();
     }
