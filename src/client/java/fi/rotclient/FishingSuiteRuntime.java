@@ -280,13 +280,12 @@ public final class FishingSuiteRuntime {
                         entity.xo, entity.yo, entity.zo,
                         partialTick);
                 AABB box = entity.getBoundingBox().move(offset.x(), offset.y(), offset.z()).inflate(0.15D);
-                Gizmos.cuboid(
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(
                         box,
                         GizmoStyle.strokeAndFill(
                                 extras.fishingCreaturesEspColor,
                                 2.0F,
-                                withAlpha(extras.fishingCreaturesEspColor, 0x44)))
-                        .setAlwaysOnTop();
+                                withAlpha(extras.fishingCreaturesEspColor, 0x44))));
             }
         }
         if (extras.fishingHotspotsEnabled && extras.fishingHotspotsCircle) {
@@ -298,10 +297,9 @@ public final class FishingSuiteRuntime {
                         circle.x() + circle.radius(),
                         circle.y() + 0.2D,
                         circle.z() + circle.radius());
-                Gizmos.cuboid(
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(
                         box,
-                        GizmoStyle.stroke(extras.fishingHotspotsColor, 1.5F))
-                        .setAlwaysOnTop();
+                        GizmoStyle.stroke(extras.fishingHotspotsColor, 1.5F)));
             }
         }
         QolClientFlavorSupport.hooks().fishingRadarRenderGizmos();
@@ -313,14 +311,14 @@ public final class FishingSuiteRuntime {
                     geyser.x() + 2.0D,
                     117.91D,
                     geyser.z() + 2.0D);
-            Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FFFF, 2.0F)).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FFFF, 2.0F)));
         }
         if (extras.fishingTrophyEnabled && extras.fishingTrophySponge && spongeBox != null) {
-            Gizmos.cuboid(spongeBox, GizmoStyle.stroke(0xFFFFFF55, 1.5F)).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(spongeBox, GizmoStyle.stroke(0xFFFFFF55, 1.5F)));
         }
         if (extras.fishingCreaturesEnabled && extras.fishingCreaturesThunderSparks) {
             for (AABB spark : THUNDER_SPARKS) {
-                Gizmos.cuboid(spark, GizmoStyle.stroke(0xFFFFFF00, 1.5F)).setAlwaysOnTop();
+                QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(spark, GizmoStyle.stroke(0xFFFFFF00, 1.5F)));
             }
         }
     }

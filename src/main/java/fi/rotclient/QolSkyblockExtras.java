@@ -1459,7 +1459,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.doors" -> dungeonEspDoors;
             case "qol.dungeon_esp.blood_box" -> dungeonEspBloodBox;
             case "qol.dungeon_esp.tracers" -> dungeonEspTracers;
-            case "qol.dungeon_esp.depth" -> dungeonEspDepth;
+            case "qol.dungeon_esp.depth" -> QolFlavorSupport.isPlus() ? dungeonEspDepth : true;
             case "qol.dungeon_esp.ghost_block" -> dungeonEspGhostBlock;
             case "qol.dungeon_esp.ghost_uayor" -> dungeonEspGhostUayor;
             case "qol.dungeon_esp.ghost_stonk" -> dungeonEspGhostStonk;
@@ -1647,7 +1647,7 @@ final class QolSkyblockExtras {
             case "qol.slayer_highlights.boss" -> slayerHighlightsBoss;
             case "qol.slayer_highlights.miniboss" -> slayerHighlightsMiniboss;
             case "qol.slayer_highlights.demon" -> slayerHighlightsDemon;
-            case "qol.slayer_highlights.depth" -> slayerHighlightsDepth;
+            case "qol.slayer_highlights.depth" -> QolFlavorSupport.isPlus() ? slayerHighlightsDepth : true;
             case "qol.slayer_highlights.target_lines" -> slayerHighlightsTargetLines;
             case "qol.slayer_highlights.hide_spawn_particles" -> slayerHighlightsHideSpawnParticles;
             case "qol.slayer_highlights.hide_damage_splash" -> slayerHighlightsHideDamageSplash;
@@ -2093,7 +2093,7 @@ final class QolSkyblockExtras {
             case "qol.dungeon_esp.doors" -> dungeonEspDoors = value;
             case "qol.dungeon_esp.blood_box" -> dungeonEspBloodBox = value;
             case "qol.dungeon_esp.tracers" -> dungeonEspTracers = value;
-            case "qol.dungeon_esp.depth" -> dungeonEspDepth = value;
+            case "qol.dungeon_esp.depth" -> dungeonEspDepth = QolFlavorSupport.isPlus() ? value : true;
             case "qol.dungeon_esp.ghost_block" -> dungeonEspGhostBlock = value;
             case "qol.dungeon_esp.ghost_uayor" -> dungeonEspGhostUayor = value;
             case "qol.dungeon_esp.ghost_stonk" -> dungeonEspGhostStonk = value;
@@ -2282,7 +2282,7 @@ final class QolSkyblockExtras {
             case "qol.slayer_highlights.boss" -> slayerHighlightsBoss = value;
             case "qol.slayer_highlights.miniboss" -> slayerHighlightsMiniboss = value;
             case "qol.slayer_highlights.demon" -> slayerHighlightsDemon = value;
-            case "qol.slayer_highlights.depth" -> slayerHighlightsDepth = value;
+            case "qol.slayer_highlights.depth" -> slayerHighlightsDepth = QolFlavorSupport.isPlus() ? value : true;
             case "qol.slayer_highlights.target_lines" -> slayerHighlightsTargetLines = value;
             case "qol.slayer_highlights.hide_spawn_particles" -> slayerHighlightsHideSpawnParticles = value;
             case "qol.slayer_highlights.hide_damage_splash" -> slayerHighlightsHideDamageSplash = value;

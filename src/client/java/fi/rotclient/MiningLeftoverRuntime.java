@@ -285,7 +285,7 @@ public final class MiningLeftoverRuntime {
             AABB box = stand.getBoundingBox()
                     .move(offset.x(), offset.y(), offset.z())
                     .inflate(0.2D, 0.6D, 0.2D);
-            Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FF55, 2.0F)).setAlwaysOnTop();
+            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FF55, 2.0F)));
         }
     }
 

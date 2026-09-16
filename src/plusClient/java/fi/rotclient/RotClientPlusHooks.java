@@ -121,6 +121,78 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public void configurePlusGizmo(
+            net.minecraft.gizmos.GizmoProperties properties) {
+        if (properties != null) {
+            properties.setAlwaysOnTop();
+        }
+    }
+
+    @Override
+    public boolean shouldIgnoreServerBlockUpdate(
+            net.minecraft.core.BlockPos pos,
+            net.minecraft.world.level.block.state.BlockState state) {
+        return MiningAssistRuntime.shouldIgnoreUpdate(pos, state);
+    }
+
+    @Override
+    public void filterLocalPlayerPoseMetadata(
+            net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket packet) {
+        if (packet == null || !QolVisualRuntime.animationFixEnabled()) {
+            return;
+        }
+
+        net.minecraft.client.Minecraft client =
+                net.minecraft.client.Minecraft.getInstance();
+
+        if (client.player == null
+                || packet.id() != client.player.getId()) {
+            return;
+        }
+
+        packet.packedItems().removeIf(entry ->
+                entry.serializer()
+                        == net.minecraft.network.syncher.EntityDataSerializers.POSE);
+    }
+
+    @Override
+    public void hateDoorsClear() {
+        HateDoorsPlusRuntime.clear();
+    }
+
+    @Override
+    public void hateDoorsRemember(
+            BlockPos pos,
+            EmberDungeonPolicy.GlassTint tint) {
+        HateDoorsPlusRuntime.remember(pos, tint);
+    }
+
+    @Override
+    public void hateDoorsForget(BlockPos pos) {
+        HateDoorsPlusRuntime.forget(pos);
+    }
+
+    @Override
+    public net.minecraft.world.level.block.state.BlockState hateDoorsRewrite(
+            BlockPos pos,
+            net.minecraft.world.level.block.state.BlockState original) {
+        return HateDoorsPlusRuntime.rewrite(pos, original);
+    }
+
+    @Override
+    public void hateDoorsScan(
+            Minecraft client,
+            QolSkyblockExtras extras) {
+        HateDoorsPlusRuntime.scan(client, extras);
+    }
+
+    @Override
+    public net.minecraft.world.level.block.state.BlockState hateDoorsGlassState(
+            EmberDungeonPolicy.GlassTint tint) {
+        return HateDoorsPlusRuntime.glassState(tint);
+    }
+
+    @Override
     public void mobHighlightTick(Minecraft client) {
         MobHighlightRuntime.tick(client);
     }

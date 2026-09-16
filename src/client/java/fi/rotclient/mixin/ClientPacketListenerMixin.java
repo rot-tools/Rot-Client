@@ -24,7 +24,6 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
@@ -239,7 +238,9 @@ abstract class ClientPacketListenerMixin {
     @Inject(method = "handleBlockUpdate", at = @At("HEAD"), cancellable = true)
     private void rotclient$singleBlockPacket(ClientboundBlockUpdatePacket packet, CallbackInfo ci) {
         if (!onClientThread()) return;
-        if (fi.rotclient.MiningAssistRuntime.shouldIgnoreUpdate(packet.getPos(), packet.getBlockState())) {
+        if (QolClientFlavorSupport.hooks().shouldIgnoreServerBlockUpdate(
+                packet.getPos(),
+                packet.getBlockState())) {
             ci.cancel();
             return;
         }
@@ -257,20 +258,17 @@ abstract class ClientPacketListenerMixin {
     }
 
     @Inject(method = "handleSetEntityData", at = @At("HEAD"))
-    private void rotclient$animationFix(ClientboundSetEntityDataPacket packet, CallbackInfo ci) {
+    private void rotclient$entityMetadata(
+            ClientboundSetEntityDataPacket packet,
+            CallbackInfo ci) {
         if (!onClientThread() || packet == null) {
             return;
         }
+
         fi.rotclient.DungeonRuntime.onEntityMetadata(packet.id());
-        if (!QolVisualRuntime.animationFixEnabled()) {
-            return;
-        }
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null || packet.id() != client.player.getId()) {
-            return;
-        }
-        packet.packedItems().removeIf(entry ->
-                entry.serializer() == EntityDataSerializers.POSE);
+
+        QolClientFlavorSupport.hooks()
+                .filterLocalPlayerPoseMetadata(packet);
     }
 
     @WrapOperation(

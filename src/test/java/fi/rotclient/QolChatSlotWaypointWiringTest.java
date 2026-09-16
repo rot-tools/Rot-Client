@@ -52,7 +52,27 @@ final class QolChatSlotWaypointWiringTest {
         assertTrue(chat.contains("ChatCommandsRuntime.outgoingCommand"));
         assertTrue(chat.contains("ChatCommandsRuntime.applyEmotes"));
         assertTrue(chat.contains("sendChat"));
-        assertTrue(chat.contains("MiningAssistRuntime.shouldIgnoreUpdate"));
+        assertTrue(chat.contains("shouldIgnoreServerBlockUpdate"));
+        assertTrue(chat.contains("DungeonRuntime.onEntityMetadata"));
+        assertTrue(chat.contains("filterLocalPlayerPoseMetadata"));
+
+        String plusHooks = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/RotClientPlusHooks.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(plusHooks.contains("MiningAssistRuntime.shouldIgnoreUpdate"));
+        assertTrue(plusHooks.contains("EntityDataSerializers.POSE"));
+
+        String plusMixins = Files.readString(Path.of(
+                "src/plusClient/resources/rotclient.plus.mixins.json"),
+                StandardCharsets.UTF_8);
+        assertTrue(!json.contains("FogRendererMixin"));
+        assertTrue(!json.contains("CameraEyeHeightMixin"));
+        assertTrue(!json.contains("ItemStackCountFixMixin"));
+        assertTrue(!json.contains("FishingHookIotaMixin"));
+        assertTrue(plusMixins.contains("FogRendererMixin"));
+        assertTrue(plusMixins.contains("CameraEyeHeightMixin"));
+        assertTrue(plusMixins.contains("ItemStackCountFixMixin"));
+        assertTrue(plusMixins.contains("FishingHookIotaMixin"));
 
         String drop = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/LocalPlayerMixin.java"),
