@@ -150,4 +150,51 @@ final class RotClientClientUiLayoutTest {
                 RotClientTabStrip.dropIndex(
                         layout, 4, 0, layout.x() + layout.width() + 100));
     }
+
+    @Test
+    void dashboardUsesNormalScaleOnComfortableViewport() {
+        assertEquals(
+                1.0F,
+                RotClientDashboardLayout.uiScale(1280, 720),
+                0.0001F);
+    }
+
+    @Test
+    void dashboardScalesDownBeforeMinimumLayoutDominatesViewport() {
+        int screenWidth = 854;
+        int screenHeight = 480;
+
+        float scale =
+                RotClientDashboardLayout.uiScale(
+                        screenWidth,
+                        screenHeight);
+
+        assertTrue(scale < 1.0F);
+
+        int logicalWidth =
+                Math.round(screenWidth / scale);
+        int logicalHeight =
+                Math.round(screenHeight / scale);
+
+        RotClientDashboardLayout.PanelSize panel =
+                RotClientDashboardLayout.resolve(
+                        logicalWidth,
+                        logicalHeight);
+
+        float renderedWidth =
+                panel.width() * scale;
+        float renderedHeight =
+                panel.height() * scale;
+
+        assertTrue(renderedWidth <= screenWidth * 0.76F);
+        assertTrue(renderedHeight <= screenHeight * 0.76F);
+    }
+
+    @Test
+    void dashboardScaleHasReadabilityFloor() {
+        assertEquals(
+                RotClientDashboardLayout.MIN_UI_SCALE,
+                RotClientDashboardLayout.uiScale(480, 270),
+                0.0001F);
+    }
 }
