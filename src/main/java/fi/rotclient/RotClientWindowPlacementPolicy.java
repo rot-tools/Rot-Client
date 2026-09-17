@@ -11,8 +11,8 @@ public final class RotClientWindowPlacementPolicy {
     public static final int SNAP_EDGE_PX = 28;
     public static final int SNAP_TOP_PX = 16;
     public static final int RESIZE_GRIP_PX = 6;
-    public static final int FLOATING_MIN_WIDTH = 480;
-    public static final int FLOATING_MIN_HEIGHT = 320;
+    public static final int FLOATING_MIN_WIDTH = RotClientDashboardLayout.MIN_WIDTH;
+    public static final int FLOATING_MIN_HEIGHT = RotClientDashboardLayout.MIN_HEIGHT;
     public static final String FLOATING = "floating";
     public static final String MAXIMIZED = "maximized";
     public static final String SNAP_LEFT = "left";

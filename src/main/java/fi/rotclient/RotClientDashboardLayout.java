@@ -13,6 +13,7 @@ final class RotClientDashboardLayout {
     static final int MIN_HEIGHT = 440;
     static final int VIEWPORT_MARGIN = 36;
     static final double VIEWPORT_FRACTION = 0.72D;
+    static final float MIN_UI_SCALE = 0.55F;
     static final int SIDEBAR_WIDTH = 196;
     static final int HEADER_HEIGHT = 42;
     static final int TAB_STRIP_HEIGHT = 28;
@@ -65,6 +66,28 @@ final class RotClientDashboardLayout {
             height = Math.min(height, Math.max(1, logicalHeight - 8));
         }
         return new PanelSize(Math.max(1, width), Math.max(1, height));
+    }
+
+    /**
+     * Adds an internal dashboard scale on crowded Minecraft GUI viewports.
+     *
+     * Screen.width/height are already affected by Minecraft GUI Scale. When
+     * that viewport becomes smaller than the dashboard's comfortable base
+     * canvas, scale the whole dashboard down and perform layout in the
+     * corresponding larger logical coordinate space.
+     */
+    static float uiScale(int scaledWidth, int scaledHeight) {
+        int safeWidth = Math.max(1, scaledWidth);
+        int safeHeight = Math.max(1, scaledHeight);
+
+        float fitWidth =
+                safeWidth / (float) (BASE_WIDTH + VIEWPORT_MARGIN);
+        float fitHeight =
+                safeHeight / (float) (BASE_HEIGHT + VIEWPORT_MARGIN);
+
+        return Math.max(
+                MIN_UI_SCALE,
+                Math.min(1.0F, Math.min(fitWidth, fitHeight)));
     }
 
     static int contentLeft(int panelX) {
