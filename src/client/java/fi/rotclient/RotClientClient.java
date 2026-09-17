@@ -1431,7 +1431,32 @@ public final class RotClientClient implements ClientModInitializer {
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                RotClientClient::trackingDebugStatus)))))
+                                                RotClientClient::trackingDebugStatus))))
+                        .then(literal("perf")
+                                .executes(context -> runCommand(
+                                        context.getSource(),
+                                        legacyAlias,
+                                        RotClientClient::performanceDebugStatus))
+                                .then(literal("on")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::performanceDebugOn)))
+                                .then(literal("off")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::performanceDebugOff)))
+                                .then(literal("reset")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::performanceDebugReset)))
+                                .then(literal("status")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::performanceDebugStatus)))))
                 .then(literal("fortune")
                         .then(literal("auto")
                                 .executes(context -> runCommand(
@@ -4046,6 +4071,7 @@ private static int toggle(FabricClientCommandSource source) {
                 /rot record start|stop
                 /rot fortune auto|<mining> [material]
                 /rot shadow status
+                /rot debug perf on|off|reset|status
 
                 Other:
                 /rot slayer status | carry ...
@@ -4527,6 +4553,74 @@ private static int toggle(FabricClientCommandSource source) {
         }
 
         return result.toString();
+    }
+
+    private static int performanceDebugOn(
+            FabricClientCommandSource source) {
+        ClientPerformanceProfiler.enable();
+        source.sendFeedback(Component.literal(
+                "Rot Client performance profiler ON. "
+                        + "Use the client normally, then run "
+                        + "/rot debug perf status."));
+        return 1;
+    }
+
+    private static int performanceDebugOff(
+            FabricClientCommandSource source) {
+        ClientPerformanceProfiler.disable();
+        source.sendFeedback(Component.literal(
+                "Rot Client performance profiler OFF. "
+                        + "Collected samples remain available until reset."));
+        return 1;
+    }
+
+    private static int performanceDebugReset(
+            FabricClientCommandSource source) {
+        ClientPerformanceProfiler.reset();
+        source.sendFeedback(Component.literal(
+                "Rot Client performance samples reset."));
+        return 1;
+    }
+
+    private static int performanceDebugStatus(
+            FabricClientCommandSource source) {
+        ClientPerformanceProfiler.Snapshot snapshot =
+                ClientPerformanceProfiler.snapshot();
+
+        source.sendFeedback(Component.literal(String.format(
+                Locale.ROOT,
+                "Rot Client perf: %s · sample %.1fs · boundaries %d · measured %.1fms",
+                snapshot.enabled() ? "ON" : "OFF",
+                snapshot.elapsedSeconds(),
+                snapshot.entries().size(),
+                snapshot.totalMeasuredMillis())));
+
+        if (snapshot.entries().isEmpty()) {
+            source.sendFeedback(Component.literal(
+                    "No samples yet. Run /rot debug perf on first."));
+            return 1;
+        }
+
+        source.sendFeedback(Component.literal(
+                "Top boundaries by total measured time:"));
+
+        int limit = Math.min(12, snapshot.entries().size());
+
+        for (int index = 0; index < limit; index++) {
+            ClientPerformanceProfiler.Entry entry =
+                    snapshot.entries().get(index);
+
+            source.sendFeedback(Component.literal(String.format(
+                    Locale.ROOT,
+                    "- %s · calls %d · avg %.3fms · max %.3fms · total %.1fms",
+                    entry.boundary(),
+                    entry.calls(),
+                    entry.averageMillis(),
+                    entry.maxMillis(),
+                    entry.totalMillis())));
+        }
+
+        return 1;
     }
 
     private static String formatShadowQuantities(

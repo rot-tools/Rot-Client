@@ -21,17 +21,21 @@ public final class ClientBoundaryGuard {
 
     public static void run(String boundary, Runnable action) {
         Objects.requireNonNull(action, "action");
+        long startedNanos = ClientPerformanceProfiler.beginSample();
         try {
             action.run();
         } catch (RuntimeException failure) {
             recordFailure(boundary, failure);
         } catch (LinkageError failure) {
             recordFailure(boundary, failure);
+        } finally {
+            ClientPerformanceProfiler.endSample(boundary, startedNanos);
         }
     }
 
     public static <T> T call(String boundary, java.util.concurrent.Callable<T> action, T fallback) {
         Objects.requireNonNull(action, "action");
+        long startedNanos = ClientPerformanceProfiler.beginSample();
         try {
             return action.call();
         } catch (RuntimeException failure) {
@@ -44,6 +48,8 @@ public final class ClientBoundaryGuard {
             // Checked exceptions from Callable are treated like boundary I/O.
             recordFailure(boundary, failure);
             return fallback;
+        } finally {
+            ClientPerformanceProfiler.endSample(boundary, startedNanos);
         }
     }
 
