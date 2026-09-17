@@ -8,7 +8,7 @@ final class TermSimKeybindRuntime {
 
     static void tick(Minecraft client) {
         if (client == null || client.getWindow() == null
-                || client.gui == null || client.gui.screen() != null) {
+                || client.gui == null || client.screen != null) {
             wasDown = false;
             return;
         }

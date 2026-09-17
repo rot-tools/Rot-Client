@@ -9419,7 +9419,7 @@ if (trackerDropdownOpen) {
         config.setSelectedDashboardModule(selectedModule);
         RotClientClient.save();
         if (parent != null) {
-            minecraft.gui.setScreen(parent);
+            minecraft.setScreen(parent);
         } else {
             super.onClose();
         }
@@ -9840,7 +9840,7 @@ if (trackerDropdownOpen) {
     }
 
     void openAppearanceCustomizer(RotClientAppearanceScreen.Section section) {
-        Minecraft.getInstance().gui.setScreen(
+        Minecraft.getInstance().setScreen(
                 new RotClientAppearanceScreen(this, config, hud, section));
     }
 
@@ -10584,7 +10584,7 @@ private void drawTrackerDropdown(
         RotClientUiDraw.text(graphics, font, "ROT", brandX, brandY, RotClientTheme.HUD_ACCENT, false);
         RotClientUiDraw.text(graphics, font, " CLIENT", brandX + font.width("ROT"), brandY,
                 RotClientTheme.TEXT, false);
-        RotClientUiDraw.text(graphics, font, "by OgRudolf", brandX, brandY + 10,
+        RotClientUiDraw.text(graphics, font, "by Rot Tools", brandX, brandY + 10,
                 RotClientTheme.TEXT_MUTED, false);
         RotClientHeaderLinksPolicy.Layout headerLinks =
                 RotClientHeaderLinksPolicy.layout(panelX, panelY);

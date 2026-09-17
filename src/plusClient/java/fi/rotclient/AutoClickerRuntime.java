@@ -42,7 +42,7 @@ final class AutoClickerRuntime {
             resetAccumulators();
             return;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen != null && !screen.isPauseScreen()) {
             releaseSyntheticAttack(client);
             resetAccumulators();

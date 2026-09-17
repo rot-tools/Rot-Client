@@ -70,7 +70,7 @@ final class InventoryChromeColorsScreen extends Screen {
                 Row row = ROWS[i];
                 Integer current = qol.readColor(row.id);
                 int initial = current == null ? 0xA01C1C24 : current;
-                Minecraft.getInstance().gui.setScreen(
+                Minecraft.getInstance().setScreen(
                         new RotClientColorPickerScreen(
                                 this,
                                 row.label,
@@ -91,6 +91,6 @@ final class InventoryChromeColorsScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 }

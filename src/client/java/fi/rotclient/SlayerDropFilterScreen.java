@@ -68,7 +68,7 @@ final class SlayerDropFilterScreen extends Screen {
         return super.mouseClicked(e,doubleClick);
     }
 
-    @Override public void onClose(){RotClientClient.save();Minecraft.getInstance().gui.setScreen(parent);}
+    @Override public void onClose(){RotClientClient.save();Minecraft.getInstance().setScreen(parent);}
     @Override public boolean isPauseScreen(){return false;}
     private List<String> ids(){return SlayerDropScalePolicy.dropsFor(type).stream().sorted().toList();}
     private boolean selected(String id){return SlayerDropScalePolicy.selected(extras().slayerDropFilter,id);}

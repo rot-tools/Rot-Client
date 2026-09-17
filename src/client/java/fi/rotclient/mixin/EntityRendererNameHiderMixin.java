@@ -18,25 +18,4 @@ abstract class EntityRendererNameHiderMixin<T extends Entity, S extends EntityRe
     private void rotclient$hideNameTag(T entity, CallbackInfoReturnable<Component> cir) {
         cir.setReturnValue(SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(cir.getReturnValue())));
     }
-
-    @Inject(
-            method = "extractNameTags(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;FDD)V",
-            at = @At("RETURN"))
-    private void rotclient$hideExtractedNameTags(
-            T entity,
-            S state,
-            float tickDelta,
-            double x,
-            double z,
-            CallbackInfo ci) {
-        if (state == null) {
-            return;
-        }
-        if (state.nameTag != null) {
-            state.nameTag = SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(state.nameTag));
-        }
-        if (state.scoreText != null) {
-            state.scoreText = SkyBlockUtilityRuntime.rewriteNameTag(NameHiderRuntime.apply(state.scoreText));
-        }
-    }
 }

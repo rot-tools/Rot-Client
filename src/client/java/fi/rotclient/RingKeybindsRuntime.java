@@ -121,7 +121,7 @@ public final class RingKeybindsRuntime {
                 || keyName.isBlank()) {
             return false;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen != null) {
             return false;
         }
@@ -175,7 +175,7 @@ public final class RingKeybindsRuntime {
                 send.message(),
                 context(client));
         if (!replaced.ok()) {
-            client.gui.hud.getChat().addClientSystemMessage(PREFIX.copy().append(
+            client.gui.getChat().addClientSystemMessage(PREFIX.copy().append(
                     Component.literal("Placeholder failed: " + replaced.text())
                             .withStyle(ChatFormatting.RED)));
             return;
@@ -186,7 +186,7 @@ public final class RingKeybindsRuntime {
         }
         int limit = RingPolicy.clampLengthLimit(qol.commandBindLengthLimit);
         if (replaced.text().length() > limit) {
-            client.gui.hud.getChat().addClientSystemMessage(PREFIX.copy().append(
+            client.gui.getChat().addClientSystemMessage(PREFIX.copy().append(
                     Component.literal("Blocked, length " + replaced.text().length()
                                     + " > " + limit)
                             .withStyle(ChatFormatting.RED)));
@@ -199,10 +199,10 @@ public final class RingKeybindsRuntime {
             player.connection.sendChat(replaced.text());
         }
         if (qol.commandBindAddHistory) {
-            client.gui.hud.getChat().addRecentChat(replaced.text());
+            client.gui.getChat().addRecentChat(replaced.text());
         }
         if (qol.commandBindShowHud) {
-            client.gui.hud.setOverlayMessage(
+            client.gui.setOverlayMessage(
                     Component.literal(replaced.text()).withStyle(ChatFormatting.GRAY),
                     false);
         }
@@ -210,7 +210,7 @@ public final class RingKeybindsRuntime {
 
     private static void openChat(Minecraft client, String message) {
         ChatScreen screen = new ChatScreen(message, false);
-        client.gui.setScreen(screen);
+        client.setScreen(screen);
         int editAt = message.indexOf(RingPolicy.EDIT_TOKEN);
         if (editAt < 0 || !(screen instanceof ChatScreenAccessor accessor)) {
             return;
@@ -226,7 +226,7 @@ public final class RingKeybindsRuntime {
     private static RingPolicy.PlaceholderContext context(Minecraft client) {
         LocalPlayer player = client.player;
         String lastSent = "";
-        ArrayListDeque<String> recent = client.gui.hud.getChat().getRecentChat();
+        ArrayListDeque<String> recent = client.gui.getChat().getRecentChat();
         if (recent != null && recent.peekLast() != null) {
             lastSent = recent.peekLast();
         }
@@ -283,7 +283,7 @@ public final class RingKeybindsRuntime {
     }
 
     private static void notifyRateLimit(Minecraft client, String keyName, QolUtilityConfig qol) {
-        client.gui.hud.getChat().addClientSystemMessage(PREFIX.copy().append(
+        client.gui.getChat().addClientSystemMessage(PREFIX.copy().append(
                 Component.literal("Rate limit: " + keyName + " ("
                                 + RingPolicy.clampRatelimitCount(qol.commandBindRatelimitCount)
                                 + " / "

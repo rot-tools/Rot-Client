@@ -19,12 +19,12 @@ final class RotClientLinkOpener {
             return;
         }
         Minecraft client = Minecraft.getInstance();
-        client.gui.setScreen(new ConfirmLinkScreen(
+        client.setScreen(new ConfirmLinkScreen(
                 accepted -> {
                     if (accepted) {
                         openDirect(url);
                     }
-                    client.gui.setScreen(parent);
+                    client.setScreen(parent);
                 },
                 url,
                 true));

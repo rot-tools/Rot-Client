@@ -41,7 +41,7 @@ final class ForagingAutomationRuntime {
                 extras, "qol.foraging_cheats", "qol.foraging_cheats.auto_beacon", false)) {
             return false;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (!(screen instanceof AbstractContainerScreen<?> container) || client.gameMode == null) {
             return false;
         }
@@ -64,7 +64,7 @@ final class ForagingAutomationRuntime {
     }
 
     private static void maybeChopOrToss(Minecraft client, QolSkyblockExtras extras) {
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             return;
         }
         LocalPlayer player = client.player;

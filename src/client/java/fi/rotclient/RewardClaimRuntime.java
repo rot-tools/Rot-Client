@@ -69,7 +69,7 @@ public final class RewardClaimRuntime {
                     }
                     Minecraft client = Minecraft.getInstance();
                     if (client != null) {
-                        client.gui.setScreen(new RewardClaimScreen(page, http));
+                        client.setScreen(new RewardClaimScreen(page, http));
                     }
                 }));
     }
@@ -121,8 +121,8 @@ public final class RewardClaimRuntime {
                 RewardClaimPolicy.RewardOption reward = page.rewards().get(option);
                 notify("Claimed " + reward.title() + ".");
                 Minecraft client = Minecraft.getInstance();
-                if (client != null && client.gui.screen() instanceof RewardClaimScreen) {
-                    client.gui.setScreen(null);
+                if (client != null && client.screen instanceof RewardClaimScreen) {
+                    client.setScreen(null);
                 }
             }
             if (onDone != null) {

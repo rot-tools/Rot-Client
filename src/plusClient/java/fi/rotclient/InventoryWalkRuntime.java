@@ -73,7 +73,7 @@ public final class InventoryWalkRuntime {
         if (client == null || client.options == null || client.getWindow() == null) {
             return;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen == null) {
             clicked = false;
             if (managingKeys) {
@@ -190,7 +190,7 @@ public final class InventoryWalkRuntime {
         if (client == null || client.gui == null) {
             return null;
         }
-        return client.gui.screen();
+        return client.screen;
     }
 
     private static boolean isWalkContext(Minecraft client) {

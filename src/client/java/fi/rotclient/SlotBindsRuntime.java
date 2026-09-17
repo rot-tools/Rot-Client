@@ -28,7 +28,7 @@ public final class SlotBindsRuntime {
 
     static void tick(Minecraft client) {
         if (client == null
-                || !(client.gui != null && client.gui.screen() instanceof InventoryScreen)) {
+                || !(client.gui != null && client.screen instanceof InventoryScreen)) {
             clearPending();
         }
     }

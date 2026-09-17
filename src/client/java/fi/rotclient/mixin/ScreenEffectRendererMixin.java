@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ScreenEffectRenderer.class)
 abstract class ScreenEffectRendererMixin {
     @Redirect(
-            method = "submit",
+            method = "renderScreenEffect",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/player/LocalPlayer;isOnFire()Z"))

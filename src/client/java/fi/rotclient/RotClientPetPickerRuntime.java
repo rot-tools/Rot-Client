@@ -357,7 +357,7 @@ public final class RotClientPetPickerRuntime {
         if (client.gui != null
                 && target != null) {
 
-            client.gui.setScreen(
+            client.setScreen(
                     target);
         }
     }

@@ -23,7 +23,7 @@ abstract class RecipeBookComponentMixin {
             CallbackInfo ci) {
         if (client != null
                 && client.gui != null
-                && InventoryChromeRuntime.shouldHideRecipeBook(client.gui.screen())) {
+                && InventoryChromeRuntime.shouldHideRecipeBook(client.screen)) {
             this.visible = false;
         }
     }

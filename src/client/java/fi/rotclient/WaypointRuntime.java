@@ -118,7 +118,7 @@ public final class WaypointRuntime {
     }
 
     private static void tickPingKey(Minecraft client, QolUtilityConfig qol) {
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen instanceof ChatScreen || screen != null) {
             pingWasDown = false;
             return;

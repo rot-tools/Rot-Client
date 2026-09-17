@@ -4,7 +4,7 @@ import fi.rotclient.DungeonRuntime;
 import fi.rotclient.ItemRarityRuntime;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.Hud;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Paints rarity behind hotbar items so the item texture is not tinted.
  */
-@Mixin(Hud.class)
+@Mixin(Gui.class)
 abstract class HudItemRarityMixin {
     @Inject(method = "extractSlot", at = @At("HEAD"))
     private void rotclient$rarityBehindHotbar(

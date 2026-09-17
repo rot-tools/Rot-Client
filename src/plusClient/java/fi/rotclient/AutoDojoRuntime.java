@@ -8,7 +8,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -50,7 +50,7 @@ public final class AutoDojoRuntime {
             releaseUse(client);
             return;
         }
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             return;
         }
         switch (type) {
@@ -117,7 +117,7 @@ public final class AutoDojoRuntime {
         long now = System.currentTimeMillis();
         if (masteryTarget != null
                 && (now > masteryExpiry
-                || !client.level.getBlockState(masteryTarget).is(Blocks.WOOL.yellow()))) {
+                || !client.level.getBlockState(masteryTarget).is(Blocks.YELLOW_WOOL))) {
             masteryTarget = null;
         }
         if (masteryTarget == null) {
@@ -128,7 +128,7 @@ public final class AutoDojoRuntime {
                 for (int dy = -6; dy <= 8; dy++) {
                     for (int dz = -12; dz <= 12; dz++) {
                         BlockPos pos = origin.offset(dx, dy, dz);
-                        if (!client.level.getBlockState(pos).is(Blocks.WOOL.yellow())) {
+                        if (!client.level.getBlockState(pos).is(Blocks.YELLOW_WOOL)) {
                             continue;
                         }
                         double dist = Math.sqrt(dx * dx + dz * dz);
@@ -170,7 +170,7 @@ public final class AutoDojoRuntime {
         double min = 7.0D;
         AABB search = player.getBoundingBox().inflate(6.0D);
         for (Zombie zombie : client.level.getEntitiesOfClass(Zombie.class, search)) {
-            if (zombie.getType() != EntityTypes.ZOMBIE) {
+            if (zombie.getType() != EntityType.ZOMBIE) {
                 continue;
             }
             double dist = player.distanceTo(zombie);

@@ -14,7 +14,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Giant;
-import net.minecraft.world.entity.monster.cubemob.MagmaCube;
+import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.inventory.Slot;
@@ -646,8 +646,8 @@ public final class IotaKuudraRuntime {
                 && (highlightedGiantId != chosen.getId() || giantAlert != IotaKuudraPolicy.AlertLevel.PRIMARY)) {
             overlayTitle = IotaKuudraPolicy.DOUBLE_PEARL_TITLE;
             overlayUntilMs = System.currentTimeMillis() + 1000L;
-            if (client.gui != null && client.gui.hud != null) {
-                client.gui.hud.setTitle(Component.literal(IotaKuudraPolicy.DOUBLE_PEARL_TITLE));
+            if (client.gui != null && client.gui != null) {
+                client.gui.setTitle(Component.literal(IotaKuudraPolicy.DOUBLE_PEARL_TITLE));
             }
             client.level.playSound(player, player.blockPosition(), SoundEvents.VILLAGER_NO,
                     SoundSource.PLAYERS, 1.0F, 1.15F);
@@ -1007,10 +1007,10 @@ public final class IotaKuudraRuntime {
 
     private static void notifyProfit(String message) {
         Minecraft client = Minecraft.getInstance();
-        if (client == null || client.gui == null || client.gui.hud == null || message == null || message.isBlank()) {
+        if (client == null || client.gui == null || client.gui == null || message == null || message.isBlank()) {
             return;
         }
-        client.gui.hud.getChat().addClientSystemMessage(Component.literal(message));
+        client.gui.getChat().addClientSystemMessage(Component.literal(message));
     }
 
     private static String lore(ItemStack stack) {
@@ -1100,8 +1100,8 @@ public final class IotaKuudraRuntime {
         overlayTitle = title;
         overlayUntilMs = System.currentTimeMillis() + 1_800L;
         Minecraft client = Minecraft.getInstance();
-        if (client != null && client.gui != null && client.gui.hud != null) {
-            client.gui.hud.setTitle(Component.literal("§a" + title));
+        if (client != null && client.gui != null && client.gui != null) {
+            client.gui.setTitle(Component.literal("§a" + title));
         }
     }
 

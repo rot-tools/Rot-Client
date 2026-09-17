@@ -115,8 +115,8 @@ final class DungeonWatcherRuntime {
         if (client == null || client.gui == null || text == null || text.isBlank()) {
             return;
         }
-        client.gui.hud.setTimes(5, 25, 8);
-        client.gui.hud.setTitle(Component.literal(text));
+        client.gui.setTimes(5, 25, 8);
+        client.gui.setTitle(Component.literal(text));
     }
 
     private static void reset() {

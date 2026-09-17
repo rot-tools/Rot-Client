@@ -584,7 +584,7 @@ public final class FishingSuiteRuntime {
     }
 
     private static void maybeAutoAttack(Minecraft client, QolSkyblockExtras extras) {
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         boolean looking = false;
         if (client.hitResult != null && client.hitResult.getType() == HitResult.Type.ENTITY) {
             Entity hit = ((EntityHitResult) client.hitResult).getEntity();

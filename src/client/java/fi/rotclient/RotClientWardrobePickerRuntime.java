@@ -322,7 +322,7 @@ public final class RotClientWardrobePickerRuntime {
         if (client.gui != null
                 && target != null) {
 
-            client.gui.setScreen(
+            client.setScreen(
                     target);
         }
     }

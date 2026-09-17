@@ -634,7 +634,7 @@ final class DungeonCarryManagerScreen extends Screen {
         }
         if (RotClientUiDraw.inside(mouseX, mouseY, x + PANEL_WIDTH - 132,
                 y + PANEL_HEIGHT - 38, 116, RotClientUiDraw.BUTTON_HEIGHT)) {
-            Minecraft.getInstance().gui.setScreen(parent);
+            Minecraft.getInstance().setScreen(parent);
             return true;
         }
         return super.mouseClicked(event, doubleClick);
@@ -642,7 +642,7 @@ final class DungeonCarryManagerScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     @Override

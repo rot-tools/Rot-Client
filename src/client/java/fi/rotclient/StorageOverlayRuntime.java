@@ -129,7 +129,7 @@ public final class StorageOverlayRuntime {
             return false;
         }
 
-        Screen current = client.gui.screen();
+        Screen current = client.screen;
         return current instanceof AbstractContainerScreen<?> screen
                 && shouldReplaceVanilla(screen);
     }
@@ -360,7 +360,7 @@ public final class StorageOverlayRuntime {
         if (client != null && client.player != null) {
             client.player.closeContainer();
         } else if (client != null && client.gui != null) {
-            client.gui.setScreen(null);
+            client.setScreen(null);
         }
     }
 
@@ -377,7 +377,7 @@ public final class StorageOverlayRuntime {
 
     public static boolean shouldKeepUngrabbedCursor() {
         Minecraft client = Minecraft.getInstance();
-        Screen screen = client != null && client.gui != null ? client.gui.screen() : null;
+        Screen screen = client != null && client.gui != null ? client.screen : null;
         boolean currentOverlay = screen instanceof AbstractContainerScreen<?> current
                 && shouldReplaceVanilla(current);
         return StorageOverlayPolicy.shouldKeepUngrabbedCursor(
@@ -493,7 +493,7 @@ public final class StorageOverlayRuntime {
         Minecraft client = Minecraft.getInstance();
         if (client == null
                 || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)
                 || !shouldReplaceVanilla(screen)) {
             searchFocused = false;
             return false;
@@ -512,7 +512,7 @@ public final class StorageOverlayRuntime {
         Minecraft client = Minecraft.getInstance();
         if (client == null
                 || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)
                 || !shouldReplaceVanilla(screen)) {
             searchFocused = false;
             return false;
@@ -611,7 +611,7 @@ public final class StorageOverlayRuntime {
     public static void tick(Minecraft client) {
         loadCache();
         if (client != null && client.gui != null
-                && client.gui.screen() instanceof AbstractContainerScreen<?> screen
+                && client.screen instanceof AbstractContainerScreen<?> screen
                 && shouldReplaceVanilla(screen)) {
             String title = screen.getTitle().getString();
             observe(screen, StorageOverlayPolicy.isOverviewTitle(title),
@@ -628,7 +628,7 @@ public final class StorageOverlayRuntime {
     public static void onContainerContent(int containerId, int slotCount) {
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)
                 || client.player.containerMenu != screen.getMenu() || !shouldReplaceVanilla(screen)) return;
         loadCache();
         bindObservedScreen(screen);
@@ -671,7 +671,7 @@ public final class StorageOverlayRuntime {
             return;
         }
         if (isOverlayOpen()) {
-            Screen current = client.gui != null ? client.gui.screen() : null;
+            Screen current = client.gui != null ? client.screen : null;
             if (current instanceof AbstractContainerScreen<?> screen
                     && StorageOverlayPolicy.isOverviewTitle(screen.getTitle().getString())) {
                 maybeStartPrefetch(true);
@@ -2114,7 +2114,7 @@ public final class StorageOverlayRuntime {
             cancelPrefetch();
             return;
         }
-        Screen screen = client.gui != null ? client.gui.screen() : null;
+        Screen screen = client.gui != null ? client.screen : null;
         if (!(screen instanceof AbstractContainerScreen<?> container) || !shouldReplaceVanilla(container)) {
             prefetchTicksOnPage++;
             if (prefetchTicksOnPage >= StorageOverlayPolicy.PREFETCH_TIMEOUT_TICKS) {

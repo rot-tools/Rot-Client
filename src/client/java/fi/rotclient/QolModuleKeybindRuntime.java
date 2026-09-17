@@ -17,7 +17,7 @@ public final class QolModuleKeybindRuntime {
             reset();
             return;
         }
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             reset();
             return;
         }

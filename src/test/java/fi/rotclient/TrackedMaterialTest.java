@@ -139,11 +139,11 @@ final class TrackedMaterialTest {
         assertEquals(
                 1,
                 TrackedMaterial.MITHRIL.baseDrop(
-                        Blocks.WOOL.gray().defaultBlockState()));
+                        Blocks.GRAY_WOOL.defaultBlockState()));
         assertEquals(
                 1,
                 TrackedMaterial.MITHRIL.baseDrop(
-                        Blocks.DYED_TERRACOTTA.cyan().defaultBlockState()));
+                        Blocks.CYAN_TERRACOTTA.defaultBlockState()));
         assertEquals(
                 2,
                 TrackedMaterial.MITHRIL.baseDrop(
@@ -159,7 +159,7 @@ final class TrackedMaterialTest {
         assertEquals(
                 5,
                 TrackedMaterial.MITHRIL.baseDrop(
-                        Blocks.WOOL.lightBlue().defaultBlockState()));
+                        Blocks.LIGHT_BLUE_WOOL.defaultBlockState()));
 
         assertEquals(
                 2,
@@ -202,7 +202,7 @@ final class TrackedMaterialTest {
         assertEquals(1, TrackedMaterial.UMBER.baseDrop(
                 Blocks.TERRACOTTA.defaultBlockState()));
         assertEquals(2, TrackedMaterial.UMBER.baseDrop(
-                Blocks.DYED_TERRACOTTA.brown().defaultBlockState()));
+                Blocks.BROWN_TERRACOTTA.defaultBlockState()));
         assertEquals(3, TrackedMaterial.UMBER.baseDrop(
                 Blocks.SMOOTH_RED_SANDSTONE.defaultBlockState()));
         assertEquals(0, TrackedMaterial.UMBER.baseDrop(

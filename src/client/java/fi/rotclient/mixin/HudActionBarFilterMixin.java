@@ -6,7 +6,7 @@ import fi.rotclient.NameHiderRuntime;
 import fi.rotclient.PlayerDisplayHidePolicy;
 import fi.rotclient.RotClientClient;
 import fi.rotclient.SkyBlockStatBarParser;
-import net.minecraft.client.gui.Hud;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +21,7 @@ import java.util.Optional;
  * {@link Hud#setOverlayMessage(Component, boolean)}, not {@code Gui}.
  * Does not cancel unrelated overlay messages.
  */
-@Mixin(Hud.class)
+@Mixin(Gui.class)
 abstract class HudActionBarFilterMixin {
     @ModifyVariable(
             method = "setOverlayMessage(Lnet/minecraft/network/chat/Component;Z)V",

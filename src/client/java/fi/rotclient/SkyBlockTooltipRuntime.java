@@ -160,7 +160,7 @@ public final class SkyBlockTooltipRuntime {
         Minecraft client = Minecraft.getInstance();
         if (client == null
                 || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> container)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> container)) {
             return "";
         }
         return container.getTitle() == null ? "" : container.getTitle().getString();

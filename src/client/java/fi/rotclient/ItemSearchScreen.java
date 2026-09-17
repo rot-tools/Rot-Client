@@ -594,7 +594,7 @@ final class ItemSearchScreen extends Screen {
     }
 
     private void closeToParent() {
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     private int panelX() {

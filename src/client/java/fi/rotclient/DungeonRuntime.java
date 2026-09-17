@@ -20,7 +20,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.LivingEntity;
@@ -592,7 +592,7 @@ public final class DungeonRuntime {
                 && DungeonPolicy.isBloodCampReady(raw)
                 && client != null && client.gui != null) {
             bloodCampActive = true;
-            client.gui.hud.setTitle(Component.literal("§cBlood Camp Ready"));
+            client.gui.setTitle(Component.literal("§cBlood Camp Ready"));
         }
         if (EmberDungeonPolicy.isLividStart(raw)) {
             lastLivid = "Livid invuln";
@@ -825,7 +825,7 @@ public final class DungeonRuntime {
         if (extras.dungeonAnnounceEnabled && extras.dungeonAnnounceRooms
                 && (DungeonPolicy.isRoomClearedChat(raw) || DungeonPolicy.isRoomSecretsChat(raw))
                 && client != null && client.gui != null) {
-            client.gui.hud.setTitle(Component.literal("§a"
+            client.gui.setTitle(Component.literal("§a"
                     + (DungeonPolicy.isRoomClearedChat(raw) ? "Room cleared" : "Secrets done")));
         }
         if (DungeonPolicy.isMimicChat(raw)) {
@@ -1418,7 +1418,7 @@ public final class DungeonRuntime {
                         }
                         continue;
                     }
-                    if (extras.dungeonEspBats && living.getType() == EntityTypes.BAT) {
+                    if (extras.dungeonEspBats && living.getType() == EntityType.BAT) {
                         box(living.getBoundingBox(), extras.dungeonEspBatColor, extras, eye);
                     }
                     if (needNamed) {
@@ -3019,7 +3019,7 @@ public final class DungeonRuntime {
             }
         }
         boolean melodyOpen = false;
-        if (client.gui.screen() instanceof AbstractContainerScreen<?> screen) {
+        if (client.screen instanceof AbstractContainerScreen<?> screen) {
             String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
             if (DungeonF7Policy.melodyTerminalTitle(title)) {
                 melodyOpen = true;
@@ -3152,7 +3152,7 @@ public final class DungeonRuntime {
         if (!enabled || client == null || client.gui == null || text == null || text.isBlank()) {
             return;
         }
-        client.gui.hud.setTitle(Component.literal(text));
+        client.gui.setTitle(Component.literal(text));
     }
 
     static List<String> sidebarLines() {
@@ -3757,7 +3757,7 @@ public final class DungeonRuntime {
         if (!extras.dungeonMenusEnabled
                 || !extras.dungeonMenusChestProfit
                 || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             chestProfitHud = List.of();
             return;
         }
@@ -3881,7 +3881,7 @@ public final class DungeonRuntime {
     }
 
     static void observeTerminalOpen(Minecraft client, QolSkyblockExtras extras) {
-        if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+        if (!(client.screen instanceof AbstractContainerScreen<?> screen)) {
             // Pingless terminals keep the same chest open. A 1-frame empty screen
             // must not re-arm first-click delay between Auto Terms clicks.
             return;
@@ -4184,7 +4184,7 @@ public final class DungeonRuntime {
                     waypoint.kind() == DungeonRoomDataPolicy.SecretKind.BAT ? 5.0D : 2.5D);
             boolean present = waypoint.kind() == DungeonRoomDataPolicy.SecretKind.BAT
                     ? client.level.getEntitiesOfClass(LivingEntity.class, box).stream()
-                    .anyMatch(entity -> entity.getType() == EntityTypes.BAT)
+                    .anyMatch(entity -> entity.getType() == EntityType.BAT)
                     : !client.level.getEntitiesOfClass(ItemEntity.class, box).isEmpty();
             if (present) {
                 seenSecretEntities.add(key);

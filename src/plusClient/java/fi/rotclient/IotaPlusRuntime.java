@@ -64,7 +64,7 @@ final class IotaPlusRuntime {
             IotaRuntime.rightAccumulator = 0.0D;
             return;
         }
-        if (client.gui != null && client.gui.screen() != null && !client.gui.screen().isPauseScreen()) {
+        if (client.gui != null && client.screen != null && !client.screen.isPauseScreen()) {
             IotaRuntime.leftAccumulator = 0.0D;
             IotaRuntime.rightAccumulator = 0.0D;
             return;

@@ -41,7 +41,7 @@ public final class EtherwarpPlusRuntime {
         if (client == null || client.player == null || client.options == null) {
             return false;
         }
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             return false;
         }
         LocalPlayer player = client.player;
@@ -72,7 +72,7 @@ public final class EtherwarpPlusRuntime {
 
     static void tick(Minecraft client) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (client == null || client.gui == null || client.gui.screen() != null) {
+        if (client == null || client.gui == null || client.screen != null) {
             if (holdingSneakForWarp || pendingWarpTicks > 0 || pendingReleaseTicks > 0) {
                 clear();
             }

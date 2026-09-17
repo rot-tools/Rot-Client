@@ -18,7 +18,7 @@ final class BazaarTaxDetector {
     void tick(Minecraft client) {
         if (++ticks % 20 != 0) return;
         ClientBoundaryGuard.run("BAZAAR_TAX_SCAN", () -> {
-            if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+            if (!(client.screen instanceof AbstractContainerScreen<?> screen)) {
                 return;
             }
 

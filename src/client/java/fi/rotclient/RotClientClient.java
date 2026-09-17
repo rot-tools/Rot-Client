@@ -1503,8 +1503,8 @@ public final class RotClientClient implements ClientModInitializer {
 
     private static int slayerCarryManager(FabricClientCommandSource source) {
         Minecraft client = Minecraft.getInstance();
-        Screen parent = client.gui == null ? null : client.gui.screen();
-        client.gui.setScreen(new SlayerCarryManagerScreen(parent));
+        Screen parent = client.gui == null ? null : client.screen;
+        client.setScreen(new SlayerCarryManagerScreen(parent));
         return 1;
     }
 
@@ -1574,8 +1574,8 @@ public final class RotClientClient implements ClientModInitializer {
 
     private static int dungeonCarryManager(FabricClientCommandSource source) {
         Minecraft client = Minecraft.getInstance();
-        Screen parent = client.gui == null ? null : client.gui.screen();
-        client.gui.setScreen(new DungeonCarryManagerScreen(parent));
+        Screen parent = client.gui == null ? null : client.screen;
+        client.setScreen(new DungeonCarryManagerScreen(parent));
         return 1;
     }
 
@@ -2519,7 +2519,7 @@ public final class RotClientClient implements ClientModInitializer {
     private static int openMiningUi(FabricClientCommandSource source) {
         Minecraft.getInstance().schedule(() -> {
             WORKSPACE.flushIfDirty();
-            Minecraft.getInstance().gui.setScreen(
+            Minecraft.getInstance().setScreen(
                     new MiningUiScreen(CONFIG, HUD, null, null, true));
         });
         return 1;
@@ -2531,7 +2531,7 @@ public final class RotClientClient implements ClientModInitializer {
             WORKSPACE.navigateActive(
                     RotClientWorkspaceRoute.fromDashboardModule(module));
         }
-        Minecraft.getInstance().gui.setScreen(
+        Minecraft.getInstance().setScreen(
                 new MiningUiScreen(CONFIG, HUD, parent, module, true));
     }
 
@@ -2541,7 +2541,7 @@ public final class RotClientClient implements ClientModInitializer {
     }
 
     static void openHudEditor(Screen parent, String focusId) {
-        Minecraft.getInstance().gui.setScreen(new RotClientScreen(HUD, parent, focusId));
+        Minecraft.getInstance().setScreen(new RotClientScreen(HUD, parent, focusId));
     }
 
     /** Opens the existing Rot Client home / mining UI (Click GUI target). */
@@ -2552,7 +2552,7 @@ public final class RotClientClient implements ClientModInitializer {
             return;
         }
         maybeSendDeveloperMessage(client);
-        client.gui.setScreen(new MiningUiScreen(CONFIG, HUD, null, null, true));
+        client.setScreen(new MiningUiScreen(CONFIG, HUD, null, null, true));
     }
 
     static void closeClickGuiIfOpen() {
@@ -2560,9 +2560,9 @@ public final class RotClientClient implements ClientModInitializer {
         if (client == null || client.gui == null) {
             return;
         }
-        Screen screen = client.gui.screen();
+        Screen screen = client.screen;
         if (screen instanceof MiningUiScreen || screen instanceof RotClientHomeScreen) {
-            client.gui.setScreen(null);
+            client.setScreen(null);
         }
     }
 
@@ -2571,7 +2571,7 @@ public final class RotClientClient implements ClientModInitializer {
         if (client == null || client.gui == null) {
             return false;
         }
-        Screen screen = client.gui.screen();
+        Screen screen = client.screen;
         return screen instanceof MiningUiScreen
                 || screen instanceof RotClientHomeScreen
                 || screen instanceof RotClientScreen;
@@ -2582,7 +2582,7 @@ public final class RotClientClient implements ClientModInitializer {
         if (client == null || client.gui == null) {
             return false;
         }
-        Screen screen = client.gui.screen();
+        Screen screen = client.screen;
         return screen instanceof MiningUiScreen
                 || screen instanceof RotClientHomeScreen
                 || screen instanceof RotClientScreen
@@ -2703,7 +2703,7 @@ public final class RotClientClient implements ClientModInitializer {
         Minecraft client = Minecraft.getInstance();
         return client != null
                 && client.gui != null
-                && client.gui.screen() instanceof PauseScreen pause
+                && client.screen instanceof PauseScreen pause
                 && pause.showsPauseMenu();
     }
 
@@ -2758,7 +2758,7 @@ public final class RotClientClient implements ClientModInitializer {
     }
 
     private static boolean isTextInputConsuming(Minecraft client) {
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen == null) {
             return false;
         }
@@ -2787,12 +2787,12 @@ public final class RotClientClient implements ClientModInitializer {
             return;
         }
         Minecraft client = Minecraft.getInstance();
-        if (client == null || client.gui == null || client.gui.hud == null) {
+        if (client == null || client.gui == null || client.gui == null) {
             return;
         }
         // Local HUD only. A system-message send re-enters ALLOW_GAME and
         // crashed the click when a later Slayer class failed to load from the JAR.
-        client.gui.hud.getChat().addClientSystemMessage(Component.literal(
+        client.gui.getChat().addClientSystemMessage(Component.literal(
                 "[Rot Client] "
                         + moduleLabel
                         + (enabled ? " enabled" : " disabled")));
@@ -2910,7 +2910,7 @@ public final class RotClientClient implements ClientModInitializer {
             Minecraft client, Screen screen, int width, int height) {
         Button dashboardButton = Button.builder(
                         Component.translatable("rotclient.menu.dashboard"),
-                        button -> client.gui.setScreen(
+                        button -> client.setScreen(
                                 new MiningUiScreen(CONFIG, HUD, screen)))
                 .bounds(
                         0,

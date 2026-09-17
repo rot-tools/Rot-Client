@@ -701,7 +701,7 @@ public final class SlayerRuntime {
     static List<String> profitLines(boolean editorOpen) {
         QolSkyblockExtras settings = settings();
         Minecraft client = Minecraft.getInstance();
-        boolean inventoryOpen = client != null && client.gui.screen() instanceof AbstractContainerScreen<?>;
+        boolean inventoryOpen = client != null && client.screen instanceof AbstractContainerScreen<?>;
         if (!SlayerProfitHudPolicy.shouldRender(
                 settings.slayerDropsEnabled,
                 settings.slayerDropsProfitHud,
@@ -774,8 +774,8 @@ public final class SlayerRuntime {
         if (price == null || price.signum() <= 0 || client.player == null) return;
         if (settings.slayerDropsPriceTitle
                 && price.compareTo(BigDecimal.valueOf(settings.slayerDropsPriceTitleMinimum)) >= 0) {
-            client.gui.hud.setTimes(10, 40, 10);
-            client.gui.hud.setTitle(Component.literal("§bRare Drop! §f" + entry.display()));
+            client.gui.setTimes(10, 40, 10);
+            client.gui.setTitle(Component.literal("§bRare Drop! §f" + entry.display()));
             if (settings.slayerDropsPriceTitleSound) {
                 client.player.level().playLocalSound(
                         client.player.getX(), client.player.getY(), client.player.getZ(),
@@ -1923,8 +1923,8 @@ public final class SlayerRuntime {
             client.player.sendSystemMessage(RotClientChat.message(text, false, 0));
         }
         if (settings.slayerMinibossAlertTitle) {
-            client.gui.hud.setTimes(10, 30, 10);
-            client.gui.hud.setTitle(Component.literal("§b" + text));
+            client.gui.setTimes(10, 30, 10);
+            client.gui.setTitle(Component.literal("§b" + text));
         }
     }
 
@@ -1934,8 +1934,8 @@ public final class SlayerRuntime {
         }
         String text = SlayerMechanicsPolicy.formatAlertText(
                 settings.slayerCocoonAlertMessage);
-        client.gui.hud.setTimes(10, 30, 10);
-        client.gui.hud.setTitle(Component.literal(text));
+        client.gui.setTimes(10, 30, 10);
+        client.gui.setTitle(Component.literal(text));
 
         String configured = settings.slayerCocoonAlertSound == null
                 ? ""
@@ -1964,8 +1964,8 @@ public final class SlayerRuntime {
         if (client == null || client.player == null) {
             return;
         }
-        client.gui.hud.setTimes(5, 30, 10);
-        client.gui.hud.setTitle(Component.literal("Slayer boss soon!")
+        client.gui.setTimes(5, 30, 10);
+        client.gui.setTitle(Component.literal("Slayer boss soon!")
                 .withStyle(ChatFormatting.YELLOW));
         client.player.level().playLocalSound(
                 client.player.getX(),
@@ -2219,8 +2219,8 @@ public final class SlayerRuntime {
         lastRngEmptyWarningMillis = now;
         client.player.sendSystemMessage(RotClientChat.message(
                 "No selected Slayer RNG Meter drop. Pick a target before the luck runs dry."));
-        client.gui.hud.setTimes(5, 30, 10);
-        client.gui.hud.setTitle(Component.literal("§cNo RNG Meter drop selected"));
+        client.gui.setTimes(5, 30, 10);
+        client.gui.setTitle(Component.literal("§cNo RNG Meter drop selected"));
     }
 
     private static boolean anyFeatureEnabled(QolSkyblockExtras settings) {
@@ -3488,8 +3488,8 @@ public final class SlayerRuntime {
         if (client == null || client.gui == null) {
             return;
         }
-        client.gui.hud.setTimes(5, 20, 8);
-        client.gui.hud.setTitle(Component.literal(text).withStyle(ChatFormatting.RED));
+        client.gui.setTimes(5, 20, 8);
+        client.gui.setTitle(Component.literal(text).withStyle(ChatFormatting.RED));
     }
 
     private static void onSound(String soundId, QolSkyblockExtras settings) {

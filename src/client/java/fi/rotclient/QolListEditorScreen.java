@@ -324,7 +324,7 @@ final class QolListEditorScreen extends Screen {
     }
 
     private void closeToParent() {
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     private void drawButton(

@@ -12,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -144,7 +144,7 @@ final class DungeonPlusRuntime {
         if (terminalCooldown > 0
                 || client.gameMode == null
                 || client.player == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             lastMelody = "";
             melodySkipQueue.clear();
             return;
@@ -333,7 +333,7 @@ final class DungeonPlusRuntime {
     }
 
     static void clickLeapMenu(Minecraft client, QolSkyblockExtras extras) {
-        if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen) || client.gameMode == null) {
+        if (!(client.screen instanceof AbstractContainerScreen<?> screen) || client.gameMode == null) {
             return;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
@@ -548,7 +548,7 @@ final class DungeonPlusRuntime {
     }
 
     static void armRequeueFromScreen(Minecraft client, QolSkyblockExtras extras) {
-        if (client == null || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+        if (client == null || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
         if (!DungeonRequeueRuntime.onChat(
@@ -564,7 +564,7 @@ final class DungeonPlusRuntime {
     static void maybeCloseChest(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonMenusEnabled
                 || !extras.dungeonMenusCloseChest
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             closeChestArmed = false;
             return;
         }
@@ -597,8 +597,8 @@ final class DungeonPlusRuntime {
 
     static void flushTermQueue(Minecraft client, QolSkyblockExtras extras) {
         if (terminalCooldown > 0 || client.gameMode == null || client.player == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
-            if (!(client.gui.screen() instanceof AbstractContainerScreen<?>)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
+            if (!(client.screen instanceof AbstractContainerScreen<?>)) {
                 termQueue.clear();
                 melodySkipQueue.clear();
                 termQueueUpdatedAt = 0L;
@@ -741,7 +741,7 @@ final class DungeonPlusRuntime {
             hologram = entityName(entity);
         }
         boolean lookingCrystal = DungeonLeftoverPolicy.isEnergyCrystalName(hologram)
-                || (entity != null && entity.getType() == EntityTypes.END_CRYSTAL);
+                || (entity != null && entity.getType() == EntityType.END_CRYSTAL);
         DungeonLeftoverPolicy.TriggerKind kind = DungeonLeftoverPolicy.triggerKind(
                 extras.dungeonEspTriggerCrystal,
                 extras.dungeonEspTriggerSecret,

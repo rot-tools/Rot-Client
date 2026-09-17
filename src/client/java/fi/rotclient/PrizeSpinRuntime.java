@@ -33,7 +33,7 @@ public final class PrizeSpinRuntime {
 
     static void tick(Minecraft client) {
         if (client == null || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?>)) {
+                || !(client.screen instanceof AbstractContainerScreen<?>)) {
             chestKey = "";
             chestSpinStartMs = 0L;
             chestReel = List.of();
@@ -147,7 +147,7 @@ public final class PrizeSpinRuntime {
         if (client == null || graphics == null || slotReel.isEmpty() || slotSpinStartMs <= 0L) {
             return;
         }
-        if (client.gui != null && client.gui.screen() instanceof AbstractContainerScreen<?>) {
+        if (client.gui != null && client.screen instanceof AbstractContainerScreen<?>) {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();

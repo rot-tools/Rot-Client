@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(LevelRenderer.class)
 abstract class LevelRendererEtherwarpMixin {
-    @Inject(method = "collectPerFrameRenderThreadGizmos", at = @At("RETURN"))
+    @Inject(method = "collectPerFrameGizmos", at = @At("RETURN"))
     private void rotclient$etherwarpGizmos(
             CallbackInfoReturnable<Gizmos.TemporaryCollection> cir) {
         ClientBoundaryGuard.run("ETHERWARP_GIZMOS", () -> QolVisualRuntime.renderEtherwarpGizmos());

@@ -537,7 +537,7 @@ final class InventoryButtonsEditorScreen extends Screen {
     @Override
     public void onClose() {
         save();
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     @Override

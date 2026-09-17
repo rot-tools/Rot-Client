@@ -946,9 +946,9 @@ public final class  InventoryChromeRuntime {
 
     private static void observeLiveHudSources(Minecraft client) {
         StringBuilder tabText = new StringBuilder();
-        if (client.gui != null && client.gui.hud != null) {
+        if (client.gui != null && client.gui != null) {
             PlayerTabOverlayAccessor tab =
-                    (PlayerTabOverlayAccessor) client.gui.hud.getTabList();
+                    (PlayerTabOverlayAccessor) client.gui.getTabList();
             Component header = tab.rotclient$getHeader();
             Component footer = tab.rotclient$getFooter();
             if (header != null) {

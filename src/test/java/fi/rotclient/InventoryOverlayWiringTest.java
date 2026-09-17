@@ -58,7 +58,7 @@ final class InventoryOverlayWiringTest {
         assertTrue(runtime.contains("chromeFillRects"));
         assertTrue(runtime.contains("survivalSlotRects"));
         assertTrue(runtime.contains("drawSlotWell"));
-        assertTrue(!runtime.contains("client.gui.setScreen(new InventoryChromeColorsScreen"));
+        assertTrue(!runtime.contains("client.setScreen(new InventoryChromeColorsScreen"));
         assertTrue(!runtime.contains("shouldShiftInventory"));
         assertTrue(!runtime.contains("renderPetInOffhand"));
         assertTrue(!runtime.contains("renderPetBesideBoots"));

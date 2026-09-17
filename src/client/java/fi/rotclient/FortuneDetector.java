@@ -46,7 +46,7 @@ final class FortuneDetector {
                 if (display != null) inspect(display.getString(), best);
             }
 
-            PlayerTabOverlayAccessor tab = (PlayerTabOverlayAccessor) client.gui.hud.getTabList();
+            PlayerTabOverlayAccessor tab = (PlayerTabOverlayAccessor) client.gui.getTabList();
             Component header = tab.rotclient$getHeader();
             Component footer = tab.rotclient$getFooter();
             if (header != null) inspect(header.getString(), best);

@@ -4313,7 +4313,7 @@ final class QolUtilityDashboard {
     }
 
     private void openBoardListEditor(String settingId) {
-        Minecraft.getInstance().gui.setScreen(new QolListEditorScreen(host, settingId));
+        Minecraft.getInstance().setScreen(new QolListEditorScreen(host, settingId));
     }
 
     private void handleAction(String settingId) {
@@ -4370,19 +4370,19 @@ final class QolUtilityDashboard {
             return;
         }
         if ("qol.command_keybinds.open_sequence_editor".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new HotkeySequenceEditorScreen(host));
+            Minecraft.getInstance().setScreen(new HotkeySequenceEditorScreen(host));
             return;
         }
         if ("qol.storage_overlay.open_item_search".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new ItemSearchScreen(host, ""));
+            Minecraft.getInstance().setScreen(new ItemSearchScreen(host, ""));
             return;
         }
         if ("qol.dungeon_carry.open_manager".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new DungeonCarryManagerScreen(host));
+            Minecraft.getInstance().setScreen(new DungeonCarryManagerScreen(host));
             return;
         }
         if ("qol.slayer_carry.open_manager".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new SlayerCarryManagerScreen(host));
+            Minecraft.getInstance().setScreen(new SlayerCarryManagerScreen(host));
             return;
         }
         if ("qol.slayer_stats.reset_session".equals(settingId)) {
@@ -4458,15 +4458,15 @@ final class QolUtilityDashboard {
             return;
         }
         if ("qol.slayer_drops.open_filter_editor".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new SlayerDropFilterScreen(host));
+            Minecraft.getInstance().setScreen(new SlayerDropFilterScreen(host));
             return;
         }
         if ("qol.inventory_overlay.open_colors".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new InventoryChromeColorsScreen(host));
+            Minecraft.getInstance().setScreen(new InventoryChromeColorsScreen(host));
             return;
         }
         if ("qol.inventory_buttons.open_editor".equals(settingId)) {
-            Minecraft.getInstance().gui.setScreen(new InventoryButtonsEditorScreen(host));
+            Minecraft.getInstance().setScreen(new InventoryButtonsEditorScreen(host));
             return;
         }
         if ("qol.inventory_buttons.save_preset".equals(settingId)) {
@@ -5105,7 +5105,7 @@ final class QolUtilityDashboard {
         }
         pendingColorSettingId = setting.id();
         int initial = current;
-        Minecraft.getInstance().gui.setScreen(
+        Minecraft.getInstance().setScreen(
                 new RotClientColorPickerScreen(
                         host,
                         setting.label(),

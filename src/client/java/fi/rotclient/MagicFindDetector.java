@@ -31,9 +31,9 @@ final class MagicFindDetector {
             return;
         }
         OptionalInt best = OptionalInt.empty();
-        if (client.gui != null && client.gui.hud != null) {
+        if (client.gui != null && client.gui != null) {
             PlayerTabOverlayAccessor tab =
-                    (PlayerTabOverlayAccessor) client.gui.hud.getTabList();
+                    (PlayerTabOverlayAccessor) client.gui.getTabList();
             best = max(best, parseComponent(tab.rotclient$getHeader()));
             best = max(best, parseComponent(tab.rotclient$getFooter()));
         }

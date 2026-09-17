@@ -33,7 +33,7 @@ public final class ExperimentSolverRuntime {
         Minecraft client = Minecraft.getInstance();
         if (client == null
                 || client.gui == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
         if (!enabled()) {
@@ -77,7 +77,7 @@ public final class ExperimentSolverRuntime {
         Minecraft client = Minecraft.getInstance();
         if (client != null
                 && client.gui != null
-                && client.gui.screen() instanceof AbstractContainerScreen<?> screen) {
+                && client.screen instanceof AbstractContainerScreen<?> screen) {
             bind(screen);
         }
     }

@@ -522,7 +522,7 @@ public final class ForagingRuntime {
             lastTargetPane = -1;
             return;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (!(screen instanceof AbstractContainerScreen<?> container)
                 || !ForagingPolicy.isBeaconTuneTitle(screen.getTitle().getString())) {
             lastTargetPane = -1;
@@ -745,10 +745,10 @@ public final class ForagingRuntime {
     }
 
     private static String screenTitle(Minecraft client) {
-        if (client == null || client.gui == null || client.gui.screen() == null) {
+        if (client == null || client.gui == null || client.screen == null) {
             return "";
         }
-        Component title = client.gui.screen().getTitle();
+        Component title = client.screen.getTitle();
         return title == null ? "" : title.getString();
     }
 

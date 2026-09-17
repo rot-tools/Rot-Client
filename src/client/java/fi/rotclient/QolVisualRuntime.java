@@ -14,7 +14,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -571,13 +571,13 @@ public final class QolVisualRuntime {
     }
 
     private static RenderOptimizerPolicy.EntityKind classifyEntity(Entity entity) {
-        if (entity.getType() == EntityTypes.FALLING_BLOCK) {
+        if (entity.getType() == EntityType.FALLING_BLOCK) {
             return RenderOptimizerPolicy.EntityKind.FALLING_BLOCK;
         }
-        if (entity.getType() == EntityTypes.LIGHTNING_BOLT) {
+        if (entity.getType() == EntityType.LIGHTNING_BOLT) {
             return RenderOptimizerPolicy.EntityKind.LIGHTNING;
         }
-        if (entity.getType() == EntityTypes.EXPERIENCE_ORB) {
+        if (entity.getType() == EntityType.EXPERIENCE_ORB) {
             return RenderOptimizerPolicy.EntityKind.EXPERIENCE_ORB;
         }
         if (entity instanceof ArmorStand) {
@@ -599,21 +599,21 @@ public final class QolVisualRuntime {
         }
         if (extras.hideGuidedSheep
                 && dungeon
-                && entity.getType() == EntityTypes.SHEEP
+                && entity.getType() == EntityType.SHEEP
                 && entity instanceof LivingEntity sheep
                 && Math.abs(sheep.getHealth() - 8.0F) < 0.01F) {
             return true;
         }
         if (extras.hideBonePlating
                 && dungeon
-                && entity.getType() == EntityTypes.ITEM
+                && entity.getType() == EntityType.ITEM
                 && entity instanceof net.minecraft.world.entity.item.ItemEntity item) {
             ItemStack stack = item.getItem();
             return stack.is(Items.BONE_MEAL)
                     && ChatTextPolicy.stripFormatting(stack.getHoverName().getString())
                     .equalsIgnoreCase("Bone Meal");
         }
-        if (extras.hideTreeBits && entity.getType() == EntityTypes.BLOCK_DISPLAY) {
+        if (extras.hideTreeBits && entity.getType() == EntityType.BLOCK_DISPLAY) {
             return true;
         }
         return false;

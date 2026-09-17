@@ -96,7 +96,7 @@ public final class AutoSellRuntime {
         if (client == null || client.gui == null) {
             return null;
         }
-        return client.gui.screen() instanceof AbstractContainerScreen<?> screen ? screen : null;
+        return client.screen instanceof AbstractContainerScreen<?> screen ? screen : null;
     }
 
     private static boolean enabled() {

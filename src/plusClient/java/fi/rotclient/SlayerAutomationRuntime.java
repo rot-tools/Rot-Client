@@ -157,7 +157,7 @@ final class SlayerAutomationRuntime {
         SOULCRY_ABILITY.tick();
         if (!settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
                 || client == null || client.player == null || client.level == null
-                || (client.gui != null && client.gui.screen() != null)) {
+                || (client.gui != null && client.screen != null)) {
             SOULCRY.reset();
             return;
         }

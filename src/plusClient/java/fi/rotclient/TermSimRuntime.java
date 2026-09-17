@@ -21,7 +21,7 @@ public final class TermSimRuntime {
 
     public static boolean isOpen() {
         Minecraft client = Minecraft.getInstance();
-        return layout != null && client.gui.screen() instanceof TermSimScreen;
+        return layout != null && client.screen instanceof TermSimScreen;
     }
 
     public static TermSimPolicy.Layout layout() {
@@ -87,7 +87,7 @@ public final class TermSimRuntime {
 
     public static void click(int slot, int button) {
         Minecraft client = Minecraft.getInstance();
-        if (!(client.gui.screen() instanceof TermSimScreen screen) || layout == null) {
+        if (!(client.screen instanceof TermSimScreen screen) || layout == null) {
             return;
         }
         requestClick(screen, slot, button);
@@ -173,7 +173,7 @@ public final class TermSimRuntime {
         if (client.player == null) {
             return;
         }
-        client.gui.setScreen(TermSimScreen.create(next));
+        client.setScreen(TermSimScreen.create(next));
     }
 
     private static TermSimSettings settings() {

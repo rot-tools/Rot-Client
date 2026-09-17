@@ -32,7 +32,7 @@ abstract class MouseHandlerCustomTooltipMixin {
         Minecraft client = Minecraft.getInstance();
         if (client != null
                 && client.gui != null
-                && client.gui.screen() instanceof AbstractContainerScreen<?> container) {
+                && client.screen instanceof AbstractContainerScreen<?> container) {
             Slot slot = ((AbstractContainerScreenAccessor) container).rotclient$hoveredSlot();
             hovered = slot == null ? ItemStack.EMPTY : slot.getItem();
             overlay = StorageOverlayRuntime.shouldReplaceVanilla(container)

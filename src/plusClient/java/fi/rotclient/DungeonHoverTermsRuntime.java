@@ -18,7 +18,7 @@ final class DungeonHoverTermsRuntime {
             return;
         }
         if (client == null || client.player == null || client.gameMode == null
-                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
+                || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();

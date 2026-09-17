@@ -57,7 +57,7 @@ public final class AutoGfsRuntime {
         if (client == null || client.player == null) {
             return;
         }
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             return;
         }
         QolSkyblockExtras extras = extras();

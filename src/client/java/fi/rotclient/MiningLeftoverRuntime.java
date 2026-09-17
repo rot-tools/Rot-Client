@@ -139,7 +139,7 @@ public final class MiningLeftoverRuntime {
                     InventoryChromeRuntime.loreLines(client.player.getMainHandItem()))
                     .orElse(null);
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         String title = screen == null || screen.getTitle() == null ? "" : screen.getTitle().getString();
         boolean hotmNow = extras.miningHotmEnabled
                 && extras.miningHotmScreenHint

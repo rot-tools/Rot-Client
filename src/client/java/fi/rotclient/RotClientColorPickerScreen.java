@@ -266,7 +266,7 @@ final class RotClientColorPickerScreen extends Screen {
             if (onApply != null) {
                 onApply.accept(currentColor());
             }
-            Minecraft.getInstance().gui.setScreen(parent);
+            Minecraft.getInstance().setScreen(parent);
             return true;
         }
         if (RotClientUiDraw.inside(
@@ -276,7 +276,7 @@ final class RotClientColorPickerScreen extends Screen {
             if (onLive != null) {
                 onLive.accept(originalColor);
             }
-            Minecraft.getInstance().gui.setScreen(parent);
+            Minecraft.getInstance().setScreen(parent);
             return true;
         }
         if (RotClientUiDraw.inside(
@@ -352,7 +352,7 @@ final class RotClientColorPickerScreen extends Screen {
             if (onLive != null) {
                 onLive.accept(originalColor);
             }
-            Minecraft.getInstance().gui.setScreen(parent);
+            Minecraft.getInstance().setScreen(parent);
             return true;
         }
         return super.keyPressed(event);
@@ -390,7 +390,7 @@ final class RotClientColorPickerScreen extends Screen {
         if (onLive != null) {
             onLive.accept(originalColor);
         }
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     @Override

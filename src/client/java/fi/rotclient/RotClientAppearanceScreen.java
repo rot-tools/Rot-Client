@@ -1401,7 +1401,7 @@ final class RotClientAppearanceScreen extends Screen {
     }
 
     private void openPicker(String label, int initial, IntConsumer setter) {
-        Minecraft.getInstance().gui.setScreen(
+        Minecraft.getInstance().setScreen(
                 new RotClientColorPickerScreen(
                         this,
                         label,
@@ -1500,7 +1500,7 @@ final class RotClientAppearanceScreen extends Screen {
             RotClientClient.workspace().navigateActive(
                     RotClientWorkspaceRoute.OVERVIEW);
         }
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     @Override

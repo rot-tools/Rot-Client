@@ -31,9 +31,9 @@ public final class ItemToolsRuntime {
                 && extras.storageItemSearch
                 && QolKeybindNames.isBoundDown(
                         client.getWindow().handle(), extras.storageItemSearchKeybind);
-        if (down && !keyWasDown && !(client.gui.screen() instanceof ItemSearchScreen)) {
-            Screen parent = client.gui.screen();
-            client.gui.setScreen(new ItemSearchScreen(parent, hoveredItemId(parent)));
+        if (down && !keyWasDown && !(client.screen instanceof ItemSearchScreen)) {
+            Screen parent = client.screen;
+            client.setScreen(new ItemSearchScreen(parent, hoveredItemId(parent)));
         }
         keyWasDown = down;
     }

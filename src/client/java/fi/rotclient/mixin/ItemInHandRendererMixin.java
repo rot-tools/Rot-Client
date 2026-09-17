@@ -28,7 +28,7 @@ abstract class ItemInHandRendererMixin {
     private float oOffHandHeight;
 
     @Inject(
-            method = "submitArmWithItem",
+            method = "renderArmWithItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V",
@@ -49,7 +49,7 @@ abstract class ItemInHandRendererMixin {
     }
 
     @Inject(
-            method = "submitArmWithItem",
+            method = "renderArmWithItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))

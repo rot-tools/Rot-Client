@@ -14,7 +14,7 @@ final class PlusModuleKeybindRuntime {
 
     static void tick(Minecraft client) {
         if (client == null || client.getWindow() == null
-                || (client.gui != null && client.gui.screen() != null)) {
+                || (client.gui != null && client.screen != null)) {
             reset();
             return;
         }

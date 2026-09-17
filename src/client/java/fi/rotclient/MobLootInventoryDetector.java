@@ -59,7 +59,7 @@ final class MobLootInventoryDetector {
         Map<ItemKey, Long> current = snapshot(client);
         long now = System.currentTimeMillis();
         boolean containerOpen = client.gui != null
-                && client.gui.screen() instanceof AbstractContainerScreen<?>;
+                && client.screen instanceof AbstractContainerScreen<?>;
         if (initialized
                 && collectionAllowed
                 && attribution.allowsInventoryGain(now, containerOpen)) {

@@ -59,7 +59,7 @@ public final class FreecamRuntime {
         prevX = x;
         prevY = y;
         prevZ = z;
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.gui != null && client.screen != null) {
             return;
         }
         if (client.options == null) {

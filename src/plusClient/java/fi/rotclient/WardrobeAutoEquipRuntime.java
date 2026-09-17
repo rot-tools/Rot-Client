@@ -301,7 +301,7 @@ if (loadoutDriven
         if (swapping && !moveEquip(qol) && isMovementBound(client, key)) {
             return true;
         }
-        Screen screen = client.gui == null ? null : client.gui.screen();
+        Screen screen = client.gui == null ? null : client.screen;
         if (screen != null || swapping) {
             return false;
         }

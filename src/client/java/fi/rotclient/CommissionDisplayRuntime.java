@@ -64,8 +64,8 @@ final class CommissionDisplayRuntime {
     static List<String> captureTabLines(Minecraft client) {
         List<String> lines = new ArrayList<>();
         PlayerTabOverlay overlay = null;
-        if (client.gui != null && client.gui.hud != null) {
-            overlay = client.gui.hud.getTabList();
+        if (client.gui != null && client.gui != null) {
+            overlay = client.gui.getTabList();
         }
         if (client.getConnection() != null) {
             List<PlayerInfo> infos = new ArrayList<>(client.getConnection().getOnlinePlayers());

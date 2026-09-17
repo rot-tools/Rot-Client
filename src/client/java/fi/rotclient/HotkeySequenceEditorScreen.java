@@ -629,7 +629,7 @@ final class HotkeySequenceEditorScreen extends Screen {
     }
 
     private void closeToParent() {
-        Minecraft.getInstance().gui.setScreen(parent);
+        Minecraft.getInstance().setScreen(parent);
     }
 
     private String firstError() {

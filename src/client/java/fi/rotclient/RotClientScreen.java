@@ -91,7 +91,7 @@ final class RotClientScreen extends Screen {
         RotClientClient.workspace().flushIfDirty();
         RotClientClient.save();
         if (parent != null) {
-            minecraft.gui.setScreen(parent);
+            minecraft.setScreen(parent);
         } else {
             super.onClose();
         }
@@ -1566,7 +1566,7 @@ final class RotClientScreen extends Screen {
         HudStyleState style = RotClientClient.qolConfigPublic().extras().resolvedHudStyle(id);
         int current = background ? style.backgroundColor : style.textColor;
         String title = background ? "HUD background" : "HUD text";
-        this.minecraft.gui.setScreen(new RotClientColorPickerScreen(
+        this.minecraft.setScreen(new RotClientColorPickerScreen(
                 this,
                 title,
                 current,

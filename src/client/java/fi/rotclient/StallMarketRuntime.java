@@ -451,7 +451,7 @@ public final class StallMarketRuntime {
 
     private static Screen currentScreen() {
         Minecraft client = Minecraft.getInstance();
-        return client == null || client.gui == null ? null : client.gui.screen();
+        return client == null || client.gui == null ? null : client.screen;
     }
 
     private static QolSkyblockExtras extras() {

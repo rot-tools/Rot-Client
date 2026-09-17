@@ -27,8 +27,8 @@ public final class CustomCursorRuntime {
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         boolean enabled = qol.extras().customCursorEnabled;
-        boolean menuOpen = client.gui != null && client.gui.screen() != null;
-        if (!(client.gui != null && client.gui.screen() instanceof MiningUiScreen)) {
+        boolean menuOpen = client.gui != null && client.screen != null;
+        if (!(client.gui != null && client.screen instanceof MiningUiScreen)) {
             resizeKind = CustomCursorPolicy.ResizeKind.NONE;
         }
         boolean hide = CustomCursorPolicy.shouldHideVanillaCursor(
@@ -59,7 +59,7 @@ public final class CustomCursorRuntime {
 
     public static void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY) {
         Minecraft client = Minecraft.getInstance();
-        if (client == null || client.gui == null || client.gui.screen() == null || graphics == null) {
+        if (client == null || client.gui == null || client.screen == null || graphics == null) {
             return;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
