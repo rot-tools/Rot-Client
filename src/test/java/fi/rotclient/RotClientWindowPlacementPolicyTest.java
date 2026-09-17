@@ -85,7 +85,7 @@ final class RotClientWindowPlacementPolicyTest {
     @Test
     void resizeWestMovesOrigin() {
         RotClientWindowPlacementPolicy.Rect start =
-                new RotClientWindowPlacementPolicy.Rect(200, 100, 600, 400);
+                new RotClientWindowPlacementPolicy.Rect(200, 100, 800, 500);
         RotClientWindowPlacementPolicy.Rect next =
                 RotClientWindowPlacementPolicy.resize(
                         start,
@@ -95,7 +95,7 @@ final class RotClientWindowPlacementPolicyTest {
                         1920,
                         1080);
         assertEquals(150, next.x());
-        assertEquals(650, next.width());
+        assertEquals(850, next.width());
     }
 
     @Test
@@ -108,5 +108,33 @@ final class RotClientWindowPlacementPolicyTest {
                 RotClientWindowPlacementPolicy.FLOATING,
                 RotClientWindowPlacementPolicy.toggleMaximize(
                         RotClientWindowPlacementPolicy.MAXIMIZED));
+    }
+
+    @Test
+    void floatingMinimumMatchesDashboardLayoutContract() {
+        assertEquals(
+                RotClientDashboardLayout.MIN_WIDTH,
+                RotClientWindowPlacementPolicy.FLOATING_MIN_WIDTH);
+        assertEquals(
+                RotClientDashboardLayout.MIN_HEIGHT,
+                RotClientWindowPlacementPolicy.FLOATING_MIN_HEIGHT);
+    }
+
+    @Test
+    void resizeCannotShrinkBelowDashboardLayoutMinimum() {
+        RotClientWindowPlacementPolicy.Rect start =
+                new RotClientWindowPlacementPolicy.Rect(100, 100, 800, 500);
+
+        RotClientWindowPlacementPolicy.Rect next =
+                RotClientWindowPlacementPolicy.resize(
+                        start,
+                        RotClientWindowPlacementPolicy.ResizeEdge.SE,
+                        200,
+                        200,
+                        1920,
+                        1080);
+
+        assertEquals(RotClientDashboardLayout.MIN_WIDTH, next.width());
+        assertEquals(RotClientDashboardLayout.MIN_HEIGHT, next.height());
     }
 }

@@ -10317,7 +10317,15 @@ private void drawTrackerDropdown(
     }
 
     private float uiScale() {
-        return 1.0F;
+        return RotClientDashboardLayout.uiScale(width, height);
+    }
+
+    private int logicalViewportWidth() {
+        return Math.max(1, Math.round(width / uiScale()));
+    }
+
+    private int logicalViewportHeight() {
+        return Math.max(1, Math.round(height / uiScale()));
     }
 
     private RotClientDashboardLayout.PanelSize resolvedPanelSize() {
@@ -10335,14 +10343,19 @@ private void drawTrackerDropdown(
 
     private RotClientWindowPlacementPolicy.Rect windowRect() {
         RotClientWorkspaceConfig cfg = RotClientClient.workspace().config();
+
+        int logicalWidth = logicalViewportWidth();
+        int logicalHeight = logicalViewportHeight();
+
         RotClientWindowPlacementPolicy.Rect floating =
                 RotClientWindowPlacementPolicy.floatingRect(
-                        width,
-                        height,
+                        logicalWidth,
+                        logicalHeight,
                         cfg.clientUiNormX,
                         cfg.clientUiNormY,
                         cfg.clientUiNormW,
                         cfg.clientUiNormH);
+
         if (Double.isFinite(livePanelX) && Double.isFinite(livePanelY)) {
             floating = new RotClientWindowPlacementPolicy.Rect(
                     (int) Math.round(livePanelX),
@@ -10350,11 +10363,16 @@ private void drawTrackerDropdown(
                     floating.width(),
                     floating.height());
         }
+
         if (panelDragging) {
             return floating;
         }
+
         return RotClientWindowPlacementPolicy.apply(
-                cfg.windowPlacement, width, height, floating);
+                cfg.windowPlacement,
+                logicalWidth,
+                logicalHeight,
+                floating);
     }
 
     private void persistFloatingRect(
@@ -10654,15 +10672,25 @@ private void drawTrackerDropdown(
                 || RotClientWindowPlacementPolicy.FLOATING.equals(snapPreview)) {
             return;
         }
+
+        int logicalWidth = logicalViewportWidth();
+        int logicalHeight = logicalViewportHeight();
+
         RotClientWindowPlacementPolicy.Rect preview =
                 RotClientWindowPlacementPolicy.apply(
-                        snapPreview, width, height, windowRect());
+                        snapPreview,
+                        logicalWidth,
+                        logicalHeight,
+                        windowRect());
+
         graphics.fill(
                 preview.x(),
                 preview.y(),
                 preview.right(),
                 preview.bottom(),
-                RotClientUiDraw.withAlpha(RotClientTheme.HUD_ACCENT, 0x44));
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.HUD_ACCENT,
+                        0x44));
     }
 
     private int sidebarBottomY(int panelY) {
