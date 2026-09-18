@@ -740,7 +740,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = stressLines("Fishing HUD", FishingSuiteRuntime.hudLines(qol));
+        List<String> lines = stressLines("Fishing HUD", HudRuntimeCache.get("fishing_lines", () -> FishingSuiteRuntime.hudLines(qol)));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -768,7 +768,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = stressLines("Mining HUD", MiningLeftoverRuntime.hudLines(qol));
+        List<String> lines = stressLines("Mining HUD", HudRuntimeCache.get("mining_lines", () -> MiningLeftoverRuntime.hudLines(qol)));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -782,7 +782,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = stressLines("Foraging HUD", ForagingRuntime.hudLines(qol));
+        List<String> lines = stressLines("Foraging HUD", HudRuntimeCache.get("foraging_lines", () -> ForagingRuntime.hudLines(qol)));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
