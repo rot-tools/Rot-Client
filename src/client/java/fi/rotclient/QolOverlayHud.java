@@ -235,39 +235,39 @@ final class QolOverlayHud {
         }
         profileHud("HUD_SLAYER", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer",
-                SlayerRuntime.displayLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_display", () -> SlayerRuntime.displayLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_PROGRESS", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_progress",
-                SlayerRuntime.progressLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_progress", () -> SlayerRuntime.progressLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_RNG", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_rng",
-                SlayerRuntime.rngLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_rng", () -> SlayerRuntime.rngLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_PROFIT", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_profit",
-                SlayerRuntime.profitLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_profit", () -> SlayerRuntime.profitLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_STATS", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_stats",
-                SlayerRuntime.statsLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_stats", () -> SlayerRuntime.statsLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_CARRY", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_carry",
-                SlayerRuntime.carryLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_carry", () -> SlayerRuntime.carryLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_COCOON", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_cocoon",
-                SlayerRuntime.cocoonLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_cocoon", () -> SlayerRuntime.cocoonLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_ATTUNEMENT", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_attunement",
-                SlayerRuntime.attunementLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_attunement", () -> SlayerRuntime.attunementLines(editorOpen || stress))));
 
         profileHud("HUD_SLAYER_VENGEANCE", () -> renderSlayerPanel(
                 graphics, font, qol, "slayer_vengeance",
-                SlayerRuntime.vengeanceLines(editorOpen || stress)));
+                HudRuntimeCache.get("slayer_vengeance", () -> SlayerRuntime.vengeanceLines(editorOpen || stress))));
         profileHud("HUD_DUNGEON", () -> renderSlayerPanel(
                 graphics,
                 font,
@@ -2442,7 +2442,7 @@ final class QolOverlayHud {
      * screen clamp always cover the visible panel.
      */
     private static int profitPanelHeight() {
-        return Math.max(68, 8 + SlayerRuntime.profitLines(true).size() * 10);
+        return Math.max(68, 8 + HudRuntimeCache.get("slayer_profit", () -> SlayerRuntime.profitLines(true)).size() * 10);
     }
 
     private QolUtilityConfig qol() {
