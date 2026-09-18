@@ -122,6 +122,20 @@ public final class SlayerRuntime {
     private static SlayerFightPolicy.QuestRef latestQuest;
     private static List<String> ownedNametagLines = List.of();
 
+    /*
+     * syncSidebarQuest() re-parses the sidebar/tab text into quest and
+     * progress state every tick (20/s), even though Hypixel only rewrites
+     * the sidebar/tab when something on it actually changes. These fields
+     * remember the last parsed input and its result so an unchanged tick
+     * (the common case while idle) skips the regex-heavy parse entirely.
+     */
+    private static String lastSidebarQuestText;
+    private static List<String> lastSidebarQuestTab;
+    private static boolean lastSidebarQuestProgressEnabled;
+    private static boolean lastSidebarQuestVisible;
+    private static SlayerFightPolicy.QuestRef lastSidebarQuestRef;
+    private static SlayerProgressPolicy.Progress lastSidebarQuestProgress;
+
     private static long fadeSnapshotTick = Long.MIN_VALUE;
     private static SlayerSessionEngine.Snapshot fadeSnapshot;
     private static long scanOwnedAt;
@@ -1566,35 +1580,67 @@ public final class SlayerRuntime {
 
     private static void syncSidebarQuest(QolSkyblockExtras settings) {
         Minecraft client = Minecraft.getInstance();
-        List<String> sidebar = List.of(SkyBlockSidebar.text().split("\n"));
+        String sidebarText = SkyBlockSidebar.text();
         List<String> tab = client == null
                 ? List.of()
                 : CommissionDisplayRuntime.tabLines(client);
-        boolean visible = SlayerFightPolicy.sidebarHasSlayerQuest(sidebar)
-                || SlayerFightPolicy.sidebarHasSlayerQuest(tab)
-                || SlayerProgressPolicy.showsQuest(tab)
-                || SlayerProgressPolicy.showsQuest(sidebar);
+
+        boolean unchanged = settings.slayerProgressEnabled == lastSidebarQuestProgressEnabled
+                && sidebarText.equals(lastSidebarQuestText)
+                && tab.equals(lastSidebarQuestTab);
+
+        boolean visible;
+        SlayerFightPolicy.QuestRef quest;
+        SlayerProgressPolicy.Progress progress;
+
+        if (unchanged) {
+            visible = lastSidebarQuestVisible;
+            quest = lastSidebarQuestRef;
+            progress = lastSidebarQuestProgress;
+        } else {
+            List<String> sidebar = List.of(sidebarText.split("\n"));
+
+            visible = SlayerFightPolicy.sidebarHasSlayerQuest(sidebar)
+                    || SlayerFightPolicy.sidebarHasSlayerQuest(tab)
+                    || SlayerProgressPolicy.showsQuest(tab)
+                    || SlayerProgressPolicy.showsQuest(sidebar);
+
+            Optional<SlayerFightPolicy.QuestRef> questOpt =
+                    SlayerFightPolicy.questFromSidebar(sidebar);
+            if (questOpt.isEmpty()) {
+                questOpt = SlayerFightPolicy.questFromSidebar(tab);
+            }
+            quest = questOpt.orElse(null);
+
+            Optional<SlayerProgressPolicy.Progress> progressOpt = Optional.empty();
+            if (settings.slayerProgressEnabled) {
+                progressOpt = SlayerProgressPolicy.parseLines(sidebar, visible);
+                if (progressOpt.isEmpty()) {
+                    progressOpt = SlayerProgressPolicy.parseLines(tab, visible);
+                }
+            }
+            progress = progressOpt.orElse(null);
+
+            lastSidebarQuestText = sidebarText;
+            lastSidebarQuestTab = tab;
+            lastSidebarQuestProgressEnabled = settings.slayerProgressEnabled;
+            lastSidebarQuestVisible = visible;
+            lastSidebarQuestRef = quest;
+            lastSidebarQuestProgress = progress;
+        }
+
         long now = System.currentTimeMillis();
         ENGINE.observeQuestVisible(visible, now);
-        Optional<SlayerFightPolicy.QuestRef> quest = SlayerFightPolicy.questFromSidebar(sidebar);
-        if (quest.isEmpty()) {
-            quest = SlayerFightPolicy.questFromSidebar(tab);
-        }
-        if (quest.isPresent()) {
-            latestQuest = quest.get();
+        if (quest != null) {
+            latestQuest = quest;
             activateStoredRngDrop(latestQuest.type());
         } else if (!visible && ENGINE.questState() != SlayerSessionEngine.QuestState.ACTIVE) {
             latestQuest = null;
         }
-        if (!settings.slayerProgressEnabled) {
+        if (!settings.slayerProgressEnabled || progress == null) {
             return;
         }
-        Optional<SlayerProgressPolicy.Progress> progress =
-                SlayerProgressPolicy.parseLines(sidebar, visible);
-        if (progress.isEmpty()) {
-            progress = SlayerProgressPolicy.parseLines(tab, visible);
-        }
-        progress.ifPresent(value -> applyProgress(settings, value, visible));
+        applyProgress(settings, progress, visible);
     }
 
     private static void applyProgress(
@@ -1715,11 +1761,14 @@ public final class SlayerRuntime {
         scanOwnedAt = now;
     }
 
-    private static void cacheForeignVoidgloomPositions(ClientLevel level, long now) {
+    private static void cacheForeignVoidgloomPositions(
+            ClientLevel level,
+            long now,
+            List<SlayerSessionEngine.ActiveBoss> activeBosses) {
         scanOwnedVoidgloomEntityId = ownedVoidgloomEntityId(now);
         List<Vec3> positions = new ArrayList<>();
         if (level != null) {
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (active.owned()
                         || active.descriptor().role() != SlayerPolicy.EntityRole.BOSS
                         || active.descriptor().type() != SlayerPolicy.SlayerType.VOIDGLOOM) {
@@ -2306,9 +2355,20 @@ public final class SlayerRuntime {
         }
         ClientLevel level = client.level;
         long now = System.currentTimeMillis();
+
+        /*
+         * scanFightMarkers() used to call ENGINE.snapshot(now) independently
+         * in every gated marker loop below (and again inside
+         * cacheForeignVoidgloomPositions()) -- nine deep copies
+         * (Map.copyOf + two List.copyOf calls) of the same unchanged active
+         * boss list within a single call. Fetch it once and reuse it.
+         */
+        List<SlayerSessionEngine.ActiveBoss> activeBosses =
+                ENGINE.snapshot(now).activeBosses();
+
         cacheOwnedBossPositions(level, now);
-        cacheForeignVoidgloomPositions(level, now);
-        for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+        cacheForeignVoidgloomPositions(level, now, activeBosses);
+        for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
             if (active.owned() && active.descriptor().type() == SlayerPolicy.SlayerType.INFERNO) {
                 ownedInfernoTier = Math.max(ownedInfernoTier, active.descriptor().tier());
             }
@@ -2382,7 +2442,7 @@ public final class SlayerRuntime {
         }
         if (settings.slayerVoidgloomEnabled && settings.slayerVoidgloomLineToBoss) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVoidgloomBossLineWidth);
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.VOIDGLOOM) {
                     continue;
                 }
@@ -2394,7 +2454,7 @@ public final class SlayerRuntime {
             }
         }
         if (settings.slayerSvenEnabled && settings.slayerSvenLineToBoss) {
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.SVEN) {
                     continue;
                 }
@@ -2406,7 +2466,7 @@ public final class SlayerRuntime {
             }
         }
         if (settings.slayerRevenantEnabled && settings.slayerRevenantLineToBoss) {
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.REVENANT) {
                     continue;
                 }
@@ -2420,7 +2480,7 @@ public final class SlayerRuntime {
         if (settings.slayerRevenantEnabled
                 && settings.slayerRevenantBoomHighlight
                 && revenantBoomActive) {
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.REVENANT) {
                     continue;
                 }
@@ -2435,7 +2495,7 @@ public final class SlayerRuntime {
         }
         if (settings.slayerTarantulaEnabled) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerTarantulaBossLineWidth);
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.TARANTULA) {
                     continue;
                 }
@@ -2470,7 +2530,7 @@ public final class SlayerRuntime {
         }
         if (settings.slayerVampireMarkersEnabled) {
             float bossWidth = SlayerFightPolicy.clampLineWidth(settings.slayerVampireMarkersBossLineWidth);
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.VAMPIRE) {
                     continue;
                 }
@@ -2503,7 +2563,7 @@ public final class SlayerRuntime {
             }
         }
         if (settings.slayerInfernoEnabled) {
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(now).activeBosses()) {
+            for (SlayerSessionEngine.ActiveBoss active : activeBosses) {
                 if (!active.owned() || active.descriptor().type() != SlayerPolicy.SlayerType.INFERNO) {
                     continue;
                 }
