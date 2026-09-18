@@ -1456,7 +1456,27 @@ public final class RotClientClient implements ClientModInitializer {
                                         .executes(context -> runCommand(
                                                 context.getSource(),
                                                 legacyAlias,
-                                                RotClientClient::performanceDebugStatus)))))
+                                                RotClientClient::performanceDebugStatus))))
+                        .then(literal("hudstress")
+                                .executes(context -> runCommand(
+                                        context.getSource(),
+                                        legacyAlias,
+                                        RotClientClient::hudStressStatus))
+                                .then(literal("on")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::hudStressOn)))
+                                .then(literal("off")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::hudStressOff)))
+                                .then(literal("status")
+                                        .executes(context -> runCommand(
+                                                context.getSource(),
+                                                legacyAlias,
+                                                RotClientClient::hudStressStatus)))))
                 .then(literal("fortune")
                         .then(literal("auto")
                                 .executes(context -> runCommand(
@@ -4555,6 +4575,33 @@ private static int toggle(FabricClientCommandSource source) {
         return result.toString();
     }
 
+    private static int hudStressOn(
+            FabricClientCommandSource source) {
+        QolOverlayHud.setDebugHudStress(true);
+        ClientPerformanceProfiler.enable();
+        source.sendFeedback(Component.literal(
+                "HUD stress mode ON. All HUD renderers are being previewed; "
+                        + "saved settings were not changed."));
+        return 1;
+    }
+
+    private static int hudStressOff(
+            FabricClientCommandSource source) {
+        QolOverlayHud.setDebugHudStress(false);
+        ClientPerformanceProfiler.disable();
+        source.sendFeedback(Component.literal(
+                "HUD stress mode OFF. Performance samples preserved."));
+        return 1;
+    }
+
+    private static int hudStressStatus(
+            FabricClientCommandSource source) {
+        source.sendFeedback(Component.literal(
+                "HUD stress mode: "
+                        + (QolOverlayHud.debugHudStressEnabled() ? "ON" : "OFF")));
+        return 1;
+    }
+
     private static int performanceDebugOn(
             FabricClientCommandSource source) {
         ClientPerformanceProfiler.enable();
@@ -4604,7 +4651,7 @@ private static int toggle(FabricClientCommandSource source) {
         source.sendFeedback(Component.literal(
                 "Top boundaries by total measured time:"));
 
-        int limit = Math.min(12, snapshot.entries().size());
+        int limit = Math.min(32, snapshot.entries().size());
 
         for (int index = 0; index < limit; index++) {
             ClientPerformanceProfiler.Entry entry =

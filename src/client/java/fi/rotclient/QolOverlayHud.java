@@ -32,6 +32,38 @@ final class QolOverlayHud {
     private double dragOffsetX;
     private double dragOffsetY;
 
+    private static boolean debugHudStress;
+
+    static void setDebugHudStress(boolean enabled) {
+        debugHudStress = enabled;
+    }
+
+    static boolean debugHudStressEnabled() {
+        return debugHudStress;
+    }
+
+    private static void profileHud(String boundary, Runnable render) {
+        long startedNanos = ClientPerformanceProfiler.beginSample();
+        try {
+            render.run();
+        } finally {
+            ClientPerformanceProfiler.endSample(boundary, startedNanos);
+        }
+    }
+
+    private static List<String> stressLines(
+            String title,
+            List<String> lines) {
+
+        if (!debugHudStress || (lines != null && !lines.isEmpty())) {
+            return lines == null ? List.of() : lines;
+        }
+
+        return List.of(
+                title,
+                "Stress preview · active");
+    }
+
     QolOverlayHud(TrackerConfig config) {
         this.config = config;
     }
@@ -66,50 +98,98 @@ final class QolOverlayHud {
         if (client == null || RotClientClient.pauseMenuHidesHud()) {
             return;
         }
-        PrizeSpinRuntime.renderHud(graphics);
         QolUtilityConfig qol = qol();
-        CustomScoreboardRuntime.render(graphics, qol);
+        boolean stress = debugHudStress;
         Font font = client.font;
         long now = System.currentTimeMillis();
 
-        if (qol.performanceHudEnabled) {
-            renderPerformance(graphics, font, qol, metrics.sample(client, now));
+        profileHud(
+                "HUD_PRIZE_SPIN",
+                () -> PrizeSpinRuntime.renderHud(graphics));
+
+        profileHud(
+                "HUD_CUSTOM_SCOREBOARD",
+                () -> CustomScoreboardRuntime.render(graphics, qol));
+
+        if (stress || qol.performanceHudEnabled) {
+            profileHud(
+                    "HUD_PERFORMANCE",
+                    () -> renderPerformance(
+                            graphics,
+                            font,
+                            qol,
+                            metrics.sample(client, now)));
         }
-        if (qol.playerDisplayEnabled) {
-            renderPlayerDisplay(graphics, font, qol);
+
+        if (stress || qol.playerDisplayEnabled) {
+            profileHud(
+                    "HUD_PLAYER_DISPLAY",
+                    () -> renderPlayerDisplay(graphics, font, qol));
         }
-        if (qol.petHudEnabled) {
-            renderPetHud(graphics, font, qol);
+
+        if (stress || qol.petHudEnabled) {
+            profileHud(
+                    "HUD_PET",
+                    () -> renderPetHud(graphics, font, qol));
         }
-        if (qol.commissionDisplayEnabled) {
-            renderCommission(graphics, font, qol);
+
+        if (stress || qol.commissionDisplayEnabled) {
+            profileHud(
+                    "HUD_COMMISSION",
+                    () -> renderCommission(graphics, font, qol));
         }
-        if (wardrobeHudEnabled(qol)) {
-            renderWardrobe(graphics, font, qol);
+
+        if (stress || wardrobeHudEnabled(qol)) {
+            profileHud(
+                    "HUD_WARDROBE",
+                    () -> renderWardrobe(graphics, font, qol));
         }
-        if (autoClickerHudEnabled(qol)) {
-            renderAutoClickerHud(graphics, font, qol);
+
+        if (stress || autoClickerHudEnabled(qol)) {
+            profileHud(
+                    "HUD_AUTO_CLICKER",
+                    () -> renderAutoClickerHud(graphics, font, qol));
         }
-        if (FishingSuiteRuntime.hudVisible(qol)) {
-            renderFishing(graphics, font, qol);
+        if (stress || FishingSuiteRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_FISHING",
+                    () -> renderFishing(graphics, font, qol));
         }
-        if (MiningLeftoverRuntime.hudVisible(qol)) {
-            renderMiningLeftover(graphics, font, qol);
+
+        if (stress || MiningLeftoverRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_MINING",
+                    () -> renderMiningLeftover(graphics, font, qol));
         }
-        if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)) {
-            renderDiana(graphics, font, qol);
+
+        if (stress || QolClientFlavorSupport.hooks().dianaHudVisible(qol)) {
+            profileHud(
+                    "HUD_DIANA",
+                    () -> renderDiana(graphics, font, qol));
         }
-        if (ForagingRuntime.hudVisible(qol)) {
-            renderForaging(graphics, font, qol);
+
+        if (stress || ForagingRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_FORAGING",
+                    () -> renderForaging(graphics, font, qol));
         }
-        if (IotaRuntime.hudVisible(qol)) {
-            renderIotaArrows(graphics, font, qol);
+
+        if (stress || IotaRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_IOTA_ARROWS",
+                    () -> renderIotaArrows(graphics, font, qol));
         }
-        if (IotaKuudraRuntime.hudVisible(qol)) {
-            renderKuudraAlerts(graphics, font, qol);
+
+        if (stress || IotaKuudraRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_KUUDRA_ALERTS",
+                    () -> renderKuudraAlerts(graphics, font, qol));
         }
-        if (StallMarketRuntime.hudVisible(qol)) {
-            renderStallBin(graphics, font, qol);
+
+        if (stress || StallMarketRuntime.hudVisible(qol)) {
+            profileHud(
+                    "HUD_STALL_BIN",
+                    () -> renderStallBin(graphics, font, qol));
         }
         int coldAlpha = MiningLeftoverRuntime.coldAlpha();
         if (coldAlpha > 0) {
@@ -153,43 +233,70 @@ final class QolOverlayHud {
             int x = (client.getWindow().getGuiScaledWidth() - w) / 2;
             RotClientUiDraw.text(graphics, font, iotaTitle, x, 84, 0xFFFF5555, true);
         }
-        renderSlayerPanel(graphics, font, qol, "slayer", SlayerRuntime.displayLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_progress", SlayerRuntime.progressLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_rng", SlayerRuntime.rngLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_profit", SlayerRuntime.profitLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_stats", SlayerRuntime.statsLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_carry", SlayerRuntime.carryLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_cocoon", SlayerRuntime.cocoonLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_attunement", SlayerRuntime.attunementLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_vengeance", SlayerRuntime.vengeanceLines(editorOpen));
-        renderSlayerPanel(
+        profileHud("HUD_SLAYER", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer",
+                SlayerRuntime.displayLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_PROGRESS", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_progress",
+                SlayerRuntime.progressLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_RNG", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_rng",
+                SlayerRuntime.rngLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_PROFIT", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_profit",
+                SlayerRuntime.profitLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_STATS", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_stats",
+                SlayerRuntime.statsLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_CARRY", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_carry",
+                SlayerRuntime.carryLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_COCOON", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_cocoon",
+                SlayerRuntime.cocoonLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_ATTUNEMENT", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_attunement",
+                SlayerRuntime.attunementLines(editorOpen || stress)));
+
+        profileHud("HUD_SLAYER_VENGEANCE", () -> renderSlayerPanel(
+                graphics, font, qol, "slayer_vengeance",
+                SlayerRuntime.vengeanceLines(editorOpen || stress)));
+        profileHud("HUD_DUNGEON", () -> renderSlayerPanel(
                 graphics,
                 font,
                 qol,
                 "dungeon",
-                DungeonRuntime.displayLines(editorOpen));
+                DungeonRuntime.displayLines(editorOpen || stress)));
 
-        if (dungeonCarryEditorVisible(qol)) {
-            renderSlayerPanel(
+        if (stress || dungeonCarryEditorVisible(qol)) {
+            profileHud("HUD_DUNGEON_CARRY", () -> renderSlayerPanel(
                     graphics,
                     font,
                     qol,
                     "dungeon_carry",
-                    DungeonCarryRuntime.hudLines(editorOpen));
+                    DungeonCarryRuntime.hudLines(editorOpen || stress)));
         }
 
-        if (dungeonWatcherEditorVisible(qol)) {
-            renderSlayerPanel(
+        if (stress || dungeonWatcherEditorVisible(qol)) {
+            profileHud("HUD_DUNGEON_WATCHER", () -> renderSlayerPanel(
                     graphics,
                     font,
                     qol,
                     "dungeon_watcher",
-                    DungeonWatcherRuntime.hudLines(editorOpen));
+                    DungeonWatcherRuntime.hudLines(editorOpen || stress)));
         }
-        ItemRarityRuntime.renderHotbar(
+        profileHud("HUD_ITEM_RARITY", () -> ItemRarityRuntime.renderHotbar(
                 graphics,
                 client.getWindow() == null ? 0 : client.getWindow().getGuiScaledWidth(),
-                client.getWindow() == null ? 0 : client.getWindow().getGuiScaledHeight());
+                client.getWindow() == null ? 0 : client.getWindow().getGuiScaledHeight(),
+                stress));
     }
 
     private void renderPerformance(
@@ -201,9 +308,9 @@ final class QolOverlayHud {
         List<String> lines =
                 PerformanceHudLayout.renderLines(
                         snapshot,
-                        qol.performanceShowFps,
-                        qol.performanceShowTps,
-                        qol.performanceShowPing,
+                        debugHudStress || qol.performanceShowFps,
+                        debugHudStress || qol.performanceShowTps,
+                        debugHudStress || qol.performanceShowPing,
                         PerformanceHudLayout.Direction
                                 .fromConfig(
                                         qol.performanceDirection));
@@ -330,13 +437,13 @@ final class QolOverlayHud {
 
         List<PlayerDisplayMath.HudLine> lines = PlayerDisplayMath.visibleLines(
                 stats.stats(),
-                qol.playerDisplayHealthHud,
-                qol.playerDisplayManaHud,
-                qol.playerDisplayOverflowManaHud,
-                qol.playerDisplayDefenseHud,
-                qol.playerDisplayVitalityHud,
-                qol.playerDisplayEhpHud,
-                qol.playerDisplaySpeedHud);
+                debugHudStress || qol.playerDisplayHealthHud,
+                debugHudStress || qol.playerDisplayManaHud,
+                debugHudStress || qol.playerDisplayOverflowManaHud,
+                debugHudStress || qol.playerDisplayDefenseHud,
+                debugHudStress || qol.playerDisplayVitalityHud,
+                debugHudStress || qol.playerDisplayEhpHud,
+                debugHudStress || qol.playerDisplaySpeedHud);
         for (PlayerDisplayMath.HudLine line : lines) {
             String id = elementId(line.kind());
             float[] pose = qol.pose(id);
@@ -622,7 +729,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = CommissionDisplayRuntime.hudLines(qol);
+        List<String> lines = stressLines("Commission Display", CommissionDisplayRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -633,7 +740,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = FishingSuiteRuntime.hudLines(qol);
+        List<String> lines = stressLines("Fishing HUD", FishingSuiteRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -647,7 +754,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = QolClientFlavorSupport.hooks().dianaHudLines(qol);
+        List<String> lines = stressLines("Diana HUD", QolClientFlavorSupport.hooks().dianaHudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -661,7 +768,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = MiningLeftoverRuntime.hudLines(qol);
+        List<String> lines = stressLines("Mining HUD", MiningLeftoverRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -675,7 +782,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = ForagingRuntime.hudLines(qol);
+        List<String> lines = stressLines("Foraging HUD", ForagingRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -689,7 +796,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = IotaRuntime.hudLines(qol);
+        List<String> lines = stressLines("Arrow Tracker", IotaRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -703,7 +810,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = IotaKuudraRuntime.hudLines(qol);
+        List<String> lines = stressLines("Kuudra Alerts", IotaKuudraRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -717,7 +824,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = StallMarketRuntime.hudLines(qol);
+        List<String> lines = stressLines("BIN Overlay", StallMarketRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -736,7 +843,11 @@ final class QolOverlayHud {
                 QolClientFlavorSupport
                         .hooks()
                         .wardrobeHudText(
-                                editorOpen);
+                                editorOpen || debugHudStress);
+
+        if (text.isEmpty() && debugHudStress) {
+            text = "Wardrobe HUD · Stress preview";
+        }
 
         if (text.isEmpty()
                 && !editorOpen) {
@@ -833,11 +944,13 @@ final class QolOverlayHud {
             Font font,
             QolUtilityConfig qol) {
         QolClientFlavorHooks.CpsHud hud = QolClientFlavorSupport.hooks().autoClickerHud();
-        if (hud == null) {
+        if (hud == null && !debugHudStress) {
             return;
         }
-        String text = hud.text();
-        boolean blockHold = hud.blockHold();
+        String text = hud == null
+                ? "CPS HUD · Stress preview"
+                : hud.text();
+        boolean blockHold = hud != null && hud.blockHold();
         float[] pose = qol.pose("auto_clicker");
         int x = Math.round(pose[0]);
         int y = Math.round(pose[1]);

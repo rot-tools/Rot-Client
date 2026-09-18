@@ -58,9 +58,30 @@ public final class ItemRarityRuntime {
         paint(graphics, x, y, stack, qol, true, false);
     }
 
-    static void renderHotbar(GuiGraphicsExtractor graphics, int screenWidth, int screenHeight) {
+    static void renderHotbar(
+            GuiGraphicsExtractor graphics,
+            int screenWidth,
+            int screenHeight) {
+
+        renderHotbar(
+                graphics,
+                screenWidth,
+                screenHeight,
+                false);
+    }
+
+    static void renderHotbar(
+            GuiGraphicsExtractor graphics,
+            int screenWidth,
+            int screenHeight,
+            boolean force) {
+
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.itemRarityEnabled || !qol.itemRarityHotbar || graphics == null) {
+
+        if (graphics == null
+                || (!force
+                && (!qol.itemRarityEnabled
+                || !qol.itemRarityHotbar))) {
             return;
         }
         Minecraft client = Minecraft.getInstance();
