@@ -1313,7 +1313,8 @@ public final class SlayerRuntime {
         Map<Integer, List<String>> linesByEntity = new HashMap<>();
         Map<Integer, Entity> hosts = new HashMap<>();
         ownedNametagLines = List.of();
-        for (Entity entity : level.getEntities(player, search)) {
+        var nearbyEntities = level.getEntities(player, search);
+        for (Entity entity : nearbyEntities) {
             if (settings.slayerVengeanceDamageEnabled && entity instanceof ArmorStand) {
                 seenDamageEntities.add(entity.getId());
                 reportVengeanceDamage(client, settings, entity);
@@ -1340,7 +1341,7 @@ public final class SlayerRuntime {
                 }
             }
         }
-        for (Entity entity : level.getEntities(player, search)) {
+        for (Entity entity : nearbyEntities) {
             if (!isNameHologram(entity)) {
                 continue;
             }
