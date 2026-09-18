@@ -125,6 +125,12 @@ Minecraft client = Minecraft.getInstance();
                 "HUD_CUSTOM_SCOREBOARD",
                 () -> CustomScoreboardRuntime.render(graphics, qol));
 
+        if (stress || qol.marketWatchPinsHudEnabled) {
+            profileHud(
+                    "HUD_MARKET_PINS",
+                    () -> renderMarketPins(graphics, font, qol));
+        }
+
         if (stress || qol.performanceHudEnabled) {
             profileHud(
                     "HUD_PERFORMANCE",
@@ -737,6 +743,50 @@ Minecraft client = Minecraft.getInstance();
 
         graphics.pose()
                 .popMatrix();
+    }
+
+    private void renderMarketPins(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            QolUtilityConfig qol) {
+
+        List<MarketWatchPinnedDeal> pins =
+                MarketWatchPinnedDealStore.all();
+
+        if (pins.isEmpty() && !editorOpen) {
+            return;
+        }
+
+        float[] pose = qol.pose("market_pins");
+        int x = Math.round(pose[0]);
+        int y = Math.round(pose[1]);
+        int width = MarketWatchPinnedDealHud.CARD_WIDTH;
+        int height = pins.isEmpty()
+                ? MarketWatchPinnedDealHud.CARD_HEIGHT
+                : MarketWatchPinnedDealHud.contentHeight(pins.size());
+
+        pushHudScale(graphics, "market_pins", x, y);
+
+        if (editorOpen) {
+            drawEditorFrame(graphics, font, x, y, width, height, "market_pins");
+        }
+
+        if (pins.isEmpty()) {
+            RotClientUiDraw.drawElevatedCard(
+                    graphics, x, y, width, MarketWatchPinnedDealHud.CARD_HEIGHT);
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "No pinned deals",
+                    x + 10,
+                    y + 22,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+        } else {
+            MarketWatchPinnedDealHud.render(graphics, font, pins, x, y);
+        }
+
+        graphics.pose().popMatrix();
     }
 
     private void renderCommission(
@@ -1710,6 +1760,11 @@ Minecraft client = Minecraft.getInstance();
         if (qol.petHudEnabled && inside(mouseX, mouseY, "pet", PET_EDITOR_WIDTH, PET_EDITOR_HEIGHT)) {
             return "pet";
         }
+        if (qol.marketWatchPinsHudEnabled
+                && inside(mouseX, mouseY, "market_pins",
+                        MarketWatchPinnedDealHud.CARD_WIDTH, marketPinsPanelHeight())) {
+            return "market_pins";
+        }
         if (qol.commissionDisplayEnabled && inside(mouseX, mouseY, "commission", 180, 48)) {
             return "commission";
         }
@@ -2288,6 +2343,7 @@ Minecraft client = Minecraft.getInstance();
             if (qol.playerDisplaySpeedHud) return "speed";
         }
         if (qol.petHudEnabled) return "pet";
+        if (qol.marketWatchPinsHudEnabled) return "market_pins";
         if (qol.commissionDisplayEnabled) return "commission";
         if (wardrobeHudEnabled(qol)) return "wardrobe";
         if (autoClickerHudEnabled(qol)) return "auto_clicker";
@@ -2321,6 +2377,7 @@ Minecraft client = Minecraft.getInstance();
         QolUtilityConfig qol = qol();
         return switch (id) {
             case "performance" -> qol.performanceHudEnabled;
+            case "market_pins" -> qol.marketWatchPinsHudEnabled;
             case "health" -> qol.playerDisplayEnabled && qol.playerDisplayHealthHud;
             case "mana" -> qol.playerDisplayEnabled && qol.playerDisplayManaHud;
             case "overflow" -> qol.playerDisplayEnabled && qol.playerDisplayOverflowManaHud;
@@ -2359,6 +2416,7 @@ Minecraft client = Minecraft.getInstance();
     private static String labelFor(String id) {
         return switch (id == null ? "" : id) {
             case "performance" -> "Performance HUD";
+            case "market_pins" -> "Market Watch Pins";
             case "health" -> "Health HUD";
             case "mana" -> "Mana HUD";
             case "overflow" -> "Overflow Mana HUD";
@@ -2398,6 +2456,9 @@ Minecraft client = Minecraft.getInstance();
         if ("performance".equals(id)) {
             return PERFORMANCE_EDITOR_WIDTH;
         }
+        if ("market_pins".equals(id)) {
+            return MarketWatchPinnedDealHud.CARD_WIDTH;
+        }
         if ("pet".equals(id)) {
             return PET_EDITOR_WIDTH;
         }
@@ -2422,6 +2483,9 @@ Minecraft client = Minecraft.getInstance();
     private static int elementHeight(String id) {
         if ("performance".equals(id)) {
             return PERFORMANCE_EDITOR_HEIGHT;
+        }
+        if ("market_pins".equals(id)) {
+            return marketPinsPanelHeight();
         }
         if ("pet".equals(id)) {
             return PET_EDITOR_HEIGHT;
@@ -2458,6 +2522,18 @@ Minecraft client = Minecraft.getInstance();
      */
     private static int profitPanelHeight() {
         return Math.max(68, 8 + HudRuntimeCache.get("slayer_profit", () -> SlayerRuntime.profitLines(true)).size() * 10);
+    }
+
+    /**
+     * Mirrors {@link #profitPanelHeight()}: the editor's drag target and
+     * screen clamp for the pin stack must cover however many cards are
+     * actually pinned right now, not a fixed guess.
+     */
+    private static int marketPinsPanelHeight() {
+        int count = MarketWatchPinnedDealStore.all().size();
+        return count <= 0
+                ? MarketWatchPinnedDealHud.CARD_HEIGHT
+                : MarketWatchPinnedDealHud.contentHeight(count);
     }
 
     private QolUtilityConfig qol() {
