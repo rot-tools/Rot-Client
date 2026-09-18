@@ -293,7 +293,7 @@ Minecraft client = Minecraft.getInstance();
                 font,
                 qol,
                 "dungeon",
-                DungeonRuntime.displayLines(editorOpen || stress)));
+                HudRuntimeCache.get("dungeon_display", () -> DungeonRuntime.displayLines(editorOpen || stress))));
 
         if (stress || dungeonCarryEditorVisible(qol)) {
             profileHud("HUD_DUNGEON_CARRY", () -> renderSlayerPanel(
@@ -301,7 +301,7 @@ Minecraft client = Minecraft.getInstance();
                     font,
                     qol,
                     "dungeon_carry",
-                    DungeonCarryRuntime.hudLines(editorOpen || stress)));
+                    HudRuntimeCache.get("dungeon_carry", () -> DungeonCarryRuntime.hudLines(editorOpen || stress))));
         }
 
         if (stress || dungeonWatcherEditorVisible(qol)) {
@@ -310,7 +310,7 @@ Minecraft client = Minecraft.getInstance();
                     font,
                     qol,
                     "dungeon_watcher",
-                    DungeonWatcherRuntime.hudLines(editorOpen || stress)));
+                    HudRuntimeCache.get("dungeon_watcher", () -> DungeonWatcherRuntime.hudLines(editorOpen || stress))));
         }
         profileHud("HUD_ITEM_RARITY", () -> ItemRarityRuntime.renderHotbar(
                 graphics,
