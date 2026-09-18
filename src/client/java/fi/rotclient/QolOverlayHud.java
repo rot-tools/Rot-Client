@@ -1,5 +1,8 @@
 package fi.rotclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -14,6 +17,16 @@ import java.util.List;
  * drag inside the existing Rot HUD editor / pause editor mode.
  */
 final class QolOverlayHud {
+
+    private final Map<String, HudStyleState> frameStyleCache = new HashMap<>();
+
+    private HudStyleState cachedHudStyle(String id) {
+        return frameStyleCache.computeIfAbsent(
+                id,
+                key -> qol().extras().resolvedHudStyle(key)
+        );
+    }
+
     private static final int PERFORMANCE_EDITOR_WIDTH = 120;
     private static final int PERFORMANCE_EDITOR_HEIGHT = 36;
     private static final int STAT_EDITOR_WIDTH = 110;
@@ -94,7 +107,8 @@ final class QolOverlayHud {
     }
 
     void render(GuiGraphicsExtractor graphics) {
-        Minecraft client = Minecraft.getInstance();
+                frameStyleCache.clear();
+Minecraft client = Minecraft.getInstance();
         if (client == null || RotClientClient.pauseMenuHidesHud()) {
             return;
         }
@@ -1925,11 +1939,11 @@ final class QolOverlayHud {
         }
     }
     private boolean panelOn(String id) {
-        return qol().extras().resolvedHudStyle(id).showBackground;
+        return cachedHudStyle(id).showBackground;
     }
 
     private int panelFill(String id, int color, int alpha) {
-        HudStyleState style = qol().extras().resolvedHudStyle(id);
+        HudStyleState style = cachedHudStyle(id);
         if (!style.showBackground) {
             return 0x00000000;
         }
@@ -1961,7 +1975,7 @@ final class QolOverlayHud {
     }
 
     private int textPaint(String id, int fallback) {
-        HudStyleState style = qol().extras().resolvedHudStyle(id);
+        HudStyleState style = cachedHudStyle(id);
         int color = style.textColor == 0 ? fallback : style.textColor;
         return HudStylePolicy.dim(
                 color,
@@ -2016,7 +2030,7 @@ final class QolOverlayHud {
         if (lines == null || lines.isEmpty()) {
             return List.of();
         }
-        if (HudStylePolicy.titleVisible(qol().extras().resolvedHudStyle(id)) || lines.size() <= 1) {
+        if (HudStylePolicy.titleVisible(cachedHudStyle(id)) || lines.size() <= 1) {
             return lines;
         }
         return lines.subList(1, lines.size());
@@ -2188,7 +2202,7 @@ final class QolOverlayHud {
                 .popMatrix();
     }
     private float styleScale(String id) {
-        return qol().extras().resolvedHudStyle(id).scale;
+        return cachedHudStyle(id).scale;
     }
 
     private void fillHudPanel(
