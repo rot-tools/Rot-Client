@@ -996,13 +996,17 @@ Minecraft client = Minecraft.getInstance();
         int y = Math.round(pose[1]);
         int width = SLAYER_EDITOR_WIDTH;
         boolean dynamicSlayerText = "slayer".equals(id) && qol.extras().slayerDisplayDynamicSize;
-        for (String line : lines) {
+        int lineCount = lines.size();
+        float[] lineScales = new float[lineCount];
+        for (int i = 0; i < lineCount; i++) {
+            int lineWidth = font.width(lines.get(i));
             float scale = dynamicSlayerText
-                    ? SlayerHudTextPolicy.scaleFor(font.width(line), SLAYER_EDITOR_WIDTH - 12)
+                    ? SlayerHudTextPolicy.scaleFor(lineWidth, SLAYER_EDITOR_WIDTH - 12)
                     : 1.0F;
-            width = Math.max(width, Math.round(font.width(line) * scale) + 12);
+            lineScales[i] = scale;
+            width = Math.max(width, Math.round(lineWidth * scale) + 12);
         }
-        int height = Math.max(26, 8 + lines.size() * 10);
+        int height = Math.max(26, 8 + lineCount * 10);
         pushHudScale(graphics, id, x, y);
         if (editorOpen) {
             drawEditorFrame(graphics, font, x, y, width, height, id);
@@ -1012,9 +1016,10 @@ Minecraft client = Minecraft.getInstance();
             graphics.fill(x, y, x + 3, y + height, accentPaint(id));
         }
         List<String> visible = visibleHudLines(id, lines);
+        int skip = lineCount - visible.size();
         int rowY = y + 4;
         for (int i = 0; i < visible.size(); i++) {
-            int color = i == 0 && HudStylePolicy.titleVisible(qol.extras().resolvedHudStyle(id))
+            int color = i == 0 && HudStylePolicy.titleVisible(cachedHudStyle(id))
                     ? accentPaint(id) : textPaint(id, RotClientTheme.TEXT);
             if ("slayer_profit".equals(id)
                     && visible.get(i).startsWith("Latest · ")
@@ -1022,9 +1027,7 @@ Minecraft client = Minecraft.getInstance();
                     && !visible.get(i).equals("Latest · none")) {
                 color = RotClientTheme.SUCCESS;
             }
-            float scale = dynamicSlayerText
-                    ? SlayerHudTextPolicy.scaleFor(font.width(visible.get(i)), SLAYER_EDITOR_WIDTH - 12)
-                    : 1.0F;
+            float scale = lineScales[i + skip];
             if (scale < 1.0F) {
                 graphics.pose().pushMatrix();
                 graphics.pose().translate(x + 7, rowY);
@@ -2065,10 +2068,8 @@ Minecraft client = Minecraft.getInstance();
                         lines);
 
         HudStyleState style =
-                qol()
-                        .extras()
-                        .resolvedHudStyle(
-                                id);
+                cachedHudStyle(
+                        id);
 
         boolean title =
                 HudStylePolicy
