@@ -71,6 +71,7 @@ public final class IotaPolicy {
     }
 
     private static final Pattern CONTROL = Pattern.compile("§.");
+    private static final Pattern LEFT_SUFFIX = Pattern.compile("\\s+left[.!]?$");
     private static final Pattern PARTY_JOIN = Pattern.compile("^\\w+ joined the party[.!]?$");
     private static final Pattern TERMINATOR_COOLDOWN =
             Pattern.compile("^This ability is on cooldown for ");
@@ -100,12 +101,12 @@ public final class IotaPolicy {
     }
 
     public static boolean isLimboKick(String raw) {
-        return strip(raw).contains(LIMBO_MESSAGE);
+        return serverLineContains(strip(raw), LIMBO_MESSAGE);
     }
 
     public static boolean isPartyJoin(String raw) {
         String text = strip(raw);
-        if (text.contains("joined the party")) {
+        if (serverLineContains(text, "joined the party")) {
             return true;
         }
         return PARTY_JOIN.matcher(text).matches();
@@ -194,7 +195,9 @@ public final class IotaPolicy {
                     : Optional.empty();
             case "!tps" -> config.tps()
                     ? Optional.of(PartyAction.partyChat(
-                            String.format(Locale.ROOT, "[Rot] %.1f", tps)))
+                            Float.isFinite(tps) && tps > 0.0F
+                                    ? String.format(Locale.ROOT, "[Rot] %.1f", tps)
+                                    : "[Rot] TPS unavailable"))
                     : Optional.empty();
             case "!promote" -> config.promote()
                     ? Optional.of(PartyAction.command("party promote " + sender))
@@ -250,7 +253,7 @@ public final class IotaPolicy {
     public static Optional<ArrowNotice> arrowChatNotice(String raw) {
         String text = strip(raw);
         String lower = text.toLowerCase(Locale.ROOT);
-        if (lower.contains("your quiver is now completely empty")) {
+        if (serverLineContains(lower, "your quiver is now completely empty")) {
             return Optional.of(new ArrowNotice(true, 0, ""));
         }
         if (text.startsWith("QUIVER! You only have")) {
@@ -258,7 +261,9 @@ public final class IotaPolicy {
             if (parts.length >= 6) {
                 try {
                     int count = Integer.parseInt(parts[4]);
-                    String type = String.join(" ", java.util.Arrays.copyOfRange(parts, 5, parts.length));
+                    String type = LEFT_SUFFIX.matcher(
+                            String.join(" ", java.util.Arrays.copyOfRange(parts, 5, parts.length)))
+                            .replaceFirst("");
                     return Optional.of(new ArrowNotice(false, count, type));
                 } catch (NumberFormatException ignored) {
                     return Optional.empty();
@@ -327,6 +332,16 @@ public final class IotaPolicy {
             return String.format(Locale.ROOT, "%s%.1fk", sign, abs / 1000.0);
         }
         return sign + abs;
+    }
+
+    /**
+     * True when the phrase is in a server line, not inside a player's
+     * "Name: message" chat text. Anyone can type a phrase into chat, and these
+     * triggers make the client play sounds or post to party chat.
+     */
+    private static boolean serverLineContains(String plain, String phrase) {
+        int at = plain.indexOf(phrase);
+        return at >= 0 && plain.lastIndexOf(':', at) < 0;
     }
 
     private static Optional<PartyAction> kick(PartyCommandConfig config, String[] parts) {
