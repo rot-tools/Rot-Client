@@ -152,6 +152,12 @@ final class ForagingPolicyTest {
         assertEquals(-1, ForagingPolicy.signedQuarterTurns(
                 ForagingPolicy.Cardinal.WEST, ForagingPolicy.Cardinal.SOUTH));
         assertEquals(List.of("BLUE", "RED"), ForagingPolicy.desertTempleButtonOrder(Map.of("RED", 3, "BLUE", 1)));
+        // Equal counts must not depend on hash order.
+        assertEquals(
+                List.of("GREEN", "LIGHT_BLUE", "RED"),
+                ForagingPolicy.desertTempleButtonOrder(Map.of("RED", 2, "GREEN", 2, "LIGHT_BLUE", 2)));
+        assertEquals("Temple Blue > Light Blue", ForagingPolicy.desertTempleHudLine(List.of("BLUE", "LIGHT_BLUE")));
+        assertEquals("", ForagingPolicy.desertTempleHudLine(List.of()));
         assertTrue(ForagingPolicy.muteStereoPants(
                 true, ForagingPolicy.Island.GALATEA, true, "block.note_block.harp"));
         assertEquals(

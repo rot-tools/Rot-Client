@@ -59,6 +59,19 @@ public final class ForagingRuntime {
     private static int shardTotal;
     private static final Set<Integer> lassoAlerted = new HashSet<>();
 
+    // Block and entity scans are far too heavy to repeat on every rendered frame,
+    // so tick() refreshes these on a throttle and renderGizmos() only draws them.
+    private record BlockBox(BlockPos pos, int color) {
+    }
+
+    private record EntityBox(Entity entity, int color) {
+    }
+
+    private static List<BlockBox> blockBoxes = List.of();
+    private static List<EntityBox> entityBoxes = List.of();
+    private static List<String> templeOrder = List.of();
+    private static int worldScanTicks;
+
     private ForagingRuntime() {
     }
 
@@ -82,6 +95,7 @@ public final class ForagingRuntime {
         hotfOpen = false;
         shardTotal = 0;
         lassoAlerted.clear();
+        clearScans();
     }
 
     static boolean hudVisible(QolUtilityConfig qol) {
@@ -133,6 +147,9 @@ public final class ForagingRuntime {
         }
         if (toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.temple_solver", true)) {
             String temple = ForagingPolicy.templeHudLine(templePending);
+            if (temple.isBlank()) {
+                temple = ForagingPolicy.desertTempleHudLine(templeOrder);
+            }
             if (!temple.isBlank()) {
                 lines.add(temple);
             }
@@ -197,6 +214,9 @@ public final class ForagingRuntime {
             }
             hotfOpen = hotfNow;
             maybeLassoAlert(client, extras);
+            scanWorld(client, extras);
+        } else {
+            clearScans();
         }
         QolClientFlavorSupport.hooks().foragingAutomationTick(client);
     }
@@ -246,51 +266,21 @@ public final class ForagingRuntime {
             return;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (helpers(extras)) {
-            renderCinderbats(client, extras);
-        }
-        if (!helpers(extras) || island == ForagingPolicy.Island.NONE) {
+        if (!helpers(extras)) {
             return;
         }
-        LocalPlayer player = client.player;
-        BlockPos origin = player.blockPosition();
-        int min = seaLumiesMin(extras);
-        boolean highlight = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.highlights", true);
-        boolean temple = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.temple_solver", true);
-        templePending = 0;
-        int radius = 24;
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dy = -8; dy <= 8; dy++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    BlockState state = client.level.getBlockState(pos);
-                    String id = blockId(state);
-                    if (highlight && ForagingPolicy.highlightLushlilac(island, id)) {
-                        box(pos, 0xFF55FF55);
-                    }
-                    if (highlight && ForagingPolicy.highlightVeilshroom(island, id)) {
-                        box(pos, 0xFFFF5555);
-                    }
-                    int pickles = pickleCount(state);
-                    if (highlight && ForagingPolicy.highlightSeaLumies(island, id, pickles, min)) {
-                        box(pos, 0xFF55FFFF);
-                    }
-                    int honey = honeyLevel(state);
-                    boolean fence = client.level.getBlockState(pos.above()).getBlock().toString()
-                            .toLowerCase(Locale.ROOT)
-                            .contains("birch_fence");
-                    if (highlight && ForagingPolicy.highlightHoneyhive(island, id, honey, fence)) {
-                        box(pos, 0xFFFFAA00);
-                    }
-                }
+        for (EntityBox highlighted : entityBoxes) {
+            if (!highlighted.entity().isRemoved()) {
+                boxEntity(highlighted.entity(), highlighted.color());
             }
         }
-        if (temple && island == ForagingPolicy.Island.GALATEA) {
-            renderForestTemple(client);
+        if (island == ForagingPolicy.Island.NONE) {
+            return;
         }
-        if (temple && island == ForagingPolicy.Island.TORRHUS) {
-            renderDesertTempleOrder(client);
+        for (BlockBox highlighted : blockBoxes) {
+            box(highlighted.pos(), highlighted.color());
         }
+        boolean highlight = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.highlights", true);
         if (highlight && toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.moonglade_beacon", true)
                 && island == ForagingPolicy.Island.GALATEA) {
             box(new BlockPos(
@@ -304,40 +294,113 @@ public final class ForagingRuntime {
                 box(BlockPos.containing(step.x(), step.y(), step.z()), 0xFFFFFF55);
             }
         }
-        if (highlight && toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.hunting_esp", true)
-                && ForagingPolicy.customTrees(island)) {
-            AABB search = player.getBoundingBox().inflate(48.0D);
-            for (Entity entity : client.level.getEntities(player, search)) {
-                String name = entity.getCustomName() != null
-                        ? entity.getCustomName().getString()
-                        : entity.getName().getString();
-                ForagingPolicy.HuntGlow glow = ForagingPolicy.huntGlow(
-                        island, name, entity.getType().toString());
-                if (glow == ForagingPolicy.HuntGlow.CINDERBAT) {
-                    continue;
-                }
-                int color = ForagingPolicy.huntGlowColor(glow);
-                if (color != 0) {
-                    boxEntity(entity, color);
-                }
-            }
-        }
     }
 
-    private static void renderCinderbats(Minecraft client, QolSkyblockExtras extras) {
-        if (!toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.cinderbat", true)
-                || client.player == null
-                || client.level == null) {
-            return;
+    private static void clearScans() {
+        blockBoxes = List.of();
+        entityBoxes = List.of();
+        templePending = 0;
+        templeOrder = List.of();
+        worldScanTicks = 0;
+    }
+
+    private static void scanWorld(Minecraft client, QolSkyblockExtras extras) {
+        if (worldScanTicks % 4 == 0) {
+            entityBoxes = scanEntityBoxes(client, extras);
         }
-        AABB search = client.player.getBoundingBox().inflate(48.0D);
-        int color = ForagingPolicy.huntGlowColor(ForagingPolicy.HuntGlow.CINDERBAT);
-        for (Entity entity : client.level.getEntities(client.player, search)) {
+        if (island == ForagingPolicy.Island.NONE) {
+            blockBoxes = List.of();
+            templePending = 0;
+            templeOrder = List.of();
+        } else if (worldScanTicks % 10 == 0) {
+            scanBlocks(client, extras);
+        }
+        worldScanTicks++;
+    }
+
+    private static List<EntityBox> scanEntityBoxes(Minecraft client, QolSkyblockExtras extras) {
+        boolean cinderbats = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.cinderbat", true);
+        boolean hunting = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.highlights", true)
+                && toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.hunting_esp", true)
+                && ForagingPolicy.customTrees(island);
+        if (!cinderbats && !hunting) {
+            return List.of();
+        }
+        LocalPlayer player = client.player;
+        AABB search = player.getBoundingBox().inflate(48.0D);
+        int cinderColor = ForagingPolicy.huntGlowColor(ForagingPolicy.HuntGlow.CINDERBAT);
+        List<EntityBox> found = new ArrayList<>();
+        for (Entity entity : client.level.getEntities(player, search)) {
             String name = entity.getCustomName() != null
                     ? entity.getCustomName().getString()
                     : entity.getName().getString();
-            if (ForagingPolicy.cinderbatName(name)) {
-                boxEntity(entity, color);
+            if (cinderbats && ForagingPolicy.cinderbatName(name)) {
+                found.add(new EntityBox(entity, cinderColor));
+            }
+            if (hunting) {
+                ForagingPolicy.HuntGlow glow = ForagingPolicy.huntGlow(
+                        island, name, entity.getType().toString());
+                int color = glow == ForagingPolicy.HuntGlow.CINDERBAT
+                        ? 0
+                        : ForagingPolicy.huntGlowColor(glow);
+                if (color != 0) {
+                    found.add(new EntityBox(entity, color));
+                }
+            }
+        }
+        return found;
+    }
+
+    private static void scanBlocks(Minecraft client, QolSkyblockExtras extras) {
+        boolean highlight = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.highlights", true);
+        boolean temple = toggle(extras, "qol.foraging_helpers", "qol.foraging_helpers.temple_solver", true);
+        List<BlockBox> found = new ArrayList<>();
+        templePending = 0;
+        templeOrder = List.of();
+        if (highlight) {
+            scanResourceBlocks(client, seaLumiesMin(extras), found);
+        }
+        if (temple && island == ForagingPolicy.Island.GALATEA) {
+            scanForestTemple(client, found);
+        }
+        if (temple && island == ForagingPolicy.Island.TORRHUS) {
+            scanDesertTempleOrder(client);
+        }
+        blockBoxes = found;
+    }
+
+    private static void scanResourceBlocks(Minecraft client, int seaLumiesMin, List<BlockBox> found) {
+        BlockPos origin = client.player.blockPosition();
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos above = new BlockPos.MutableBlockPos();
+        int radius = 24;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -8; dy <= 8; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    pos.set(origin.getX() + dx, origin.getY() + dy, origin.getZ() + dz);
+                    BlockState state = client.level.getBlockState(pos);
+                    if (state.isAir()) {
+                        continue;
+                    }
+                    String id = blockId(state);
+                    if (ForagingPolicy.highlightLushlilac(island, id)) {
+                        found.add(new BlockBox(pos.immutable(), 0xFF55FF55));
+                    }
+                    if (ForagingPolicy.highlightVeilshroom(island, id)) {
+                        found.add(new BlockBox(pos.immutable(), 0xFFFF5555));
+                    }
+                    if (id.contains("sea_pickle")
+                            && ForagingPolicy.highlightSeaLumies(island, id, pickleCount(state), seaLumiesMin)) {
+                        found.add(new BlockBox(pos.immutable(), 0xFF55FFFF));
+                    }
+                    if (id.contains("bee_nest")) {
+                        above.set(pos).move(Direction.UP);
+                        boolean fence = blockId(client.level.getBlockState(above)).contains("birch_fence");
+                        if (ForagingPolicy.highlightHoneyhive(island, id, honeyLevel(state), fence)) {
+                            found.add(new BlockBox(pos.immutable(), 0xFFFFAA00));
+                        }
+                    }
+                }
             }
         }
     }
@@ -401,14 +464,21 @@ public final class ForagingRuntime {
         if (!audio(extras) || soundId == null) {
             return false;
         }
+        boolean stereo = toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_stereo", false);
+        // This runs for every sound the game plays, so only look for nearby Stereo Pants
+        // when the answer can matter (setting on, on Galatea, and a note block sound).
+        boolean pantsNearby = stereo
+                && island == ForagingPolicy.Island.GALATEA
+                && soundId.toLowerCase(Locale.ROOT).contains("note")
+                && nearbyMusicPants();
         return ForagingPolicy.shouldMuteSound(
                 toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_phantom", true),
                 toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_tree_break", true),
                 toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_break_galatea", true),
                 toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_fusion", true),
-                toggle(extras, "qol.foraging_audio", "qol.foraging_audio.mute_stereo", false),
+                stereo,
                 island,
-                nearbyMusicPants(),
+                pantsNearby,
                 soundId,
                 volume);
     }
@@ -503,7 +573,11 @@ public final class ForagingRuntime {
             for (int dy = -r; dy <= r; dy++) {
                 for (int dz = -r; dz <= r; dz++) {
                     BlockPos pos = look.offset(dx, dy, dz);
-                    String id = blockId(client.level.getBlockState(pos));
+                    BlockState candidate = client.level.getBlockState(pos);
+                    if (candidate.isAir()) {
+                        continue;
+                    }
+                    String id = blockId(candidate);
                     if (ForagingPolicy.isChopLog(island, id)
                             && ForagingPolicy.sameChopFamily(island, lookId, id)) {
                         logs.add(new ForagingPolicy.BlockKey(pos.getX(), pos.getY(), pos.getZ()));
@@ -566,7 +640,7 @@ public final class ForagingRuntime {
         beaconHint = new ForagingPolicy.BeaconHint(colorClicks, speedClicks, pitchClicks);
     }
 
-    private static void renderForestTemple(Minecraft client) {
+    private static void scanForestTemple(Minecraft client, List<BlockBox> found) {
         List<ForagingPolicy.Cardinal> walls = new ArrayList<>();
         for (int x = ForagingPolicy.FOREST_TEMPLE_WALL_X_MAX; x >= ForagingPolicy.FOREST_TEMPLE_WALL_X_MIN; x--) {
             for (int y = ForagingPolicy.FOREST_TEMPLE_WALL_Y_MAX; y >= ForagingPolicy.FOREST_TEMPLE_WALL_Y_MIN; y--) {
@@ -590,23 +664,23 @@ public final class ForagingRuntime {
             int turns = ForagingPolicy.forestTempleTurns(walls.get(i), floorFacing);
             if (turns != 0) {
                 pending++;
-                box(floor, 0xFF5555FF);
+                found.add(new BlockBox(floor, 0xFF5555FF));
             }
         }
         templePending = pending;
     }
 
-    private static void renderDesertTempleOrder(Minecraft client) {
+    private static void scanDesertTempleOrder(Minecraft client) {
         Map<String, Integer> counts = new HashMap<>();
         BlockPos centre = new BlockPos(-612, 42, 227);
         Set<BlockPos> visited = new HashSet<>();
         List<BlockPos> queue = new ArrayList<>();
         queue.add(centre);
         visited.add(centre);
-        for (int i = 0; i < queue.size(); i++) {
+        // The glass floor is small; the cap only guards against a runaway flood fill.
+        for (int i = 0; i < queue.size() && i < 4096; i++) {
             BlockPos current = queue.get(i);
-            BlockState state = client.level.getBlockState(current);
-            String id = blockId(state);
+            String id = blockId(client.level.getBlockState(current));
             if (!id.contains("stained_glass") || id.contains("pane")) {
                 continue;
             }
@@ -614,14 +688,12 @@ public final class ForagingRuntime {
             counts.merge(color.toUpperCase(Locale.ROOT), 1, Integer::sum);
             for (Direction dir : new Direction[] {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}) {
                 BlockPos next = current.relative(dir);
-                if (visited.add(next) && client.level.getBlockState(next).toString().contains("stained_glass")) {
+                if (visited.add(next) && blockId(client.level.getBlockState(next)).contains("stained_glass")) {
                     queue.add(next);
                 }
             }
         }
-        if (!counts.isEmpty()) {
-            templePending = ForagingPolicy.desertTempleButtonOrder(counts).size();
-        }
+        templeOrder = ForagingPolicy.desertTempleButtonOrder(counts);
     }
 
     private static ForagingPolicy.Island detectIsland() {
