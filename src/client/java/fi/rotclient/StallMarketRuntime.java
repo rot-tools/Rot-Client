@@ -62,19 +62,25 @@ public final class StallMarketRuntime {
         if (client.getWindow() == null || client.player == null) {
             return;
         }
-        if (!extras.stallBazaarSearch) {
+        if (extras.stallBazaarSearch) {
+            long window = client.getWindow().handle();
+            boolean down = QolKeybindNames.isBoundDown(window, extras.stallSearchKeybind);
+            if (down && !searchKeyWasDown) {
+                searchHoveredOrHeld(client);
+            }
+            searchKeyWasDown = down;
+        } else {
             searchKeyWasDown = false;
-            return;
         }
-        long window = client.getWindow().handle();
-        boolean down = QolKeybindNames.isBoundDown(window, extras.stallSearchKeybind);
-        if (down && !searchKeyWasDown) {
-            searchHoveredOrHeld(client);
-        }
-        searchKeyWasDown = down;
         if (currentScreen() instanceof AbstractContainerScreen<?> container) {
-            maybeClickPendingSearch(container);
-            syncBinStatus(container);
+            if (extras.stallBazaarSearch) {
+                maybeClickPendingSearch(container);
+            }
+            // The BIN overlay has its own toggle; it used to be synced only while Bazaar
+            // Search was on, so with search off its status went stale after the first open.
+            if (extras.stallBinOverlay) {
+                syncBinStatus(container);
+            }
         }
     }
 
@@ -234,17 +240,40 @@ public final class StallMarketRuntime {
             return 0x6600FF55;
         }
         if (extras.stallAhHighlight && title.toLowerCase(Locale.ROOT).contains("auction")) {
-            double listing = StallMarketPolicy.listingPrice(
-                    InventoryChromeRuntime.loreLines(slot.getItem()));
-            String itemId = SkyBlockItemData.marketId(slot.getItem());
-            double lowest = SkyBlockMarketQuoteService.current().quote(itemId).lowestBin();
-            return switch (StallMarketPolicy.listingHighlight(listing, lowest)) {
-                case UNDER -> 0x6600FF55;
-                case OVER -> 0x66FF3333;
-                case NONE -> null;
-            };
+            int color = auctionHighlightOf(slot.getItem());
+            return color == 0 ? null : color;
         }
         return null;
+    }
+
+    /*
+     * The AH highlight parsed every slot's lore and looked up a price on every frame. This keeps one
+     * result per stack instance for half a second (render-thread only, direct-mapped by identity).
+     */
+    private static final int AH_CACHE_SIZE = 128;
+    private static final long AH_CACHE_MS = 500L;
+    private static final ItemStack[] AH_CACHE_KEY = new ItemStack[AH_CACHE_SIZE];
+    private static final int[] AH_CACHE_VALUE = new int[AH_CACHE_SIZE];
+    private static final long[] AH_CACHE_UNTIL = new long[AH_CACHE_SIZE];
+
+    private static int auctionHighlightOf(ItemStack stack) {
+        int cell = (System.identityHashCode(stack) & 0x7FFFFFFF) % AH_CACHE_SIZE;
+        long now = System.currentTimeMillis();
+        if (AH_CACHE_KEY[cell] == stack && now < AH_CACHE_UNTIL[cell]) {
+            return AH_CACHE_VALUE[cell];
+        }
+        double listing = StallMarketPolicy.listingPrice(InventoryChromeRuntime.loreLines(stack));
+        String itemId = SkyBlockItemData.marketId(stack);
+        double lowest = SkyBlockMarketQuoteService.current().quote(itemId).lowestBin();
+        int color = switch (StallMarketPolicy.listingHighlight(listing, lowest)) {
+            case UNDER -> 0x6600FF55;
+            case OVER -> 0x66FF3333;
+            case NONE -> 0;
+        };
+        AH_CACHE_KEY[cell] = stack;
+        AH_CACHE_VALUE[cell] = color;
+        AH_CACHE_UNTIL[cell] = now + AH_CACHE_MS;
+        return color;
     }
 
     static List<String> hudLines(QolUtilityConfig qol) {

@@ -137,6 +137,11 @@ public final class ChatCommandsRuntime {
             QUEUE.clear();
             return;
         }
+        // Keep the rolling TPS estimate running so !tps can report a measured value.
+        QolOverlayHud hud = RotClientClient.qolHud();
+        if (hud != null) {
+            hud.sampleMetrics(client);
+        }
         List<Pending> next = new ArrayList<>();
         for (Pending pending : QUEUE) {
             int left = pending.ticksLeft() - 1;
@@ -203,6 +208,16 @@ public final class ChatCommandsRuntime {
         player.connection.sendCommand(action.payload());
     }
 
+    private static String tpsText(Minecraft client) {
+        QolOverlayHud hud = RotClientClient.qolHud();
+        if (hud == null) {
+            return "TPS unavailable";
+        }
+        return hud.sampleMetrics(client).tps()
+                .map(value -> String.format(Locale.ROOT, "TPS: %.1f", value))
+                .orElse("TPS unavailable");
+    }
+
     private static ChatCommandsPolicy.Context context(Minecraft client, LocalPlayer player) {
         int ping = 0;
         if (client.getConnection() != null) {
@@ -226,7 +241,7 @@ public final class ChatCommandsRuntime {
                 player.getBlockZ(),
                 ping,
                 client.getFps(),
-                "20.0",
+                tpsText(client),
                 location,
                 holding,
                 true,

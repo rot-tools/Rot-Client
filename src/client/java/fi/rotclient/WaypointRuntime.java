@@ -183,6 +183,7 @@ public final class WaypointRuntime {
                 ThreadLocalRandom.current().nextInt());
         if (result.status() == WaypointPolicy.AddStatus.ADDED) {
             MARKERS.add(result.marker());
+            WaypointPolicy.trimOldest(MARKERS, WaypointPolicy.MAX_MARKERS);
             if (notify && player != null) {
                 player.sendSystemMessage(Component.literal(
                         "Added waypoint at " + x + ", " + y + ", " + z + "."));

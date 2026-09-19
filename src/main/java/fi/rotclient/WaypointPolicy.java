@@ -15,6 +15,8 @@ public final class WaypointPolicy {
     public static final long CHAT_DURATION_MS = 60_000L;
     public static final long PING_DURATION_MS = 15_000L;
     public static final double PING_DISTANCE = 64.0D;
+    /** Chat pings expire after a minute, but nothing else stopped a flood of them. */
+    public static final int MAX_MARKERS = 32;
     public static final String PING_OFF = "Off";
     public static final String PING_LOOK_TARGET = "Look Target";
 
@@ -185,6 +187,16 @@ public final class WaypointPolicy {
                 nowMs,
                 Math.max(0L, durationMs));
         return new AddResult(AddStatus.ADDED, marker);
+    }
+
+    /** Drops the oldest markers so at most {@code cap} remain. */
+    public static void trimOldest(List<Marker> markers, int cap) {
+        if (markers == null || cap < 0) {
+            return;
+        }
+        while (markers.size() > cap) {
+            markers.remove(0);
+        }
     }
 
     public static int manhattan(int x, int y, int z, int px, int py, int pz) {
