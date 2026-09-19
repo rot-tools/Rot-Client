@@ -1209,7 +1209,15 @@ public final class QolUtilityCatalog {
                         "Controls how quickly the camera eases into and out of zoom.",
                         SettingType.NUMBER,
                         "transition",
-                        "smoothness")));
+                        "smoothness"),
+                setting(
+                        "qol.zoom.scroll",
+                        "Scroll To Zoom",
+                        "While the zoom key is held, the mouse wheel zooms in and out instead of changing your hotbar slot. The level resets when you let go.",
+                        SettingType.TOGGLE,
+                        "scroll",
+                        "mouse wheel",
+                        "hotbar")));
 
         modules.add(module(
                 "qol.render_optimizer",

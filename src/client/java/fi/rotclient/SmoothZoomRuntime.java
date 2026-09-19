@@ -11,6 +11,9 @@ import net.minecraft.client.Minecraft;
 public final class SmoothZoomRuntime {
     private static double progress;
     private static long lastSampleNanos;
+    // Set by the scroll wheel while the key is held; 0 means "use the configured amount".
+    private static double targetAmount;
+    private static double liveAmount;
 
     private SmoothZoomRuntime() {
     }
@@ -41,18 +44,17 @@ public final class SmoothZoomRuntime {
 
         lastSampleNanos = now;
 
-        boolean canZoom =
-                client.level != null
-                        && client.player != null
-                        && client.getWindow() != null
-                        && qol.zoomKeybind != null
-                        && !qol.zoomKeybind.isBlank();
+        boolean held = zoomHeld(client, qol);
+        double configured = SmoothZoomPolicy.clampAmount(qol.zoomAmount);
 
-        boolean held =
-                canZoom
-                        && QolKeybindNames.isBoundDown(
-                                client.getWindow().handle(),
-                                qol.zoomKeybind);
+        if (held) {
+            if (!qol.zoomScroll || targetAmount <= 0.0D) {
+                targetAmount = configured;
+            }
+            if (liveAmount <= 0.0D) {
+                liveAmount = targetAmount;
+            }
+        }
 
         progress =
                 SmoothZoomPolicy.advanceProgress(
@@ -61,14 +63,62 @@ public final class SmoothZoomRuntime {
                         qol.zoomSpeed,
                         deltaSeconds);
 
+        if (!held && progress <= 0.0D) {
+            // Fully zoomed out: the next press starts from the configured amount again.
+            targetAmount = 0.0D;
+            liveAmount = 0.0D;
+        } else if (liveAmount > 0.0D) {
+            liveAmount = SmoothZoomPolicy.advanceAmount(
+                    liveAmount, targetAmount, qol.zoomSpeed, deltaSeconds);
+        }
+
         return SmoothZoomPolicy.applyToFov(
                 vanillaFov,
-                qol.zoomAmount,
+                liveAmount > 0.0D ? liveAmount : configured,
                 progress);
+    }
+
+    /**
+     * Mouse wheel while the zoom key is held. Returns true when the wheel was used for zooming,
+     * so the caller can keep it from also changing the selected hotbar slot.
+     */
+    public static boolean onScroll(double vertical) {
+        Minecraft client = Minecraft.getInstance();
+        QolUtilityConfig qol = RotClientClient.qolConfigPublic();
+        if (client == null
+                || qol == null
+                || !qol.zoomEnabled
+                || !qol.zoomScroll
+                || vertical == 0.0D
+                || !Double.isFinite(vertical)
+                || !zoomHeld(client, qol)) {
+            return false;
+        }
+        double base = targetAmount > 0.0D
+                ? targetAmount
+                : SmoothZoomPolicy.clampAmount(qol.zoomAmount);
+        targetAmount = SmoothZoomPolicy.scrollAmount(base, vertical);
+        return true;
+    }
+
+    private static boolean zoomHeld(Minecraft client, QolUtilityConfig qol) {
+        boolean canZoom =
+                client.level != null
+                        && client.player != null
+                        && client.getWindow() != null
+                        && qol.zoomKeybind != null
+                        && !qol.zoomKeybind.isBlank();
+
+        return canZoom
+                && QolKeybindNames.isBoundDown(
+                        client.getWindow().handle(),
+                        qol.zoomKeybind);
     }
 
     public static void reset() {
         progress = 0.0D;
         lastSampleNanos = 0L;
+        targetAmount = 0.0D;
+        liveAmount = 0.0D;
     }
 }

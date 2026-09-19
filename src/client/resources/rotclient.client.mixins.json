@@ -50,6 +50,7 @@
     "MouseHandlerCursorAccessor",
     "MouseHandlerStorageOverlayMixin",
     "MouseHandlerCustomTooltipMixin",
+    "MouseHandlerZoomMixin",
     "PackSelectionModelMixin",
     "MultiPlayerGameModeMixin",
     "OptionsCloudsMixin",
