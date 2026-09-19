@@ -1655,9 +1655,11 @@ final class QolUtilityDashboard {
                         evidence);
 
         int statusWidth =
-                QolUtilityUiMath.statusBadgeWidth(
+                evidence.showsBanner()
+                        ? QolUtilityUiMath.statusBadgeWidth(
                         font.width(
-                                statusLabel));
+                                statusLabel))
+                        : 0;
 
         int titleMax =
                 Math.max(
@@ -1689,13 +1691,15 @@ final class QolUtilityDashboard {
                         : RotClientTheme.TEXT_MUTED,
                 true);
 
-        RotClientUiDraw.drawStatusPill(
-                graphics,
-                font,
-                x + width - 12,
-                y + 7,
-                statusLabel,
-                statusColor);
+        if (evidence.showsBanner()) {
+            RotClientUiDraw.drawStatusPill(
+                    graphics,
+                    font,
+                    x + width - 12,
+                    y + 7,
+                    statusLabel,
+                    statusColor);
+        }
 
         String hoverTip =
                 null;
@@ -2040,27 +2044,25 @@ final class QolUtilityDashboard {
                 RotClientTheme.TEXT,
                 true);
 
-        String evidenceLabel =
-                module.evidenceStatus()
-                        .label();
+        QolModuleEvidence.Status drawerEvidence =
+                module.evidenceStatus();
 
-        int evidenceColor =
-                evidenceColor(
-                        module.evidenceStatus());
-
-        RotClientUiDraw.text(
-                graphics,
-                font,
-                evidenceLabel,
-                x + 18
-                        + Math.min(
-                        titleMax,
-                        font.width(
-                                drawerTitle))
-                        + 10,
-                y + 11,
-                evidenceColor,
-                false);
+        if (drawerEvidence.showsBanner()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    drawerEvidence.label(),
+                    x + 18
+                            + Math.min(
+                            titleMax,
+                            font.width(
+                                    drawerTitle))
+                            + 10,
+                    y + 11,
+                    evidenceColor(
+                            drawerEvidence),
+                    false);
+        }
 
         boolean cheat =
                 QolFlavorSupport.isPlus()
