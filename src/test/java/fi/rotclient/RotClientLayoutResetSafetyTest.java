@@ -134,7 +134,10 @@ final class RotClientLayoutResetSafetyTest {
         assertTrue(mining.contains("addOverviewTab"));
 
         String appearance = Files.readString(
-                Path.of("src/client/java/fi/rotclient/RotClientAppearanceScreen.java"),
+                Path.of("src/client/java/fi/rotclient/RotClientAppearanceCards.java"),
+                StandardCharsets.UTF_8)
+                + Files.readString(
+                Path.of("src/main/java/fi/rotclient/AppearanceCards.java"),
                 StandardCharsets.UTF_8);
         assertTrue(appearance.contains("Reset UI Positions"));
         assertTrue(appearance.contains("resetLayoutPositionsFromUi"));
