@@ -81,7 +81,7 @@ public final class SlayerRngMeterPolicy {
             return Optional.empty();
         }
         Matcher matcher = CHAT_SELECTION.matcher(line);
-        if (!matcher.find()) {
+        if (!matcher.find() || playerChat(line, matcher.start())) {
             return Optional.empty();
         }
         String item = matcher.group("item");
@@ -94,7 +94,7 @@ public final class SlayerRngMeterPolicy {
             return Optional.empty();
         }
         Matcher matcher = CHAT_SELECTION.matcher(line);
-        if (!matcher.find()) {
+        if (!matcher.find() || playerChat(line, matcher.start())) {
             return Optional.empty();
         }
         return familyFromTitle(matcher.group("family"));
@@ -106,7 +106,7 @@ public final class SlayerRngMeterPolicy {
             return Optional.empty();
         }
         Matcher matcher = CHAT_STORED_XP.matcher(line);
-        if (!matcher.find()) {
+        if (!matcher.find() || playerChat(line, matcher.start())) {
             return Optional.empty();
         }
         try {
@@ -422,13 +422,20 @@ public final class SlayerRngMeterPolicy {
         return Math.round(parsed * multiplier);
     }
 
+    private static final Pattern STRIP_FORMAT = Pattern.compile("(?i)§[0-9A-FK-OR]");
+    private static final Pattern STRIP_WHITESPACE = Pattern.compile("\\s+");
+
+    /** True when the match sits after a "Name:" prefix, i.e. a player typed it. */
+    private static boolean playerChat(String line, int matchStart) {
+        return line.lastIndexOf(':', matchStart) >= 0;
+    }
+
     private static String strip(String raw) {
         if (raw == null) {
             return "";
         }
-        return raw.replaceAll("(?i)§[0-9A-FK-OR]", "")
-                .replace('\u00A0', ' ')
-                .replaceAll("\\s+", " ")
+        return STRIP_WHITESPACE.matcher(STRIP_FORMAT.matcher(raw).replaceAll("")
+                .replace('\u00A0', ' ')).replaceAll(" ")
                 .trim();
     }
 }

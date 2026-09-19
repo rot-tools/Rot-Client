@@ -62,6 +62,8 @@ public final class SlayerMechanicsPolicy {
             String formatted) {
     }
 
+    private static final Pattern SECTION_CODE = Pattern.compile("§[0-9A-FK-ORa-fk-or]");
+
     public static final class CocoonTimer {
         private long expiresAtMillis;
 
@@ -262,6 +264,6 @@ public final class SlayerMechanicsPolicy {
     }
 
     private static String normalizeText(String value) {
-        return value == null ? "" : value.replaceAll("§[0-9A-FK-ORa-fk-or]", "").trim();
+        return value == null ? "" : SECTION_CODE.matcher(value).replaceAll("").trim();
     }
 }
