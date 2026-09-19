@@ -311,7 +311,15 @@ public final class  InventoryChromeRuntime {
             return;
         }
         loadCache();
-        snapshot(screen);
+        // Container contents only change when the server sends an update, but the Equipment and
+        // Pets menus used to be re-parsed slot by slot on every frame. Once per 100 ms per open
+        // screen catches every update without that cost.
+        long snapshotNow = System.currentTimeMillis();
+        if (screen != lastSnapshotScreen || snapshotNow - lastSnapshotMs >= SNAPSHOT_INTERVAL_MS) {
+            lastSnapshotScreen = screen;
+            lastSnapshotMs = snapshotNow;
+            snapshot(screen);
+        }
         SlayerRuntime.observeContainer(screen);
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         hoveredValueTip = null;
@@ -588,6 +596,10 @@ public final class  InventoryChromeRuntime {
             }
         }
     }
+
+    private static final long SNAPSHOT_INTERVAL_MS = 100L;
+    private static AbstractContainerScreen<?> lastSnapshotScreen;
+    private static long lastSnapshotMs;
 
     private static void snapshot(AbstractContainerScreen<?> screen) {
         String title = titleOf(screen);
