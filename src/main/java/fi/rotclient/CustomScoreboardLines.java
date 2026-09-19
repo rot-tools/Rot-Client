@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 import java.util.regex.Matcher;
@@ -62,6 +64,7 @@ final class CustomScoreboardLines {
     private static final Pattern JACOB = Pattern.compile("(?i)(?:§.)*Jacob's Contest.*");
     private static final Pattern AGATHA = Pattern.compile("(?i)(?:§.)*Agatha's Contest.*");
     private static final Pattern MIRIA = Pattern.compile("(?i)(?:§.)*Miria's Contest.*");
+    private static final Pattern DUNGEON_CLASS_TAG = Pattern.compile("\\[[msthb]\\] ");
 
     private CustomScoreboardLines() {
     }
@@ -94,9 +97,34 @@ final class CustomScoreboardLines {
         SKIP
     }
 
+    /** Vanilla never draws more than this many sidebar rows. */
+    static final int MAX_SIDEBAR_LINES = 15;
+
+    /** One raw sidebar entry: its score holder id, score, and formatted text. */
+    record SidebarEntry(String owner, int score, String text) {
+    }
+
+    private static final Comparator<SidebarEntry> VANILLA_SIDEBAR_ORDER =
+            Comparator.comparingInt(SidebarEntry::score)
+                    .reversed()
+                    .thenComparing(SidebarEntry::owner, String.CASE_INSENSITIVE_ORDER);
+
+    /**
+     * Orders raw sidebar entries the way vanilla draws them, top to bottom:
+     * highest score first, ties broken by owner name, at most fifteen rows.
+     * The scoreboard hands entries back in hash-map order, so callers must not
+     * rely on the order they arrive in.
+     */
+    static List<String> orderSidebar(List<SidebarEntry> entries) {
+        return entries.stream()
+                .sorted(VANILLA_SIDEBAR_ORDER)
+                .limit(MAX_SIDEBAR_LINES)
+                .map(SidebarEntry::text)
+                .toList();
+    }
+
     record Hit(Kind kind, CustomScoreboardPolicy.EventKind event, String capture, int extraLines) {
         Hit {
-            event = event;
             capture = capture == null ? "" : capture;
             extraLines = Math.max(0, extraLines);
         }
@@ -194,11 +222,11 @@ final class CustomScoreboardLines {
         if (VISITING.matcher(trimmed).find() || plain.contains("Visiting") || plain.contains("✌")) {
             return Hit.of(Kind.VISITING);
         }
-        if (OBJECTIVE.matcher(trimmed).find()) {
-            return new Hit(Kind.OBJECTIVE, null, "", 3);
-        }
         if (SLAYER.matcher(trimmed).find() || SLAYER.matcher(plain).find()) {
             return new Hit(Kind.SLAYER, null, "", 2);
+        }
+        if (OBJECTIVE.matcher(trimmed).find()) {
+            return new Hit(Kind.OBJECTIVE, null, "", 3);
         }
         if (ARROWS.matcher(plain).find()) {
             return Hit.of(Kind.ARROWS);
@@ -325,8 +353,8 @@ final class CustomScoreboardLines {
         if (lower.startsWith("cleared:")
                 || lower.startsWith("keys:")
                 || lower.contains("no alive dragons")
-                || lower.contains("§3§lsolo")
-                || lower.matches(".*\\[[msthb]\\] .*")
+                || lower.trim().equals("solo")
+                || DUNGEON_CLASS_TAG.matcher(lower).find()
                 || lower.contains("healthy") && lower.contains("dragon")
                 || lower.contains("starting in:")
                 || lower.contains("auto-closing")

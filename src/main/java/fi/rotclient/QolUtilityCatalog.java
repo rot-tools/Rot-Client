@@ -355,7 +355,7 @@ public final class QolUtilityCatalog {
                 setting("qol.custom_scoreboard.date_in_lobby", "Date In Lobby Line", "Prefix the lobby code with today's date.", SettingType.TOGGLE),
                 setting("qol.custom_scoreboard.date_format", "Date Format", "Pattern for the lobby date prefix.", SettingType.ENUM, CustomScoreboardPolicy.dateFormatOptions()),
                 section("qol.custom_scoreboard.section_align", "Alignment"),
-                setting("qol.custom_scoreboard.line_spacing", "Line Spacing", "Extra pixels between rows. 10 is the vanilla-like default.", SettingType.NUMBER),
+                setting("qol.custom_scoreboard.line_spacing", "Line Spacing", "Row height in pixels, 10 to 20. 10 is the vanilla-like default.", SettingType.NUMBER),
                 setting("qol.custom_scoreboard.text_align", "Text Alignment", "Left, center, or right inside the panel.", SettingType.ENUM, CustomScoreboardPolicy.alignOptions()),
                 setting("qol.custom_scoreboard.show_profile_name", "Show Profile Name", "Use the profile name from tab instead of Ironman/Bingo/Stranded.", SettingType.TOGGLE),
                 setting("qol.custom_scoreboard.align_h", "Horizontal Align", "Pin the panel left, center, or right. Don't Align uses the HUD editor position.", SettingType.ENUM, CustomScoreboardPolicy.alignOptions()),
