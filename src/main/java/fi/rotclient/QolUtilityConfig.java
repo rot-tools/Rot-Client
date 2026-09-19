@@ -318,6 +318,7 @@ final class QolUtilityConfig {
     String zoomKeybind = "C";
     float zoomAmount = (float) SmoothZoomPolicy.DEFAULT_AMOUNT;
     float zoomSpeed = (float) SmoothZoomPolicy.DEFAULT_SPEED;
+    boolean zoomScroll = true;
 
     // Movable QoL HUD poses (screen pixels)
     float performanceHudX = 12.0F;
@@ -499,6 +500,7 @@ final class QolUtilityConfig {
             case "qol.render_optimizer.hide_tentacle_head" -> hideTentacleHead;
             case "qol.render_optimizer.hide_fire_overlay" -> hideFireOverlay;
             case "qol.performance_hud.show_fps" -> performanceShowFps;
+            case "qol.zoom.scroll" -> zoomScroll;
             case "qol.performance_hud.show_tps" -> performanceShowTps;
             case "qol.performance_hud.show_ping" -> performanceShowPing;
             case "qol.hide_players.only_dungeons" -> hidePlayersOnlyDungeons;
@@ -621,6 +623,7 @@ final class QolUtilityConfig {
             case "qol.render_optimizer.hide_tentacle_head" -> hideTentacleHead = value;
             case "qol.render_optimizer.hide_fire_overlay" -> hideFireOverlay = value;
             case "qol.performance_hud.show_fps" -> performanceShowFps = value;
+            case "qol.zoom.scroll" -> zoomScroll = value;
             case "qol.performance_hud.show_tps" -> performanceShowTps = value;
             case "qol.performance_hud.show_ping" -> performanceShowPing = value;
             case "qol.hide_players.only_dungeons" -> hidePlayersOnlyDungeons = value;
@@ -1726,6 +1729,7 @@ final class QolUtilityConfig {
                 zoomKeybind = d.zoomKeybind;
                 zoomAmount = d.zoomAmount;
                 zoomSpeed = d.zoomSpeed;
+                zoomScroll = d.zoomScroll;
             }
             case "qol.render_optimizer" -> {
                 renderOptimizerEnabled = d.renderOptimizerEnabled;
