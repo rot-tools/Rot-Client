@@ -31,6 +31,16 @@ public final class MiningAssistRuntime {
     private static final List<MiningAssistPolicy.BlockPos> detectorHits = new ArrayList<>();
     private static BlockPos miningPos;
     private static String miningBlockId = "";
+    // The heatmap was recomputed for every slot on every frame (each time re-reading the whole
+    // board and parsing every slot's lore). It is computed once per screen and refreshed at 4 Hz.
+    private static AbstractContainerScreen<?> fossilScreen;
+    private static long fossilComputedAtMs;
+    private static double[] fossilHeat = new double[0];
+    private static int fossilBest = -1;
+    // The mines centre only changes with the world, so the huge armor-stand search that finds
+    // it is done once and retried slowly, not every tick.
+    private static MiningAssistPolicy.BlockPos detectorCenter;
+    private static int detectorScanCooldown;
 
     private MiningAssistRuntime() {
     }
@@ -42,6 +52,11 @@ public final class MiningAssistRuntime {
         compassWasUsing = false;
         treasureMeters = null;
         detectorHits.clear();
+        detectorCenter = null;
+        detectorScanCooldown = 0;
+        fossilScreen = null;
+        fossilHeat = new double[0];
+        fossilBest = -1;
         miningPos = null;
         miningBlockId = "";
     }
@@ -162,14 +177,17 @@ public final class MiningAssistRuntime {
         if (slotIndex < 0 || slotIndex >= MiningAssistPolicy.FOSSIL_SLOTS) {
             return 0;
         }
-        MiningAssistPolicy.FossilTile[] board = readFossilBoard(screen);
-        String percent = fossilPercent(screen);
-        double[] heat = MiningAssistPolicy.fossilHeatmap(board, percent);
-        int best = MiningAssistPolicy.bestFossilSlot(heat);
-        if (best == slotIndex) {
+        long now = System.currentTimeMillis();
+        if (screen != fossilScreen || now - fossilComputedAtMs >= 250L) {
+            fossilHeat = MiningAssistPolicy.fossilHeatmap(readFossilBoard(screen), fossilPercent(screen));
+            fossilBest = MiningAssistPolicy.bestFossilSlot(fossilHeat);
+            fossilScreen = screen;
+            fossilComputedAtMs = now;
+        }
+        if (fossilBest == slotIndex) {
             return 0xAA22C55E;
         }
-        if (heat[slotIndex] > 0.0D) {
+        if (slotIndex < fossilHeat.length && fossilHeat[slotIndex] > 0.0D) {
             return 0x6622C55E;
         }
         return 0;
@@ -179,25 +197,18 @@ public final class MiningAssistRuntime {
         int previous = detectorHits.size();
         detectorHits.clear();
         LocalPlayer player = client.player;
-        MiningAssistPolicy.BlockPos center = null;
-        AABB search = player.getBoundingBox().inflate(80.0D, 40.0D, 80.0D);
-        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-            Optional<String> keeper = MiningAssistPolicy.parseKeeper(stand.getName().getString());
-            if (keeper.isEmpty()) {
-                continue;
+        if (detectorCenter == null) {
+            if (detectorScanCooldown > 0) {
+                detectorScanCooldown--;
+                return;
             }
-            center = MiningAssistPolicy.minesCenter(
-                    keeper.get(),
-                    stand.blockPosition().getX(),
-                    stand.blockPosition().getY(),
-                    stand.blockPosition().getZ()).orElse(null);
-            if (center != null) {
-                break;
+            detectorCenter = findMinesCenter(client);
+            if (detectorCenter == null) {
+                detectorScanCooldown = 20;
+                return;
             }
         }
-        if (center == null) {
-            return;
-        }
+        MiningAssistPolicy.BlockPos center = detectorCenter;
         List<MiningAssistPolicy.BlockPos> hits = MiningAssistPolicy.filterByDistance(
                 MiningAssistPolicy.knownChests(center),
                 player.getX(),
@@ -208,6 +219,25 @@ public final class MiningAssistRuntime {
             detectorHits.addAll(hits);
         }
         SkyBlockUtilityRuntime.onDetectorHits(previous, detectorHits.size());
+    }
+
+    private static MiningAssistPolicy.BlockPos findMinesCenter(Minecraft client) {
+        AABB search = client.player.getBoundingBox().inflate(80.0D, 40.0D, 80.0D);
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
+            Optional<String> keeper = MiningAssistPolicy.parseKeeper(stand.getName().getString());
+            if (keeper.isEmpty()) {
+                continue;
+            }
+            MiningAssistPolicy.BlockPos center = MiningAssistPolicy.minesCenter(
+                    keeper.get(),
+                    stand.blockPosition().getX(),
+                    stand.blockPosition().getY(),
+                    stand.blockPosition().getZ()).orElse(null);
+            if (center != null) {
+                return center;
+            }
+        }
+        return null;
     }
 
     private static void tickCompass(LocalPlayer player) {
