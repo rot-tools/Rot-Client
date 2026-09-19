@@ -9835,15 +9835,6 @@ if (trackerDropdownOpen) {
         ensureSidebarRevealsVisuals(target);
     }
 
-    void openAppearanceCustomizer() {
-        openAppearanceCustomizer(RotClientAppearanceScreen.Section.OVERVIEW);
-    }
-
-    void openAppearanceCustomizer(RotClientAppearanceScreen.Section section) {
-        Minecraft.getInstance().gui.setScreen(
-                new RotClientAppearanceScreen(this, config, hud, section));
-    }
-
     private void ensureSidebarRevealsVisuals(RotClientSidebarNav.HitTarget target) {
         if (target != RotClientSidebarNav.HitTarget.APPEARANCE
                 && target != RotClientSidebarNav.HitTarget.HUD_LAYOUT) {
@@ -10006,8 +9997,7 @@ if (trackerDropdownOpen) {
                 highlightSettingId = "";
                 highlightUntilMillis = 0L;
                 if ("appearance.reset".equals(entry.id())) {
-                    openAppearanceCustomizer(
-                            RotClientAppearanceScreen.Section.RESET);
+                    qolDashboard.openFromSearchId(AppearanceLandingPolicy.OPEN_RESET);
                 } else {
                     openAppearanceLanding();
                 }

@@ -2586,7 +2586,6 @@ public final class RotClientClient implements ClientModInitializer {
         return screen instanceof MiningUiScreen
                 || screen instanceof RotClientHomeScreen
                 || screen instanceof RotClientScreen
-                || screen instanceof RotClientAppearanceScreen
                 || screen instanceof RotClientColorPickerScreen;
     }
 
