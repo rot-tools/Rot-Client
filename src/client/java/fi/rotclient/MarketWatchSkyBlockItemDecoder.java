@@ -25,9 +25,12 @@ import net.minecraft.world.item.component.ResolvableProfile;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 final class MarketWatchSkyBlockItemDecoder {
@@ -54,6 +57,26 @@ final class MarketWatchSkyBlockItemDecoder {
                     return size() > CACHE_SIZE;
                 }
             };
+
+    /*
+     * representativeAuction() used to linear-scan every auction in the
+     * current snapshot (thousands of listings) on every single call, and
+     * icon() called it unconditionally before even checking CACHE above --
+     * so every visible Market Watch card re-scanned the whole snapshot on
+     * every rendered frame. These two fields cache the scan result per item
+     * name for as long as the underlying auction snapshot object is the
+     * same instance; MarketWatchDataService only publishes a new snapshot
+     * instance when a fresh page actually arrives; a name with no BIN match
+     * this snapshot is remembered too, so unmatched items are not rescanned
+     * every frame either.
+     */
+    private static MarketWatchAuctionSnapshot representativeCacheSnapshot;
+
+    private static final Map<String, MarketWatchAuction> REPRESENTATIVE_CACHE =
+            new HashMap<>();
+
+    private static final Set<String> REPRESENTATIVE_NOT_FOUND =
+            new HashSet<>();
 
     /*
      * Quantity cache used by the Opportunity Scanner.
@@ -315,11 +338,34 @@ final class MarketWatchSkyBlockItemDecoder {
             return null;
         }
 
+        MarketWatchAuctionSnapshot snapshot =
+                state.snapshot();
+
+        if (snapshot != representativeCacheSnapshot) {
+            REPRESENTATIVE_CACHE.clear();
+            REPRESENTATIVE_NOT_FOUND.clear();
+            representativeCacheSnapshot = snapshot;
+        }
+
+        String key =
+                itemName.toLowerCase(Locale.ROOT);
+
+        MarketWatchAuction cached =
+                REPRESENTATIVE_CACHE.get(key);
+
+        if (cached != null) {
+            return cached;
+        }
+
+        if (REPRESENTATIVE_NOT_FOUND.contains(key)) {
+            return null;
+        }
+
         MarketWatchAuction best =
                 null;
 
         for (MarketWatchAuction auction
-                : state.snapshot().auctions()) {
+                : snapshot.auctions()) {
 
             if (auction == null
                     || !auction.bin()
@@ -339,6 +385,12 @@ final class MarketWatchSkyBlockItemDecoder {
                 best =
                         auction;
             }
+        }
+
+        if (best != null) {
+            REPRESENTATIVE_CACHE.put(key, best);
+        } else {
+            REPRESENTATIVE_NOT_FOUND.add(key);
         }
 
         return best;
