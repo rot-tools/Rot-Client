@@ -642,24 +642,6 @@ public final class QolPlusCatalog {
                 setting("qol.loadout_keybinds.next", "Next Page", "Next loadout page.", SettingType.KEYBIND),
                 setting("qol.loadout_keybinds.previous", "Previous Page", "Previous loadout page.", SettingType.KEYBIND)));
 
-        modules.add(module(
-                "qol.slot_binds",
-                "Slot Binds",
-                "Bind a hotbar slot to an inventory slot, draw a connector, and shift-click to swap. Only while the scoreboard says SKYBLOCK.",
-                Group.INTERFACE,
-                "Inventory",
-                false,
-                true,
-                true,
-                List.of("slot", "bind", "inventory line"),
-                setting("qol.slot_binds.bind_set_key", "Bind Set Key", "Press on two slots (one hotbar) to bind, or on a bound slot to remove.", SettingType.KEYBIND),
-                setting("qol.slot_binds.bind_color", "Bind Color", "Connector line color.", SettingType.COLOR),
-                setting("qol.slot_binds.line_width", "Line Width", "Connector width.", SettingType.NUMBER, "0.5"),
-                setting("qol.slot_binds.line_display", "Line Display", "When to show binding lines.", SettingType.ENUM,
-                        List.of("Hover", "Hover + Shift", "None"), "hover"),
-                setting("qol.slot_binds.profile", "Profile", "Independent binding profile.", SettingType.ENUM,
-                        List.of("Profile 1", "Profile 2", "Profile 3"), "profile")));
-
         return List.copyOf(modules);
     }
 
@@ -840,14 +822,6 @@ public final class QolPlusCatalog {
                     setting("qol.stall_market.sell_threshold", "Sell Protection Threshold", "Coin amount above which sells are blocked. Default 1m.", SettingType.NUMBER, "1m"),
                     setting("qol.stall_market.angry_coop", "Angry Co-op Protection", "Block claiming co-op auctions and Claim All on Manage Auctions / Your Bids. Hold Ctrl to override.", SettingType.TOGGLE, "auction"),
                     setting("qol.stall_market.search_keybind", "Search Hovered", "Search the bazaar for the hovered or held item name.", SettingType.KEYBIND)
-            );
-            case "qol.foraging_helpers" -> List.of(
-                    setting("qol.foraging_helpers.huntaxe_lock", "Huntaxe Lock", "Block dropping or salvaging the held hunting axe. Sneak to bypass.", SettingType.TOGGLE, "huntaxe")
-            );
-            case "qol.inventory_overlay" -> List.of(
-                    setting("qol.inventory_overlay.protect_drops", "Protect Drops", "Block dropping starred, Legendary+ items, and names in the extra list. Sneak to bypass.", SettingType.TOGGLE, "item protection"),
-                    setting("qol.inventory_overlay.protect_salvage", "Protect Salvage", "Block clicking protected items in salvage / Hex menus. Sneak to bypass.", SettingType.TOGGLE, "salvage"),
-                    setting("qol.inventory_overlay.protect_list", "Protect Extra Names", "One item name per line. Also always locks starred and Legendary+ when the toggles above are on.", SettingType.TEXT, "protect", "lock")
             );
             case "qol.storage_overlay" -> List.of(
                     setting("qol.storage_overlay.reload_pages", "Reload Storage Pages", "Open every unlocked Ender Chest and Backpack from the server. Later overlay opens only reload pages you clicked; use this to refresh all of them.", SettingType.ACTION, "cache", "reload", "refresh")

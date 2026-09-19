@@ -26,16 +26,11 @@ final class QolUtilityCatalogTest {
         assertEquals(null, QolUtilityCatalog.findById("qol.double_use_fix"));
         assertEquals(null, QolUtilityCatalog.findById("qol.pet_keybinds"));
         assertEquals(null, QolUtilityCatalog.findById("qol.loadout_keybinds"));
-        assertEquals(null, QolUtilityCatalog.findById("qol.slot_binds"));
-        assertSettingAbsent("qol.inventory_overlay", "qol.inventory_overlay.protect_drops");
-        assertSettingAbsent("qol.inventory_overlay", "qol.inventory_overlay.protect_salvage");
-        assertSettingAbsent("qol.inventory_overlay", "qol.inventory_overlay.protect_list");
-        assertSettingAbsent("qol.storage_overlay", "qol.storage_overlay.reload_pages");
         assertSettingAbsent("qol.stall_market", "qol.stall_market.bazaar_search");
         assertSettingAbsent("qol.stall_market", "qol.stall_market.sell_protection");
         assertSettingAbsent("qol.stall_market", "qol.stall_market.angry_coop");
+        assertSettingAbsent("qol.storage_overlay", "qol.storage_overlay.reload_pages");
         assertSettingAbsent("qol.stall_market", "qol.stall_market.search_keybind");
-        assertSettingAbsent("qol.foraging_helpers", "qol.foraging_helpers.huntaxe_lock");
         // Nether Fog Darkening only thickens fog, so it stays in the standard edition.
         assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog");
         assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog_scale");
@@ -82,6 +77,7 @@ final class QolUtilityCatalogTest {
                 "qol.pet_hud",
                 "qol.name_hider",
                 "qol.chat_commands",
+                "qol.slot_binds",
                 "qol.waypoints",
                 "qol.fishing_helper",
                 "qol.fishing_creatures",
@@ -195,7 +191,7 @@ final class QolUtilityCatalogTest {
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.inventory_overlay")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.storage_overlay")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.reward_claim")));
-        assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.slot_binds")));
+        assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.slot_binds")));
         assertTrue(iface.stream().anyMatch(m -> m.id().equals("qol.no_cursor_reset")));
         assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.auto_experiments")));
         assertTrue(iface.stream().noneMatch(m -> m.id().equals("qol.auto_harp")));
@@ -435,7 +431,7 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(92, moduleIds.size());
+        assertEquals(93, moduleIds.size());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {

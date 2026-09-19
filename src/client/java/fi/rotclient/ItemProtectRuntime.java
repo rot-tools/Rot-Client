@@ -18,10 +18,6 @@ public final class ItemProtectRuntime {
     }
 
     public static boolean shouldBlockDrop(ItemStack stack) {
-        // Cancelling the player's drop is Plus-only.
-        if (!QolFlavorSupport.isPlus()) {
-            return false;
-        }
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null || stack == null || stack.isEmpty()) {
             return false;
@@ -48,10 +44,6 @@ public final class ItemProtectRuntime {
             AbstractContainerScreen<?> screen,
             Slot slot,
             ContainerInput input) {
-        // Cancelling the player's clicks is Plus-only.
-        if (!QolFlavorSupport.isPlus()) {
-            return false;
-        }
         if (screen == null || slot == null || slot.getItem().isEmpty()) {
             return false;
         }
@@ -95,7 +87,7 @@ public final class ItemProtectRuntime {
 
     private static boolean huntaxeLocked(
             QolUtilityConfig qol, boolean sneak, ItemStack stack, String name) {
-        if (sneak || qol == null || !QolFlavorSupport.isPlus()) {
+        if (sneak || qol == null) {
             return false;
         }
         QolSkyblockExtras extras = qol.extras();

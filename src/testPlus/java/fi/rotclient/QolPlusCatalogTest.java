@@ -18,13 +18,10 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.double_use_fix"));
         assertNotNull(QolUtilityCatalog.findById("qol.pet_keybinds"));
         assertNotNull(QolUtilityCatalog.findById("qol.loadout_keybinds"));
-        assertNotNull(QolUtilityCatalog.findById("qol.slot_binds"));
-        assertSettingPresent("qol.inventory_overlay", "qol.inventory_overlay.protect_drops");
-        assertSettingPresent("qol.storage_overlay", "qol.storage_overlay.reload_pages");
         assertSettingPresent("qol.stall_market", "qol.stall_market.bazaar_search");
         assertSettingPresent("qol.stall_market", "qol.stall_market.sell_protection");
         assertSettingPresent("qol.stall_market", "qol.stall_market.angry_coop");
-        assertSettingPresent("qol.foraging_helpers", "qol.foraging_helpers.huntaxe_lock");
+        assertSettingPresent("qol.storage_overlay", "qol.storage_overlay.reload_pages");
         assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.hide_fog");
         assertSettingPresent("qol.iota", "qol.iota.fix_fishing_hook");
         assertSettingPresent("qol.mining_helpers", "qol.mining_helpers.break_reset");

@@ -14,8 +14,7 @@ final class QolChatSlotWaypointWiringTest {
                 "src/main/java/fi/rotclient/QolUtilityCatalog.java"),
                 StandardCharsets.UTF_8);
         assertTrue(catalog.contains("\"qol.chat_commands\""));
-        // Slot Binds swaps clicks for the player, so it is Plus-only now.
-        assertTrue(!catalog.contains("\"qol.slot_binds\""));
+        assertTrue(catalog.contains("\"qol.slot_binds\""));
         assertTrue(catalog.contains("\"qol.waypoints\""));
         assertTrue(catalog.contains("Look Target"));
     }

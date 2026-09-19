@@ -680,6 +680,7 @@ public final class QolUtilityCatalog {
                 setting("qol.foraging_helpers.frog_mask", "Frog Mask HUD", "Show a HUD line while wearing a Frog Mask on Galatea.", SettingType.TOGGLE),
                 setting("qol.foraging_helpers.lasso_hud", "Lasso HUD", "Show a HUD line while holding a lasso.", SettingType.TOGGLE),
                 setting("qol.foraging_helpers.cinderbat", "Cinderbat Highlight", "Box Cinderbat nametags. Works with Hunting ESP or on its own.", SettingType.TOGGLE, "cinderbat"),
+                setting("qol.foraging_helpers.huntaxe_lock", "Huntaxe Lock", "Block dropping or salvaging the held hunting axe. Sneak to bypass.", SettingType.TOGGLE, "huntaxe"),
                 setting("qol.foraging_helpers.shard_tracker", "Shard Tracker", "Count hunting shards gained this session on the foraging HUD.", SettingType.TOGGLE, "shard"),
                 setting("qol.foraging_helpers.lasso_alert", "Lasso Alert", "Local sound when a huntable nametag is nearby while holding a lasso.", SettingType.TOGGLE, "lasso"),
                 setting("qol.foraging_helpers.sea_lumies_min", "Sea Lumies Min", "Minimum pickles to highlight.", SettingType.NUMBER, "3"),
@@ -835,7 +836,10 @@ public final class QolUtilityCatalog {
                 setting("qol.inventory_overlay.chrome_header", "Top / Armor", "Tint over the armor column and the strip beside the player. Crafting stays vanilla.", SettingType.COLOR),
                 setting("qol.inventory_overlay.chrome_main", "Main Inventory", "Tint over the 3x9 inventory rows.", SettingType.COLOR),
                 setting("qol.inventory_overlay.chrome_hotbar", "Hotbar", "Tint over the hotbar row.", SettingType.COLOR),
-                setting("qol.inventory_overlay.chrome_border", "Border", "Outline around the inventory.", SettingType.COLOR)));
+                setting("qol.inventory_overlay.chrome_border", "Border", "Outline around the inventory.", SettingType.COLOR),
+                setting("qol.inventory_overlay.protect_drops", "Protect Drops", "Block dropping starred, Legendary+ items, and names in the extra list. Sneak to bypass.", SettingType.TOGGLE, "item protection"),
+                setting("qol.inventory_overlay.protect_salvage", "Protect Salvage", "Block clicking protected items in salvage / Hex menus. Sneak to bypass.", SettingType.TOGGLE, "salvage"),
+                setting("qol.inventory_overlay.protect_list", "Protect Extra Names", "One item name per line. Also always locks starred and Legendary+ when the toggles above are on.", SettingType.TEXT, "protect", "lock")));
 
         modules.add(module(
                 "qol.skill_levels",
@@ -850,6 +854,24 @@ public final class QolUtilityCatalog {
                 setting("qol.skill_levels.background", "Number Background", "Draw a tight dark box behind the level digits so they stay readable.", SettingType.TOGGLE, "background", "box"),
                 setting("qol.skill_levels.level_color", "Level Color", "In-progress skill level color.", SettingType.COLOR),
                 setting("qol.skill_levels.max_color", "Max Level Color", "Color for MAX LEVEL skills.", SettingType.COLOR, "max")));
+
+        modules.add(module(
+                "qol.slot_binds",
+                "Slot Binds",
+                "Bind a hotbar slot to an inventory slot, draw a connector, and shift-click to swap. Only while the scoreboard says SKYBLOCK.",
+                Group.INTERFACE,
+                "Inventory",
+                false,
+                true,
+                true,
+                List.of("slot", "bind", "inventory line"),
+                setting("qol.slot_binds.bind_set_key", "Bind Set Key", "Press on two slots (one hotbar) to bind, or on a bound slot to remove.", SettingType.KEYBIND),
+                setting("qol.slot_binds.bind_color", "Bind Color", "Connector line color.", SettingType.COLOR),
+                setting("qol.slot_binds.line_width", "Line Width", "Connector width.", SettingType.NUMBER, "0.5"),
+                setting("qol.slot_binds.line_display", "Line Display", "When to show binding lines.", SettingType.ENUM,
+                        List.of("Hover", "Hover + Shift", "None"), "hover"),
+                setting("qol.slot_binds.profile", "Profile", "Independent binding profile.", SettingType.ENUM,
+                        List.of("Profile 1", "Profile 2", "Profile 3"), "profile")));
 
         modules.add(module(
                 "qol.waypoints",
