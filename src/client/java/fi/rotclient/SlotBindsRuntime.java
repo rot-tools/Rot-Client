@@ -41,7 +41,8 @@ public final class SlotBindsRuntime {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled
+        if (!QolFlavorSupport.isPlus()
+                || !qol.slotBindsEnabled
                 || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
                 || qol.slotBindSetKey == null
                 || qol.slotBindSetKey.isBlank()) {
@@ -64,7 +65,8 @@ public final class SlotBindsRuntime {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled
+        if (!QolFlavorSupport.isPlus()
+                || !qol.slotBindsEnabled
                 || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
                 || input != ContainerInput.QUICK_MOVE) {
             return false;
@@ -105,7 +107,8 @@ public final class SlotBindsRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.slotBindsEnabled
+        if (!QolFlavorSupport.isPlus()
+                || !qol.slotBindsEnabled
                 || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())) {
             return;
         }

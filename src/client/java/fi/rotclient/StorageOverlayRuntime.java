@@ -664,6 +664,10 @@ public final class StorageOverlayRuntime {
 
     /** Opens Storage if needed and walks every unlocked Ender Chest / Backpack. */
     public static void requestReloadAll() {
+        // Walking every storage page by itself is automation, so it is Plus-only.
+        if (!QolFlavorSupport.isPlus()) {
+            return;
+        }
         userRequestedReload = true;
         prefetchDoneThisOpen = false;
         Minecraft client = Minecraft.getInstance();
@@ -2010,7 +2014,10 @@ public final class StorageOverlayRuntime {
     }
 
     private static void maybeStartPrefetch(boolean overview) {
-        if (!overview) {
+        // The overview used to open every uncached Ender Chest and Backpack on its own. That is
+        // automation, so the standard edition only shows pages the player opens.
+        if (!overview || !QolFlavorSupport.isPlus()) {
+            userRequestedReload = false;
             return;
         }
         boolean idle = PREFETCH.isEmpty() && !prefetchActive;
