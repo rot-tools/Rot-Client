@@ -21,6 +21,11 @@ import java.util.List;
 public final class CustomResourcePackRuntime {
     private static boolean registered;
     private static boolean reloading;
+    // If a pack fails to load, Minecraft drops the selection, the next tick sees a mismatch and
+    // would reload again forever. Give up on an unchanged target after a few tries.
+    private static final int MAX_ATTEMPTS_PER_TARGET = 3;
+    private static List<String> lastTarget = List.of();
+    private static int attemptsForTarget;
 
     private CustomResourcePackRuntime() {
     }
@@ -90,7 +95,17 @@ public final class CustomResourcePackRuntime {
                         extras.customResourcePackGameplayFont));
         Collection<String> selected = repository.getSelectedIds();
         if (CustomResourcePackPolicy.selectionMatches(selected, desired)) {
+            attemptsForTarget = 0;
             return;
+        }
+        if (desired.equals(lastTarget)) {
+            if (attemptsForTarget >= MAX_ATTEMPTS_PER_TARGET) {
+                return;
+            }
+            attemptsForTarget++;
+        } else {
+            lastTarget = List.copyOf(desired);
+            attemptsForTarget = 1;
         }
         apply(client, repository, desired);
     }

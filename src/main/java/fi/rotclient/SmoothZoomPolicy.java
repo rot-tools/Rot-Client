@@ -16,6 +16,15 @@ public final class SmoothZoomPolicy {
     private SmoothZoomPolicy() {
     }
 
+    /**
+     * Zoom only applies while playing. It is a held key that is polled directly,
+     * so with a screen open (chat, inventory) typing the bound letter would
+     * otherwise zoom the camera behind the screen.
+     */
+    public static boolean canZoom(boolean inWorld, boolean screenOpen, boolean keyBound) {
+        return inWorld && !screenOpen && keyBound;
+    }
+
     public static double clampAmount(double value) {
         return clamp(
                 value,
