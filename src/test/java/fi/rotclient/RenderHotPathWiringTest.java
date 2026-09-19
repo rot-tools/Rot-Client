@@ -55,6 +55,22 @@ final class RenderHotPathWiringTest {
     }
 
     @Test
+    void dungeonEspSharesOneThrottledEntitySnapshot() throws Exception {
+        String runtime = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/DungeonRuntime.java"),
+                StandardCharsets.UTF_8);
+        // The 128-block passes over every living entity and dropped item are not repeated per frame.
+        assertFalse(runtime.contains("getEntitiesOfClass(LivingEntity.class, search)"));
+        assertFalse(runtime.contains("getEntitiesOfClass(ItemEntity.class, search)"));
+        assertTrue(runtime.contains("DungeonEntitySnapshot.living("));
+        assertTrue(runtime.contains("DungeonEntitySnapshot.items("));
+        String snapshot = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/DungeonEntitySnapshot.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(snapshot.contains("DungeonPolicy.scanDue"));
+    }
+
+    @Test
     void overlaysClassifyOnTickAndLerpOnRender() throws Exception {
         String slayer = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/SlayerRuntime.java"),
