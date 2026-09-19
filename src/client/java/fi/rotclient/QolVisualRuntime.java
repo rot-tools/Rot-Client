@@ -556,6 +556,9 @@ public final class QolVisualRuntime {
     }
 
     private static boolean shouldHidePlayer(Player player, QolUtilityConfig qol) {
+        if (HidePlayersPolicy.isNpcUuid(player.getUUID())) {
+            return false;
+        }
         Minecraft client = Minecraft.getInstance();
         LocalPlayer local = client == null ? null : client.player;
         boolean isLocal = local != null && player.getId() == local.getId();
