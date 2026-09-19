@@ -16,7 +16,6 @@ public final class QolModuleKeybindCatalog {
             CustomScoreboardPolicy.MODULE_ID,
             "qol.no_cursor_reset",
             "qol.player_display",
-            "qol.pet_keybinds",
             "qol.performance_hud",
             "qol.render_optimizer",
             "qol.hide_players",
@@ -25,7 +24,9 @@ public final class QolModuleKeybindCatalog {
 
     /** Parents whose toggle key is read by their own runtime. */
     public static final List<String> HANDLED_ELSEWHERE = List.of(
-            "qol.chat_commands");
+            "qol.chat_commands",
+            // Plus-only module; its toggle is read by PlusModuleKeybindRuntime.
+            "qol.pet_keybinds");
 
     private QolModuleKeybindCatalog() {
     }

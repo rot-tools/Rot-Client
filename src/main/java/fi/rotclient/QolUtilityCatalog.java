@@ -431,19 +431,6 @@ public final class QolUtilityCatalog {
                 setting("qol.command_keybinds.potion_bag", "Potion Bag", "Opens the potion bag when you press this key.", SettingType.KEYBIND, "potion")));
 
         modules.add(module(
-                "qol.loadout_keybinds",
-                "Loadout Keybinds",
-                "Page and 1-9 / 0 / - / = slot binds while the Hypixel Loadout GUI is open.",
-                Group.UTILITIES,
-                "Keybinds",
-                false,
-                true,
-                true,
-                List.of("loadout", "loadouts"),
-                setting("qol.loadout_keybinds.next", "Next Page", "Next loadout page.", SettingType.KEYBIND),
-                setting("qol.loadout_keybinds.previous", "Previous Page", "Previous loadout page.", SettingType.KEYBIND)));
-
-        modules.add(module(
                 "qol.chat_commands",
                 "Chat Commands",
                 "Party, guild, and private !command helpers plus outgoing emote tokens. Serveri convenience only.",
@@ -525,23 +512,6 @@ public final class QolUtilityCatalog {
                 setting("qol.player_display.speed_color", "Speed Color", "Speed HUD color.", SettingType.COLOR),
                 setting("qol.player_display.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND),
                 setting("qol.player_display.open_hud_editor", "Open HUD Elements Editor", "Move each Player Display element.", SettingType.ACTION, "position")));
-
-        modules.add(module(
-                "qol.pet_keybinds",
-                "Pet Keybinds",
-                "Page, unequip, and 1-9 pet binds while the Hypixel Pets GUI is open.",
-                Group.UTILITIES,
-                "Keybinds",
-                false,
-                true,
-                true,
-                List.of("pet", "pets"),
-                setting("qol.pet_keybinds.unequip", "Unequip", "Unequip active pet.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.next", "Next Page", "Next pets page.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.previous", "Previous Page", "Previous pets page.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.disable_unequip", "Disable Unequip", "Prevent accidental pet unequip.", SettingType.TOGGLE),
-                setting("qol.pet_keybinds.close_if_equipped", "Close If Already Equipped", "Close pets UI if already equipped.", SettingType.TOGGLE),
-                setting("qol.pet_keybinds.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
 
 
@@ -710,7 +680,6 @@ public final class QolUtilityCatalog {
                 setting("qol.foraging_helpers.frog_mask", "Frog Mask HUD", "Show a HUD line while wearing a Frog Mask on Galatea.", SettingType.TOGGLE),
                 setting("qol.foraging_helpers.lasso_hud", "Lasso HUD", "Show a HUD line while holding a lasso.", SettingType.TOGGLE),
                 setting("qol.foraging_helpers.cinderbat", "Cinderbat Highlight", "Box Cinderbat nametags. Works with Hunting ESP or on its own.", SettingType.TOGGLE, "cinderbat"),
-                setting("qol.foraging_helpers.huntaxe_lock", "Huntaxe Lock", "Block dropping or salvaging the held hunting axe. Sneak to bypass.", SettingType.TOGGLE, "huntaxe"),
                 setting("qol.foraging_helpers.shard_tracker", "Shard Tracker", "Count hunting shards gained this session on the foraging HUD.", SettingType.TOGGLE, "shard"),
                 setting("qol.foraging_helpers.lasso_alert", "Lasso Alert", "Local sound when a huntable nametag is nearby while holding a lasso.", SettingType.TOGGLE, "lasso"),
                 setting("qol.foraging_helpers.sea_lumies_min", "Sea Lumies Min", "Minimum pickles to highlight.", SettingType.NUMBER, "3"),
@@ -2353,17 +2322,6 @@ public final class QolUtilityCatalog {
                 List.of("disconnect", "tarantula", "packet")));
 
         modules.add(module(
-                "qol.double_use_fix",
-                "Double Use Fix",
-                "Stops blaze daggers and fishing rods from activating twice on one click.",
-                Group.UTILITIES,
-                "Fixes",
-                false,
-                true,
-                true,
-                List.of("dagger", "fishing rod", "double use")));
-
-        modules.add(module(
                 "qol.active_pet_highlight",
                 "Active Pet Highlight",
                 "Highlight the spawned pet in the Pets menu with a thin outline so the pet icon stays visible.",
@@ -2588,20 +2546,15 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.stall_market",
                 "Market Guard",
-                "Bazaar search, sell protection, angry co-op AH guard, and BIN overlay/highlights. Local GUI only.",
+                "BIN overlay and auction listing highlights. Local GUI only.",
                 Group.UTILITIES,
                 "Market",
                 false,
                 true,
                 true,
                 List.of("bazaar", "auction house", "bin", "sell protection"),
-                setting("qol.stall_market.bazaar_search", "Bazaar Search", "Click the Search slot and fill the sign. /rot bazaarsearch also works.", SettingType.TOGGLE, "bazaar"),
-                setting("qol.stall_market.sell_protection", "Sell Protection", "Block high-value Sell Instantly / Sell Sacks / Sell Inventory clicks. Hold Ctrl to override.", SettingType.TOGGLE),
-                setting("qol.stall_market.sell_threshold", "Sell Protection Threshold", "Coin amount above which sells are blocked. Default 1m.", SettingType.NUMBER, "1m"),
-                setting("qol.stall_market.angry_coop", "Angry Co-op Protection", "Block claiming co-op auctions and Claim All on Manage Auctions / Your Bids. Hold Ctrl to override.", SettingType.TOGGLE, "auction"),
                 setting("qol.stall_market.bin_overlay", "BIN Overlay", "Highlight Buy/Confirm slots and show BIN status on BIN Auction View / Confirm Purchase.", SettingType.TOGGLE, "bin"),
-                setting("qol.stall_market.ah_highlight", "Auction Highlights", "Tint AH listings cheaper or more expensive than the latest lowest BIN.", SettingType.TOGGLE, "auction house"),
-                setting("qol.stall_market.search_keybind", "Search Hovered", "Search the bazaar for the hovered or held item name.", SettingType.KEYBIND)));
+                setting("qol.stall_market.ah_highlight", "Auction Highlights", "Tint AH listings cheaper or more expensive than the latest lowest BIN.", SettingType.TOGGLE, "auction house")));
 
         modules.add(module(
                 "qol.click_gui",

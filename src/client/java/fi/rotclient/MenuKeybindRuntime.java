@@ -42,6 +42,11 @@ public final class MenuKeybindRuntime {
         if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, code)) {
             return true;
         }
+        if (!QolFlavorSupport.isPlus()) {
+            // Pet and loadout keybinds click menu slots for the player, which Hypixel's rules
+            // do not allow, so they only run in the Plus edition.
+            return false;
+        }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         String title = titleOf(screen);
         OptionalInt slot = OptionalInt.empty();

@@ -102,10 +102,6 @@ final class RotClientSettingsIndexTest {
                 QolUtilityCatalog.findById(
                         RotClientSettingsIndex.search("cursor").get(0).id()).id());
         assertEquals(
-                "qol.pet_keybinds",
-                QolUtilityCatalog.findById(
-                        RotClientSettingsIndex.search("pet keybinds").get(0).id()).id());
-        assertEquals(
                 "qol.performance_hud",
                 QolUtilityCatalog.findById(
                         RotClientSettingsIndex.search("show fps").get(0).id()).id());

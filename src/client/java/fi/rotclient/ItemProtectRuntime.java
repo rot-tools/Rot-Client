@@ -87,7 +87,7 @@ public final class ItemProtectRuntime {
 
     private static boolean huntaxeLocked(
             QolUtilityConfig qol, boolean sneak, ItemStack stack, String name) {
-        if (sneak || qol == null) {
+        if (sneak || qol == null || !QolFlavorSupport.isPlus()) {
             return false;
         }
         QolSkyblockExtras extras = qol.extras();

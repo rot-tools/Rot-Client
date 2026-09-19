@@ -62,7 +62,8 @@ public final class StallMarketRuntime {
         if (client.getWindow() == null || client.player == null) {
             return;
         }
-        if (extras.stallBazaarSearch) {
+        boolean plus = QolFlavorSupport.isPlus();
+        if (plus && extras.stallBazaarSearch) {
             long window = client.getWindow().handle();
             boolean down = QolKeybindNames.isBoundDown(window, extras.stallSearchKeybind);
             if (down && !searchKeyWasDown) {
@@ -73,7 +74,7 @@ public final class StallMarketRuntime {
             searchKeyWasDown = false;
         }
         if (currentScreen() instanceof AbstractContainerScreen<?> container) {
-            if (extras.stallBazaarSearch) {
+            if (plus && extras.stallBazaarSearch) {
                 maybeClickPendingSearch(container);
             }
             // The BIN overlay has its own toggle; it used to be synced only while Bazaar
@@ -98,6 +99,7 @@ public final class StallMarketRuntime {
     public static boolean fillPendingBazaarSign(SignBlockEntity sign, boolean front) {
         QolSkyblockExtras extras = extras();
         if (!extras.stallMarketEnabled
+                || !QolFlavorSupport.isPlus()
                 || !extras.stallBazaarSearch
                 || pendingBazaarSearch == null
                 || pendingBazaarSearch.isBlank()
@@ -135,7 +137,7 @@ public final class StallMarketRuntime {
 
     public static void search(String rawName) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallMarketEnabled || !extras.stallBazaarSearch) {
+        if (!extras.stallMarketEnabled || !QolFlavorSupport.isPlus() || !extras.stallBazaarSearch) {
             return;
         }
         String cleaned = StallMarketPolicy.cleanItemNameForSearch(rawName);
@@ -167,7 +169,9 @@ public final class StallMarketRuntime {
         String name = stack.getHoverName().getString();
         List<String> lore = InventoryChromeRuntime.loreLines(stack);
         boolean override = ctrl || ctrlHeld();
-        if (extras.stallSellProtection) {
+        // Cancelling the player's clicks is Plus-only; the standard edition never blocks a click.
+        boolean plus = QolFlavorSupport.isPlus();
+        if (plus && extras.stallSellProtection) {
             StallMarketPolicy.SellBlock sell = StallMarketPolicy.sellProtection(
                     true,
                     true,
@@ -182,7 +186,7 @@ public final class StallMarketRuntime {
                 return true;
             }
         }
-        if (extras.stallAngryCoop) {
+        if (plus && extras.stallAngryCoop) {
             Optional<StallMarketPolicy.CoopScreen> mode =
                     StallMarketPolicy.coopScreen(title(screen));
             if (mode.isPresent()) {
@@ -210,7 +214,10 @@ public final class StallMarketRuntime {
 
     public static void appendTooltip(ItemStack stack, List<Component> lines) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallMarketEnabled || !extras.stallSellProtection || stack == null) {
+        if (!extras.stallMarketEnabled
+                || !QolFlavorSupport.isPlus()
+                || !extras.stallSellProtection
+                || stack == null) {
             return;
         }
         if (!(currentScreen() instanceof AbstractContainerScreen<?> screen)) {
@@ -366,7 +373,8 @@ public final class StallMarketRuntime {
 
     private static void maybeClickPendingSearch(AbstractContainerScreen<?> container) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallBazaarSearch
+        if (!QolFlavorSupport.isPlus()
+                || !extras.stallBazaarSearch
                 || pendingBazaarSearch == null
                 || pendingSearchClicked
                 || !StallMarketPolicy.isBazaar(title(container), containerSize(container))) {
