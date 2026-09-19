@@ -8,6 +8,7 @@ record MarketWatchPinnedDeal(
         String itemId,
         String itemName,
         String category,
+        String sellerUuid,
         double buyPricePerUnit,
         double sellPricePerUnit,
         long quantity,
@@ -22,6 +23,11 @@ record MarketWatchPinnedDeal(
                 id == null
                         ? ""
                         : id;
+
+        sellerUuid =
+                sellerUuid == null
+                        ? ""
+                        : sellerUuid;
 
         market =
                 market == null
@@ -92,6 +98,7 @@ record MarketWatchPinnedDeal(
                 opportunity.itemId(),
                 opportunity.itemName(),
                 opportunity.category(),
+                opportunity.sellerUuid(),
                 opportunity.buyPricePerUnit(),
                 opportunity.sellPricePerUnit(),
                 opportunity.quantity(),
@@ -216,6 +223,24 @@ record MarketWatchPinnedDeal(
         }
 
         return result.toString();
+    }
+
+    /*
+     * Bazaar trades have no individual seller; only Auction House deals
+     * carry a seller UUID.
+     */
+    String sellerName() {
+
+        if (market
+                != MarketWatchOpportunity.Market.AUCTION_HOUSE
+                || sellerUuid.isBlank()) {
+
+            return "";
+        }
+
+        return MarketWatchSellerNameService
+                .displayName(
+                        sellerUuid);
     }
 
     double capitalCoins() {
