@@ -27,6 +27,7 @@
     "GuiGraphicsExtractorCustomTooltipMixin",
     "GuiGraphicsExtractorNameHiderMixin",
     "GuiNoCursorResetMixin",
+    "NetherFogDarkeningMixin",
     "GuiRewardClaimMixin",
     "HudActionBarFilterMixin",
     "HudItemRarityMixin",

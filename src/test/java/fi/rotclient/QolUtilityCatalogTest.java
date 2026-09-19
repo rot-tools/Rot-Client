@@ -21,6 +21,9 @@ final class QolUtilityCatalogTest {
         assertEquals(null, QolUtilityCatalog.findById("qol.instant_sneak"));
         assertEquals(null, QolUtilityCatalog.findById("qol.item_count_fix"));
         assertSettingAbsent("qol.render_optimizer", "qol.render_optimizer.hide_fog");
+        // Nether Fog Darkening only thickens fog, so it stays in the standard edition.
+        assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog");
+        assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog_scale");
         assertSettingAbsent("qol.iota", "qol.iota.fix_fishing_hook");
         assertSettingAbsent("qol.mining_helpers", "qol.mining_helpers.break_reset");
         assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.hate_doors");
@@ -422,6 +425,12 @@ final class QolUtilityCatalogTest {
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
         assertEquals(96, moduleIds.size());
+    }
+
+    private static void assertSettingPresent(String moduleId, String settingId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        assertNotNull(module, moduleId);
+        assertTrue(module.settings().stream().anyMatch(setting -> settingId.equals(setting.id())), settingId);
     }
 
     private static void assertSettingAbsent(String moduleId, String settingId) {

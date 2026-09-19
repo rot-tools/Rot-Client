@@ -70,6 +70,19 @@ final class QolChatSlotWaypointWiringTest {
         assertTrue(!json.contains("ItemStackCountFixMixin"));
         assertTrue(!json.contains("FishingHookIotaMixin"));
         assertTrue(plusMixins.contains("FogRendererMixin"));
+        // Nether Fog Darkening only thickens fog, so its mixin ships in the standard edition
+        // while the fog-removing mixin above stays Plus-only.
+        assertTrue(json.contains("NetherFogDarkeningMixin"));
+        assertTrue(!plusMixins.contains("NetherFogDarkeningMixin"));
+        String netherFog = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/NetherFogDarkeningMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(netherFog.contains("factor < 1.0F"));
+        assertTrue(!netherFog.contains("shouldHideFog"));
+        String plusFog = Files.readString(Path.of(
+                "src/plusClient/java/fi/rotclient/mixin/FogRendererMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(!plusFog.contains("netherFogFactor"));
         assertTrue(plusMixins.contains("CameraEyeHeightMixin"));
         assertTrue(plusMixins.contains("ItemStackCountFixMixin"));
         assertTrue(plusMixins.contains("FishingHookIotaMixin"));

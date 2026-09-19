@@ -1256,6 +1256,8 @@ public final class QolUtilityCatalog {
                 setting("qol.render_optimizer.hide_stuck_arrows", "Hide Stuck Arrows", "Hide arrows stuck in entities.", SettingType.TOGGLE, "arrow"),
                 setting("qol.render_optimizer.hide_island_clouds", "Hide Island Clouds", "Hide clouds in Dwarven Mines, all mining islands, or always.", SettingType.ENUM,
                         List.of("Off", "Dwarven", "Mining", "Always"), "clouds"),
+                setting("qol.render_optimizer.nether_fog", "Nether Fog Darkening", "Keep Crimson Isle fog dark while Night Vision is active.", SettingType.TOGGLE, "crimson"),
+                setting("qol.render_optimizer.nether_fog_scale", "Nether Fog Scale", "How strong Crimson Isle fog stays with Night Vision. Lower is thicker.", SettingType.NUMBER),
                 setting("qol.render_optimizer.totem_animation", "Totem Animation", "Play the totem burst when Bonzo/Spirit/Phoenix/Eye absorb chat fires.", SettingType.TOGGLE, "bonzo", "phoenix"),
                 setting("qol.render_optimizer.mob_icons", "Mob Icon Labels", "Replace Hypixel nametag icon glyphs with readable labels such as [Undead].", SettingType.TOGGLE, "bestiary"),
                 setting("qol.render_optimizer.armor_self", "Armor Self %", "Local worn-armor visibility for you. 0 hides armor. 1-99 still show it in this build.", SettingType.NUMBER, "transparent"),

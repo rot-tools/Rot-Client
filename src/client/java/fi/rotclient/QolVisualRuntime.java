@@ -298,7 +298,11 @@ public final class QolVisualRuntime {
     public static float netherFogFactor() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         Minecraft client = Minecraft.getInstance();
-        if (!qol.renderOptimizerEnabled || client == null || client.player == null) {
+        if (!qol.renderOptimizerEnabled
+                || !qol.extras().netherFog
+                || client == null
+                || client.player == null
+                || !client.player.hasEffect(MobEffects.NIGHT_VISION)) {
             return 1.0F;
         }
         String area = SkyBlockAreaDetector.detect().displayName()

@@ -11,10 +11,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Nether Fog Darkening only ever makes fog thicker: the factor is applied only
+ * when it is below 1, so it can never extend how far you can see. Removing fog
+ * is a separate, Plus-only feature (FogRendererMixin in the Plus mixin config).
+ */
 @Mixin(FogRenderer.class)
-abstract class FogRendererMixin {
+abstract class NetherFogDarkeningMixin {
     @Inject(method = "setupFog", at = @At("RETURN"))
-    private void rotclient$hideFog(
+    private void rotclient$netherFogDarkening(
             Camera camera,
             int renderDistanceInChunks,
             DeltaTracker deltaTracker,
@@ -25,12 +30,10 @@ abstract class FogRendererMixin {
         if (data == null) {
             return;
         }
-        if (QolVisualRuntime.shouldHideFog()) {
-            data.renderDistanceStart = Float.MAX_VALUE;
-            data.renderDistanceEnd = Float.MAX_VALUE;
-            data.environmentalStart = Float.MAX_VALUE;
-            data.environmentalEnd = Float.MAX_VALUE;
+        float factor = QolVisualRuntime.netherFogFactor();
+        if (factor < 1.0F) {
+            data.environmentalStart *= factor;
+            data.environmentalEnd *= factor;
         }
-        // Nether Fog Darkening is applied by NetherFogDarkeningMixin in the standard edition.
     }
 }

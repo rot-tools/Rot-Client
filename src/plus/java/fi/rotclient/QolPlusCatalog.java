@@ -610,10 +610,7 @@ public final class QolPlusCatalog {
         }
         return switch (moduleId) {
             case "qol.render_optimizer" -> List.of(
-                    setting("qol.render_optimizer.hide_fog", "Hide Fog", "Push environmental fog out of view.", SettingType.TOGGLE, "fog"),
-                    // Both fog rows are applied by the Plus-only FogRendererMixin, so they live here.
-                    setting("qol.render_optimizer.nether_fog", "Nether Fog Darkening", "Keep Crimson Isle fog dark while Night Vision is active.", SettingType.TOGGLE, "crimson"),
-                    setting("qol.render_optimizer.nether_fog_scale", "Nether Fog Scale", "How strong Crimson Isle fog stays with Night Vision. Lower is thicker.", SettingType.NUMBER)
+                    setting("qol.render_optimizer.hide_fog", "Hide Fog", "Push environmental fog out of view.", SettingType.TOGGLE, "fog")
             );
             case "qol.fishing_hotspots" -> List.of(
                     setting("qol.fishing_hotspots.radar", "Radar Solver", "Guess hotspot direction from still flame particles while holding a radar.", SettingType.TOGGLE),
