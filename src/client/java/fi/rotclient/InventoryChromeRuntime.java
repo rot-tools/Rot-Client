@@ -823,6 +823,34 @@ public final class  InventoryChromeRuntime {
         }
     }
 
+    /*
+     * The Skills menu used to re-parse every slot's lore on every frame. This keeps one result
+     * per stack instance for half a second (render-thread only, direct-mapped by identity).
+     */
+    private static final int SKILL_CACHE_SIZE = 128;
+    private static final long SKILL_CACHE_MS = 500L;
+    private static final ItemStack[] SKILL_CACHE_KEY = new ItemStack[SKILL_CACHE_SIZE];
+    @SuppressWarnings("unchecked")
+    private static final Optional<SkillLevelOverlayPolicy.Overlay>[] SKILL_CACHE_VALUE =
+            (Optional<SkillLevelOverlayPolicy.Overlay>[]) new Optional<?>[SKILL_CACHE_SIZE];
+    private static final long[] SKILL_CACHE_UNTIL = new long[SKILL_CACHE_SIZE];
+
+    private static Optional<SkillLevelOverlayPolicy.Overlay> skillOverlayOf(ItemStack stack) {
+        int slot = (System.identityHashCode(stack) & 0x7FFFFFFF) % SKILL_CACHE_SIZE;
+        long now = System.currentTimeMillis();
+        if (SKILL_CACHE_KEY[slot] == stack && now < SKILL_CACHE_UNTIL[slot]) {
+            return SKILL_CACHE_VALUE[slot];
+        }
+        Optional<SkillLevelOverlayPolicy.Overlay> overlay = SkillLevelOverlayPolicy.parse(
+                stack.getHoverName().getString(),
+                loreLines(stack),
+                stack.getCount());
+        SKILL_CACHE_KEY[slot] = stack;
+        SKILL_CACHE_VALUE[slot] = overlay;
+        SKILL_CACHE_UNTIL[slot] = now + SKILL_CACHE_MS;
+        return overlay;
+    }
+
     private static void renderSkillLevels(
             AbstractContainerScreen<?> screen,
             GuiGraphicsExtractor graphics,
@@ -842,11 +870,7 @@ public final class  InventoryChromeRuntime {
             if (stack.isEmpty()) {
                 continue;
             }
-            Optional<SkillLevelOverlayPolicy.Overlay> overlay =
-                    SkillLevelOverlayPolicy.parse(
-                            stack.getHoverName().getString(),
-                            loreLines(stack),
-                            stack.getCount());
+            Optional<SkillLevelOverlayPolicy.Overlay> overlay = skillOverlayOf(stack);
             if (overlay.isEmpty()) {
                 continue;
             }
