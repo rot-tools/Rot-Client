@@ -1804,7 +1804,7 @@ public final class QolUtilityCatalog {
                 setting("qol.etherwarp.render_style", "Render Style", "Filled, outline, or both.", SettingType.ENUM,
                         EtherwarpPredictor.RENDER_STYLES, "outline"),
                 setting("qol.etherwarp.full_block", "Full Block", "Highlight the whole destination cube instead of a thin top face.", SettingType.TOGGLE),
-                setting("qol.etherwarp.use_server_position", "Use Server Position", "Use server-authoritative position.", SettingType.TOGGLE),
+                setting("qol.etherwarp.use_server_position", "Use Server Position", "Not active yet: the guess always starts from your client position.", SettingType.TOGGLE),
                 setting("qol.etherwarp.sounds", "Sounds", "Local feedback sounds.", SettingType.TOGGLE),
                 setting("qol.etherwarp.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
