@@ -1633,21 +1633,27 @@ public final class DungeonRuntime {
         }
         String floor = DungeonCarryPolicy.normalizeFloor(sidebar.floor());
         DungeonPartyJoinRuntime.prefetch(player, floor);
-        var stats = DungeonPartyJoinRuntime.cached(player, floor);
-        if (stats.isEmpty()) {
+        var lookup = DungeonPartyJoinRuntime.cachedLookup(player, floor);
+        if (lookup.isEmpty()) {
+            return;
+        }
+        boolean failed = lookup.get().failed();
+        var stats = lookup.get().stats();
+        if (!failed && stats.isEmpty()) {
             return;
         }
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.font == null) {
             return;
         }
+        // A red "!" marks a failed lookup; the tooltip carries the reason.
         RotClientUiDraw.text(
                 graphics,
                 client.font,
-                DungeonPartyFinderPolicy.formatPb(stats.get().pbSeconds()),
+                failed ? "!" : DungeonPartyFinderPolicy.formatPb(stats.get().pbSeconds()),
                 leftPos + slot.x,
                 topPos + slot.y - 8,
-                0xFFA3E635,
+                failed ? 0xFFEF4444 : 0xFFA3E635,
                 true);
     }
 
