@@ -128,7 +128,8 @@ public final class FishingCreaturesPolicy {
     }
 
     public static boolean looksLikeCreatureHologram(String nametag) {
-        return matchNametag(nametag) != null && hasCreatureHealthMarker(nametag);
+        // The marker check is one cheap scan; most armor stands fail it before any name matching.
+        return hasCreatureHealthMarker(nametag) && matchNametag(nametag) != null;
     }
 
     public static boolean meetsRarity(String creatureRarity, String minimum) {
@@ -158,6 +159,23 @@ public final class FishingCreaturesPolicy {
         }
         long due = clampTimer(timerSeconds) * 1000L;
         return oldestAgeMs >= due && oldestAgeMs < due + 250L;
+    }
+
+    /**
+     * True once the oldest creature has reached the barn timer. Unlike
+     * {@link #shouldTimerNotify}, this is a level, not a 250 ms window, so a
+     * caller that latches on it cannot miss the moment.
+     */
+    public static boolean timerDue(
+            boolean moduleEnabled,
+            boolean timerOn,
+            int liveCount,
+            long oldestAgeMs,
+            int timerSeconds) {
+        return moduleEnabled
+                && timerOn
+                && liveCount > 0
+                && oldestAgeMs >= clampTimer(timerSeconds) * 1000L;
     }
 
     public static CapState capState(int count, long oldestAgeMs, int timerSeconds) {
@@ -318,8 +336,7 @@ public final class FishingCreaturesPolicy {
                 "Lava Blaze|A Lava Blaze has surfaced from the depths!|EPIC|SPECIAL",
                 "Lava Pigman|A Lava Pigman arose from the depths!|EPIC|SPECIAL",
                 "Abyssal Miner|An Abyssal Miner breaks out of the water!|LEGENDARY|SPECIAL",
-                "Plhlegblast|WOAH! A Plhlegblast appeared.|MYTHIC|SPECIAL",
-                "Loch Emperor|The Loch Emperor arises from the depths.|LEGENDARY|MOONGLADE_MARSH"
+                "Plhlegblast|WOAH! A Plhlegblast appeared.|MYTHIC|SPECIAL"
         };
         List<Creature> out = new ArrayList<>();
         for (String row : rows) {

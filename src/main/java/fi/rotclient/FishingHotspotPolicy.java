@@ -40,6 +40,33 @@ public final class FishingHotspotPolicy {
         return false;
     }
 
+    /**
+     * A hotspot only counts as despawned if it was well inside the scan range
+     * last time, otherwise sailing away from it looks the same as it vanishing.
+     */
+    public static boolean vanishedNearby(
+            List<Circle> previous,
+            Set<String> currentKeys,
+            double playerX,
+            double playerZ,
+            double maxDistance) {
+        if (previous == null || previous.isEmpty() || currentKeys == null) {
+            return false;
+        }
+        double limit = maxDistance * maxDistance;
+        for (Circle circle : previous) {
+            if (currentKeys.contains(key(circle.x(), circle.z()))) {
+                continue;
+            }
+            double dx = circle.x() - playerX;
+            double dz = circle.z() - playerZ;
+            if (dx * dx + dz * dz <= limit) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Set<String> keys(List<Circle> circles) {
         Set<String> out = new HashSet<>();
         if (circles == null) {

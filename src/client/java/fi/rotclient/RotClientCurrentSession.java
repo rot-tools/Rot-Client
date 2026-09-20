@@ -174,8 +174,7 @@ final class RotClientCurrentSession {
                 config.currentTargetId);
         return gemstone != null
                 && selection != null
-                && selection.isGemstone()
-                && selection.gemstone() == gemstone;
+                && selection.tracksGemstone(gemstone);
     }
 
     /**

@@ -123,12 +123,14 @@ final class MiningHudOtherSummaryTest {
                 true, true, true, false, false, false, 2, true);
         // Target rows grow with material count; OTHER block stays fixed size.
         int delta = twoMaterials - oneMaterial;
-        assertEquals(36, delta); // 18 raw + 18 enchanted for second material
+        assertEquals(2 * HudLayoutMath.ITEM_ROW, delta); // raw + enchanted row
         int withoutOther = HudLayoutMath.profitCardHeight(
                 true, true, true, false, false, false, 1, false);
         assertTrue(oneMaterial > withoutOther);
-        // OTHER heading+row+totals; divider exists in both item-row layouts.
-        assertEquals(14 + 18 + 48, oneMaterial - withoutOther);
+        // OTHER row plus the target / others / total value lines.
+        assertEquals(
+                HudLayoutMath.ITEM_ROW + 3 * HudLayoutMath.VALUE_ROW,
+                oneMaterial - withoutOther);
     }
 
     @Test
@@ -136,10 +138,10 @@ final class MiningHudOtherSummaryTest {
         int top = HudLayoutMath.topCardHeight(true, true, true, true);
         int profit = HudLayoutMath.profitCardHeight(
                 true, true, true, true, true, true, 1, true);
-        int full = top + 6 + profit;
-        assertTrue(full > top + 6 + 86);
+        int full = top + HudLayoutMath.SECTION_GAP + profit;
+        assertTrue(full > top + HudLayoutMath.SECTION_GAP + 86);
         assertEquals(
                 full,
-                top + 6 + profit);
+                top + HudLayoutMath.SECTION_GAP + profit);
     }
 }

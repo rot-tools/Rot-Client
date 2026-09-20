@@ -51,6 +51,7 @@ public final class SlayerFightPolicy {
     /** Unique fragment of the Nukekubi skull texture payload. */
     static final String NUKEKUBI_TEXTURE_FRAGMENT = "ZWIwNzU5NGUyZGYy";
     private static final Pattern FORMAT = Pattern.compile("§[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern SIDEBAR_QUEST = Pattern.compile(
             "(?i).*(revenant horror|tarantula broodfather|sven packmaster|voidgloom seraph|"
                     + "inferno demonlord|riftstalker bloodfiend|"
@@ -76,9 +77,8 @@ public final class SlayerFightPolicy {
         if (raw == null) {
             return "";
         }
-        return FORMAT.matcher(raw).replaceAll("")
-                .replace('\u00A0', ' ')
-                .replaceAll("\\s+", " ")
+        return WHITESPACE.matcher(FORMAT.matcher(raw).replaceAll("")
+                .replace('\u00A0', ' ')).replaceAll(" ")
                 .trim();
     }
 

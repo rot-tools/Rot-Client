@@ -24,6 +24,13 @@ public final class CustomScoreboardPolicy {
     static final long DELTA_MS = 5_000L;
 
     private static final Pattern NUMBER = Pattern.compile("([+-]?[\\d,]+(?:\\.\\d+)?)");
+    private static final Pattern NON_TOKEN = Pattern.compile("[^a-z0-9/]+");
+    private static final Pattern SLASH_MAX = Pattern.compile("/\\s*([\\d,]+)");
+    private static final Pattern SLASH_MAX_DECIMAL = Pattern.compile("/\\s*([\\d,]+(?:\\.\\d+)?)");
+    private static final Pattern CLOCK = Pattern.compile(
+            "(\\d{1,2}):(\\d{2})\\s*(am|pm)?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern LOBBY_CODE = Pattern.compile("(?i)\\b((?:m|mini|mega)[0-9A-Z]+)\\b");
+    private static final Pattern LAST_INTEGER = Pattern.compile("(-?\\d+)\\D*$");
     private static final Pattern TAB_LABEL = Pattern.compile(
             "(?i)^\\s*(?<key>[a-z][a-z /]+)\\s*:\\s*(?<value>.+)$");
     private static final Pattern TAB_LABEL_FIND = Pattern.compile(
@@ -259,7 +266,7 @@ public final class CustomScoreboardPolicy {
             footerAlign = footerAlign == null ? Align.LEFT : footerAlign;
             customFooter = customFooter == null ? "&&ewww.hypixel.net" : customFooter;
             customAlphaFooter = customAlphaFooter == null ? "&&ealpha.hypixel.net" : customAlphaFooter;
-            lineSpacing = clamp(lineSpacing, 0, 20);
+            lineSpacing = clamp(lineSpacing, 10, 20);
             margin = clamp(margin, 0, 50);
             maxStatsPerLine = clamp(maxStatsPerLine, 1, 10);
             tuningAmount = clamp(tuningAmount, 1, 8);
@@ -801,7 +808,7 @@ public final class CustomScoreboardPolicy {
             return null;
         }
         return switch (settingId) {
-            case "qol.custom_scoreboard.line_spacing" -> new QolNumberSettings.Spec(0, 20, 1, true);
+            case "qol.custom_scoreboard.line_spacing" -> new QolNumberSettings.Spec(10, 20, 1, true);
             case "qol.custom_scoreboard.margin" -> new QolNumberSettings.Spec(0, 50, 1, true);
             case "qol.custom_scoreboard.max_stats_per_line" -> new QolNumberSettings.Spec(1, 10, 1, true);
             case "qol.custom_scoreboard.tuning_amount" -> new QolNumberSettings.Spec(1, 8, 1, true);
@@ -1136,22 +1143,9 @@ public final class CustomScoreboardPolicy {
         return List.of(new Row(layout("Bank", number, "§6", options.numberLayout()), options.textAlign(), false));
     }
 
-    private static String bankLine(ParsedBoard parsed, Options options) {
-        if (parsed.bank.isEmpty() && parsed.personalBank.isEmpty()) {
-            return "";
-        }
-        String coop = parsed.bank.isPresent()
-                ? formatNumber(parsed.bank.getAsLong(), options.numberStyle())
-                : "0";
-        if (parsed.personalBank.isPresent()) {
-            coop += " §7/ §6" + formatNumber(parsed.personalBank.getAsLong(), options.numberStyle());
-        }
-        return layout("Bank", "§6" + coop, "§6", options.numberLayout());
-    }
-
     private static List<Row> playersLine(ParsedBoard parsed, Options options, boolean hideEmpty) {
         if (parsed.players.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         String text = "§a" + parsed.players.getAsLong();
         if (options.showMaxPlayers() && parsed.maxPlayers.isPresent()) {
@@ -1198,7 +1192,7 @@ public final class CustomScoreboardPolicy {
             return List.of();
         }
         if (parsed.powder.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         boolean allZero = true;
         for (PowderPair pair : parsed.powder.values()) {
@@ -1294,7 +1288,7 @@ public final class CustomScoreboardPolicy {
             case SOWDUST -> chunkAmount("§2", parsed.sowdust, hideEmpty, options);
             case GEMS -> chunkAmount("§a", parsed.gems, hideEmpty, options);
             case HEAT -> {
-                if (hideEmpty && (parsed.heat.isBlank() || strip(parsed.heat).endsWith("0"))) {
+                if (hideEmpty && (parsed.heat.isBlank() || readsZero(parsed.heat))) {
                     yield null;
                 }
                 yield parsed.heat.isBlank() ? "§c♨ 0" : parsed.heat;
@@ -1345,7 +1339,7 @@ public final class CustomScoreboardPolicy {
 
     private static List<Row> tuningRows(ParsedBoard parsed, Options options, boolean hideEmpty) {
         if (parsed.tunings.isEmpty() && parsed.magicalPower.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         List<Row> rows = new ArrayList<>();
         if (options.showMagicalPower() && parsed.magicalPower.isPresent()) {
@@ -1371,7 +1365,7 @@ public final class CustomScoreboardPolicy {
 
     private static List<Row> mayorRows(ParsedBoard parsed, Options options, boolean hideEmpty, boolean inRift) {
         if (inRift || parsed.mayor.isBlank()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         List<Row> rows = new ArrayList<>();
         String mayor = parsed.mayor;
@@ -1403,7 +1397,7 @@ public final class CustomScoreboardPolicy {
             return List.of();
         }
         if (parsed.party.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         List<Row> rows = new ArrayList<>();
         rows.add(new Row("§9Party", options.textAlign(), false));
@@ -1499,8 +1493,7 @@ public final class CustomScoreboardPolicy {
             return raw;
         }
         String symbol = CustomScoreboardLines.timeSymbol(raw);
-        Matcher matcher = Pattern.compile("(\\d{1,2}):(\\d{2})\\s*(am|pm)?", Pattern.CASE_INSENSITIVE)
-                .matcher(strip(raw));
+        Matcher matcher = CLOCK.matcher(strip(raw));
         if (!matcher.find() || !options.time24h() && !options.timeExact()) {
             return raw;
         }
@@ -1553,7 +1546,7 @@ public final class CustomScoreboardPolicy {
         if (raw.isBlank()) {
             return hideEmpty ? List.of() : List.of(new Row(layout("Heat", "§c♨ 0", "§c", options.numberLayout()), options.textAlign(), false));
         }
-        if (hideEmpty && (strip(raw).endsWith("0") || strip(raw).equals("Heat: 0"))) {
+        if (hideEmpty && readsZero(raw)) {
             return List.of();
         }
         return List.of(new Row(raw.contains("Heat") ? raw : layout("Heat", raw, "§c", options.numberLayout()), options.textAlign(), false));
@@ -1567,10 +1560,16 @@ public final class CustomScoreboardPolicy {
         if (raw.isBlank()) {
             return hideEmpty ? List.of() : List.of(new Row(layout("Cold", "0❄", "§b", options.numberLayout()), options.textAlign(), false));
         }
-        if (hideEmpty && (strip(raw).endsWith("0") || strip(raw).contains("Cold: 0"))) {
+        if (hideEmpty && readsZero(raw)) {
             return List.of();
         }
         return List.of(new Row(raw.contains("Cold") ? raw : layout("Cold", raw, "§b", options.numberLayout()), options.textAlign(), false));
+    }
+
+    /** True when the last number on a sidebar line is zero (Heat: 10 is not, Heat: 0 is). */
+    private static boolean readsZero(String raw) {
+        Matcher matcher = LAST_INTEGER.matcher(strip(raw));
+        return matcher.find() && matcher.group(1).chars().noneMatch(c -> c >= '1' && c <= '9');
     }
 
     private static boolean isZero(OptionalLong amount) {
@@ -1600,7 +1599,7 @@ public final class CustomScoreboardPolicy {
 
     private static List<Row> copyLines(List<String> lines, Align align, boolean hideEmpty) {
         if (lines == null || lines.isEmpty()) {
-            return hideEmpty ? List.of() : List.of();
+            return List.of();
         }
         List<Row> rows = new ArrayList<>();
         for (String line : lines) {
@@ -1646,13 +1645,19 @@ public final class CustomScoreboardPolicy {
         if (abs < 1_000L) {
             return sign + abs;
         }
-        if (abs < 1_000_000L) {
-            return sign + trimDecimal(abs / 1_000.0D) + "k";
+        String[] units = {"k", "M", "B"};
+        double scaled = abs;
+        int unit = -1;
+        while (scaled >= 1_000.0D && unit < units.length - 1) {
+            scaled /= 1_000.0D;
+            unit++;
         }
-        if (abs < 1_000_000_000L) {
-            return sign + trimDecimal(abs / 1_000_000.0D) + "M";
+        // 999,960 rounds to 1000.0k at one decimal, which should read 1M instead.
+        if (Math.round(scaled * 10.0D) >= 10_000L && unit < units.length - 1) {
+            scaled /= 1_000.0D;
+            unit++;
         }
-        return sign + trimDecimal(abs / 1_000_000_000.0D) + "B";
+        return sign + trimDecimal(scaled) + units[unit];
     }
 
     private static String trimDecimal(double value) {
@@ -1671,7 +1676,7 @@ public final class CustomScoreboardPolicy {
         if (raw == null) {
             return "";
         }
-        return raw.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9/]+", "");
+        return NON_TOKEN.matcher(raw.toLowerCase(Locale.ROOT)).replaceAll("");
     }
 
     private static OptionalLong parseLong(String raw) {
@@ -1755,7 +1760,7 @@ public final class CustomScoreboardPolicy {
             }
             case ARROWS -> {
                 parsed.arrows = parseLong(strip(raw));
-                Matcher max = Pattern.compile("/\\s*([\\d,]+)").matcher(strip(raw));
+                Matcher max = SLASH_MAX.matcher(strip(raw));
                 if (max.find()) {
                     parsed.arrowMax = parseLong(max.group(1));
                 }
@@ -2037,7 +2042,7 @@ public final class CustomScoreboardPolicy {
             }
             case "players" -> {
                 parsed.players = amount;
-                Matcher max = Pattern.compile("/\\s*([\\d,]+)").matcher(value);
+                Matcher max = SLASH_MAX.matcher(value);
                 if (max.find()) {
                     parsed.maxPlayers = parseLong(max.group(1));
                 }
@@ -2185,7 +2190,7 @@ public final class CustomScoreboardPolicy {
     }
 
     private static OptionalDouble optionalMax(String raw) {
-        Matcher matcher = Pattern.compile("/\\s*([\\d,]+(?:\\.\\d+)?)").matcher(strip(raw));
+        Matcher matcher = SLASH_MAX_DECIMAL.matcher(strip(raw));
         if (!matcher.find()) {
             return OptionalDouble.empty();
         }
@@ -2197,7 +2202,7 @@ public final class CustomScoreboardPolicy {
     }
 
     private static String extractLobby(String plain) {
-        Matcher matcher = Pattern.compile("(?i)\\b((?:m|mini|mega)[0-9A-Z]+)\\b").matcher(plain);
+        Matcher matcher = LOBBY_CODE.matcher(plain);
         if (matcher.find()) {
             return matcher.group(1);
         }
@@ -2291,9 +2296,10 @@ public final class CustomScoreboardPolicy {
             boolean winter = blob.contains("jerry")
                     || blob.contains("winter")
                     || blob.contains("glacier");
-            boolean dungeon = blob.contains("dungeon") || blob.contains("catacomb");
+            boolean dungeonHub = blob.contains("dungeon hub");
+            boolean dungeon = !dungeonHub && (blob.contains("dungeon") || blob.contains("catacomb"));
             boolean kuudra = blob.contains("kuudra");
-            boolean party = dungeon || kuudra || blob.contains("crimson");
+            boolean party = dungeon || dungeonHub || kuudra || blob.contains("crimson");
             return new Place(rift, garden, mining, glacite, hollows, winter, dungeon, kuudra, party);
         }
     }

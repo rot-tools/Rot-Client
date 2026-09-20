@@ -1,9 +1,31 @@
 package fi.rotclient;
 
 final class HudLayoutMath {
-    private static final int CARD_GAP = 6;
-    private static final int GEMSTONE_BASE_TOP_HEIGHT = 101;
-    private static final int GEMSTONE_LEDGER_HEIGHT = 150;
+    /** Compact single-card Mining HUD: every row height lives here. */
+    static final int PAD_TOP = 4;
+    static final int PAD_BOTTOM = 4;
+    static final int HEADER_ROW = 13;
+    static final int BLOCKS_ROW = 11;
+    /** 16px sparkline plus 3px of air below it. */
+    static final int GRAPH_HEIGHT = 16;
+    static final int GRAPH_SECTION = GRAPH_HEIGHT + 3;
+    static final int METRIC_ROW = 11;
+    static final int FOOTER_ROW = 11;
+    /** 2px auto-pause bar plus 3px of air above it. */
+    static final int PAUSE_BAR_HEIGHT = 2;
+    static final int PAUSE_BAR_SECTION = PAUSE_BAR_HEIGHT + 3;
+    /** Divider between the tracker section and the value section. */
+    static final int SECTION_GAP = 4;
+    static final int HEADING_ROW = 10;
+    static final int ITEM_ROW = 12;
+    static final int VALUE_ROW = 11;
+    static final int BAZAAR_ROW = 10;
+    /** 1px rule plus air between list rows and value lines. */
+    static final int SEPARATOR = 4;
+    /** One ledger row per {@code GemstoneTier}. */
+    static final int GEMSTONE_TIER_ROWS = 5;
+    /** All Gemstones shows this many gemstone rows, then "+N more". */
+    static final int MAX_ALL_GEMSTONE_ROWS = 6;
 
     private HudLayoutMath() {
     }
@@ -76,7 +98,7 @@ final class HudLayoutMath {
     }
 
     /** Compact AREA row height when location visibility is enabled. */
-    static final int AREA_ROW_HEIGHT = 14;
+    static final int AREA_ROW_HEIGHT = 11;
 
     static int topCardHeight(boolean showBlocks,
                              boolean showRateGraph,
@@ -89,19 +111,17 @@ final class HudLayoutMath {
                              boolean showHudStatus,
                              boolean showActiveTool,
                              boolean showArea) {
-        int height = showHudTitle || showHudStatus || showActiveTool ? 37 : 28;
-        if (showArea) height += AREA_ROW_HEIGHT;
-        if (showBlocks) height += 28;
-        if (showRateGraph) height += 39;
-        if (showMaterialPerHour || showDropAndFortune) height += 29;
-        if (showHudAutoPause) {
-            height += 34;
-        } else if (showHudVersion || showSessionTime) {
-            height += 16;
-        } else {
-            height += 4;
+        int height = PAD_TOP;
+        if (showHudTitle || showHudStatus || showActiveTool) {
+            height += HEADER_ROW;
         }
-        return height;
+        if (showArea) height += AREA_ROW_HEIGHT;
+        if (showBlocks) height += BLOCKS_ROW;
+        if (showRateGraph) height += GRAPH_SECTION;
+        if (showMaterialPerHour || showDropAndFortune) height += METRIC_ROW;
+        if (showHudVersion || showSessionTime) height += FOOTER_ROW;
+        if (showHudAutoPause) height += PAUSE_BAR_SECTION;
+        return height + PAD_BOTTOM;
     }
 
     static boolean hasProfitCard(boolean showRawMaterial,
@@ -250,43 +270,25 @@ final class HudLayoutMath {
                                 boolean showTargetHeading) {
         int safeMaterialCount = Math.max(1, materialCount);
         boolean itemRows = showRawMaterial || showEnchantedMaterial;
-        int height;
+        int height = 0;
         if (itemRows) {
-            // Title + optional TARGET heading + column headers.
-            height = showTargetHeading ? 52 : 38;
-            if (showEnchantedMaterial) {
-                height += 18 * safeMaterialCount;
-            }
-            if (showRawMaterial) {
-                height += 18 * safeMaterialCount;
-            }
-        } else {
-            height = 26;
+            if (showTargetHeading) height += HEADING_ROW;
+            if (showEnchantedMaterial) height += ITEM_ROW * safeMaterialCount;
+            if (showRawMaterial) height += ITEM_ROW * safeMaterialCount;
         }
-        if (showOtherSection) {
-            height += 14 + 18;
+        if (showOtherSection) height += ITEM_ROW;
+        int valueLines = (showTargetValue ? 1 : 0)
+                + (showOtherValue ? 1 : 0)
+                + (showTotalMinedValue ? 1 : 0)
+                + (showSessionProfit ? 1 : 0)
+                + (showCoinsPerHour ? 1 : 0)
+                + (showUnsoldValue ? 1 : 0);
+        if ((itemRows || showOtherSection) && valueLines > 0) {
+            height += SEPARATOR;
         }
-        boolean anyValueLine =
-                showTargetValue || showOtherValue || showTotalMinedValue;
-        if (showOtherSection || anyValueLine) {
-            height += 8;
-        } else if (itemRows) {
-            height += 8;
-        }
-        if (showTargetValue) {
-            height += 16;
-        }
-        if (showOtherValue) {
-            height += 16;
-        }
-        if (showTotalMinedValue) {
-            height += 16;
-        }
-        if (showSessionProfit) height += 16;
-        if (showCoinsPerHour) height += 15;
-        if (showUnsoldValue) height += 15;
-        if (showBazaarPrices) height += 13 * safeMaterialCount;
-        return Math.max(46, height + 4);
+        height += VALUE_ROW * valueLines;
+        if (showBazaarPrices) height += BAZAAR_ROW * safeMaterialCount;
+        return height + PAD_BOTTOM;
     }
 
     static int gemstoneTopCardHeight(
@@ -299,15 +301,85 @@ final class HudLayoutMath {
             boolean showBlocks,
             boolean showRateGraph,
             boolean showArea) {
-        int height = GEMSTONE_BASE_TOP_HEIGHT;
-        if (showArea) height += AREA_ROW_HEIGHT;
-        if (showBlocks) height += 28;
-        if (showRateGraph) height += 39;
-        return height;
+        return gemstoneTopCardHeight(
+                showBlocks, showRateGraph, showArea,
+                true, true, true, true, true, true);
+    }
+
+    /** Gemstone header/footer chrome follows the same toggles as ores. */
+    static int gemstoneTopCardHeight(
+            boolean showBlocks,
+            boolean showRateGraph,
+            boolean showArea,
+            boolean showHudTitle,
+            boolean showHudAutoPause,
+            boolean showHudVersion,
+            boolean showSessionTime,
+            boolean showHudStatus,
+            boolean showActiveTool) {
+        return topCardHeight(
+                showBlocks,
+                showRateGraph,
+                true,
+                false,
+                showHudTitle,
+                showHudAutoPause,
+                showHudVersion,
+                showSessionTime,
+                showHudStatus,
+                showActiveTool,
+                showArea);
     }
 
     static int gemstoneLedgerCardHeight() {
-        return GEMSTONE_LEDGER_HEIGHT;
+        // Column heading, one row per tier, rule, total items, total rough EQ.
+        return HEADING_ROW
+                + GEMSTONE_TIER_ROWS * VALUE_ROW
+                + SEPARATOR
+                + 2 * VALUE_ROW
+                + PAD_BOTTOM;
+    }
+
+    /**
+     * All Gemstones ledger: a tier heading, one row per gemstone that has
+     * items (best first, capped), an optional "+N more" row, then totals. With
+     * nothing gained yet a single placeholder row keeps the layout stable.
+     */
+    static int gemstoneAllLedgerHeight(int gemstonesWithItems) {
+        int withItems = Math.max(0, gemstonesWithItems);
+        int shown = Math.min(withItems, MAX_ALL_GEMSTONE_ROWS);
+        int overflow = withItems > MAX_ALL_GEMSTONE_ROWS ? VALUE_ROW : 0;
+        return HEADING_ROW
+                + Math.max(1, shown) * VALUE_ROW
+                + overflow
+                + SEPARATOR
+                + 2 * VALUE_ROW
+                + PAD_BOTTOM;
+    }
+
+    static int gemstoneAllHudHeight(
+            boolean showBlocks,
+            boolean showRateGraph,
+            boolean showArea,
+            boolean showHudTitle,
+            boolean showHudAutoPause,
+            boolean showHudVersion,
+            boolean showSessionTime,
+            boolean showHudStatus,
+            boolean showActiveTool,
+            int gemstonesWithItems) {
+        return gemstoneTopCardHeight(
+                showBlocks,
+                showRateGraph,
+                showArea,
+                showHudTitle,
+                showHudAutoPause,
+                showHudVersion,
+                showSessionTime,
+                showHudStatus,
+                showActiveTool)
+                + SECTION_GAP
+                + gemstoneAllLedgerHeight(gemstonesWithItems);
     }
 
     static int gemstoneHudHeight(
@@ -324,7 +396,31 @@ final class HudLayoutMath {
                 showBlocks,
                 showRateGraph,
                 showArea)
-                + CARD_GAP
+                + SECTION_GAP
+                + gemstoneLedgerCardHeight();
+    }
+
+    static int gemstoneHudHeight(
+            boolean showBlocks,
+            boolean showRateGraph,
+            boolean showArea,
+            boolean showHudTitle,
+            boolean showHudAutoPause,
+            boolean showHudVersion,
+            boolean showSessionTime,
+            boolean showHudStatus,
+            boolean showActiveTool) {
+        return gemstoneTopCardHeight(
+                showBlocks,
+                showRateGraph,
+                showArea,
+                showHudTitle,
+                showHudAutoPause,
+                showHudVersion,
+                showSessionTime,
+                showHudStatus,
+                showActiveTool)
+                + SECTION_GAP
                 + gemstoneLedgerCardHeight();
     }
 

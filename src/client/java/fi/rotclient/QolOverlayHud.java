@@ -77,6 +77,11 @@ final class QolOverlayHud {
                 "Stress preview · active");
     }
 
+    /** Feeds and reads the FPS/ping/TPS sampler outside the Performance HUD's own render. */
+    PerformanceHudLayout.Snapshot sampleMetrics(Minecraft client) {
+        return metrics.sample(client, System.currentTimeMillis());
+    }
+
     QolOverlayHud(TrackerConfig config) {
         this.config = config;
     }
@@ -107,8 +112,8 @@ final class QolOverlayHud {
     }
 
     void render(GuiGraphicsExtractor graphics) {
-                frameStyleCache.clear();
-Minecraft client = Minecraft.getInstance();
+        frameStyleCache.clear();
+        Minecraft client = Minecraft.getInstance();
         if (client == null || RotClientClient.pauseMenuHidesHud()) {
             return;
         }
@@ -718,7 +723,7 @@ Minecraft client = Minecraft.getInstance();
                     barY,
                     barX + barWidth,
                     barY + barHeight,
-                    0x66333333);
+                    HudCardStyle.BAR_TRACK);
 
             int filled =
                     Math.max(
@@ -2284,16 +2289,16 @@ Minecraft client = Minecraft.getInstance();
 
         RotClientUiDraw.roundedFill(
                 graphics,
-                x + 2,
-                y + 3,
-                x + width + 2,
-                y + height + 3,
+                x + HudCardStyle.SHADOW_OFFSET_X,
+                y + HudCardStyle.SHADOW_OFFSET_Y,
+                x + width + HudCardStyle.SHADOW_OFFSET_X,
+                y + height + HudCardStyle.SHADOW_OFFSET_Y,
                 RotClientUiDraw.withAlpha(
                         RotClientTheme.SHADOW,
                         editorOpen
-                                ? 0x38
-                                : 0x50),
-                5);
+                                ? HudCardStyle.EDITOR_SHADOW_ALPHA
+                                : HudCardStyle.SHADOW_ALPHA),
+                HudCardStyle.RADIUS);
 
         RotClientUiDraw.roundedFill(
                 graphics,
@@ -2302,13 +2307,13 @@ Minecraft client = Minecraft.getInstance();
                 x + width,
                 y + height,
                 fill,
-                5);
+                HudCardStyle.RADIUS);
 
         int border =
                 HudStylePolicy.dim(
                         RotClientUiDraw.withAlpha(
                                 RotClientTheme.BORDER,
-                                0xA8),
+                                HudCardStyle.BORDER_ALPHA),
                         HudStylePolicy.isFocused(
                                 id,
                                 focusId),
@@ -2324,7 +2329,7 @@ Minecraft client = Minecraft.getInstance();
                 x + width,
                 y + height,
                 border,
-                5);
+                HudCardStyle.RADIUS);
     }
     String selectedId() {
         return selectedId;

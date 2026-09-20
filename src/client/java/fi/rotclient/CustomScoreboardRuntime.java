@@ -100,16 +100,18 @@ final class CustomScoreboardRuntime {
         int screenW = client.getWindow().getGuiScaledWidth();
         int screenH = client.getWindow().getGuiScaledHeight();
         float[] pose = qol.pose(CustomScoreboardPolicy.POSE_ID);
+        float scale = pose.length > 2 ? Math.max(0.4F, pose[2]) : 1.0F;
+        int scaledW = Math.round(panelW * scale);
+        int scaledH = Math.round(panelH * scale);
         int x = CustomScoreboardPolicy.panelX(
-                screenW, panelW, options.alignH(), options.margin(), Math.round(pose[0]));
+                screenW, scaledW, options.alignH(), options.margin(), Math.round(pose[0]));
         int y = CustomScoreboardPolicy.panelY(
-                screenH, panelH, options.alignV(), options.margin(), Math.round(pose[1]));
+                screenH, scaledH, options.alignV(), options.margin(), Math.round(pose[1]));
         lastX = x;
         lastY = y;
-        lastW = panelW;
-        lastH = panelH;
+        lastW = scaledW;
+        lastH = scaledH;
         lastVisible = true;
-        float scale = pose.length > 2 ? Math.max(0.4F, pose[2]) : 1.0F;
         graphics.pose().pushMatrix();
         graphics.pose().translate(x, y);
         graphics.pose().scale(scale, scale);
@@ -128,8 +130,6 @@ final class CustomScoreboardRuntime {
             textY += lineH;
         }
         graphics.pose().popMatrix();
-        lastW = Math.round(panelW * scale);
-        lastH = Math.round(panelH * scale);
     }
 
     static boolean hit(double mouseX, double mouseY) {
@@ -367,16 +367,23 @@ final class CustomScoreboardRuntime {
             return new SidebarCapture(title, lines, alpha);
         }
         title = sectionString(sidebar.getDisplayName());
+        List<CustomScoreboardLines.SidebarEntry> entries = new ArrayList<>();
         for (PlayerScoreEntry entry : scoreboard.listPlayerScores(sidebar)) {
+            if (entry.isHidden()) {
+                continue;
+            }
             Component name = PlayerTeam.formatNameForTeam(
                     scoreboard.getPlayersTeam(entry.owner()), entry.ownerName());
-            String line = sectionString(name);
-            lines.add(line);
+            entries.add(new CustomScoreboardLines.SidebarEntry(
+                    entry.owner(), entry.value(), sectionString(name)));
+        }
+        lines.addAll(CustomScoreboardLines.orderSidebar(entries));
+        for (String line : lines) {
             if (CustomScoreboardPolicy.strip(line).toLowerCase().contains("alpha.hypixel.net")) {
                 alpha = true;
+                break;
             }
         }
-        java.util.Collections.reverse(lines);
         return new SidebarCapture(title, lines, alpha);
     }
 

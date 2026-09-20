@@ -40,7 +40,8 @@ final class TrackerTargetMatrixTest {
     void clientUiAndCommandsExposeExactlyEverySupportedSelection()
             throws IOException {
         assertEquals(
-                MATERIAL_SELECTIONS.size() + GemstoneType.values().length,
+                MATERIAL_SELECTIONS.size() + GemstoneType.values().length
+                        + 1, // All Gemstones
                 TrackerSelection.values().length);
         for (TrackerSelection selection : TrackerSelection.values()) {
             assertTrue(selection.supportsLiveTracking(), selection.id());
@@ -222,22 +223,25 @@ final class TrackerTargetMatrixTest {
                     offset++;
                 }
             } else {
-                assertTrue(TargetItemGainPipeline.creditGemstone(
-                        current,
-                        selection.gemstone(),
-                        GemstoneTier.ROUGH,
-                        20L,
-                        SkyBlockArea.CRYSTAL_HOLLOWS,
-                        started + 2L),
-                        selection.id());
-                assertTrue(TargetItemGainPipeline.creditGemstone(
-                        current,
-                        selection.gemstone(),
-                        GemstoneTier.FLAWED,
-                        3L,
-                        SkyBlockArea.CRYSTAL_HOLLOWS,
-                        started + 3L),
-                        selection.id());
+                long at = started + 2L;
+                for (GemstoneType gemstone : selection.gemstones()) {
+                    assertTrue(TargetItemGainPipeline.creditGemstone(
+                            current,
+                            gemstone,
+                            GemstoneTier.ROUGH,
+                            20L,
+                            SkyBlockArea.CRYSTAL_HOLLOWS,
+                            at++),
+                            selection.id() + " -> " + gemstone.id());
+                    assertTrue(TargetItemGainPipeline.creditGemstone(
+                            current,
+                            gemstone,
+                            GemstoneTier.FLAWED,
+                            3L,
+                            SkyBlockArea.CRYSTAL_HOLLOWS,
+                            at++),
+                            selection.id() + " -> " + gemstone.id());
+                }
             }
 
             RotClientCurrentSessionConfig before = current.snapshotConfig();
@@ -338,8 +342,7 @@ final class TrackerTargetMatrixTest {
                         selection.id() + " reset material " + material.id());
             }
             for (GemstoneType gemstone : GemstoneType.values()) {
-                boolean shouldReset = selection.isGemstone()
-                        && selection.gemstone() == gemstone;
+                boolean shouldReset = selection.tracksGemstone(gemstone);
                 long expected = shouldReset ? 0L : 20L + gemstone.ordinal();
                 assertEquals(expected,
                         config.gemstoneState(gemstone).sessionBlocks,
@@ -415,14 +418,17 @@ final class TrackerTargetMatrixTest {
                         offset++;
                     }
                 } else {
-                    assertTrue(TargetItemGainPipeline.creditGemstone(
-                            fixture.session,
-                            selection.gemstone(),
-                            GemstoneTier.ROUGH,
-                            10L,
-                            area,
-                            20L),
-                            selection.id() + " target in " + area.id());
+                    long at = 20L;
+                    for (GemstoneType gemstone : selection.gemstones()) {
+                        assertTrue(TargetItemGainPipeline.creditGemstone(
+                                fixture.session,
+                                gemstone,
+                                GemstoneTier.ROUGH,
+                                10L,
+                                area,
+                                at++),
+                                selection.id() + " target in " + area.id());
+                    }
                 }
 
                 fixture.engine.onConfirmedMaterialBreak(
@@ -515,10 +521,14 @@ final class TrackerTargetMatrixTest {
     private static List<SackChangeParser.Change> targetFamilyChanges(
             TrackerSelection selection) {
         if (selection.isGemstone()) {
-            return List.of(sack(
-                    selection.gemstone().itemName(GemstoneTier.ROUGH),
-                    5L,
-                    "Gemstone Sack"));
+            List<SackChangeParser.Change> gemstoneChanges = new ArrayList<>();
+            for (GemstoneType gemstone : selection.gemstones()) {
+                gemstoneChanges.add(sack(
+                        gemstone.itemName(GemstoneTier.ROUGH),
+                        5L,
+                        "Gemstone Sack"));
+            }
+            return List.copyOf(gemstoneChanges);
         }
         List<SackChangeParser.Change> changes = new ArrayList<>();
         for (TrackedMaterial material
