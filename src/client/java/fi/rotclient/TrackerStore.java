@@ -201,6 +201,9 @@ final class TrackerStore {
         if (qolJson == null || !qolJson.has("petHudEnabled")) {
             qol.petHudEnabled = true;
         }
+        if (qolJson == null || !qolJson.has("marketWatchPinsHudEnabled")) {
+            qol.marketWatchPinsHudEnabled = true;
+        }
     }
 
     /**
