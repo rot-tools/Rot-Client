@@ -957,6 +957,13 @@ final class QolSkyblockExtras {
     boolean customCursorHoldAnim = true;
     boolean customCursorHideVanilla = true;
 
+    boolean blockOutlineEnabled;
+    String blockOutlineMode = BlockOutlinePolicy.MODE_SOLID;
+    int blockOutlineColor = BlockOutlinePolicy.DEFAULT_COLOR;
+    double blockOutlineWidth = BlockOutlinePolicy.DEFAULT_WIDTH;
+    double blockOutlineRainbowSpeed = BlockOutlinePolicy.DEFAULT_SPEED;
+    double blockOutlineRainbowSpread = BlockOutlinePolicy.DEFAULT_SPREAD;
+
     boolean legacyTexturesEnabled;
     boolean legacyTexturesItems = true;
 
@@ -1115,6 +1122,7 @@ final class QolSkyblockExtras {
             case "qol.freecam" -> freecamEnabled;
             case "qol.hud_layout" -> hudLayoutEnabled;
             case "qol.custom_cursor" -> customCursorEnabled;
+            case "qol.block_outline" -> blockOutlineEnabled;
             case "qol.legacy_textures" -> legacyTexturesEnabled;
             case "qol.custom_resource_pack" -> customResourcePackEnabled;
             case "qol.iota" -> iotaAddonsEnabled;
@@ -1204,6 +1212,7 @@ final class QolSkyblockExtras {
             case "qol.freecam" -> freecamEnabled = enabled;
             case "qol.hud_layout" -> hudLayoutEnabled = enabled;
             case "qol.custom_cursor" -> customCursorEnabled = enabled;
+            case "qol.block_outline" -> blockOutlineEnabled = enabled;
             case "qol.legacy_textures" -> legacyTexturesEnabled = enabled;
             case "qol.custom_resource_pack" -> customResourcePackEnabled = enabled;
             case "qol.iota" -> iotaAddonsEnabled = enabled;
@@ -2580,6 +2589,9 @@ final class QolSkyblockExtras {
             case "qol.freecam.speed" -> freecamSpeed;
             case "qol.hud_layout.scale" -> (double) hudLayoutScale;
             case "qol.custom_cursor.size" -> customCursorSize;
+            case "qol.block_outline.width" -> blockOutlineWidth;
+            case "qol.block_outline.rainbow_speed" -> blockOutlineRainbowSpeed;
+            case "qol.block_outline.rainbow_spread" -> blockOutlineRainbowSpread;
             case "qol.camera.distance" -> cameraDistance;
             case "qol.foraging_helpers.sea_lumies_min" -> (double) foragingHelpersSeaLumiesMin;
             case "qol.foraging_cheats.min_cluster" -> (double) foragingCheatsMinCluster;
@@ -2731,6 +2743,12 @@ final class QolSkyblockExtras {
                     hudLayoutScale = HudStylePolicy.clampScale((float) value);
             case "qol.custom_cursor.size" ->
                     customCursorSize = CustomCursorPolicy.clampSize(value);
+            case "qol.block_outline.width" ->
+                    blockOutlineWidth = BlockOutlinePolicy.clampWidth(value);
+            case "qol.block_outline.rainbow_speed" ->
+                    blockOutlineRainbowSpeed = BlockOutlinePolicy.clampSpeed(value);
+            case "qol.block_outline.rainbow_spread" ->
+                    blockOutlineRainbowSpread = BlockOutlinePolicy.clampSpread(value);
             case "qol.camera.distance" ->
                     cameraDistance = TempleDungeonPolicy.clampCameraDistance(value);
             case "qol.foraging_helpers.sea_lumies_min" -> foragingHelpersSeaLumiesMin =
@@ -2816,6 +2834,9 @@ final class QolSkyblockExtras {
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
             return DungeonF7Policy.normalizeSoloClass(dungeonF7DragonSoloClass);
         }
+        if ("qol.block_outline.mode".equals(settingId)) {
+            return BlockOutlinePolicy.normalizeMode(blockOutlineMode);
+        }
         return athen().readEnum(settingId);
     }
 
@@ -2891,6 +2912,10 @@ final class QolSkyblockExtras {
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
             dungeonF7DragonSoloClass = DungeonF7Policy.normalizeSoloClass(value);
+            return true;
+        }
+        if ("qol.block_outline.mode".equals(settingId)) {
+            blockOutlineMode = BlockOutlinePolicy.normalizeMode(value);
             return true;
         }
         return athen().writeEnum(settingId, value);
@@ -2999,6 +3024,7 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill;
             case "qol.custom_cursor.outline" -> customCursorOutline;
             case "qol.custom_cursor.accent" -> customCursorAccent;
+            case "qol.block_outline.color" -> blockOutlineColor;
             case "qol.ghosts.fill_color" -> ghostsFillColor;
             case "qol.ghosts.outline_color" -> ghostsOutlineColor;
             default -> athen().readColor(settingId);
@@ -3090,6 +3116,7 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill = argb;
             case "qol.custom_cursor.outline" -> customCursorOutline = argb;
             case "qol.custom_cursor.accent" -> customCursorAccent = argb;
+            case "qol.block_outline.color" -> blockOutlineColor = argb;
             case "qol.ghosts.fill_color" -> ghostsFillColor = argb;
             case "qol.ghosts.outline_color" -> ghostsOutlineColor = argb;
             default -> {
@@ -4128,6 +4155,14 @@ final class QolSkyblockExtras {
                 customCursorClickAnim = d.customCursorClickAnim;
                 customCursorHoldAnim = d.customCursorHoldAnim;
                 customCursorHideVanilla = d.customCursorHideVanilla;
+            }
+            case "qol.block_outline" -> {
+                blockOutlineEnabled = d.blockOutlineEnabled;
+                blockOutlineMode = d.blockOutlineMode;
+                blockOutlineColor = d.blockOutlineColor;
+                blockOutlineWidth = d.blockOutlineWidth;
+                blockOutlineRainbowSpeed = d.blockOutlineRainbowSpeed;
+                blockOutlineRainbowSpread = d.blockOutlineRainbowSpread;
             }
             case "qol.legacy_textures" -> {
                 legacyTexturesEnabled = d.legacyTexturesEnabled;

@@ -304,6 +304,12 @@ public final class QolNumberSettings {
             case "qol.hud_layout.scale",
                  "rotclient.hud_style.scale" -> new Spec(0.6D, 2.5D, 0.05D, true);
             case "qol.custom_cursor.size" -> new Spec(0.6D, 2.4D, 0.05D, true);
+            case "qol.block_outline.width" ->
+                    new Spec(BlockOutlinePolicy.MIN_WIDTH, BlockOutlinePolicy.MAX_WIDTH, 0.25D, true);
+            case "qol.block_outline.rainbow_speed" ->
+                    new Spec(BlockOutlinePolicy.MIN_SPEED, BlockOutlinePolicy.MAX_SPEED, 0.1D, true);
+            case "qol.block_outline.rainbow_spread" ->
+                    new Spec(BlockOutlinePolicy.MIN_SPREAD, BlockOutlinePolicy.MAX_SPREAD, 0.1D, true);
             case "qol.stall_market.sell_threshold" ->
                     new Spec(0.0D, 2_000_000_000D, 10_000D, true);
             case "qol.foraging_helpers.sea_lumies_min" -> new Spec(1.0D, 4.0D, 1.0D, true);
