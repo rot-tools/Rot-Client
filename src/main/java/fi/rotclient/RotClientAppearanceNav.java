@@ -16,6 +16,8 @@ final class RotClientAppearanceNav {
     static final String HUD_BASICS = "appearance.hud_basics";
     static final String HUD_TEXT = "appearance.hud_text";
     static final String BUTTONS_BORDERS = "appearance.buttons_borders";
+    /** Top-level dropdown cards of the Appearance page: dashboard, colors, background, charts, reset. */
+    static final String CARD_PREFIX = "appearance.card.";
 
     private RotClientAppearanceNav() {
     }
@@ -57,8 +59,15 @@ final class RotClientAppearanceNav {
         return switch (id) {
             case DASHBOARD_BASICS, DASHBOARD_TEXT, HUD_BASICS, HUD_TEXT,
                     BUTTONS_BORDERS -> id;
-            default -> null;
+            default -> isCardId(id) ? id : null;
         };
+    }
+
+    static boolean isCardId(String id) {
+        if (id == null || !id.startsWith(CARD_PREFIX)) {
+            return false;
+        }
+        return AppearanceCards.card(id.substring(CARD_PREFIX.length())) != null;
     }
 
     static boolean isExpanded(Collection<String> expanded, String sectionId) {
