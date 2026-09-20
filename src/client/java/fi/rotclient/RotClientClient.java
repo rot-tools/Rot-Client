@@ -703,8 +703,7 @@ public final class RotClientClient implements ClientModInitializer {
                 }
             } else {
                 GemstoneTrackerState state =
-                        CONFIG.gemstoneState(
-                                selection.gemstone());
+                        CONFIG.selectedGemstoneTimeline();
 
                 state.persistActiveTime(
                         now,
@@ -712,6 +711,9 @@ public final class RotClientClient implements ClientModInitializer {
 
                 state.lastBreakEpochMillis =
                         0L;
+                if (selection.isAllGemstones()) {
+                    CONFIG.clearGemstoneBreakClocks();
+                }
             }
 
             save();
@@ -2974,8 +2976,7 @@ private static int toggle(FabricClientCommandSource source) {
     static void resetSessionData() {
         TrackerSelection selection = selectedSelection();
         if (selection.isGemstone()) {
-            CONFIG.gemstoneState(
-                            selection.gemstone())
+            CONFIG.selectedGemstoneTimeline()
                     .persistActiveTime(
                             System.currentTimeMillis(),
                             PAUSE_AFTER_MILLIS);
@@ -3037,12 +3038,7 @@ private static int toggle(FabricClientCommandSource source) {
             SALE_GATES.get(material).reset();
         }
 
-        for (GemstoneType gemstone : GemstoneType.values()) {
-            CONFIG.gemstoneState(
-                    gemstone)
-                    .lastBreakEpochMillis =
-                    0L;
-        }
+        CONFIG.clearGemstoneBreakClocks();
 
         HUD.onMaterialChanged();
         TrackerStore.save(CONFIG);
@@ -3059,8 +3055,7 @@ private static int toggle(FabricClientCommandSource source) {
                     System.currentTimeMillis();
 
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            selection.gemstone());
+                    CONFIG.selectedGemstoneTimeline();
 
             if (!enabled) {
                 state.persistActiveTime(
@@ -3070,6 +3065,9 @@ private static int toggle(FabricClientCommandSource source) {
 
             state.lastBreakEpochMillis =
                     0L;
+            if (selection.isAllGemstones()) {
+                CONFIG.clearGemstoneBreakClocks();
+            }
 
             GEMSTONE_GAIN_DETECTOR.reset();
             CONFIG.enabled = enabled;
@@ -3184,8 +3182,7 @@ private static int toggle(FabricClientCommandSource source) {
         }
         else if (previousSelection.isGemstone()) {
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            previousSelection.gemstone());
+                    CONFIG.gemstoneTimeline(previousSelection);
 
             state.persistActiveTime(
                     now,
@@ -3193,6 +3190,9 @@ private static int toggle(FabricClientCommandSource source) {
 
             state.lastBreakEpochMillis =
                     0L;
+            if (previousSelection.isAllGemstones()) {
+                CONFIG.clearGemstoneBreakClocks();
+            }
         }
 
         CONFIG.setSelectedSelection(safeSelection);
@@ -3367,15 +3367,13 @@ private static int toggle(FabricClientCommandSource source) {
                     "Shadow baseline selection cannot be null");
         }
         if (selection.isGemstone()) {
-            GemstoneLedger ledger = CONFIG.gemstoneState(
-                    selection.gemstone()).sessionLedger();
+            GemstoneLedger ledger = CONFIG.gemstoneSessionLedger(selection);
             Map<GemstoneTier, Long> tierQuantities =
                     new EnumMap<>(GemstoneTier.class);
             for (GemstoneTier tier : GemstoneTier.values()) {
                 tierQuantities.put(tier, ledger.quantity(tier));
             }
-            GemstoneTrackerState state = CONFIG.gemstoneState(
-                    selection.gemstone());
+            GemstoneTrackerState state = CONFIG.gemstoneTimeline(selection);
             return MiningSessionParity.LiveBaseline.gemstone(
                     selection,
                     tierQuantities,
@@ -3411,9 +3409,8 @@ private static int toggle(FabricClientCommandSource source) {
             GemstoneType gemstone,
             long epochMillis) {
         if (!isGemstoneTrackingActive()
-                || gemstone == null
-                || CONFIG.selectedGemstone()
-                != gemstone) {
+                || !CONFIG.selectedSelection()
+                .tracksGemstone(gemstone)) {
             SESSION_ENGINE.onConfirmedGemstoneBreak(
                     gemstone,
                     epochMillis);
@@ -3424,7 +3421,9 @@ private static int toggle(FabricClientCommandSource source) {
                 CONFIG.gemstoneState(
                         gemstone);
 
-        state.persistActiveTime(
+        // The clock belongs to the selection: the gemstone itself, or the
+        // shared aggregate when tracking all gemstones.
+        CONFIG.selectedGemstoneTimeline().persistActiveTime(
                 epochMillis,
                 PAUSE_AFTER_MILLIS);
 
@@ -3703,15 +3702,11 @@ private static int toggle(FabricClientCommandSource source) {
                 selectedSelection();
 
         if (selection.isGemstone()) {
-            GemstoneType gemstone =
-                    selection.gemstone();
-
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            gemstone);
+                    CONFIG.gemstoneTimeline(selection);
 
             GemstoneLedger ledger =
-                    state.sessionLedger();
+                    CONFIG.gemstoneSessionLedger(selection);
 
             long activeMillis =
                     state.currentSessionActiveMillis(
@@ -3720,7 +3715,7 @@ private static int toggle(FabricClientCommandSource source) {
 
             source.sendFeedback(Component.literal(String.format(
                     Locale.ROOT,
-                    "Rot Client status (%s Gemstone)\n"
+                    "Rot Client status (%s)\n"
                             + "Blocks: %d\n"
                             + "Rough: %d\n"
                             + "Flawed: %d\n"
@@ -3731,7 +3726,9 @@ private static int toggle(FabricClientCommandSource source) {
                             + "Rough equivalent: %d\n"
                             + "Active time: %.1f seconds\n"
                             + "Tracker: %s",
-                    gemstone.displayName(),
+                    selection.isAllGemstones()
+                            ? selection.displayName()
+                            : selection.displayName() + " Gemstone",
                     state.sessionBlocks,
                     ledger.quantity(
                             GemstoneTier.ROUGH),
@@ -4622,31 +4619,34 @@ private static int toggle(FabricClientCommandSource source) {
                     DiagnosticRecorder.start();
 
             if (selection.isGemstone()) {
-                GemstoneType gemstone =
-                        selection.gemstone();
-
-                GemstoneTrackerState state =
-                        CONFIG.gemstoneState(gemstone);
+                GemstoneLedger sessionLedger =
+                        CONFIG.gemstoneSessionLedger(selection);
+                long totalItems = 0L;
+                long totalRoughEquivalent = 0L;
+                for (GemstoneType gemstone : selection.gemstones()) {
+                    GemstoneLedger total =
+                            CONFIG.gemstoneState(gemstone).totalLedger();
+                    totalItems += total.totalItemCount();
+                    totalRoughEquivalent += total.totalRoughEquivalent();
+                }
 
                 DiagnosticRecorder.record(
                         "SNAPSHOT",
                         "selection=gemstone"
                                 + " gemstone="
-                                + gemstone.id()
+                                + (selection.isAllGemstones()
+                                        ? "ALL"
+                                        : selection.gemstone().id())
                                 + " trackerEnabled="
                                 + CONFIG.enabled
                                 + " sessionItems="
-                                + state.sessionLedger()
-                                        .totalItemCount()
+                                + sessionLedger.totalItemCount()
                                 + " sessionRoughEquivalent="
-                                + state.sessionLedger()
-                                        .totalRoughEquivalent()
+                                + sessionLedger.totalRoughEquivalent()
                                 + " totalItems="
-                                + state.totalLedger()
-                                        .totalItemCount()
+                                + totalItems
                                 + " totalRoughEquivalent="
-                                + state.totalLedger()
-                                        .totalRoughEquivalent());
+                                + totalRoughEquivalent);
             } else {
                 TrackedMaterial material =
                         selectedMaterial();
