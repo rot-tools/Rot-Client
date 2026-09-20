@@ -62,6 +62,28 @@ and the project uses semantic versioning where practical.
   mayor/party/Maxwell rows, title/footer markup (`&&` colors), and a rounded
   panel. Vanilla sidebar hide is on by default; the module stays off until
   enabled. Catalog lock is **131**.
+* Mining HUD redesigned to be smaller and see-through. The two stacked opaque
+  cards (268 wide, about 425 tall with everything on) are now one card
+  172 wide and about 225 tall, and it now uses the same panel style as the
+  Pet HUD (HUD Layout background colour and opacity, rounded corners, soft
+  shadow, thin border) with no opaque panel strips. Header, blocks,
+  metrics and footer each take one line; the auto-pause countdown is a thin
+  bar; item rows are 12px with scaled icons. Every existing HUD toggle still
+  works. Gemstone HUD uses the same layout and its height now follows the
+  title/status/footer toggles like ore targets do.
+
+* New **All Gemstones** tracker target (Mining Tracker target dropdown, just
+  above Ruby). Every gemstone is tracked at once: each keeps its own ledger,
+  and a shared aggregate carries the block count and active-time clock, so
+  rates are not double counted when you mix gemstones. Current Session and
+  history treat all of them as the target. The HUD shows a compact table with
+  one colour-coded row per gemstone you have actually gained (best rough
+  equivalent first, six rows then "+N more") and Rgh / Flwd / Fine / Flwl /
+  Perf columns (only tiers you actually have get a column), so it grows only
+  with what you mine. Fixed text overlap in the gemstone ledger header and in
+  a few other HUD rows: the game scales the UI font wider than assumed, so
+  table columns, the bazaar TAX label and long values are now laid out from
+  measured text widths instead of fixed positions.
 
 ### Dungeons (Athen / Nebulune port)
 

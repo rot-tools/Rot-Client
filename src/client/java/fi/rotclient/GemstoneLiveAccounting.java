@@ -34,6 +34,9 @@ final class GemstoneLiveAccounting {
             return false;
         }
 
+        if (config.selectedSelection().isAllGemstones()) {
+            config.gemstoneAggregateState().recordBlock(epochMillis);
+        }
         config.gemstoneState(
                 gemstone)
                 .recordBlock(
@@ -73,7 +76,7 @@ final class GemstoneLiveAccounting {
             return false;
         }
 
-        return config.selectedGemstone()
-                == gemstone;
+        return config.selectedSelection()
+                .tracksGemstone(gemstone);
     }
 }
