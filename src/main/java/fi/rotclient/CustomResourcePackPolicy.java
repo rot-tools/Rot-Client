@@ -141,9 +141,13 @@ public final class CustomResourcePackPolicy {
         return packId;
     }
 
+    /**
+     * The dark packs never touch {@code hypixel_skyblock:} item models, so they work with
+     * Legacy SkyBlock Textures in every combination. Kept as a named answer for callers.
+     */
     public static boolean independentOfLegacyTextures(
             boolean customPackOn,
             boolean legacyTexturesOn) {
-        return customPackOn || legacyTexturesOn || (!customPackOn && !legacyTexturesOn);
+        return true;
     }
 }

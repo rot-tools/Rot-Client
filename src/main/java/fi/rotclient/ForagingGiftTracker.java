@@ -51,7 +51,11 @@ public final class ForagingGiftTracker {
         }
         Matcher rewards = REWARDS.matcher(ForagingPolicy.strip(line));
         if (rewards.find()) {
-            lastRewards = Integer.parseInt(rewards.group(1).replace(",", ""));
+            try {
+                lastRewards = Integer.parseInt(rewards.group(1).replace(",", ""));
+            } catch (NumberFormatException ignored) {
+                lastRewards = 0;
+            }
             giftsThisSession++;
             inGift = false;
             return true;

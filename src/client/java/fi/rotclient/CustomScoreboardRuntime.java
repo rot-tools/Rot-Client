@@ -24,6 +24,14 @@ final class CustomScoreboardRuntime {
     private static final CustomScoreboardPolicy.DeltaBook DELTAS =
             new CustomScoreboardPolicy.DeltaBook();
     private static List<CustomScoreboardPolicy.Row> cachedRows = List.of();
+    private static long lastComposeAtMillis;
+
+    private static List<CustomScoreboardPolicy.Row> preparedSourceRows =
+            List.of();
+    private static List<PreparedRow> preparedRows =
+            List.of();
+    private static Font preparedFont;
+
     private static long cacheUntilMillis;
     private static SidebarCapture lastCapture = new SidebarCapture("", List.of(), false);
     private static long lastCaptureAt;
@@ -34,6 +42,12 @@ final class CustomScoreboardRuntime {
     private static int lastW;
     private static int lastH;
     private static boolean lastVisible;
+
+    private record PreparedRow(
+            CustomScoreboardPolicy.Row row,
+            Component component,
+            int width) {
+    }
 
     private CustomScoreboardRuntime() {
     }
@@ -72,40 +86,50 @@ final class CustomScoreboardRuntime {
             lastVisible = false;
             return;
         }
+
+        List<PreparedRow> renderRows = prepareRows(font, rows);
+
         int lineH = CustomScoreboardPolicy.lineAdvance(options.lineSpacing());
         int border = Math.max(0, board.bgBorder);
         int maxW = 20;
-        for (CustomScoreboardPolicy.Row row : rows) {
-            maxW = Math.max(maxW, RotClientFonts.legacyWidth(font, row.text()));
+        for (PreparedRow prepared : renderRows) {
+            maxW = Math.max(maxW, prepared.width());
         }
         int panelW = maxW + border * 2 + 8;
         int panelH = Math.max(lineH, rows.size() * lineH) + border * 2 + 6;
         int screenW = client.getWindow().getGuiScaledWidth();
         int screenH = client.getWindow().getGuiScaledHeight();
         float[] pose = qol.pose(CustomScoreboardPolicy.POSE_ID);
+        float scale = pose.length > 2 ? Math.max(0.4F, pose[2]) : 1.0F;
+        int scaledW = Math.round(panelW * scale);
+        int scaledH = Math.round(panelH * scale);
         int x = CustomScoreboardPolicy.panelX(
-                screenW, panelW, options.alignH(), options.margin(), Math.round(pose[0]));
+                screenW, scaledW, options.alignH(), options.margin(), Math.round(pose[0]));
         int y = CustomScoreboardPolicy.panelY(
-                screenH, panelH, options.alignV(), options.margin(), Math.round(pose[1]));
+                screenH, scaledH, options.alignV(), options.margin(), Math.round(pose[1]));
         lastX = x;
         lastY = y;
-        lastW = panelW;
-        lastH = panelH;
+        lastW = scaledW;
+        lastH = scaledH;
         lastVisible = true;
-        float scale = pose.length > 2 ? Math.max(0.4F, pose[2]) : 1.0F;
         graphics.pose().pushMatrix();
         graphics.pose().translate(x, y);
         graphics.pose().scale(scale, scale);
         drawPanel(graphics, board, 0, 0, panelW, panelH);
         int textY = border + 3;
-        for (CustomScoreboardPolicy.Row row : rows) {
-            int textX = textX(font, row, panelW, border);
-            RotClientUiDraw.legacyText(graphics, font, row.text(), textX, textY, 0xFFFFFFFF, true);
+        for (PreparedRow prepared : renderRows) {
+            CustomScoreboardPolicy.Row row = prepared.row();
+            int textX = textX(row, prepared.width(), panelW, border);
+            graphics.text(
+                    font,
+                    prepared.component(),
+                    textX,
+                    textY,
+                    0xFFFFFFFF,
+                    true);
             textY += lineH;
         }
         graphics.pose().popMatrix();
-        lastW = Math.round(panelW * scale);
-        lastH = Math.round(panelH * scale);
     }
 
     static boolean hit(double mouseX, double mouseY) {
@@ -126,11 +150,19 @@ final class CustomScoreboardRuntime {
 
     static void clearCache() {
         cachedRows = List.of();
+        lastComposeAtMillis = 0L;
+        clearPreparedRows();
         cacheUntilMillis = 0L;
         lastCapture = new SidebarCapture("", List.of(), false);
         lastCaptureAt = 0L;
         warnedUnknown.clear();
         lastVisible = false;
+    }
+
+    private static void clearPreparedRows() {
+        preparedFont = null;
+        preparedSourceRows = List.of();
+        preparedRows = List.of();
     }
 
     private static boolean qolHudEditor(QolUtilityConfig qol) {
@@ -145,6 +177,14 @@ final class CustomScoreboardRuntime {
         if (options.cacheOnSwitch() && now < cacheUntilMillis && !cachedRows.isEmpty()) {
             return cachedRows;
         }
+
+        if (!CustomScoreboardRefreshPolicy.shouldRecompose(
+                now,
+                lastComposeAtMillis,
+                !cachedRows.isEmpty())) {
+            return cachedRows;
+        }
+
         SidebarCapture capture = captureCached(client, now);
         List<String> tab = SkyBlockTabSnapshotRuntime.lines(client, now);
         SkyBlockStatBarParser.Stats combat = RotClientClient.qolHud() == null
@@ -168,13 +208,16 @@ final class CustomScoreboardRuntime {
         CustomScoreboardPolicy.ComposeResult result =
                 CustomScoreboardPolicy.compose(view, options, DELTAS);
         cachedRows = result.rows();
+        lastComposeAtMillis = now;
         warnUnknown(board, result.unknownPlain(), now);
         return cachedRows;
     }
 
     static void onWorldChange() {
         lastCaptureAt = 0L;
+        lastComposeAtMillis = 0L;
         lastCapture = new SidebarCapture("", List.of(), false);
+        clearPreparedRows();
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (qol != null && qol.extras().board().cacheOnSwitch) {
             cacheUntilMillis = System.currentTimeMillis() + 7_000L;
@@ -193,6 +236,7 @@ final class CustomScoreboardRuntime {
             board.alignV = "Don't Align";
             board.hudX = lastX;
             board.hudY = lastY;
+            board.invalidateOptions();
         }
     }
 
@@ -227,8 +271,41 @@ final class CustomScoreboardRuntime {
         }
     }
 
-    private static int textX(Font font, CustomScoreboardPolicy.Row row, int panelW, int border) {
-        int width = RotClientFonts.legacyWidth(font, row.text());
+    private static List<PreparedRow> prepareRows(
+            Font font,
+            List<CustomScoreboardPolicy.Row> rows) {
+
+        if (font == preparedFont
+                && rows.equals(preparedSourceRows)) {
+            return preparedRows;
+        }
+
+        List<PreparedRow> prepared =
+                new ArrayList<>(rows.size());
+
+        for (CustomScoreboardPolicy.Row row : rows) {
+            Component component =
+                    RotClientFonts.legacy(row.text());
+
+            prepared.add(new PreparedRow(
+                    row,
+                    component,
+                    font.width(component)));
+        }
+
+        preparedFont = font;
+        preparedSourceRows = List.copyOf(rows);
+        preparedRows = List.copyOf(prepared);
+
+        return preparedRows;
+    }
+
+    private static int textX(
+            CustomScoreboardPolicy.Row row,
+            int width,
+            int panelW,
+            int border) {
+
         return switch (row.align()) {
             case CENTER -> Math.max(border, (panelW - width) / 2);
             case RIGHT -> Math.max(border, panelW - border - 4 - width);
@@ -290,16 +367,23 @@ final class CustomScoreboardRuntime {
             return new SidebarCapture(title, lines, alpha);
         }
         title = sectionString(sidebar.getDisplayName());
+        List<CustomScoreboardLines.SidebarEntry> entries = new ArrayList<>();
         for (PlayerScoreEntry entry : scoreboard.listPlayerScores(sidebar)) {
+            if (entry.isHidden()) {
+                continue;
+            }
             Component name = PlayerTeam.formatNameForTeam(
                     scoreboard.getPlayersTeam(entry.owner()), entry.ownerName());
-            String line = sectionString(name);
-            lines.add(line);
+            entries.add(new CustomScoreboardLines.SidebarEntry(
+                    entry.owner(), entry.value(), sectionString(name)));
+        }
+        lines.addAll(CustomScoreboardLines.orderSidebar(entries));
+        for (String line : lines) {
             if (CustomScoreboardPolicy.strip(line).toLowerCase().contains("alpha.hypixel.net")) {
                 alpha = true;
+                break;
             }
         }
-        java.util.Collections.reverse(lines);
         return new SidebarCapture(title, lines, alpha);
     }
 

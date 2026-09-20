@@ -934,6 +934,13 @@ public final class DungeonRuntime {
         extraStatsSeen = false;
         dungeonRunStarted = false;
         dungeonWorldTicks = 0;
+        DungeonEntitySnapshot.clear();
+        hateDoorMarks = List.of();
+        hateDoorScanTick = -1L;
+        collectedSecretsObservedTick = -1L;
+        blazeFirst = null;
+        blazeSecond = null;
+        blazeOrderTick = -1L;
         HateDoorsRuntime.clear();
         lastRelic = "";
         leapHideAtMs = 0L;
@@ -1408,8 +1415,10 @@ public final class DungeonRuntime {
         if (extras.dungeonEspEnabled) {
             boolean needNamed = needsNamedDungeonEsp(extras);
             if (extras.dungeonEspBats || extras.dungeonEspTeammates || needNamed) {
-                for (LivingEntity living : client.level.getEntitiesOfClass(LivingEntity.class, search)) {
-                    if (living == player) {
+                for (DungeonEntitySnapshot.Seen<LivingEntity> seen
+                        : DungeonEntitySnapshot.living(client, player)) {
+                    LivingEntity living = seen.entity();
+                    if (living == player || seen.gone()) {
                         continue;
                     }
                     if (living instanceof Player) {
@@ -1422,7 +1431,7 @@ public final class DungeonRuntime {
                         box(living.getBoundingBox(), extras.dungeonEspBatColor, extras, eye);
                     }
                     if (needNamed) {
-                        considerNamedEsp(living, extras, eye);
+                        considerNamedEsp(seen, extras, eye);
                     }
                 }
             }
@@ -1757,7 +1766,8 @@ public final class DungeonRuntime {
 
     static void updateDragonHud(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonF7Enabled || !extras.dungeonF7Dragons || !extras.dungeonF7DragonHealth
-                || client.player == null || client.level == null) {
+                || client.player == null || client.level == null
+                || !SkyBlockDungeonDetector.confidentlyInDungeon()) {
             return;
         }
         AABB search = client.player.getBoundingBox().inflate(80.0D);
@@ -2066,6 +2076,48 @@ public final class DungeonRuntime {
 
 
 
+    private static final int HATE_DOOR_SCAN_TICKS = 5;
+    private static List<HateDoorMark> hateDoorMarks = List.of();
+    private static long hateDoorScanTick = -1L;
+
+    private record HateDoorMark(BlockPos pos, int color) {
+    }
+
+    private static List<HateDoorMark> scanHateDoors(
+            Minecraft client, LocalPlayer player, QolSkyblockExtras extras) {
+        List<HateDoorMark> marks = new ArrayList<>();
+        BlockPos origin = player.blockPosition();
+        for (int dx = -6; dx <= 6; dx++) {
+            for (int dy = -3; dy <= 6; dy++) {
+                for (int dz = -6; dz <= 6; dz++) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    String id = blockId(client, pos);
+                    if (!EmberDungeonPolicy.isHateDoorBlock(
+                            id,
+                            extras.dungeonEspHateWither,
+                            extras.dungeonEspHateBlood,
+                            extras.dungeonEspHateEntrance)) {
+                        continue;
+                    }
+                    int color;
+                    if (extras.dungeonEspHateBlood && id.contains("red")) {
+                        color = EmberDungeonPolicy.glassArgb(
+                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateBloodGlass));
+                    } else if (extras.dungeonEspHateEntrance && (id.contains("lime")
+                            || id.contains("green") || id.contains("oak"))) {
+                        color = EmberDungeonPolicy.glassArgb(
+                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateEntranceGlass));
+                    } else {
+                        color = EmberDungeonPolicy.glassArgb(
+                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateWitherGlass));
+                    }
+                    marks.add(new HateDoorMark(pos, color));
+                }
+            }
+        }
+        return marks;
+    }
+
     static void highlightEmberWorld(
             Minecraft client,
             LocalPlayer player,
@@ -2073,34 +2125,13 @@ public final class DungeonRuntime {
             Vec3 eye,
             AABB search) {
         if (extras.dungeonEspEnabled && extras.dungeonEspHateDoors) {
-            BlockPos origin = player.blockPosition();
-            for (int dx = -6; dx <= 6; dx++) {
-                for (int dy = -3; dy <= 6; dy++) {
-                    for (int dz = -6; dz <= 6; dz++) {
-                        BlockPos pos = origin.offset(dx, dy, dz);
-                        String id = blockId(client, pos);
-                        if (!EmberDungeonPolicy.isHateDoorBlock(
-                                id,
-                                extras.dungeonEspHateWither,
-                                extras.dungeonEspHateBlood,
-                                extras.dungeonEspHateEntrance)) {
-                            continue;
-                        }
-                        int color;
-                        if (extras.dungeonEspHateBlood && id.contains("red")) {
-                            color = EmberDungeonPolicy.glassArgb(
-                                    EmberDungeonPolicy.glassTint(extras.dungeonEspHateBloodGlass));
-                        } else if (extras.dungeonEspHateEntrance && (id.contains("lime")
-                                || id.contains("green") || id.contains("oak"))) {
-                            color = EmberDungeonPolicy.glassArgb(
-                                    EmberDungeonPolicy.glassTint(extras.dungeonEspHateEntranceGlass));
-                        } else {
-                            color = EmberDungeonPolicy.glassArgb(
-                                    EmberDungeonPolicy.glassTint(extras.dungeonEspHateWitherGlass));
-                        }
-                        box(blockBox(pos), color, extras, eye);
-                    }
-                }
+            // 1,700 block lookups, each building a registry id string, used to run every frame.
+            if (DungeonPolicy.scanDue(dungeonWorldTicks, hateDoorScanTick, HATE_DOOR_SCAN_TICKS)) {
+                hateDoorMarks = scanHateDoors(client, player, extras);
+                hateDoorScanTick = dungeonWorldTicks;
+            }
+            for (HateDoorMark mark : hateDoorMarks) {
+                box(blockBox(mark.pos()), mark.color(), extras, eye);
             }
         }
         if (extras.dungeonEspEnabled && extras.dungeonEspSecretWaypoints) {
@@ -2111,13 +2142,12 @@ public final class DungeonRuntime {
                     hashedTileIdentity);
             String currentName = currentHashedRoomName(client);
             for (DungeonRoomDataPolicy.PlacedWaypoint waypoint : secretWaypoints) {
-                if (shouldHideCollectedSecret(client, extras, waypoint)) {
-                    continue;
-                }
+                // Every waypoint of the whole dungeon used to hit the world (chunk check plus block
+                // id) before the room test threw it away, on every frame.
                 boolean currentRoom = DungeonMapPolicy.inRoomTiles(
                         waypoint.x(), waypoint.z(), currentTiles)
                         || (!currentName.isBlank() && currentName.equalsIgnoreCase(waypoint.roomName()));
-                if (!currentRoom) {
+                if (!currentRoom || shouldHideCollectedSecret(client, extras, waypoint)) {
                     continue;
                 }
                 BlockPos pos = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
@@ -2150,17 +2180,20 @@ public final class DungeonRuntime {
                 }
             }
             if (holdingSpray) {
-                for (LivingEntity living : client.level.getEntitiesOfClass(LivingEntity.class, search)) {
-                    if (EmberDungeonPolicy.isIcedMobName(entityName(living))) {
-                        box(living.getBoundingBox(), extras.dungeonEspSecretColor, extras, eye);
+                for (DungeonEntitySnapshot.Seen<LivingEntity> seen
+                        : DungeonEntitySnapshot.living(client, player)) {
+                    if (!seen.gone() && EmberDungeonPolicy.isIcedMobName(seen.name())) {
+                        box(seen.entity().getBoundingBox(), extras.dungeonEspSecretColor, extras, eye);
                     }
                 }
             }
         }
         if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsHitboxes) {
             DungeonAthenSettings athen = extras.athen();
-            for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-                if (!EmberDungeonPolicy.isInactiveTerminal(entityName(stand))) {
+            for (DungeonEntitySnapshot.Seen<LivingEntity> seen
+                    : DungeonEntitySnapshot.living(client, player)) {
+                if (!(seen.entity() instanceof ArmorStand stand) || seen.gone()
+                        || !EmberDungeonPolicy.isInactiveTerminal(seen.name())) {
                     continue;
                 }
                 if (EmberDungeonPolicy.terminalSection(stand.getX(), stand.getY(), stand.getZ()) > 0) {
@@ -2266,18 +2299,20 @@ public final class DungeonRuntime {
                     EmberDungeonPolicy.LIVID_WOOL.z());
             EmberDungeonPolicy.lividFromWool(blockId(client, wool)).ifPresent(name -> {
                 lastLivid = name;
-                for (Player other : client.level.getEntitiesOfClass(Player.class, search)) {
-                    if (other == player) {
+                for (DungeonEntitySnapshot.Seen<LivingEntity> seen
+                        : DungeonEntitySnapshot.living(client, player)) {
+                    LivingEntity other = seen.entity();
+                    if (other == player || seen.gone()) {
                         continue;
                     }
-                    if (EmberDungeonPolicy.hologramMatchesLivid(entityName(other), name)
-                            || EmberDungeonPolicy.hologramMatchesLivid(other.getName().getString(), name)) {
+                    if (other instanceof Player) {
+                        if (EmberDungeonPolicy.hologramMatchesLivid(seen.name(), name)
+                                || EmberDungeonPolicy.hologramMatchesLivid(other.getName().getString(), name)) {
+                            box(other.getBoundingBox(), extras.dungeonEspLividColor, extras, eye);
+                        }
+                    } else if (other instanceof ArmorStand
+                            && EmberDungeonPolicy.hologramMatchesLivid(seen.name(), name)) {
                         box(other.getBoundingBox(), extras.dungeonEspLividColor, extras, eye);
-                    }
-                }
-                for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-                    if (EmberDungeonPolicy.hologramMatchesLivid(entityName(stand), name)) {
-                        box(stand.getBoundingBox(), extras.dungeonEspLividColor, extras, eye);
                     }
                 }
             });
@@ -2911,18 +2946,19 @@ public final class DungeonRuntime {
     }
 
     static void considerNamedEsp(
-            Entity entity,
+            DungeonEntitySnapshot.Seen<? extends Entity> seen,
             QolSkyblockExtras extras,
             Vec3 eye) {
-        String name = entityName(entity);
-        String lower = name.toLowerCase(Locale.ROOT);
+        Entity entity = seen.entity();
+        String name = seen.name();
+        String lower = seen.lower();
         if (extras.dungeonEspSecrets && lower.contains("secret")) {
             int secretColor = lower.contains("chest")
                     ? extras.dungeonEspChestColor
                     : extras.dungeonEspSecretColor;
             box(entity.getBoundingBox(), secretColor, extras, eye);
         }
-        DungeonPolicy.EspKind kind = DungeonPolicy.classifyHologram(name);
+        DungeonPolicy.EspKind kind = seen.kind();
         if (kind == DungeonPolicy.EspKind.BLAZE) {
             return;
         }
@@ -4107,7 +4143,16 @@ public final class DungeonRuntime {
         terminalPredictedAt = 0L;
     }
 
-    private record BlazeMark(AABB box, int health, double y) {
+    private static final int BLAZE_ORDER_TICKS = 2;
+    private static LivingEntity blazeFirst;
+    private static LivingEntity blazeSecond;
+    private static long blazeOrderTick = -1L;
+
+    private static AABB blazeBox(LivingEntity blaze) {
+        return blaze.getBoundingBox().inflate(0.5D, 1.0D, 0.5D).move(0.0D, -1.0D, 0.0D);
+    }
+
+    private record BlazeMark(LivingEntity entity, int health, double y) {
     }
 
     static void highlightBlazeOrder(
@@ -4119,19 +4164,31 @@ public final class DungeonRuntime {
         if (!extras.dungeonPuzzlesEnabled || !extras.dungeonPuzzlesBlaze || client.level == null) {
             return;
         }
+        if (DungeonPolicy.scanDue(dungeonWorldTicks, blazeOrderTick, BLAZE_ORDER_TICKS)) {
+            blazeOrderTick = dungeonWorldTicks;
+            orderBlazes(client, player);
+        }
+        if (blazeFirst != null && !blazeFirst.isRemoved()) {
+            box(blazeBox(blazeFirst), 0xFF22C55E, extras, eye);
+            if (blazeSecond != null && !blazeSecond.isRemoved()) {
+                box(blazeBox(blazeSecond), 0xFFFACC15, extras, eye);
+                tracer(blazeBox(blazeFirst).getCenter(), blazeBox(blazeSecond).getCenter(), 0xFFFACC15, extras);
+            }
+        }
+    }
+
+    private static void orderBlazes(Minecraft client, LocalPlayer player) {
+        blazeFirst = null;
+        blazeSecond = null;
         List<BlazeMark> blazes = new ArrayList<>();
-        for (LivingEntity living : client.level.getEntitiesOfClass(LivingEntity.class, search)) {
-            if (living == player || living instanceof Player) {
+        for (DungeonEntitySnapshot.Seen<LivingEntity> seen : DungeonEntitySnapshot.living(client, player)) {
+            LivingEntity living = seen.entity();
+            if (living == player || living instanceof Player || seen.gone()
+                    || seen.kind() != DungeonPolicy.EspKind.BLAZE) {
                 continue;
             }
-            String name = entityName(living);
-            if (DungeonPolicy.classifyHologram(name) != DungeonPolicy.EspKind.BLAZE) {
-                continue;
-            }
-            DungeonPolicy.blazeHealth(name).ifPresent(hp -> blazes.add(new BlazeMark(
-                    living.getBoundingBox().inflate(0.5D, 1.0D, 0.5D).move(0.0D, -1.0D, 0.0D),
-                    hp,
-                    living.getY())));
+            DungeonPolicy.blazeHealth(seen.name()).ifPresent(hp ->
+                    blazes.add(new BlazeMark(living, hp, living.getY())));
         }
         if (blazes.isEmpty()) {
             return;
@@ -4152,17 +4209,22 @@ public final class DungeonRuntime {
         blazes.sort(lowestFirst
                 ? Comparator.comparingInt(BlazeMark::health)
                 : Comparator.comparingInt(BlazeMark::health).reversed());
-        box(blazes.getFirst().box(), 0xFF22C55E, extras, eye);
-        if (blazes.size() > 1) {
-            box(blazes.get(1).box(), 0xFFFACC15, extras, eye);
-            tracer(blazes.getFirst().box().getCenter(), blazes.get(1).box().getCenter(), 0xFFFACC15, extras);
-        }
+        blazeFirst = blazes.getFirst().entity();
+        blazeSecond = blazes.size() > 1 ? blazes.get(1).entity() : null;
     }
+
+    private static final int COLLECTED_SECRET_TICKS = 4;
+    private static long collectedSecretsObservedTick = -1L;
 
     static void observeCollectedSecrets(Minecraft client, QolSkyblockExtras extras) {
         if (!extras.dungeonEspHideCollected || client == null || client.level == null) {
             return;
         }
+        // Called from the render pass; a secret does not change faster than a few ticks.
+        if (!DungeonPolicy.scanDue(dungeonWorldTicks, collectedSecretsObservedTick, COLLECTED_SECRET_TICKS)) {
+            return;
+        }
+        collectedSecretsObservedTick = dungeonWorldTicks;
         for (DungeonRoomDataPolicy.PlacedWaypoint waypoint : secretWaypoints) {
             String key = DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z());
             if (collectedSecrets.contains(key)) {
@@ -4572,14 +4634,13 @@ public final class DungeonRuntime {
         if (!extras.dungeonEspEnabled || !extras.dungeonEspItems || client.level == null) {
             return;
         }
-        for (ItemEntity item : client.level.getEntitiesOfClass(ItemEntity.class, search)) {
-            ItemStack stack = item.getItem();
-            String name = stack == null || stack.isEmpty() ? "" : stack.getHoverName().getString();
-            if (!DungeonBladePolicy.highlightDungeonDrop(
+        for (DungeonEntitySnapshot.Seen<ItemEntity> seen : DungeonEntitySnapshot.items(client, player)) {
+            ItemEntity item = seen.entity();
+            if (seen.gone() || !DungeonBladePolicy.highlightDungeonDrop(
                     true,
                     true,
                     sidebar.boss(),
-                    name)) {
+                    seen.name())) {
                 continue;
             }
             int color = DungeonBladePolicy.dungeonDropColor(
@@ -4607,9 +4668,10 @@ public final class DungeonRuntime {
         if (droppedKey != TempleDungeonPolicy.KeySkull.NONE) {
             return;
         }
-        AABB search = client.player.getBoundingBox().inflate(DungeonPolicy.ESP_SCAN_RANGE);
-        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-            if (seenKeyStands.contains(stand.getId())) {
+        for (DungeonEntitySnapshot.Seen<LivingEntity> seen
+                : DungeonEntitySnapshot.living(client, client.player)) {
+            if (!(seen.entity() instanceof ArmorStand stand) || seen.gone()
+                    || seenKeyStands.contains(stand.getId())) {
                 continue;
             }
             TempleDungeonPolicy.KeySkull skull = TempleDungeonPolicy.keySkull(helmetUuid(stand));

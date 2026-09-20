@@ -108,7 +108,7 @@ public final class NameHiderPolicy {
             if (!regionMatchesIgnoreCase(text, i, username)) {
                 continue;
             }
-            if (isNameBoundary(text, i - 1) && isNameBoundary(text, i + nameLen)) {
+            if (isLeftBoundary(text, i) && isNameBoundary(text, i + nameLen)) {
                 return i;
             }
         }
@@ -117,6 +117,18 @@ public final class NameHiderPolicy {
 
     private static boolean regionMatchesIgnoreCase(String text, int offset, String username) {
         return text.regionMatches(true, offset, username, 0, username.length());
+    }
+
+    /**
+     * The character before a name is a boundary unless it is a name character. A legacy
+     * colour code such as {@code §a} ends in a letter or digit, so {@code §aSteve} would
+     * otherwise look like part of a longer word and the name would not be hidden.
+     */
+    private static boolean isLeftBoundary(String text, int nameStart) {
+        if (isNameBoundary(text, nameStart - 1)) {
+            return true;
+        }
+        return nameStart >= 2 && text.charAt(nameStart - 2) == '\u00A7';
     }
 
     /**

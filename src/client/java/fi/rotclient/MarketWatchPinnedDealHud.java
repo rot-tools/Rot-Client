@@ -3,22 +3,18 @@ package fi.rotclient;
 import java.util.List;
 import java.util.Locale;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 final class MarketWatchPinnedDealHud {
 
-    private static final int MARGIN =
-            10;
-
-    private static final int CARD_WIDTH =
+    static final int CARD_WIDTH =
             278;
 
-    private static final int CARD_HEIGHT =
+    static final int CARD_HEIGHT =
             58;
 
-    private static final int CARD_GAP =
+    static final int CARD_GAP =
             6;
 
     private static final long STALE_AFTER_MILLIS =
@@ -27,36 +23,39 @@ final class MarketWatchPinnedDealHud {
     private MarketWatchPinnedDealHud() {
     }
 
+    /**
+     * Total stacked height for {@code pinCount} cards, used by the HUD
+     * editor to size the draggable region. 0 when there is nothing pinned.
+     */
+    static int contentHeight(int pinCount) {
+        if (pinCount <= 0) {
+            return 0;
+        }
+
+        return pinCount * CARD_HEIGHT
+                + (pinCount - 1) * CARD_GAP;
+    }
+
     static void render(
             GuiGraphicsExtractor graphics,
-            Minecraft client) {
+            Font font,
+            List<MarketWatchPinnedDeal> pins,
+            int x,
+            int y) {
 
         if (graphics == null
-                || client == null
-                || client.font == null) {
+                || font == null
+                || pins == null
+                || pins.isEmpty()) {
 
             return;
         }
-
-        List<MarketWatchPinnedDeal> pins =
-                MarketWatchPinnedDealStore
-                        .all();
-
-        if (pins.isEmpty()) {
-            return;
-        }
-
-        Font font =
-                client.font;
-
-        int x =
-                MARGIN;
-
-        int y =
-                MARGIN;
 
         long now =
                 System.currentTimeMillis();
+
+        int rowY =
+                y;
 
         for (MarketWatchPinnedDeal pin
                 : pins) {
@@ -70,10 +69,10 @@ final class MarketWatchPinnedDealHud {
                     font,
                     pin,
                     x,
-                    y,
+                    rowY,
                     now);
 
-            y +=
+            rowY +=
                     CARD_HEIGHT
                             + CARD_GAP;
         }
@@ -110,19 +109,29 @@ final class MarketWatchPinnedDealHud {
         boolean stale =
                 age >= STALE_AFTER_MILLIS;
 
+        String seller =
+                pin.sellerName();
+
         String state =
-                stale
+                (stale
                         ? "PINNED  |  STALE "
                         + ageLabel(
                                 age)
                         : "PINNED  |  "
                         + ageLabel(
-                                age);
+                                age))
+                        + (seller.isBlank()
+                        ? ""
+                        : "  |  "
+                        + seller);
 
         RotClientUiDraw.text(
                 graphics,
                 font,
-                state,
+                fit(
+                        font,
+                        state,
+                        CARD_WIDTH - 20),
                 x + 10,
                 y + 6,
                 stale

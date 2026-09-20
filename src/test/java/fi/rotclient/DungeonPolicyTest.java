@@ -230,4 +230,14 @@ class DungeonPolicyTest {
         assertEquals("", DungeonPolicy.leapHeadLabel(List.of("Class: Tank")));
         assertEquals("", DungeonPolicy.leapHeadLabel(List.of("Undead sword")));
     }
+
+    @Test
+    void throttledScansRunOnFirstUseThenOnInterval() {
+        assertTrue(DungeonPolicy.scanDue(0, -1, 5), "never ran");
+        assertFalse(DungeonPolicy.scanDue(100, 98, 5));
+        assertFalse(DungeonPolicy.scanDue(102, 98, 5));
+        assertTrue(DungeonPolicy.scanDue(103, 98, 5));
+        assertTrue(DungeonPolicy.scanDue(200, 98, 5));
+        assertTrue(DungeonPolicy.scanDue(3, 500, 5), "the clock restarted in a new world");
+    }
 }

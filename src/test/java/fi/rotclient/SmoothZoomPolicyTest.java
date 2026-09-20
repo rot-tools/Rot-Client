@@ -10,6 +10,15 @@ import org.junit.jupiter.api.Test;
 
 class SmoothZoomPolicyTest {
     @Test
+    void zoomKeyIsIgnoredWhileAScreenIsOpen() {
+        assertTrue(SmoothZoomPolicy.canZoom(true, false, true));
+        // Typing "c" in chat or an inventory must not zoom the camera behind the screen.
+        assertFalse(SmoothZoomPolicy.canZoom(true, true, true));
+        assertFalse(SmoothZoomPolicy.canZoom(false, false, true));
+        assertFalse(SmoothZoomPolicy.canZoom(true, false, false));
+    }
+
+    @Test
     void easesInAndBackOut() {
         double progress = 0.0D;
 

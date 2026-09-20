@@ -102,12 +102,17 @@ public final class SmoothZoomRuntime {
     }
 
     private static boolean zoomHeld(Minecraft client, QolUtilityConfig qol) {
+        // Zoom only applies while playing: typing the bound letter in chat or an inventory must
+        // not zoom the camera behind the screen, and the wheel must keep scrolling that screen.
         boolean canZoom =
-                client.level != null
-                        && client.player != null
-                        && client.getWindow() != null
-                        && qol.zoomKeybind != null
-                        && !qol.zoomKeybind.isBlank();
+                SmoothZoomPolicy.canZoom(
+                        client.level != null
+                                && client.player != null
+                                && client.getWindow() != null,
+                        client.gui != null
+                                && client.gui.screen() != null,
+                        qol.zoomKeybind != null
+                                && !qol.zoomKeybind.isBlank());
 
         return canZoom
                 && QolKeybindNames.isBoundDown(

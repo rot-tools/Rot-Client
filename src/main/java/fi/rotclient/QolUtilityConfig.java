@@ -51,6 +51,8 @@ final class QolUtilityConfig {
 
     boolean petHudEnabled = true;
 
+    boolean marketWatchPinsHudEnabled = true;
+
     boolean nameHiderEnabled;
     String nameHiderMode = NameHiderPolicy.MODE_SCRAMBLE;
     String nameHiderCustomName = "";
@@ -338,6 +340,8 @@ final class QolUtilityConfig {
     float speedHudY = 358.0F;
     float petHudX = 12.0F;
     float petHudY = 80.0F;
+    float marketWatchPinsHudX = 10.0F;
+    float marketWatchPinsHudY = 10.0F;
     float slayerHudX = 12.0F;
     float slayerHudY = 400.0F;
     float slayerProgressHudX = 172.0F;
@@ -405,6 +409,7 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay" -> inventoryOverlayEnabled;
             case "qol.skill_levels" -> skillLevelsEnabled;
             case "qol.pet_hud" -> petHudEnabled;
+            case "qol.market_watch_pins_hud" -> marketWatchPinsHudEnabled;
             case "qol.name_hider" -> nameHiderEnabled;
             case "qol.fishing_helper" -> fishingHelperEnabled;
             case "qol.item_tooltips" ->
@@ -448,6 +453,7 @@ final class QolUtilityConfig {
             case "qol.inventory_overlay" -> inventoryOverlayEnabled = enabled;
             case "qol.skill_levels" -> skillLevelsEnabled = enabled;
             case "qol.pet_hud" -> petHudEnabled = enabled;
+            case "qol.market_watch_pins_hud" -> marketWatchPinsHudEnabled = enabled;
             case "qol.name_hider" -> nameHiderEnabled = enabled;
             case "qol.fishing_helper" -> fishingHelperEnabled = enabled;
             case "qol.item_tooltips" -> {
@@ -1380,6 +1386,7 @@ final class QolUtilityConfig {
             case "ehp" -> new float[] {ehpHudX, ehpHudY, 1.0F};
             case "speed" -> new float[] {speedHudX, speedHudY, 1.0F};
             case "pet" -> new float[] {petHudX, petHudY, 1.0F};
+            case "market_pins" -> new float[] {marketWatchPinsHudX, marketWatchPinsHudY, 1.0F};
             case "commission" -> new float[] {commissionHudX, commissionHudY, 1.0F};
             case "wardrobe" -> new float[] {wardrobeHudX, wardrobeHudY, 1.0F};
             case "slayer" -> new float[] {slayerHudX, slayerHudY, 1.0F};
@@ -1445,6 +1452,10 @@ final class QolUtilityConfig {
             case "pet" -> {
                 petHudX = clampPos(x);
                 petHudY = clampPos(y);
+            }
+            case "market_pins" -> {
+                marketWatchPinsHudX = clampPos(x);
+                marketWatchPinsHudY = clampPos(y);
             }
             case "commission" -> {
                 commissionHudX = clampPos(x);
@@ -1807,6 +1818,12 @@ final class QolUtilityConfig {
                 petHudX = d.petHudX;
                 petHudY = d.petHudY;
                 extras().resetHudStyle("pet");
+            }
+            case "qol.market_watch_pins_hud" -> {
+                marketWatchPinsHudEnabled = d.marketWatchPinsHudEnabled;
+                marketWatchPinsHudX = d.marketWatchPinsHudX;
+                marketWatchPinsHudY = d.marketWatchPinsHudY;
+                extras().resetHudStyle("market_pins");
             }
             case "qol.name_hider" -> {
                 nameHiderEnabled = d.nameHiderEnabled;

@@ -786,6 +786,30 @@ public final class ForagingPolicy {
         return "Temple " + pendingCells + " tile" + (pendingCells == 1 ? "" : "s");
     }
 
+    /** Desert Temple button order as a HUD line, e.g. "Temple Red > Light Blue". */
+    public static String desertTempleHudLine(List<String> order) {
+        if (order == null || order.isEmpty()) {
+            return "";
+        }
+        return "Temple " + order.stream()
+                .map(ForagingPolicy::friendlyColor)
+                .collect(java.util.stream.Collectors.joining(" > "));
+    }
+
+    private static String friendlyColor(String key) {
+        StringBuilder out = new StringBuilder();
+        for (String word : key.toLowerCase(Locale.ROOT).split("_")) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (!out.isEmpty()) {
+                out.append(' ');
+            }
+            out.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        return out.toString();
+    }
+
     public static String sweepHudLine(int tabSweep, int clusterWood, int maxWood) {
         if (tabSweep <= 0 && maxWood <= 0) {
             return "";
@@ -841,7 +865,8 @@ public final class ForagingPolicy {
             return List.of();
         }
         return colorCounts.entrySet().stream()
-                .sorted(Comparator.comparingInt(Map.Entry::getValue))
+                .sorted(Comparator.<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                        .thenComparing(Map.Entry::getKey))
                 .map(Map.Entry::getKey)
                 .toList();
     }

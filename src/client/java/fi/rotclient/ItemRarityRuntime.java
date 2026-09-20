@@ -16,6 +16,21 @@ public final class ItemRarityRuntime {
     private ItemRarityRuntime() {
     }
 
+    /*
+     * renderHotbar() re-parsed every hotbar item's lore into a rarity on
+     * every single rendered frame, even though the 9 hotbar slots almost
+     * never change between frames. These remember the last stack instance
+     * seen in each slot and its resolved rarity, so an unchanged slot skips
+     * loreLines()/parseRarity() entirely. Reference equality is enough here:
+     * a slot's ItemStack instance changes whenever its contents actually
+     * change (item swap, pickup, container sync), and this is purely
+     * cosmetic tinting, so the rare case of an in-place mutation the cache
+     * misses for one frame is harmless.
+     */
+    private static final ItemStack[] HOTBAR_RARITY_STACK = new ItemStack[9];
+    private static final ItemRarityPolicy.Rarity[] HOTBAR_RARITY_CACHE =
+            new ItemRarityPolicy.Rarity[9];
+
     public static void afterContainerContents(
             AbstractContainerScreen<?> screen,
             GuiGraphicsExtractor graphics,
@@ -73,10 +88,54 @@ public final class ItemRarityRuntime {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = inventory.getItem(i);
             if (stack.isEmpty()) {
+                HOTBAR_RARITY_STACK[i] = null;
                 continue;
             }
-            paint(graphics, left + 3 + i * 20, y + 3, stack, qol, false, true);
+            paint(
+                    graphics,
+                    left + 3 + i * 20,
+                    y + 3,
+                    resolveHotbarRarity(i, stack),
+                    qol,
+                    false,
+                    true);
         }
+    }
+
+    /*
+     * Container screens and the hotbar background used to re-parse every filled
+     * slot's lore on every frame (up to ~90 slots in a double chest). This small
+     * direct-mapped cache keeps a result per stack instance for half a second, which
+     * still picks up an in-place lore change quickly and is render-thread only.
+     */
+    private static final int STACK_CACHE_SIZE = 256;
+    private static final long STACK_CACHE_MS = 500L;
+    private static final ItemStack[] STACK_CACHE_KEY = new ItemStack[STACK_CACHE_SIZE];
+    private static final ItemRarityPolicy.Rarity[] STACK_CACHE_VALUE =
+            new ItemRarityPolicy.Rarity[STACK_CACHE_SIZE];
+    private static final long[] STACK_CACHE_UNTIL = new long[STACK_CACHE_SIZE];
+
+    private static ItemRarityPolicy.Rarity rarityOf(ItemStack stack) {
+        int slot = (System.identityHashCode(stack) & 0x7FFFFFFF) % STACK_CACHE_SIZE;
+        long now = System.currentTimeMillis();
+        if (STACK_CACHE_KEY[slot] == stack && now < STACK_CACHE_UNTIL[slot]) {
+            return STACK_CACHE_VALUE[slot];
+        }
+        ItemRarityPolicy.Rarity rarity = ItemRarityPolicy.parseRarity(lore(stack));
+        STACK_CACHE_KEY[slot] = stack;
+        STACK_CACHE_VALUE[slot] = rarity;
+        STACK_CACHE_UNTIL[slot] = now + STACK_CACHE_MS;
+        return rarity;
+    }
+
+    private static ItemRarityPolicy.Rarity resolveHotbarRarity(int slot, ItemStack stack) {
+        if (HOTBAR_RARITY_STACK[slot] == stack) {
+            return HOTBAR_RARITY_CACHE[slot];
+        }
+        ItemRarityPolicy.Rarity rarity = ItemRarityPolicy.parseRarity(lore(stack));
+        HOTBAR_RARITY_STACK[slot] = stack;
+        HOTBAR_RARITY_CACHE[slot] = rarity;
+        return rarity;
     }
 
     private static void paint(
@@ -87,7 +146,17 @@ public final class ItemRarityRuntime {
             QolUtilityConfig qol,
             boolean fill,
             boolean outline) {
-        ItemRarityPolicy.Rarity rarity = ItemRarityPolicy.parseRarity(lore(stack));
+        paint(graphics, x, y, rarityOf(stack), qol, fill, outline);
+    }
+
+    private static void paint(
+            GuiGraphicsExtractor graphics,
+            int x,
+            int y,
+            ItemRarityPolicy.Rarity rarity,
+            QolUtilityConfig qol,
+            boolean fill,
+            boolean outline) {
         if (rarity == null) {
             return;
         }

@@ -30,12 +30,7 @@ abstract class FogRendererMixin {
             data.renderDistanceEnd = Float.MAX_VALUE;
             data.environmentalStart = Float.MAX_VALUE;
             data.environmentalEnd = Float.MAX_VALUE;
-            return;
         }
-        float factor = QolVisualRuntime.netherFogFactor();
-        if (factor < 1.0F) {
-            data.environmentalStart *= factor;
-            data.environmentalEnd *= factor;
-        }
+        // Nether Fog Darkening is applied by NetherFogDarkeningMixin in the standard edition.
     }
 }
