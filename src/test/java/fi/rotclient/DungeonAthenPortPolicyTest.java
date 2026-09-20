@@ -190,6 +190,16 @@ final class DungeonAthenPortPolicyTest {
     }
 
     @Test
+    void partyFinderStatsLineNamesTheFailureReason() {
+        assertEquals("Steve stats unavailable (SkyCrypt HTTP 429)",
+                DungeonPartyFinderPolicy.statsLine("Steve", null, "SkyCrypt HTTP 429"));
+        assertEquals("Steve stats unavailable",
+                DungeonPartyFinderPolicy.statsLine("Steve", null, ""));
+        assertEquals("Steve stats unavailable",
+                DungeonPartyFinderPolicy.statsLine("Steve", null));
+    }
+
+    @Test
     void breakerInstamineSkipsSecrets() {
         assertTrue(DungeonAthenPortPolicy.shouldInstamineBreaker(
                 true, true, true, true, 3, "minecraft:stone"));

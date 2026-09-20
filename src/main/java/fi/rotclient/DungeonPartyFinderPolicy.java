@@ -215,6 +215,13 @@ public final class DungeonPartyFinderPolicy {
     }
 
     public static String statsLine(String player, Stats stats) {
+        return statsLine(player, stats, "");
+    }
+
+    public static String statsLine(String player, Stats stats, String failure) {
+        if (failure != null && !failure.isBlank()) {
+            return player + " stats unavailable (" + failure + ")";
+        }
         if (stats == null) {
             return player + " stats unavailable";
         }
