@@ -9,21 +9,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class HudLayoutMathTest {
     @Test
     void topMetricsRemoveTheirOwnSpaceAndReflow() {
-        assertEquals(167, HudLayoutMath.topCardHeight(true, true, true, true));
-        assertEquals(139, HudLayoutMath.topCardHeight(false, true, true, true));
-        assertEquals(128, HudLayoutMath.topCardHeight(true, false, true, true));
-        assertEquals(138, HudLayoutMath.topCardHeight(true, true, false, false));
-        assertEquals(71, HudLayoutMath.topCardHeight(false, false, false, false));
+        assertEquals(78, HudLayoutMath.topCardHeight(true, true, true, true));
+        assertEquals(67, HudLayoutMath.topCardHeight(false, true, true, true));
+        assertEquals(59, HudLayoutMath.topCardHeight(true, false, true, true));
+        assertEquals(67, HudLayoutMath.topCardHeight(true, true, false, false));
+        assertEquals(37, HudLayoutMath.topCardHeight(false, false, false, false));
     }
 
     @Test
     void topCardChromeFlagsShrinkHeightWhenDisabled() {
         int full = HudLayoutMath.topCardHeight(
                 true, true, true, true, true, true, true, true, true, true);
-        assertEquals(167, full);
+        assertEquals(78, full);
         int withArea = HudLayoutMath.topCardHeight(
                 true, true, true, true, true, true, true, true, true, true, true);
-        assertEquals(167 + HudLayoutMath.AREA_ROW_HEIGHT, withArea);
+        assertEquals(78 + HudLayoutMath.AREA_ROW_HEIGHT, withArea);
         int noChrome = HudLayoutMath.topCardHeight(
                 true, true, true, true, false, true, true, true, false, false);
         assertTrue(full > noChrome);
@@ -52,49 +52,49 @@ final class HudLayoutMathTest {
 
     @Test
     void itemAndValueRowsHaveMatchingDynamicHeights() {
-        assertEquals(162, HudLayoutMath.profitCardHeight(
+        assertEquals(75, HudLayoutMath.profitCardHeight(
                 true, false, false, false, false, false));
-        assertEquals(162, HudLayoutMath.profitCardHeight(
+        assertEquals(75, HudLayoutMath.profitCardHeight(
                 false, true, false, false, false, false));
-        assertEquals(180, HudLayoutMath.profitCardHeight(
+        assertEquals(87, HudLayoutMath.profitCardHeight(
                 true, true, false, false, false, false));
-        assertEquals(134, HudLayoutMath.profitCardHeight(
+        assertEquals(64, HudLayoutMath.profitCardHeight(
                 false, false, true, false, false, false));
-        assertEquals(131, HudLayoutMath.profitCardHeight(
+        assertEquals(63, HudLayoutMath.profitCardHeight(
                 false, false, false, false, false, true));
     }
 
     @Test
     void combinedTargetAllocatesRowsForBothMaterialLedgers() {
-        assertEquals(216, HudLayoutMath.profitCardHeight(
+        assertEquals(111, HudLayoutMath.profitCardHeight(
                 true, true, false, false, false, false, 2));
-        assertEquals(288, HudLayoutMath.profitCardHeight(
+        assertEquals(164, HudLayoutMath.profitCardHeight(
                 true, true, true, true, true, true, 2));
     }
 
     @Test
     void gemstoneTopCardHeightTracksBlocksAndGraphOnly() {
         assertEquals(
-                101,
+                48,
                 HudLayoutMath.gemstoneTopCardHeight(false, false));
         assertEquals(
-                129,
+                59,
                 HudLayoutMath.gemstoneTopCardHeight(true, false));
         assertEquals(
-                140,
+                67,
                 HudLayoutMath.gemstoneTopCardHeight(false, true));
         assertEquals(
-                168,
+                78,
                 HudLayoutMath.gemstoneTopCardHeight(true, true));
     }
 
     @Test
     void gemstoneLedgerAndFullHudHeightsStayInSync() {
-        assertEquals(150, HudLayoutMath.gemstoneLedgerCardHeight());
-        assertEquals(257, HudLayoutMath.gemstoneHudHeight(false, false));
-        assertEquals(285, HudLayoutMath.gemstoneHudHeight(true, false));
-        assertEquals(296, HudLayoutMath.gemstoneHudHeight(false, true));
-        assertEquals(324, HudLayoutMath.gemstoneHudHeight(true, true));
+        assertEquals(95, HudLayoutMath.gemstoneLedgerCardHeight());
+        assertEquals(147, HudLayoutMath.gemstoneHudHeight(false, false));
+        assertEquals(158, HudLayoutMath.gemstoneHudHeight(true, false));
+        assertEquals(166, HudLayoutMath.gemstoneHudHeight(false, true));
+        assertEquals(177, HudLayoutMath.gemstoneHudHeight(true, true));
     }
 
     @Test
@@ -106,7 +106,7 @@ final class HudLayoutMathTest {
                 true, false, false, false, false, false, 1,
                 false, true, true, true);
         assertTrue(full > noOther);
-        assertEquals(full - 32, noOther);
+        assertEquals(full - HudLayoutMath.ITEM_ROW, noOther);
 
         int noValues = HudLayoutMath.profitCardHeight(
                 true, false, false, false, false, false, 1,
@@ -122,7 +122,7 @@ final class HudLayoutMathTest {
         int withoutHeading = HudLayoutMath.profitCardHeight(
                 true, false, false, false, false, false, 1,
                 true, true, true, true, false);
-        assertEquals(14, withHeading - withoutHeading);
+        assertEquals(HudLayoutMath.HEADING_ROW, withHeading - withoutHeading);
     }
 
     @Test
@@ -136,19 +136,57 @@ final class HudLayoutMathTest {
     }
 
     @Test
+    void allGemstonesLedgerGrowsPerGemstoneThenCapsWithAMoreRow() {
+        int empty = HudLayoutMath.gemstoneAllLedgerHeight(0);
+        int one = HudLayoutMath.gemstoneAllLedgerHeight(1);
+        // Nothing gained yet still reserves one placeholder row.
+        assertEquals(one, empty);
+        assertEquals(51, one);
+        assertEquals(one + HudLayoutMath.VALUE_ROW,
+                HudLayoutMath.gemstoneAllLedgerHeight(2));
+
+        int capped = HudLayoutMath.gemstoneAllLedgerHeight(
+                HudLayoutMath.MAX_ALL_GEMSTONE_ROWS);
+        assertEquals(one + (HudLayoutMath.MAX_ALL_GEMSTONE_ROWS - 1)
+                * HudLayoutMath.VALUE_ROW, capped);
+        // One more gemstone than fits adds only the "+N more" row.
+        assertEquals(capped + HudLayoutMath.VALUE_ROW,
+                HudLayoutMath.gemstoneAllLedgerHeight(
+                        HudLayoutMath.MAX_ALL_GEMSTONE_ROWS + 1));
+        // ...and stays put no matter how many more there are.
+        assertEquals(HudLayoutMath.gemstoneAllLedgerHeight(
+                        HudLayoutMath.MAX_ALL_GEMSTONE_ROWS + 1),
+                HudLayoutMath.gemstoneAllLedgerHeight(12));
+        assertEquals(one, HudLayoutMath.gemstoneAllLedgerHeight(-3));
+    }
+
+    @Test
+    void allGemstonesIsShorterThanTheFullSingleGemstoneLedgerUntilMany() {
+        assertTrue(HudLayoutMath.gemstoneAllLedgerHeight(3)
+                < HudLayoutMath.gemstoneLedgerCardHeight());
+        assertEquals(
+                HudLayoutMath.gemstoneTopCardHeight(true, true, false)
+                        + HudLayoutMath.SECTION_GAP
+                        + HudLayoutMath.gemstoneAllLedgerHeight(2),
+                HudLayoutMath.gemstoneAllHudHeight(
+                        true, true, false,
+                        true, true, true, true, true, true, 2));
+    }
+
+    @Test
     void gemstoneHeightAndScaleClampToLogicalScreenBounds() {
         int gemstoneHeight =
                 HudLayoutMath.gemstoneHudHeight(true, true);
 
         assertEquals(
-                276.0,
+                423.0,
                 HudLayoutMath.clampOrigin(
                         500.0,
                         600,
                         gemstoneHeight,
                         1.0F));
         assertEquals(
-                114.0,
+                334.5,
                 HudLayoutMath.clampOrigin(
                         500.0,
                         600,
@@ -158,7 +196,7 @@ final class HudLayoutMathTest {
                 0.0,
                 HudLayoutMath.clampOrigin(
                         500.0,
-                        400,
+                        200,
                         gemstoneHeight,
                         1.5F));
         assertEquals(

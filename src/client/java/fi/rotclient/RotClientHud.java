@@ -10,13 +10,36 @@ import net.minecraft.world.item.ItemStack;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Locale;
 
+/**
+ * Mining HUD: one compact, translucent card. Row heights come from
+ * {@link HudLayoutMath} so drawing and drag/clamp bounds cannot drift apart.
+ */
 final class RotClientHud {
-    static final int WIDTH = 268;
-    private static final int CARD_GAP = 6;
+    static final int WIDTH = 172;
+    private static final int PAD = 6;
+    private static final int INNER = WIDTH - 2 * PAD;
+    private static final int NAME_X = PAD + 14;
+    /** Right edge of the quantity column in item / ledger rows. */
+    private static final int QTY_RIGHT = WIDTH - PAD - 34;
+    /**
+     * Quantity column of the single-gemstone ledger. It sits well left of
+     * the "ROUGH EQ" heading so the two headings cannot overlap.
+     */
+    private static final int LEDGER_QTY_RIGHT = WIDTH - PAD - 62;
+    /** Air between columns in the All Gemstones matrix. */
+    private static final int MATRIX_GAP = 6;
+    /** Used instead when the columns would leave too little room for names. */
+    private static final int MATRIX_TIGHT_GAP = 3;
+    private static final int MATRIX_MIN_NAME = 24;
+    private static final float ICON_SCALE = 0.625F;
     private static final int MAX_RATE_SAMPLES = 64;
+    /** No per-element override exists, so this resolves to the HUD Layout style. */
+    private static final String HUD_STYLE_ID = "mining_tracker";
 
     private static final DecimalFormat NUMBER = new DecimalFormat("#,##0.#");
 
@@ -31,6 +54,10 @@ final class RotClientHud {
     private double smoothedBlocksPerHour;
     private double graphScaleMaximum = 1;
 
+    /** One inline "value label" figure in the metric row. */
+    private record Metric(String value, String label) {
+    }
+
     RotClientHud(TrackerConfig config) {
         this.config = config;
     }
@@ -39,8 +66,7 @@ final class RotClientHud {
         if (!config.enabled) return;
 
         if (config.selectedSelection().isGemstone()) {
-            renderGemstone(
-                    graphics);
+            renderGemstone(graphics);
             return;
         }
 
@@ -50,11 +76,8 @@ final class RotClientHud {
         long sessionBlocks = RotClientClient.selectedSessionBlocks();
         long sessionBaseDrops =
                 RotClientClient.selectedSessionBaseDrops();
-        sampleMiningRate(
-                sessionBlocks,
-                now,
-                RotClientClient.isActive(
-                        now));
+        boolean active = RotClientClient.isActive(now);
+        sampleMiningRate(sessionBlocks, now, active);
 
         long activeMillis = RotClientClient.currentSessionActiveMillis(now);
         boolean fortuneKnown = !config.fortuneAuto
@@ -106,691 +129,725 @@ final class RotClientHud {
                 ? 0
                 : sessionValue * 3_600_000.0 / activeMillis;
 
+        List<Metric> metrics = new ArrayList<>(3);
+        if (config.showMaterialPerHour) {
+            metrics.add(new Metric(compact(liveResourcePerHour), "/h"));
+        }
+        if (config.showDropAndFortune) {
+            metrics.add(new Metric(NUMBER.format(averagePerBlock), "avg"));
+            metrics.add(new Metric("~" + compact(observedFortune), "fort"));
+        }
+
         int topHeight = topCardHeight();
-        boolean profitCardVisible = hasProfitCard();
         int fullHeight = currentHeight();
 
         graphics.pose().pushMatrix();
         graphics.pose().translate(config.x, config.y);
         graphics.pose().scale(config.scale, config.scale);
 
-        drawTopCard(
+        drawCard(graphics, 0, 0, WIDTH, fullHeight);
+        drawTopSection(
                 graphics,
-                target,
+                target.displayName(),
                 sessionBlocks,
                 now,
-                topHeight,
                 activeMillis,
-                averagePerBlock,
-                observedFortune,
-                liveResourcePerHour);
-        if (profitCardVisible) {
-            drawProfitCard(graphics, target, now,
-                    topHeight + CARD_GAP,
-                    fullHeight - topHeight - CARD_GAP,
+                active,
+                RotClientClient.lastSelectedBreakEpochMillis(),
+                metrics,
+                RotClientVersionLabel.brandLabel());
+        if (hasProfitCard()) {
+            drawRule(graphics, topHeight);
+            drawValueSection(
+                    graphics, target, now,
+                    topHeight + HudLayoutMath.SECTION_GAP,
                     sessionValue, unsoldValue, coinsPerHour);
         }
 
         graphics.pose().popMatrix();
     }
 
-    private void renderGemstone(
-            GuiGraphicsExtractor graphics) {
-        long now =
-                System.currentTimeMillis();
+    private void renderGemstone(GuiGraphicsExtractor graphics) {
+        long now = System.currentTimeMillis();
+        TrackerSelection selection = config.selectedSelection();
+        GemstoneTrackerState state = config.gemstoneTimeline(selection);
+        GemstoneLedger ledger = config.gemstoneSessionLedger(selection);
+        long sessionBlocks = state.sessionBlocks;
+        boolean active = state.isActive(
+                now, RotClientClient.PAUSE_AFTER_MILLIS);
+        long activeMillis = state.currentSessionActiveMillis(
+                now, RotClientClient.PAUSE_AFTER_MILLIS);
+        sampleMiningRate(sessionBlocks, now, active);
 
-        GemstoneType gemstone =
-                config.selectedSelection()
-                        .gemstone();
+        long totalItems = ledger.totalItemCount();
+        long roughEquivalent = ledger.totalRoughEquivalent();
+        double averagePerBlock = sessionBlocks <= 0L
+                ? 0.0
+                : (double) roughEquivalent / sessionBlocks;
+        double roughEquivalentPerHour = activeMillis <= 0L
+                ? 0.0
+                : roughEquivalent * 3_600_000.0 / activeMillis;
 
-        GemstoneTrackerState state =
-                config.gemstoneState(
-                        gemstone);
+        List<Metric> metrics = List.of(
+                new Metric(compact(roughEquivalentPerHour), "eq/h"),
+                new Metric(NUMBER.format(averagePerBlock), "avg"),
+                new Metric(compact(roughEquivalent), "eq"));
 
-        GemstoneLedger ledger =
-                state.sessionLedger();
+        int topHeight = gemstoneTopCardHeight();
+        int fullHeight = currentHeight();
+        List<GemstoneRow> allRows = selection.isAllGemstones()
+                ? gemstoneRows()
+                : List.of();
 
-        long sessionBlocks =
-                state.sessionBlocks;
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(config.x, config.y);
+        graphics.pose().scale(config.scale, config.scale);
 
-        boolean active =
-                state.isActive(
-                        now,
-                        RotClientClient.PAUSE_AFTER_MILLIS);
-
-        long activeMillis =
-                state.currentSessionActiveMillis(
-                        now,
-                        RotClientClient.PAUSE_AFTER_MILLIS);
-
-        sampleMiningRate(
-                sessionBlocks,
-                now,
-                active);
-
-        long totalItems =
-                ledger.totalItemCount();
-
-        long roughEquivalent =
-                ledger.totalRoughEquivalent();
-
-        double averagePerBlock =
-                sessionBlocks <= 0L
-                        ? 0.0
-                        : (double) roughEquivalent
-                        / sessionBlocks;
-
-        double roughEquivalentPerHour =
-                activeMillis <= 0L
-                        ? 0.0
-                        : roughEquivalent
-                        * 3_600_000.0
-                        / activeMillis;
-
-        int topHeight =
-                gemstoneTopCardHeight();
-
-        int ledgerTop =
-                topHeight
-                        + CARD_GAP;
-
-        int fullHeight =
-                ledgerTop
-                        + gemstoneLedgerCardHeight();
-
-        graphics.pose()
-                .pushMatrix();
-
-        graphics.pose()
-                .translate(
-                        config.x,
-                        config.y);
-
-        graphics.pose()
-                .scale(
-                        config.scale,
-                        config.scale);
-
-        drawGemstoneTopCard(
+        drawCard(graphics, 0, 0, WIDTH, fullHeight);
+        drawTopSection(
                 graphics,
-                gemstone,
-                state,
+                selection.displayName(),
                 sessionBlocks,
                 now,
-                topHeight,
                 activeMillis,
-                averagePerBlock,
-                roughEquivalent,
-                roughEquivalentPerHour,
-                active);
+                active,
+                state.lastBreakEpochMillis,
+                metrics,
+                RotClientVersionLabel.gemstoneHudFooter());
+        drawRule(graphics, topHeight);
+        if (selection.isAllGemstones()) {
+            drawGemstoneMatrix(
+                    graphics,
+                    allRows,
+                    topHeight + HudLayoutMath.SECTION_GAP,
+                    totalItems,
+                    roughEquivalent);
+        } else {
+            drawGemstoneLedger(
+                    graphics,
+                    ledger,
+                    topHeight + HudLayoutMath.SECTION_GAP,
+                    totalItems,
+                    roughEquivalent);
+        }
 
-        drawGemstoneLedgerCard(
-                graphics,
-                gemstone,
-                ledger,
-                ledgerTop,
-                fullHeight - ledgerTop,
-                totalItems,
-                roughEquivalent);
-
-        graphics.pose()
-                .popMatrix();
+        graphics.pose().popMatrix();
     }
 
-    private void drawGemstoneTopCard(
-            GuiGraphicsExtractor graphics,
-            GemstoneType gemstone,
-            GemstoneTrackerState state,
-            long sessionBlocks,
-            long now,
-            int height,
-            long activeMillis,
-            double averagePerBlock,
-            long roughEquivalent,
-            double roughEquivalentPerHour,
-            boolean active) {
-        drawCard(
-                graphics,
-                0,
-                0,
-                WIDTH,
-                height);
-
-        boolean showTitle = config.showHudTitle;
-        boolean showStatus = config.showHudStatus;
-        int headerBottom = showTitle || showStatus ? 31 : 22;
-        int cursor = showTitle || showStatus ? 37 : 28;
-
-        if (config.hudShowBackground) {
-            roundedFill(
-                    graphics,
-                    1,
-                    1,
-                    WIDTH - 1,
-                    headerBottom,
-                    RotClientTheme.HUD_HEADER);
-        }
-
-        if (showTitle) {
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    gemstone.displayName()
-                            .toUpperCase(
-                                    Locale.ROOT)
-                            + " TRACKER",
-                    10,
-                    7,
-                    RotClientTheme.TEXT,
-                    true);
-        }
-
-        String subtitle =
-                config.showActiveTool
-                        ? activeGemstoneTool(
-                                gemstone)
-                        : gemstone.displayName()
-                        .toUpperCase(
-                                Locale.ROOT)
-                        + " | GEMSTONE MINING";
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                subtitle,
-                10,
-                showTitle ? 19 : 8,
-                RotClientTheme.TEXT_DIM,
-                false);
-
-        if (showStatus) {
-            drawGemstoneStatusPill(
-                    graphics,
-                    state,
-                    now);
-        }
+    /**
+     * Header, area, blocks, graph, metric row, footer and pause bar. Shared
+     * by ore and gemstone targets; each block advances the cursor by exactly
+     * the constant {@link HudLayoutMath#topCardHeight} adds for it.
+     */
+    private void drawTopSection(GuiGraphicsExtractor graphics,
+                                String name,
+                                long sessionBlocks,
+                                long now,
+                                long activeMillis,
+                                boolean active,
+                                long lastBreakMillis,
+                                List<Metric> metrics,
+                                String footerLabel) {
+        int cursor = HudLayoutMath.PAD_TOP;
+        cursor = drawHeader(graphics, name, active, sessionBlocks, cursor);
 
         if (config.showArea) {
             cursor = drawAreaRow(graphics, cursor);
         }
-
         if (config.showBlocks) {
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    "BLOCKS / HOUR",
-                    10,
-                    cursor + 1,
-                    RotClientTheme.TEXT_DIM,
-                    true);
-
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    compact(
-                            smoothedBlocksPerHour),
-                    10,
-                    cursor + 13,
-                    RotClientTheme.TEXT,
-                    true);
-
-            String trend =
-                    rateTrend();
-
-            int trendColor =
-                    trend.startsWith("\u2193")
-                            ? RotClientTheme.WARNING
-                            : RotClientTheme.SUCCESS;
-
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    trend,
-                    57,
-                    cursor + 14,
-                    trendColor,
-                    false);
-
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    "SESSION BLOCKS",
-                    WIDTH - 92,
-                    cursor + 1,
-                    RotClientTheme.TEXT_DIM,
-                    true);
-
-            drawRight(
-                    graphics,
-                    compact(
-                            sessionBlocks),
-                    WIDTH - 10,
-                    cursor + 13,
-                    RotClientTheme.HUD_ACCENT,
-                    true);
-
-            cursor +=
-                    28;
+            cursor = drawBlocksRow(graphics, sessionBlocks, cursor);
         }
-
         if (config.showRateGraph) {
             drawRateGraph(
-                    graphics,
-                    10,
-                    cursor,
-                    WIDTH - 10,
-                    cursor + 34);
-
-            cursor +=
-                    39;
+                    graphics, PAD, cursor,
+                    WIDTH - PAD, cursor + HudLayoutMath.GRAPH_HEIGHT);
+            cursor += HudLayoutMath.GRAPH_SECTION;
         }
-
-        graphics.fill(
-                1,
-                cursor - 3,
-                WIDTH - 1,
-                cursor + 22,
-                RotClientTheme.HUD_PANEL);
-
-        drawStripMetric(
-                graphics,
-                0,
-                3,
-                cursor,
-                "ROUGH EQ / HOUR",
-                compact(
-                        roughEquivalentPerHour));
-
-        drawStripMetric(
-                graphics,
-                1,
-                3,
-                cursor,
-                "AVG / BLOCK",
-                NUMBER.format(
-                        averagePerBlock));
-
-        drawStripMetric(
-                graphics,
-                2,
-                3,
-                cursor,
-                "ROUGH EQ",
-                compact(
-                        roughEquivalent));
-
-        cursor +=
-                29;
-
-        long lastBreak =
-                state.lastBreakEpochMillis;
-
-        long sinceBreak =
-                lastBreak <= 0L
-                        ? RotClientClient
-                        .PAUSE_AFTER_MILLIS
-                        : Math.max(
-                                0L,
-                                now - lastBreak);
-
-        double remaining =
-                active
-                        ? 1.0
-                        - Math.min(
-                                1.0,
-                                sinceBreak
-                                        / (double) RotClientClient
-                                        .PAUSE_AFTER_MILLIS)
-                        : 0.0;
-
-        int footerY = cursor;
+        if (!metrics.isEmpty()) {
+            drawMetricRow(graphics, metrics, cursor);
+            cursor += HudLayoutMath.METRIC_ROW;
+        }
+        if (config.showHudVersion || config.showSessionTime) {
+            int y = cursor + 1;
+            if (config.showHudVersion) {
+                RotClientUiDraw.text(graphics, font(), footerLabel,
+                        PAD, y, RotClientTheme.TEXT_DIM, false);
+            }
+            if (config.showSessionTime) {
+                drawRight(graphics, "◷ " + formatDuration(activeMillis),
+                        WIDTH - PAD, y, RotClientTheme.TEXT_MUTED, false);
+            }
+            cursor += HudLayoutMath.FOOTER_ROW;
+        }
         if (config.showHudAutoPause) {
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    "AUTO-PAUSE",
-                    10,
-                    cursor,
-                    RotClientTheme.TEXT_DIM,
-                    false);
-
-            String pauseValue =
-                    active
-                            ? Math.max(
-                                    0L,
-                                    (RotClientClient
-                                    .PAUSE_AFTER_MILLIS
-                                            - sinceBreak
-                                            + 999L)
-                                            / 1_000L)
-                            + "s"
-                            : "PAUSED";
-
-            drawRight(
-                    graphics,
-                    pauseValue,
-                    WIDTH - 10,
-                    cursor,
-                    RotClientTheme.TEXT_MUTED,
-                    false);
-
+            long sinceBreak = lastBreakMillis <= 0
+                    ? RotClientClient.PAUSE_AFTER_MILLIS
+                    : Math.max(0, now - lastBreakMillis);
+            double remaining = active
+                    ? 1.0 - Math.min(
+                            1.0,
+                            sinceBreak
+                                    / (double) RotClientClient
+                                    .PAUSE_AFTER_MILLIS)
+                    : 0;
+            int barTop = cursor + HudLayoutMath.PAUSE_BAR_SECTION
+                    - HudLayoutMath.PAUSE_BAR_HEIGHT;
             drawProgressBar(
-                    graphics,
-                    10,
-                    cursor + 11,
-                    WIDTH - 10,
-                    cursor + 16,
+                    graphics, PAD, barTop,
+                    WIDTH - PAD, barTop + HudLayoutMath.PAUSE_BAR_HEIGHT,
                     remaining);
+        }
+    }
 
-            footerY = cursor + 21;
+    /** One line: target, held tool, status. Returns the next cursor. */
+    private int drawHeader(GuiGraphicsExtractor graphics,
+                           String name,
+                           boolean active,
+                           long sessionBlocks,
+                           int cursor) {
+        boolean showTitle = config.showHudTitle;
+        boolean showStatus = config.showHudStatus;
+        boolean showTool = config.showActiveTool;
+        if (!showTitle && !showStatus && !showTool) return cursor;
+
+        int y = cursor + 2;
+        int left = PAD;
+        int right = WIDTH - PAD;
+        if (showStatus) {
+            String status = active
+                    ? "RUNNING"
+                    : (sessionBlocks > 0 ? "PAUSED" : "READY");
+            int color = active
+                    ? RotClientTheme.SUCCESS
+                    : (sessionBlocks > 0
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.TEXT_MUTED);
+            String label = "● " + status;
+            int width = RotClientFonts.width(font(), label);
+            RotClientUiDraw.text(
+                    graphics, font(), label, right - width, y, color, false);
+            right -= width + 8;
+        }
+        if (showTitle) {
+            String title = fitHudText(
+                    name.toUpperCase(Locale.ROOT), right - left);
+            RotClientUiDraw.text(graphics, font(), title, left, y,
+                    RotClientTheme.HUD_TITLE, true);
+            left += RotClientFonts.width(font(), title) + 8;
+        }
+        if (showTool && right - left > 24) {
+            String tool = fitHudText(heldToolName(), right - left);
+            RotClientUiDraw.text(graphics, font(), tool, left, y,
+                    RotClientTheme.HUD_TEXT_DIM, false);
+        }
+        return cursor + HudLayoutMath.HEADER_ROW;
+    }
+
+    /** "12.3k blocks/h  ↑4%" on the left, "4.5k total" on the right. */
+    private int drawBlocksRow(GuiGraphicsExtractor graphics,
+                              long sessionBlocks,
+                              int cursor) {
+        int y = cursor + 1;
+        String total = compact(sessionBlocks);
+        int totalWidth = pairWidth(total, "total");
+        drawPair(graphics, WIDTH - PAD - totalWidth, y, total,
+                RotClientTheme.HUD_ACCENT, "total");
+
+        int x = drawPair(graphics, PAD, y, compact(smoothedBlocksPerHour),
+                RotClientTheme.HUD_TEXT, "blocks/h");
+        String trend = compactTrend();
+        int trendWidth = RotClientFonts.width(font(), trend);
+        if (!trend.isEmpty()
+                && x + 5 + trendWidth < WIDTH - PAD - totalWidth - 6) {
+            int color = trend.startsWith("↓")
+                    ? RotClientTheme.WARNING
+                    : RotClientTheme.SUCCESS;
+            RotClientUiDraw.text(graphics, font(), trend, x + 5, y,
+                    color, false);
+        }
+        return cursor + HudLayoutMath.BLOCKS_ROW;
+    }
+
+    /**
+     * Inline figures spread across the row. If labels would not fit, the
+     * figures fall back to bare values rather than overlapping.
+     */
+    private void drawMetricRow(GuiGraphicsExtractor graphics,
+                               List<Metric> metrics,
+                               int cursor) {
+        int y = cursor + 1;
+        int minGap = 6;
+        int gaps = Math.max(0, metrics.size() - 1);
+        int labelled = 0;
+        for (Metric metric : metrics) {
+            labelled += pairWidth(metric.value(), metric.label());
+        }
+        boolean showLabels = labelled + minGap * gaps <= INNER;
+        int used = 0;
+        for (Metric metric : metrics) {
+            used += showLabels
+                    ? pairWidth(metric.value(), metric.label())
+                    : RotClientFonts.width(font(), metric.value());
+        }
+        int gap = gaps == 0 ? 0 : Math.max(minGap, (INNER - used) / gaps);
+        int x = PAD;
+        for (Metric metric : metrics) {
+            x = showLabels
+                    ? drawPair(graphics, x, y, metric.value(),
+                            RotClientTheme.HUD_ACCENT, metric.label())
+                    : drawPair(graphics, x, y, metric.value(),
+                            RotClientTheme.HUD_ACCENT, "");
+            x += gap;
+        }
+    }
+
+    /** Bright value followed by a dim label. Returns the end x. */
+    private int drawPair(GuiGraphicsExtractor graphics,
+                         int x, int y,
+                         String value, int valueColor, String label) {
+        RotClientUiDraw.text(graphics, font(), value, x, y, valueColor, true);
+        int end = x + RotClientFonts.width(font(), value);
+        if (label.isEmpty()) return end;
+        RotClientUiDraw.text(graphics, font(), label, end + 3, y,
+                RotClientTheme.HUD_TEXT_DIM, false);
+        return end + 3 + RotClientFonts.width(font(), label);
+    }
+
+    private int pairWidth(String value, String label) {
+        int width = RotClientFonts.width(font(), value);
+        return label.isEmpty()
+                ? width
+                : width + 3 + RotClientFonts.width(font(), label);
+    }
+
+    private void drawValueSection(GuiGraphicsExtractor graphics,
+                                  TrackingTarget target,
+                                  long now, int top,
+                                  double sessionValue,
+                                  double unsoldValue,
+                                  double coinsPerHour) {
+        MiningHudOtherSummary otherSummary =
+                RotClientClient.hudOtherMinedSummary();
+        boolean itemRows =
+                config.showRawMaterial || config.showEnchantedMaterial;
+        double targetValue = 0.0;
+        int cursor = top;
+        if (itemRows) {
+            if (config.showTargetHeading) {
+                RotClientUiDraw.text(graphics, font(), "TARGET",
+                        PAD, cursor + 1, RotClientTheme.TEXT_MUTED, true);
+                cursor += HudLayoutMath.HEADING_ROW;
+            }
+            for (TrackedMaterial material : target.materials()) {
+                if (config.showEnchantedMaterial) {
+                    long amount =
+                            RotClientClient.currentSessionEnchantedItems(
+                                    material);
+                    double value = RotClientClient.estimateNetValue(
+                            material, 0, amount);
+                    targetValue += value;
+                    drawMaterialItemRow(
+                            graphics, material, cursor,
+                            material.enchantedItemName(), amount, value,
+                            RotClientTheme.HUD_ACCENT);
+                    cursor += HudLayoutMath.ITEM_ROW;
+                }
+                if (config.showRawMaterial) {
+                    long amount = RotClientClient.currentSessionRawItems(
+                            material);
+                    double value = RotClientClient.estimateNetValue(
+                            material, amount, 0);
+                    targetValue += value;
+                    drawMaterialItemRow(
+                            graphics, material, cursor,
+                            material.rawItemName(), amount, value,
+                            RotClientTheme.CHART_LINE);
+                    cursor += HudLayoutMath.ITEM_ROW;
+                }
+            }
+        } else {
+            targetValue = sessionValue;
         }
 
-        if (config.showHudVersion) {
-            RotClientUiDraw.text(
+        if (config.showOtherSection) {
+            cursor = drawOthersSummaryRow(graphics, cursor, otherSummary);
+        }
+
+        boolean anyValueLine = config.showTargetValue
+                || config.showOtherValue
+                || config.showTotalMinedValue
+                || config.showSessionProfit
+                || config.showCoinsPerHour
+                || config.showUnsoldValue;
+        if ((itemRows || config.showOtherSection) && anyValueLine) {
+            drawRule(graphics, cursor);
+            cursor += HudLayoutMath.SEPARATOR;
+        }
+
+        double otherNet = otherSummary.analyticsActive()
+                ? otherSummary.resolvedNetValue(config.bazaarTaxPercent)
+                : 0.0;
+        if (config.showTargetValue) {
+            cursor = drawValueLine(graphics, cursor, "Target value",
+                    compactCoins(targetValue),
+                    RotClientTheme.TEXT, RotClientTheme.HUD_ACCENT);
+        }
+        if (config.showOtherValue) {
+            String value = otherSummary.analyticsActive()
+                    ? otherSummary.valueDisplayCompact(compact(otherNet))
+                            + " coins"
+                    : "—";
+            int color = !otherSummary.analyticsActive()
+                    ? RotClientTheme.TEXT_MUTED
+                    : otherSummary.hasUnresolved()
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.TEXT;
+            cursor = drawValueLine(graphics, cursor, "Others value",
+                    value, RotClientTheme.TEXT, color);
+        }
+        if (config.showTotalMinedValue) {
+            double total = otherSummary.analyticsActive()
+                    ? targetValue + otherNet
+                    : targetValue;
+            cursor = drawValueLine(graphics, cursor, "Total mined",
+                    compactCoins(total),
+                    RotClientTheme.TEXT, RotClientTheme.WARNING);
+        }
+        if (config.showSessionProfit) {
+            cursor = drawValueLine(graphics, cursor, "Session value (net)",
+                    compactCoins(sessionValue),
+                    RotClientTheme.TEXT, RotClientTheme.WARNING);
+        }
+        if (config.showCoinsPerHour) {
+            cursor = drawValueLine(graphics, cursor, "Coins / hour",
+                    compactCoins(coinsPerHour),
+                    RotClientTheme.TEXT, RotClientTheme.HUD_ACCENT);
+        }
+        if (config.showUnsoldValue) {
+            cursor = drawValueLine(graphics, cursor, "Unsold (net)",
+                    compactCoins(unsoldValue),
+                    RotClientTheme.TEXT_MUTED, RotClientTheme.TEXT);
+        }
+        if (config.showBazaarPrices) {
+            int firstRow = cursor;
+            String taxLabel =
+                    "TAX " + NUMBER.format(config.bazaarTaxPercent) + "%";
+            int priceMax =
+                    INNER - RotClientFonts.width(font(), taxLabel) - 6;
+            for (TrackedMaterial material : target.materials()) {
+                MaterialTrackerState state = config.state(material);
+                String prices = state.lastRawPrice > 0
+                        && state.lastEnchantedPrice > 0
+                        ? material.displayName().toUpperCase(Locale.ROOT)
+                                + " BZ " + NUMBER.format(state.lastRawPrice)
+                                + " / "
+                                + NUMBER.format(state.lastEnchantedPrice)
+                                + " · " + priceAge(state, now)
+                        : material.displayName().toUpperCase(Locale.ROOT)
+                                + " BAZAAR: CONNECTING...";
+                RotClientUiDraw.text(
+                        graphics, font(),
+                        fitHudText(prices, priceMax),
+                        PAD, cursor + 1, RotClientTheme.TEXT_DIM, false);
+                cursor += HudLayoutMath.BAZAAR_ROW;
+            }
+            drawRight(
                     graphics,
-                    font(),
-                    RotClientVersionLabel.gemstoneHudFooter(),
-                    10,
-                    footerY,
+                    taxLabel,
+                    WIDTH - PAD,
+                    firstRow + 1,
                     RotClientTheme.TEXT_DIM,
                     false);
         }
-
-        if (config.showSessionTime) {
-            drawRight(
-                    graphics,
-                    formatDuration(
-                            activeMillis),
-                    WIDTH - 10,
-                    footerY,
-                    RotClientTheme.TEXT_MUTED,
-                    false);
-        }
     }
 
-    private void drawGemstoneLedgerCard(
+    /** Quantity column right edge; moves left when the value is wide. */
+    private int qtyRightFor(String valueText) {
+        return Math.min(QTY_RIGHT,
+                WIDTH - PAD - RotClientFonts.width(font(), valueText) - 6);
+    }
+
+    private int drawValueLine(GuiGraphicsExtractor graphics,
+                              int y,
+                              String label,
+                              String value,
+                              int labelColor,
+                              int valueColor) {
+        int labelMax = INNER - RotClientFonts.width(font(), value) - 6;
+        RotClientUiDraw.text(graphics, font(), fitHudText(label, labelMax),
+                PAD, y + 1, labelColor, false);
+        drawRight(graphics, value, WIDTH - PAD, y + 1, valueColor, true);
+        return y + HudLayoutMath.VALUE_ROW;
+    }
+
+    /**
+     * Single aggregate OTHERS row: non-target mining + mob + chest/reward
+     * item units from Current Session. Not a per-item breakdown.
+     */
+    private int drawOthersSummaryRow(
             GuiGraphicsExtractor graphics,
-            GemstoneType gemstone,
-            GemstoneLedger ledger,
-            int top,
-            int height,
-            long totalItems,
-            long roughEquivalent) {
-        drawCard(
-                graphics,
-                0,
-                top,
-                WIDTH,
-                top + height);
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                "GEMSTONE SESSION",
-                10,
-                top + 8,
-                RotClientTheme.HUD_ACCENT,
-                true);
-
-        drawRight(
-                graphics,
-                gemstone.displayName()
-                        .toUpperCase(
-                                Locale.ROOT),
-                WIDTH - 10,
-                top + 8,
-                RotClientTheme.TEXT_DIM,
-                true);
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                "TIER",
-                12,
-                top + 22,
-                RotClientTheme.TEXT_DIM,
-                true);
-
-        drawRight(
-                graphics,
-                "QUANTITY",
-                WIDTH - 92,
-                top + 22,
-                RotClientTheme.TEXT_DIM,
-                true);
-
-        drawRight(
-                graphics,
-                "ROUGH EQ",
-                WIDTH - 10,
-                top + 22,
-                RotClientTheme.TEXT_DIM,
-                true);
-
-        int cursor =
-                top + 38;
-
-        for (GemstoneTier tier :
-                GemstoneTier.values()) {
-            drawGemstoneTierRow(
-                    graphics,
-                    ledger,
-                    tier,
-                    cursor);
-
-            cursor +=
-                    15;
+            int y,
+            MiningHudOtherSummary otherSummary) {
+        String label = MiningHudOtherSummary.hudRowLabel();
+        int textY = y + 2;
+        int next = y + HudLayoutMath.ITEM_ROW;
+        if (!otherSummary.analyticsActive()) {
+            RotClientUiDraw.text(graphics, font(), "No others yet",
+                    NAME_X, textY, RotClientTheme.TEXT_MUTED, false);
+            drawRight(graphics, "—", WIDTH - PAD, textY,
+                    RotClientTheme.TEXT_MUTED, false);
+            return next;
         }
 
-        graphics.fill(
-                10,
-                cursor + 1,
-                WIDTH - 10,
-                cursor + 2,
-                RotClientTheme.DIVIDER);
+        if (otherSummary.isEmpty()) {
+            RotClientUiDraw.text(graphics, font(), label, NAME_X, textY,
+                    RotClientTheme.TEXT_MUTED, false);
+            drawRight(graphics, "×0", qtyRightFor("0"), textY,
+                    RotClientTheme.TEXT_DIM, false);
+            drawRight(graphics, "0", WIDTH - PAD, textY,
+                    RotClientTheme.TEXT_DIM, false);
+            return next;
+        }
 
-        cursor +=
-                10;
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                "TOTAL ITEMS",
-                10,
-                cursor,
-                RotClientTheme.TEXT_MUTED,
-                false);
-
+        double otherNet = otherSummary.resolvedNetValue(config.bazaarTaxPercent);
+        RotClientUiDraw.text(graphics, font(), label, NAME_X, textY,
+                RotClientTheme.TEXT, false);
+        String otherValue =
+                otherSummary.valueDisplayCompact(compact(otherNet));
+        drawRight(graphics, "×" + compact(otherSummary.totalQuantity()),
+                qtyRightFor(otherValue), textY, RotClientTheme.TEXT_DIM, false);
         drawRight(
                 graphics,
-                compact(
-                        totalItems),
-                WIDTH - 10,
-                cursor,
-                RotClientTheme.TEXT,
-                true);
-
-        cursor +=
-                15;
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                "TOTAL ROUGH EQUIVALENT",
-                10,
-                cursor,
-                RotClientTheme.TEXT,
-                false);
-
-        drawRight(
-                graphics,
-                compact(
-                        roughEquivalent),
-                WIDTH - 10,
-                cursor,
-                RotClientTheme.HUD_ACCENT,
-                true);
-    }
-
-    private void drawGemstoneTierRow(
-            GuiGraphicsExtractor graphics,
-            GemstoneLedger ledger,
-            GemstoneTier tier,
-            int y) {
-        long quantity =
-                ledger.quantity(
-                        tier);
-
-        long roughEquivalent =
-                Math.multiplyExact(
-                        quantity,
-                        tier.roughEquivalent());
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                tier.displayName(),
-                12,
-                y,
-                gemstoneTierColor(
-                        tier),
-                false);
-
-        drawRight(
-                graphics,
-                compact(
-                        quantity),
-                WIDTH - 92,
-                y,
-                RotClientTheme.TEXT,
-                false);
-
-        drawRight(
-                graphics,
-                compact(
-                        roughEquivalent),
-                WIDTH - 10,
-                y,
-                RotClientTheme.TEXT_DIM,
-                false);
-    }
-
-    private void drawGemstoneStatusPill(
-            GuiGraphicsExtractor graphics,
-            GemstoneTrackerState state,
-            long now) {
-        boolean active =
-                state.isActive(
-                        now,
-                        RotClientClient.PAUSE_AFTER_MILLIS);
-
-        String status =
-                active
-                        ? "RUNNING"
-                        : (state.sessionBlocks > 0L
-                        ? "PAUSED"
-                        : "READY");
-
-        int color =
-                active
-                        ? RotClientTheme.SUCCESS
-                        : (state.sessionBlocks > 0L
+                otherValue,
+                WIDTH - PAD,
+                textY,
+                otherSummary.hasUnresolved()
                         ? RotClientTheme.WARNING
-                        : RotClientTheme.TEXT_MUTED);
-
-        int textWidth =
-                RotClientFonts.width(
-                        font(),
-                        status);
-
-        int left =
-                WIDTH
-                        - textWidth
-                        - 18;
-
-        roundedFill(
-                graphics,
-                left,
-                7,
-                WIDTH - 8,
-                25,
-                RotClientTheme.HUD_PANEL_ALT);
-
-        RotClientUiDraw.text(
-                graphics,
-                font(),
-                status,
-                left + 5,
-                12,
-                color,
-                true);
+                        : RotClientTheme.CHART_LINE,
+                false);
+        return next;
     }
 
-    private String activeGemstoneTool(
-            GemstoneType gemstone) {
-        Minecraft client =
-                Minecraft.getInstance();
+    private void drawMaterialItemRow(GuiGraphicsExtractor graphics,
+                                     TrackedMaterial material,
+                                     int y, String item,
+                                     long amount, double value,
+                                     int valueColor) {
+        ItemStack icon = new ItemStack(material.iconItem());
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(PAD, y + 1);
+        graphics.pose().scale(ICON_SCALE, ICON_SCALE);
+        graphics.item(icon, 0, 0);
+        graphics.pose().popMatrix();
 
-        String fallback =
-                gemstone.displayName()
-                        .toUpperCase(
-                                Locale.ROOT)
-                        + " | GEMSTONE MINING";
+        int textY = y + 2;
+        String quantity = "×" + compact(amount);
+        String valueText = compact(value);
+        int qtyRight = qtyRightFor(valueText);
+        int nameMax = qtyRight
+                - RotClientFonts.width(font(), quantity) - 4 - NAME_X;
+        RotClientUiDraw.text(graphics, font(), fitHudText(item, nameMax),
+                NAME_X, textY, RotClientTheme.TEXT, false);
+        drawRight(graphics, quantity, qtyRight, textY,
+                RotClientTheme.TEXT_DIM, false);
+        drawRight(graphics, valueText, WIDTH - PAD, textY,
+                valueColor, false);
+    }
 
-        if (
-            client.player == null
-            || client.player
-            .getMainHandItem()
-            .isEmpty()
-        ) {
-            return fallback;
+    private void drawGemstoneLedger(GuiGraphicsExtractor graphics,
+                                    GemstoneLedger ledger,
+                                    int top,
+                                    long totalItems,
+                                    long roughEquivalent) {
+        int cursor = top;
+        RotClientUiDraw.text(graphics, font(), "TIER", PAD, cursor + 1,
+                RotClientTheme.TEXT_DIM, true);
+        drawRight(graphics, "QTY", LEDGER_QTY_RIGHT, cursor + 1,
+                RotClientTheme.TEXT_DIM, true);
+        drawRight(graphics, "ROUGH EQ", WIDTH - PAD, cursor + 1,
+                RotClientTheme.TEXT_DIM, true);
+        cursor += HudLayoutMath.HEADING_ROW;
+
+        for (GemstoneTier tier : GemstoneTier.values()) {
+            long quantity = ledger.quantity(tier);
+            long equivalent =
+                    Math.multiplyExact(quantity, tier.roughEquivalent());
+            int y = cursor + 1;
+            RotClientUiDraw.text(graphics, font(), tier.displayName(),
+                    PAD, y, gemstoneTierColor(tier), false);
+            drawRight(graphics, compact(quantity), LEDGER_QTY_RIGHT, y,
+                    RotClientTheme.TEXT, false);
+            drawRight(graphics, compact(equivalent), WIDTH - PAD, y,
+                    RotClientTheme.TEXT_DIM, false);
+            cursor += HudLayoutMath.VALUE_ROW;
         }
 
-        String name =
-                client.player
-                        .getMainHandItem()
-                        .getHoverName()
-                        .getString()
-                        .trim();
+        drawRule(graphics, cursor);
+        cursor += HudLayoutMath.SEPARATOR;
+        cursor = drawValueLine(graphics, cursor, "Total items",
+                compact(totalItems),
+                RotClientTheme.TEXT_MUTED, RotClientTheme.TEXT);
+        drawValueLine(graphics, cursor, "Total rough equivalent",
+                compact(roughEquivalent),
+                RotClientTheme.TEXT, RotClientTheme.HUD_ACCENT);
+    }
 
-        String suffix =
-                "...";
+    /** One gemstone that has been gained this session. */
+    private record GemstoneRow(GemstoneType gemstone,
+                               GemstoneLedger ledger,
+                               long roughEquivalent) {
+    }
 
-        int maxWidth =
-                145;
+    /** Gemstones with items this session, best rough equivalent first. */
+    private List<GemstoneRow> gemstoneRows() {
+        List<GemstoneRow> rows = new ArrayList<>();
+        for (GemstoneType gemstone : GemstoneType.values()) {
+            GemstoneLedger ledger =
+                    config.gemstoneState(gemstone).sessionLedger();
+            if (ledger.totalItemCount() > 0L) {
+                rows.add(new GemstoneRow(
+                        gemstone, ledger, ledger.totalRoughEquivalent()));
+            }
+        }
+        rows.sort((left, right) ->
+                Long.compare(right.roughEquivalent(), left.roughEquivalent()));
+        return rows;
+    }
 
-        if (client.font.width(
-                name) <= maxWidth) {
-            return name;
+    /**
+     * All Gemstones: one row per gemstone you actually gained, one column
+     * per tier. Empty gemstones take no space, so the table only ever grows
+     * with what is being mined.
+     */
+    private void drawGemstoneMatrix(GuiGraphicsExtractor graphics,
+                                    List<GemstoneRow> rows,
+                                    int top,
+                                    long totalItems,
+                                    long roughEquivalent) {
+        int shown = Math.min(rows.size(), HudLayoutMath.MAX_ALL_GEMSTONE_ROWS);
+        List<GemstoneRow> visible = rows.subList(0, shown);
+
+        // Only tiers that have data get a column (Rough and Flawed always
+        // do), each sized to its widest text and packed from the right, so
+        // headings, values and names are measured rather than assumed to fit.
+        List<GemstoneTier> tiers = new ArrayList<>();
+        for (GemstoneTier tier : GemstoneTier.values()) {
+            boolean used = tier.ordinal() < 2;
+            for (GemstoneRow row : visible) {
+                if (row.ledger().quantity(tier) > 0L) used = true;
+            }
+            if (used) tiers.add(tier);
+        }
+        int[] widths = new int[tiers.size()];
+        for (int k = 0; k < widths.length; k++) {
+            GemstoneTier tier = tiers.get(k);
+            widths[k] = RotClientFonts.width(font(), tierShortLabel(tier)) + 1;
+            for (GemstoneRow row : visible) {
+                widths[k] = Math.max(widths[k], RotClientFonts.width(
+                        font(), matrixCell(row, tier)));
+            }
+        }
+        HudColumnLayout.Result columns = HudColumnLayout.packFromRight(
+                widths, WIDTH - PAD, PAD,
+                MATRIX_GAP, MATRIX_TIGHT_GAP, MATRIX_MIN_NAME);
+        int[] rights = columns.rights();
+        int nameMax = columns.nameMax();
+
+        int cursor = top;
+        for (int k = 0; k < tiers.size(); k++) {
+            drawRight(graphics, tierShortLabel(tiers.get(k)), rights[k],
+                    cursor + 1, gemstoneTierColor(tiers.get(k)), true);
+        }
+        cursor += HudLayoutMath.HEADING_ROW;
+
+        if (rows.isEmpty()) {
+            RotClientUiDraw.text(graphics, font(), "No gemstones yet", PAD,
+                    cursor + 1, RotClientTheme.TEXT_MUTED, false);
+            cursor += HudLayoutMath.VALUE_ROW;
+        }
+        for (GemstoneRow row : visible) {
+            int y = cursor + 1;
+            String name = row.gemstone().displayName();
+            if (RotClientFonts.width(font(), name) > nameMax) {
+                // Three letters are enough with the gemstone's own colour.
+                name = name.substring(0, Math.min(3, name.length()));
+            }
+            RotClientUiDraw.text(graphics, font(), fitHudText(name, nameMax),
+                    PAD, y, gemstoneColor(row.gemstone()), false);
+            for (int k = 0; k < tiers.size(); k++) {
+                boolean has = row.ledger().quantity(tiers.get(k)) > 0L;
+                drawRight(graphics, matrixCell(row, tiers.get(k)),
+                        rights[k], y,
+                        has ? RotClientTheme.TEXT : RotClientTheme.TEXT_MUTED,
+                        false);
+            }
+            cursor += HudLayoutMath.VALUE_ROW;
+        }
+        if (rows.size() > shown) {
+            RotClientUiDraw.text(graphics, font(),
+                    "+" + (rows.size() - shown) + " more", PAD, cursor + 1,
+                    RotClientTheme.TEXT_DIM, false);
+            cursor += HudLayoutMath.VALUE_ROW;
         }
 
-        while (
-            !name.isEmpty()
-            && client.font.width(
-                    name + suffix) > maxWidth
-        ) {
-            name =
-                    name.substring(
-                            0,
-                            name.length() - 1);
-        }
+        drawRule(graphics, cursor);
+        cursor += HudLayoutMath.SEPARATOR;
+        cursor = drawValueLine(graphics, cursor, "Total items",
+                compact(totalItems),
+                RotClientTheme.TEXT_MUTED, RotClientTheme.TEXT);
+        drawValueLine(graphics, cursor, "Total rough equivalent",
+                compact(roughEquivalent),
+                RotClientTheme.TEXT, RotClientTheme.HUD_ACCENT);
+    }
 
-        return name + suffix;
+    private static String matrixCell(GemstoneRow row, GemstoneTier tier) {
+        long quantity = row.ledger().quantity(tier);
+        return quantity > 0L ? HudNumbers.compactCount(quantity) : "-";
+    }
+
+    /** Short tier labels sized for the matrix columns. */
+    private static String tierShortLabel(GemstoneTier tier) {
+        return switch (tier) {
+            case ROUGH -> "Rgh";
+            case FLAWED -> "Flwd";
+            case FINE -> "Fine";
+            case FLAWLESS -> "Flwl";
+            case PERFECT -> "Perf";
+        };
+    }
+
+    /** Roughly each gemstone's in-game colour. */
+    private static int gemstoneColor(GemstoneType gemstone) {
+        return switch (gemstone) {
+            case RUBY -> 0xFFFF5555;
+            case AMBER -> 0xFFFFAA00;
+            case SAPPHIRE -> 0xFF5599FF;
+            case JADE -> 0xFF55FF77;
+            case AMETHYST -> 0xFFC77DFF;
+            case TOPAZ -> 0xFFFFE066;
+            case JASPER -> 0xFFFF6EC7;
+            case OPAL -> 0xFFE8F4FF;
+            case ONYX -> 0xFFB4B4C4;
+            case AQUAMARINE -> 0xFF55FFEE;
+            case CITRINE -> 0xFFE5B84B;
+            case PERIDOT -> 0xFFA8E05F;
+        };
     }
 
     private int gemstoneTopCardHeight() {
         return HudLayoutMath.gemstoneTopCardHeight(
                 config.showBlocks,
                 config.showRateGraph,
-                config.showArea);
+                config.showArea,
+                config.showHudTitle,
+                config.showHudAutoPause,
+                config.showHudVersion,
+                config.showSessionTime,
+                config.showHudStatus,
+                config.showActiveTool);
     }
 
-    private static int gemstoneLedgerCardHeight() {
-        return HudLayoutMath.gemstoneLedgerCardHeight();
-    }
-
-    private static int gemstoneTierColor(
-            GemstoneTier tier) {
+    private static int gemstoneTierColor(GemstoneTier tier) {
         return switch (tier) {
             case ROUGH -> RotClientTheme.TEXT;
             case FLAWED -> RotClientTheme.SUCCESS;
@@ -799,6 +856,7 @@ final class RotClientHud {
             case PERFECT -> RotClientTheme.WARNING;
         };
     }
+
     private double displayedResource(
             TrackedMaterial material,
             double effectiveFortune,
@@ -816,360 +874,9 @@ final class RotClientHud {
         return baseDrops * multiplier;
     }
 
-    private void drawTopCard(GuiGraphicsExtractor graphics,
-                             TrackingTarget target,
-                             long sessionBlocks,
-                             long now, int height,
-                             long activeMillis, double averagePerBlock,
-                             double observedFortune,
-                             double liveResourcePerHour) {
-        drawCard(graphics, 0, 0, WIDTH, height);
-        boolean showTitle = config.showHudTitle;
-        boolean showStatus = config.showHudStatus;
-        boolean showTool = config.showActiveTool;
-        int headerBottom = showTitle || showStatus || showTool ? 31 : 22;
-        int cursor = showTitle || showStatus || showTool ? 37 : 28;
-        if (config.hudShowBackground) {
-            roundedFill(graphics, 1, 1, WIDTH - 1, headerBottom, RotClientTheme.HUD_HEADER);
-        }
-
-        if (showTitle) {
-            RotClientUiDraw.text(graphics, font(),
-                    target.displayName().toUpperCase(Locale.ROOT) + " TRACKER",
-                    10, 7, RotClientTheme.HUD_TITLE, true);
-        }
-        if (showTool) {
-            int subtitleY = showTitle ? 19 : 8;
-            RotClientUiDraw.text(graphics, font(), activeTool(target), 10, subtitleY,
-                    RotClientTheme.HUD_TEXT_DIM, false);
-        }
-        if (showStatus) {
-            drawStatusPill(graphics, sessionBlocks, now);
-        }
-
-        if (config.showArea) {
-            cursor = drawAreaRow(graphics, cursor);
-        }
-
-        if (config.showBlocks) {
-            RotClientUiDraw.text(graphics, font(), "Blocks / Hour", 10, cursor + 1, RotClientTheme.HUD_TEXT_DIM, true);
-            RotClientUiDraw.text(graphics, font(), compact(smoothedBlocksPerHour), 10, cursor + 13, RotClientTheme.HUD_TEXT, true);
-            String trend = rateTrend();
-            int trendColor = trend.startsWith("↓") ? RotClientTheme.WARNING : RotClientTheme.SUCCESS;
-            RotClientUiDraw.text(graphics, font(), trend, 57, cursor + 14, trendColor, false);
-            RotClientUiDraw.text(graphics, font(), "Session total", WIDTH - 83, cursor + 1, RotClientTheme.HUD_TEXT_DIM, true);
-            drawRight(graphics, compact(sessionBlocks),
-                    WIDTH - 10, cursor + 13, RotClientTheme.HUD_ACCENT, true);
-            cursor += 28;
-        }
-
-        if (config.showRateGraph) {
-            drawRateGraph(graphics, 10, cursor, WIDTH - 10, cursor + 34);
-            cursor += 39;
-        }
-
-        cursor = drawMetricStrip(
-                graphics, target, cursor, liveResourcePerHour,
-                averagePerBlock, observedFortune);
-
-        int activityTop = cursor;
-        long lastBreak = RotClientClient.lastSelectedBreakEpochMillis();
-        long sinceBreak = lastBreak <= 0
-                ? RotClientClient.PAUSE_AFTER_MILLIS
-                : Math.max(0, now - lastBreak);
-        double remaining = RotClientClient.isActive(now)
-                ? 1.0 - Math.min(1.0, sinceBreak / (double) RotClientClient.PAUSE_AFTER_MILLIS)
-                : 0;
-        int footerY = activityTop;
-        if (config.showHudAutoPause) {
-            RotClientUiDraw.text(graphics, font(), "AUTO-PAUSE", 10, activityTop, RotClientTheme.TEXT_DIM, false);
-            String pauseValue = RotClientClient.isActive(now)
-                    ? Math.max(0, (RotClientClient.PAUSE_AFTER_MILLIS - sinceBreak + 999) / 1000) + "s"
-                    : "PAUSED";
-            drawRight(graphics, pauseValue, WIDTH - 10, activityTop, RotClientTheme.TEXT_MUTED, false);
-            drawProgressBar(graphics, 10, activityTop + 11,
-                    WIDTH - 10, activityTop + 16, remaining);
-            footerY = activityTop + 21;
-        }
-        if (config.showHudVersion) {
-            RotClientUiDraw.text(graphics, font(), RotClientVersionLabel.brandLabel(),
-                    10, footerY, RotClientTheme.TEXT_DIM, false);
-        }
-        if (config.showSessionTime) {
-            drawRight(graphics, "◷ " + formatDuration(activeMillis),
-                    WIDTH - 10, footerY, RotClientTheme.TEXT_MUTED, false);
-        }
-    }
-
-    private void drawProfitCard(GuiGraphicsExtractor graphics,
-                                TrackingTarget target,
-                                long now, int top, int height,
-                                double sessionValue, double unsoldValue, double coinsPerHour) {
-        drawCard(graphics, 0, top, WIDTH, top + height);
-        RotClientUiDraw.text(graphics, font(), "SESSION VALUE  ·  ESTIMATE",
-                10, top + 8, RotClientTheme.HUD_ACCENT, true);
-
-        MiningHudOtherSummary otherSummary =
-                RotClientClient.hudOtherMinedSummary();
-        boolean itemRows =
-                config.showRawMaterial || config.showEnchantedMaterial;
-        double targetValue = 0.0;
-        int cursor;
-        if (itemRows) {
-            int headerY = top + 22;
-            if (config.showTargetHeading) {
-                RotClientUiDraw.text(graphics, font(), "TARGET", 10, headerY, RotClientTheme.TEXT_MUTED, true);
-                headerY += 14;
-            }
-            RotClientUiDraw.text(graphics, font(), "TYPE", 12, headerY, RotClientTheme.TEXT_DIM, true);
-            RotClientUiDraw.text(graphics, font(), "ITEM", 39, headerY, RotClientTheme.TEXT_DIM, true);
-            RotClientUiDraw.text(graphics, font(), "QTY", WIDTH - 90, headerY, RotClientTheme.TEXT_DIM, true);
-            drawRight(graphics, "EST. VALUE",
-                    WIDTH - 10, headerY, RotClientTheme.TEXT_DIM, true);
-            cursor = headerY + 16;
-
-            for (TrackedMaterial material : target.materials()) {
-                if (config.showEnchantedMaterial) {
-                    long amount =
-                            RotClientClient.currentSessionEnchantedItems(
-                                    material);
-                    double value = RotClientClient.estimateNetValue(
-                            material, 0, amount);
-                    targetValue += value;
-                    drawMaterialItemRow(
-                            graphics, material, cursor,
-                            material.enchantedItemName(), amount, value, RotClientTheme.HUD_ACCENT);
-                    cursor += 18;
-                }
-                if (config.showRawMaterial) {
-                    long amount = RotClientClient.currentSessionRawItems(
-                            material);
-                    double value = RotClientClient.estimateNetValue(
-                            material, amount, 0);
-                    targetValue += value;
-                    drawMaterialItemRow(
-                            graphics, material, cursor,
-                            material.rawItemName(), amount, value, RotClientTheme.CHART_LINE);
-                    cursor += 18;
-                }
-            }
-        } else {
-            cursor = top + 26;
-            targetValue = sessionValue;
-        }
-
-        if (config.showOtherSection) {
-            RotClientUiDraw.text(graphics, font(), "OTHERS", 10, cursor, RotClientTheme.TEXT_MUTED, true);
-            cursor += 14;
-            cursor = drawOthersSummaryRow(graphics, cursor, otherSummary);
-        }
-
-        boolean anyValueLine = config.showTargetValue
-                || config.showOtherValue
-                || config.showTotalMinedValue;
-        if (config.showOtherSection || anyValueLine) {
-            graphics.fill(10, cursor, WIDTH - 10, cursor + 1, RotClientTheme.DIVIDER);
-            cursor += 8;
-        }
-
-        double otherNet = otherSummary.analyticsActive()
-                ? otherSummary.resolvedNetValue(config.bazaarTaxPercent)
-                : 0.0;
-        if (config.showTargetValue) {
-            RotClientUiDraw.text(graphics, font(), "Target Value", 10, cursor, RotClientTheme.TEXT, false);
-            drawRight(graphics, compactCoins(targetValue),
-                    WIDTH - 10, cursor - 1, RotClientTheme.HUD_ACCENT, true);
-            cursor += 16;
-        }
-
-        if (config.showOtherValue) {
-            RotClientUiDraw.text(graphics, font(), "Others Value", 10, cursor, RotClientTheme.TEXT, false);
-            if (otherSummary.analyticsActive()) {
-                drawRight(
-                        graphics,
-                        otherSummary.valueDisplayCompact(compact(otherNet))
-                                + " coins",
-                        WIDTH - 10,
-                        cursor - 1,
-                        otherSummary.hasUnresolved()
-                                ? RotClientTheme.WARNING
-                                : RotClientTheme.TEXT,
-                        true);
-            } else {
-                drawRight(graphics, "—", WIDTH - 10, cursor - 1, RotClientTheme.TEXT_MUTED, false);
-            }
-            cursor += 16;
-        }
-
-        if (config.showTotalMinedValue) {
-            RotClientUiDraw.text(graphics, font(), "Total Mined Value", 10, cursor, RotClientTheme.TEXT, false);
-            if (otherSummary.analyticsActive()) {
-                drawRight(graphics, compactCoins(targetValue + otherNet),
-                        WIDTH - 10, cursor - 1, RotClientTheme.WARNING, true);
-            } else {
-                drawRight(graphics, compactCoins(targetValue),
-                        WIDTH - 10, cursor - 1, RotClientTheme.WARNING, true);
-            }
-            cursor += 16;
-        }
-
-        if (config.showSessionProfit) {
-            RotClientUiDraw.text(graphics, font(), "Session Value (Net)", 10, cursor, RotClientTheme.TEXT, false);
-            drawRight(graphics, compactCoins(sessionValue),
-                    WIDTH - 10, cursor - 1, RotClientTheme.WARNING, true);
-            cursor += 16;
-        }
-        if (config.showCoinsPerHour) {
-            RotClientUiDraw.text(graphics, font(), "Coins / Hour (Est.)", 10, cursor, RotClientTheme.TEXT, false);
-            drawRight(graphics, compactCoins(coinsPerHour),
-                    WIDTH - 10, cursor, RotClientTheme.HUD_ACCENT, false);
-            cursor += 15;
-        }
-        if (config.showUnsoldValue) {
-            RotClientUiDraw.text(graphics, font(), "Unsold (Est. Net)", 10, cursor, RotClientTheme.TEXT_MUTED, false);
-            drawRight(graphics, compactCoins(unsoldValue),
-                    WIDTH - 10, cursor, RotClientTheme.TEXT, false);
-            cursor += 15;
-        }
-        if (config.showBazaarPrices) {
-            for (TrackedMaterial material : target.materials()) {
-                MaterialTrackerState state = config.state(material);
-                String prices = state.lastRawPrice > 0
-                        && state.lastEnchantedPrice > 0
-                        ? material.displayName().toUpperCase(Locale.ROOT)
-                                + " BZ " + NUMBER.format(state.lastRawPrice)
-                                + " / "
-                                + NUMBER.format(state.lastEnchantedPrice)
-                                + "  · " + priceAge(state, now)
-                        : material.displayName().toUpperCase(Locale.ROOT)
-                                + " BAZAAR: CONNECTING...";
-                RotClientUiDraw.text(
-                        graphics,
-                        font(), prices, 10, cursor, RotClientTheme.TEXT_DIM, false);
-                cursor += 13;
-            }
-            drawRight(
-                    graphics,
-                    "TAX " + NUMBER.format(config.bazaarTaxPercent) + "%",
-                    WIDTH - 10,
-                    cursor - 13,
-                    RotClientTheme.TEXT_DIM,
-                    false);
-        }
-    }
-
-    /**
-     * Single aggregate OTHERS row: non-target mining + mob + chest/reward
-     * item units from Current Session. Not a per-item breakdown.
-     */
-    private int drawOthersSummaryRow(
-            GuiGraphicsExtractor graphics,
-            int y,
-            MiningHudOtherSummary otherSummary) {
-        String label = MiningHudOtherSummary.hudRowLabel();
-        if (!otherSummary.analyticsActive()) {
-            RotClientUiDraw.text(
-                    graphics,
-                    font(),
-                    "No others yet",
-                    39,
-                    y,
-                    RotClientTheme.TEXT_MUTED,
-                    false);
-            drawRight(graphics, "—", WIDTH - 10, y, RotClientTheme.TEXT_MUTED, false);
-            return y + 18;
-        }
-
-        if (otherSummary.isEmpty()) {
-            RotClientUiDraw.text(graphics, font(), label, 39, y, RotClientTheme.TEXT_MUTED, false);
-            drawRight(graphics, "×0", WIDTH - 84, y, RotClientTheme.TEXT_DIM, false);
-            drawRight(graphics, "0", WIDTH - 10, y, RotClientTheme.TEXT_DIM, false);
-            return y + 18;
-        }
-
-        double otherNet = otherSummary.resolvedNetValue(config.bazaarTaxPercent);
-        RotClientUiDraw.text(graphics, font(), label, 39, y, RotClientTheme.TEXT, false);
-        drawRight(graphics, "×" + compact(otherSummary.totalQuantity()),
-                WIDTH - 84, y, RotClientTheme.TEXT_DIM, false);
-        drawRight(
-                graphics,
-                otherSummary.valueDisplayCompact(compact(otherNet)),
-                WIDTH - 10,
-                y,
-                otherSummary.hasUnresolved()
-                        ? RotClientTheme.WARNING
-                        : RotClientTheme.CHART_LINE,
-                false);
-        return y + 18;
-    }
-
-    private void drawMaterialItemRow(GuiGraphicsExtractor graphics,
-                                     TrackedMaterial material,
-                                     int y, String item,
-                                     long amount, double value,
-                                     int valueColor) {
-        ItemStack icon = new ItemStack(material.iconItem());
-        graphics.item(icon, 11, y - 5);
-        RotClientUiDraw.text(graphics, font(), item, 39, y, RotClientTheme.TEXT, false);
-        drawRight(graphics, "×" + compact(amount),
-                WIDTH - 84, y, RotClientTheme.TEXT_DIM, false);
-        drawRight(graphics, compact(value), WIDTH - 10, y, valueColor, false);
-    }
-
-    private int drawMetricStrip(GuiGraphicsExtractor graphics,
-                                TrackingTarget target,
-                                int top,
-                                double liveResourcePerHour,
-                                double averagePerBlock,
-                                double observedFortune) {
-        int metricCount = (config.showMaterialPerHour ? 1 : 0)
-                + (config.showDropAndFortune ? 2 : 0);
-        if (metricCount == 0) return top;
-
-        graphics.fill(1, top - 3, WIDTH - 1, top + 22, RotClientTheme.HUD_PANEL);
-        int index = 0;
-        if (config.showMaterialPerHour) {
-            drawStripMetric(graphics, index++, metricCount, top,
-                    (target.isCombined()
-                            ? "RESOURCES"
-                            : target.primaryMaterial().displayName()
-                                    .toUpperCase(Locale.ROOT))
-                            + " / HOUR",
-                    compact(liveResourcePerHour));
-        }
-        if (config.showDropAndFortune) {
-            drawStripMetric(graphics, index++, metricCount, top,
-                    "AVG DROP", NUMBER.format(averagePerBlock));
-            drawStripMetric(graphics, index, metricCount, top,
-                    "FORTUNE", "~" + compact(observedFortune));
-        }
-        return top + 29;
-    }
-
-    private void drawStripMetric(GuiGraphicsExtractor graphics, int index, int count,
-                                 int top, String label, String value) {
-        int left = 1 + index * (WIDTH - 2) / count;
-        if (index > 0) {
-            graphics.fill(left, top - 3, left + 1, top + 22, RotClientTheme.DIVIDER);
-        }
-        RotClientUiDraw.text(graphics, font(), label, left + 7, top, RotClientTheme.TEXT_DIM, true);
-        RotClientUiDraw.text(graphics, font(), value, left + 7, top + 11, RotClientTheme.HUD_ACCENT, true);
-    }
-
-    private void drawStatusPill(GuiGraphicsExtractor graphics,
-                                long sessionBlocks,
-                                long now) {
-        boolean active = RotClientClient.isActive(now);
-        String status = active
-                ? "● RUNNING"
-                : (sessionBlocks > 0 ? "● PAUSED" : "● READY");
-        int color = active
-                ? RotClientTheme.SUCCESS
-                : (sessionBlocks > 0 ? RotClientTheme.WARNING : RotClientTheme.TEXT_MUTED);
-        int textWidth = RotClientFonts.width(font(), status);
-        int left = WIDTH - textWidth - 18;
-        roundedFill(graphics, left, 7, WIDTH - 8, 25, RotClientTheme.HUD_PANEL_ALT);
-        RotClientUiDraw.text(graphics, font(), status, left + 5, 12, color, true);
+    private void drawRule(GuiGraphicsExtractor graphics, int y) {
+        graphics.fill(PAD, y, WIDTH - PAD, y + 1,
+                RotClientUiDraw.withAlpha(RotClientTheme.DIVIDER, 0x90));
     }
 
     private void drawRateGraph(GuiGraphicsExtractor graphics, int left, int top, int right, int bottom) {
@@ -1189,11 +896,15 @@ final class RotClientHud {
 
     private void drawProgressBar(GuiGraphicsExtractor graphics, int left, int top,
                                  int right, int bottom, double progress) {
-        roundedFill(graphics, left, top, right, bottom, RotClientTheme.TOGGLE_OFF);
+        roundedFill(graphics, left, top, right, bottom, HudCardStyle.BAR_TRACK);
         int filled = (int) Math.round((right - left) * Mth.clamp(progress, 0, 1));
         if (filled > 0) roundedFill(graphics, left, top, left + filled, bottom, RotClientTheme.HUD_ACCENT);
     }
 
+    /**
+     * One card behind the whole HUD, styled exactly like the Pet HUD panel:
+     * HUD Layout background colour, rounded corners, soft shadow, thin border.
+     */
     private void drawCard(
             GuiGraphicsExtractor graphics,
             int left,
@@ -1217,34 +928,52 @@ final class RotClientHud {
             return;
         }
 
-        roundedFill(
+        RotClientUiDraw.roundedFill(
                 graphics,
-                left + 2,
-                top + 3,
-                right + 2,
-                bottom + 3,
+                left + HudCardStyle.SHADOW_OFFSET_X,
+                top + HudCardStyle.SHADOW_OFFSET_Y,
+                right + HudCardStyle.SHADOW_OFFSET_X,
+                bottom + HudCardStyle.SHADOW_OFFSET_Y,
                 RotClientUiDraw.withAlpha(
                         RotClientTheme.SHADOW,
-                        0x50));
+                        editorOpen
+                                ? HudCardStyle.EDITOR_SHADOW_ALPHA
+                                : HudCardStyle.SHADOW_ALPHA),
+                HudCardStyle.RADIUS);
 
-        roundedFill(
+        RotClientUiDraw.roundedFill(
                 graphics,
                 left,
                 top,
                 right,
                 bottom,
-                RotClientTheme.HUD_BACKGROUND);
+                hudBackgroundColor(),
+                HudCardStyle.RADIUS);
 
-        roundedOutline(
+        RotClientUiDraw.roundedOutline(
                 graphics,
                 left,
                 top,
                 right,
                 bottom,
                 RotClientUiDraw.withAlpha(
-                        RotClientTheme.HUD_BORDER,
-                        0xD0));
+                        RotClientTheme.BORDER,
+                        HudCardStyle.BORDER_ALPHA),
+                HudCardStyle.RADIUS);
     }
+
+    /**
+     * Same source the Pet HUD uses: the HUD Layout style, so changing the HUD
+     * Layout background colour or opacity restyles both together.
+     */
+    private int hudBackgroundColor() {
+        if (config.qolUtilities == null) {
+            return HudStylePolicy.DEFAULT_BG;
+        }
+        return config.qolUtilities.extras()
+                .resolvedHudStyle(HUD_STYLE_ID).backgroundColor;
+    }
+
     private void sampleMiningRate(
             long sessionBlocks,
             long now,
@@ -1285,19 +1014,16 @@ final class RotClientHud {
         lastRateSampleMillis = now;
     }
 
-    private String rateTrend() {
-        if (rateHistory.size() < 4) return "• gathering live data";
+    /** "↑4%" / "↓12%" against the recent average; blank until there is signal. */
+    private String compactTrend() {
+        if (rateHistory.size() < 4) return "";
         double total = 0;
-        int count = 0;
-        for (double value : rateHistory) {
-            total += value;
-            count++;
-        }
-        double average = count == 0 ? 0 : total / count;
-        if (average < 1) return "• waiting for mining";
+        for (double value : rateHistory) total += value;
+        double average = total / rateHistory.size();
+        if (average < 1) return "";
         double percent = (smoothedBlocksPerHour / average - 1.0) * 100.0;
-        String arrow = percent >= 0 ? "↑ " : "↓ ";
-        return arrow + NUMBER.format(Math.abs(percent)) + "% vs 1m avg";
+        return (percent >= 0 ? "↑" : "↓")
+                + NUMBER.format(Math.abs(percent)) + "%";
     }
 
     private int topCardHeight() {
@@ -1347,20 +1073,36 @@ final class RotClientHud {
     }
 
     int currentHeight() {
+        if (config.selectedSelection().isAllGemstones()) {
+            return HudLayoutMath.gemstoneAllHudHeight(
+                    config.showBlocks,
+                    config.showRateGraph,
+                    config.showArea,
+                    config.showHudTitle,
+                    config.showHudAutoPause,
+                    config.showHudVersion,
+                    config.showSessionTime,
+                    config.showHudStatus,
+                    config.showActiveTool,
+                    gemstoneRows().size());
+        }
         if (config.selectedSelection().isGemstone()) {
             return HudLayoutMath.gemstoneHudHeight(
                     config.showBlocks,
                     config.showRateGraph,
-                    config.showArea);
+                    config.showArea,
+                    config.showHudTitle,
+                    config.showHudAutoPause,
+                    config.showHudVersion,
+                    config.showSessionTime,
+                    config.showHudStatus,
+                    config.showActiveTool);
         }
 
-        int top =
-                topCardHeight();
+        int top = topCardHeight();
 
         return hasProfitCard()
-                ? top
-                + CARD_GAP
-                + profitCardHeight()
+                ? top + HudLayoutMath.SECTION_GAP + profitCardHeight()
                 : top;
     }
 
@@ -1461,20 +1203,13 @@ final class RotClientHud {
                 && mouseY >= config.y && mouseY <= config.y + currentHeight() * config.scale;
     }
 
-    private String activeTool(TrackingTarget target) {
+    /** Name of the held item, or blank when the hand is empty. */
+    private String heldToolName() {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.player.getMainHandItem().isEmpty()) {
-            return target.displayName().toUpperCase(Locale.ROOT)
-                    + " | MINING";
+            return "";
         }
-        String name = client.player.getMainHandItem().getHoverName().getString().trim();
-        String suffix = "...";
-        int maxWidth = 145;
-        if (client.font.width(name) <= maxWidth) return name;
-        while (!name.isEmpty() && client.font.width(name + suffix) > maxWidth) {
-            name = name.substring(0, name.length() - 1);
-        }
-        return name + suffix;
+        return client.player.getMainHandItem().getHoverName().getString().trim();
     }
 
     private Font font() {
@@ -1482,9 +1217,10 @@ final class RotClientHud {
     }
 
     private int drawAreaRow(GuiGraphicsExtractor graphics, int cursor) {
-        RotClientUiDraw.text(graphics, font(), "AREA", 10, cursor, RotClientTheme.HUD_TEXT_DIM, true);
-        String value = fitHudText(hudLocationDisplay(), WIDTH - 52);
-        drawRight(graphics, value, WIDTH - 10, cursor, RotClientTheme.HUD_TEXT, false);
+        int y = cursor + 1;
+        RotClientUiDraw.text(graphics, font(), "AREA", PAD, y, RotClientTheme.HUD_TEXT_DIM, true);
+        String value = fitHudText(hudLocationDisplay(), INNER - 40);
+        drawRight(graphics, value, WIDTH - PAD, y, RotClientTheme.HUD_TEXT, false);
         return cursor + HudLayoutMath.AREA_ROW_HEIGHT;
     }
 

@@ -236,8 +236,7 @@ final class MiningSessionTargetMirror {
                     .includes(resource.material());
         }
         return resource.gemstone() != null
-                && selection.isGemstone()
-                && selection.gemstone() == resource.gemstone();
+                && selection.tracksGemstone(resource.gemstone());
     }
 
     private static String boundedSource(String value) {
