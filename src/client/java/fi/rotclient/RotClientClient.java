@@ -83,6 +83,10 @@ public final class RotClientClient implements ClientModInitializer {
             new RotClientProfileController(
                     SETTINGS_PROFILES,
                     CONFIG);
+    private static final RotClientAutoProfileSwitcher AUTO_PROFILE_SWITCHER =
+            new RotClientAutoProfileSwitcher(
+                    SETTINGS_PROFILES,
+                    SETTINGS_PROFILE_CONTROLLER);
     private static final RotClientLoadoutActivationCoordinator LOADOUT_ACTIVATION =
             new RotClientLoadoutActivationCoordinator(
                     LOADOUTS,
@@ -3245,6 +3249,7 @@ private static int toggle(FabricClientCommandSource source) {
         SkyBlockAreaDetector.clearSkyblockPresence();
         CustomScoreboardRuntime.onWorldChange();
         SkyBlockDungeonDetector.clear();
+        AUTO_PROFILE_SWITCHER.onWorldChanged();
         // Also update a PAUSED Current Session. The controller stores the
         // pending UNKNOWN area without opening a segment, so reconnect cannot
         // briefly reopen the previous world's area before scoreboard data is
@@ -3307,6 +3312,11 @@ private static int toggle(FabricClientCommandSource source) {
         SkyBlockAreaDetector.updateSkyblockPresence(lines);
         SkyBlockDungeonDetector.updateSticky(
                 SkyBlockDungeonDetector.detectFromScoreboardLines(lines));
+        AUTO_PROFILE_SWITCHER.observeSidebar(
+                lines,
+                detected,
+                SkyBlockDungeonDetector.confidentlyInDungeon(),
+                now);
         if (!detected.isUnknown()) {
             SkyBlockLocation previous = SkyBlockAreaDetector.detectLocation();
             SkyBlockAreaDetector.updateCurrentLocation(

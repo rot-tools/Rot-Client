@@ -184,6 +184,41 @@ final class RotClientProfileController {
         }
     }
 
+    /** Name given to the live setup when it has to be saved first. */
+    static final String CURRENT_SETUP_NAME = "My Setup";
+
+    /**
+     * Adds a bundled example profile for a screen of the given GUI-scaled
+     * size, without switching to it.
+     *
+     * If there are no profiles yet, the settings currently in use are saved
+     * as {@link #CURRENT_SETUP_NAME} first and stay active. Nothing is lost,
+     * and the autosave cannot overwrite the example with the live settings.
+     *
+     * Returns null when the name is taken or saving failed.
+     */
+    RotClientProfile addExample(
+            RotClientProfilePreset preset,
+            int screenWidth,
+            int screenHeight) {
+
+        if (preset == null
+                || !preset.problems().isEmpty()) {
+            return null;
+        }
+
+        if (profiles.activeProfile() == null
+                && createFromCurrent(CURRENT_SETUP_NAME) == null) {
+            return null;
+        }
+
+        return profiles.addInactive(
+                preset.name,
+                preset.buildSettings(
+                        screenWidth,
+                        screenHeight));
+    }
+
     boolean rename(
             String profileId,
             String newName) {

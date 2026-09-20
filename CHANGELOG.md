@@ -54,6 +54,48 @@ and the project uses semantic versioning where practical.
   mining/powder tracker preferences, Fullbright / Always Night). Switch live
   without restarting. Tracker history, sessions, storage cache, and workspace
   stay global. Stored in `rotclient-profiles.json`.
+* **Auto Switch** (Visuals → Profiles → Auto Switch, off by default) switches
+  profile for you when you change place. Pick a profile per place: Dungeons,
+  Kuudra, Dwarven Mines (with Base Camp), Crystal Hollows, Glacite Tunnels,
+  Glacite Mineshaft, Deep Caverns, Garden, Private Island, and Slayer Quest,
+  plus **Everywhere else** for anything without its own rule (leave it unset to
+  keep your current profile). A recognised place must show on two sidebar reads
+  in a row (about a second) before it counts, and "nothing recognised" must
+  hold for 3 seconds, so crossing an area border or a half-loaded sidebar never
+  flaps. Picking a profile by hand is never
+  reverted; the rules apply again the next time the place changes or you join
+  a new world. It only reads the sidebar and never acts outside SkyBlock, and
+  a switch is the same live switch as clicking the profile. An optional chat
+  notice reports each switch. The rules are global, not part of any profile,
+  and are stored in `rotclient-profiles.json` with no schema change; deleting
+  a profile removes the rules that pointed at it. Automated tests cover the
+  classifier, debounce, rules and persistence. Minecraft runtime validation
+  is pending, and the Garden and Private Island sidebar text in particular
+  needs an in-game check.
+* **Example profiles** (Visuals → Profiles → Examples): five ready-made setups
+  to start from, Everyday, Mining, Dungeons, Slayer and Fishing. Each one turns on
+  the Custom Scoreboard and the Pet HUD and adds the HUDs that suit it. They are
+  offered, not installed: nothing is created until you press ADD or ADD ALL, and a
+  new example is added without switching to it, so your current settings are never
+  touched. With no profiles yet, your current setup is saved as "My Setup" first
+  so nothing is lost. HUDs are laid out as anchored stacks and resolved once for
+  your GUI-scaled window size, so they never overlap each other or the scoreboard
+  and stay draggable in the HUD editor afterwards. Examples are JSON files (see
+  `docs/PROFILE_PRESETS.md`), use only shared-catalog modules, and touch no
+  automation option. The Mining example puts the Powder Chest HUD in the top-right
+  corner. The Examples page warns before you add anything if your current GUI scale
+  is too small for a layout (Mining needs about 652px of width). Automated tests
+  cover loading, layout geometry, and that every visible HUD is placed. Minecraft
+  runtime validation is pending.
+* The **Powder Chest HUD** now wears the same card as the Pet HUD: the HUD Layout
+  background colour and opacity, rounded corners, soft shadow and thin border,
+  instead of its own fixed dark panel. The left accent strip is gone, as on the
+  Pet and Mining HUDs. The existing Powder Chest background toggle still works.
+* The saved-profiles list no longer runs past the bottom of a windowed
+  dashboard. It is clipped to the space the window has and scrolls with the mouse
+  wheel or a draggable scrollbar, and it is no longer capped at six profiles (the
+  old "+N more profiles" line is gone). Opening a row's "..." menu scrolls it into
+  view. The Examples and Auto Switch pages scroll the same way in a short window.
 
 ### GUI
 

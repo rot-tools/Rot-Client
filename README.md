@@ -100,7 +100,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 
 | Area | What you get |
 | --- | --- |
-| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global |
+| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global. **Auto Switch** (off by default) can change profile for you when you enter Dungeons, Kuudra, a mining area, the Garden, and more. **Examples** offers five ready-made setups (Everyday, Mining, Dungeons, Slayer, Fishing) to add with one click |
 | **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, Cheater Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+; Cheater Wardrobe settings and hidden-equip runtime are excluded from Lite |
@@ -197,6 +197,7 @@ A green build proves packaging. It does not prove in-game correctness. See [Cont
 
 - [Changelog](CHANGELOG.md)
 - [Branching](docs/BRANCHING.md) — `main`, `development`, and feature branches
+- [Example profiles](docs/PROFILE_PRESETS.md) — the bundled starter profiles and how to change them
 - [Code walkthrough](docs/CODE_WALKTHROUGH.md) — how the JAR is organized, Policy/Runtime/Mixin, and the build-to-play loop
 - [Project state](docs/PROJECT_STATE.md)
 - [Architecture](docs/ARCHITECTURE.md)
