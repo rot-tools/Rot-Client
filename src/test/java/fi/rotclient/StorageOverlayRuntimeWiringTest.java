@@ -81,7 +81,10 @@ class StorageOverlayRuntimeWiringTest {
         String dashboard = Files.readString(Path.of("src/client/java/fi/rotclient/QolUtilityDashboard.java"));
 
         assertTrue(catalog.contains("qol.storage_overlay.clear_search"));
-        assertTrue(catalog.contains("qol.storage_overlay.reload_pages"));
+        // Walking every storage page by itself is automation, so the reload action is Plus-only.
+        String plusCatalog = Files.readString(Path.of("src/plus/java/fi/rotclient/QolPlusCatalog.java"));
+        assertTrue(!catalog.contains("qol.storage_overlay.reload_pages"));
+        assertTrue(plusCatalog.contains("qol.storage_overlay.reload_pages"));
         assertTrue(dashboard.contains("qol.storage_overlay.clear_search"));
         assertTrue(dashboard.contains("StorageOverlayRuntime.requestReloadAll"));
         assertTrue(dashboard.contains("storageOverlaySearchQuery = \"\""));

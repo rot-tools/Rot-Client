@@ -355,7 +355,7 @@ public final class QolUtilityCatalog {
                 setting("qol.custom_scoreboard.date_in_lobby", "Date In Lobby Line", "Prefix the lobby code with today's date.", SettingType.TOGGLE),
                 setting("qol.custom_scoreboard.date_format", "Date Format", "Pattern for the lobby date prefix.", SettingType.ENUM, CustomScoreboardPolicy.dateFormatOptions()),
                 section("qol.custom_scoreboard.section_align", "Alignment"),
-                setting("qol.custom_scoreboard.line_spacing", "Line Spacing", "Extra pixels between rows. 10 is the vanilla-like default.", SettingType.NUMBER),
+                setting("qol.custom_scoreboard.line_spacing", "Line Spacing", "Row height in pixels, 10 to 20. 10 is the vanilla-like default.", SettingType.NUMBER),
                 setting("qol.custom_scoreboard.text_align", "Text Alignment", "Left, center, or right inside the panel.", SettingType.ENUM, CustomScoreboardPolicy.alignOptions()),
                 setting("qol.custom_scoreboard.show_profile_name", "Show Profile Name", "Use the profile name from tab instead of Ironman/Bingo/Stranded.", SettingType.TOGGLE),
                 setting("qol.custom_scoreboard.align_h", "Horizontal Align", "Pin the panel left, center, or right. Don't Align uses the HUD editor position.", SettingType.ENUM, CustomScoreboardPolicy.alignOptions()),
@@ -429,19 +429,6 @@ public final class QolUtilityCatalog {
                 setting("qol.command_keybinds.stats", "Stats", "Sends the stats-menu command when you press this key.", SettingType.KEYBIND),
                 setting("qol.command_keybinds.dungeon_hub", "Dungeon Hub", "Warps to the Dungeon Hub when you press this key.", SettingType.KEYBIND, "dungeon"),
                 setting("qol.command_keybinds.potion_bag", "Potion Bag", "Opens the potion bag when you press this key.", SettingType.KEYBIND, "potion")));
-
-        modules.add(module(
-                "qol.loadout_keybinds",
-                "Loadout Keybinds",
-                "Page and 1-9 / 0 / - / = slot binds while the Hypixel Loadout GUI is open.",
-                Group.UTILITIES,
-                "Keybinds",
-                false,
-                true,
-                true,
-                List.of("loadout", "loadouts"),
-                setting("qol.loadout_keybinds.next", "Next Page", "Next loadout page.", SettingType.KEYBIND),
-                setting("qol.loadout_keybinds.previous", "Previous Page", "Previous loadout page.", SettingType.KEYBIND)));
 
         modules.add(module(
                 "qol.chat_commands",
@@ -525,23 +512,6 @@ public final class QolUtilityCatalog {
                 setting("qol.player_display.speed_color", "Speed Color", "Speed HUD color.", SettingType.COLOR),
                 setting("qol.player_display.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND),
                 setting("qol.player_display.open_hud_editor", "Open HUD Elements Editor", "Move each Player Display element.", SettingType.ACTION, "position")));
-
-        modules.add(module(
-                "qol.pet_keybinds",
-                "Pet Keybinds",
-                "Page, unequip, and 1-9 pet binds while the Hypixel Pets GUI is open.",
-                Group.UTILITIES,
-                "Keybinds",
-                false,
-                true,
-                true,
-                List.of("pet", "pets"),
-                setting("qol.pet_keybinds.unequip", "Unequip", "Unequip active pet.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.next", "Next Page", "Next pets page.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.previous", "Previous Page", "Previous pets page.", SettingType.KEYBIND),
-                setting("qol.pet_keybinds.disable_unequip", "Disable Unequip", "Prevent accidental pet unequip.", SettingType.TOGGLE),
-                setting("qol.pet_keybinds.close_if_equipped", "Close If Already Equipped", "Close pets UI if already equipped.", SettingType.TOGGLE),
-                setting("qol.pet_keybinds.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
 
 
@@ -785,7 +755,6 @@ public final class QolUtilityCatalog {
                 true,
                 List.of("storage", "ender chest", "backpack", "overview"),
                 setting("qol.storage_overlay.clear_cache", "Clear Observed Pages", "Clear only local storage-page previews and reload them from real server menus.", SettingType.ACTION, "cache", "refresh"),
-                setting("qol.storage_overlay.reload_pages", "Reload Storage Pages", "Open every unlocked Ender Chest and Backpack from the server. Later overlay opens only reload pages you clicked; use this to refresh all of them.", SettingType.ACTION, "cache", "reload", "refresh"),
                 setting("qol.storage_overlay.open_item_search", "Item Search", "Search the bundled SkyBlock item index without opening a second durable ledger.", SettingType.ACTION, "items", "bazaar"),
                 setting("qol.storage_overlay.craft_helper", "Craft Helper", "Show recursive recipe totals, owned vs missing, and Storage-page counts on item tooltips.", SettingType.TOGGLE, "recipe", "craft"),
                 setting("qol.storage_overlay.museum_armor", "Museum Armor Hints", "Hint missing Museum armor pieces from the bundled set list.", SettingType.TOGGLE, "museum"),
@@ -1804,7 +1773,7 @@ public final class QolUtilityCatalog {
                 setting("qol.etherwarp.render_style", "Render Style", "Filled, outline, or both.", SettingType.ENUM,
                         EtherwarpPredictor.RENDER_STYLES, "outline"),
                 setting("qol.etherwarp.full_block", "Full Block", "Highlight the whole destination cube instead of a thin top face.", SettingType.TOGGLE),
-                setting("qol.etherwarp.use_server_position", "Use Server Position", "Use server-authoritative position.", SettingType.TOGGLE),
+                setting("qol.etherwarp.use_server_position", "Use Server Position", "Not active yet: the guess always starts from your client position.", SettingType.TOGGLE),
                 setting("qol.etherwarp.sounds", "Sounds", "Local feedback sounds.", SettingType.TOGGLE),
                 setting("qol.etherwarp.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
 
@@ -2353,17 +2322,6 @@ public final class QolUtilityCatalog {
                 List.of("disconnect", "tarantula", "packet")));
 
         modules.add(module(
-                "qol.double_use_fix",
-                "Double Use Fix",
-                "Stops blaze daggers and fishing rods from activating twice on one click.",
-                Group.UTILITIES,
-                "Fixes",
-                false,
-                true,
-                true,
-                List.of("dagger", "fishing rod", "double use")));
-
-        modules.add(module(
                 "qol.active_pet_highlight",
                 "Active Pet Highlight",
                 "Highlight the spawned pet in the Pets menu with a thin outline so the pet icon stays visible.",
@@ -2588,20 +2546,15 @@ public final class QolUtilityCatalog {
         modules.add(module(
                 "qol.stall_market",
                 "Market Guard",
-                "Bazaar search, sell protection, angry co-op AH guard, and BIN overlay/highlights. Local GUI only.",
+                "BIN overlay and auction listing highlights. Local GUI only.",
                 Group.UTILITIES,
                 "Market",
                 false,
                 true,
                 true,
                 List.of("bazaar", "auction house", "bin", "sell protection"),
-                setting("qol.stall_market.bazaar_search", "Bazaar Search", "Click the Search slot and fill the sign. /rot bazaarsearch also works.", SettingType.TOGGLE, "bazaar"),
-                setting("qol.stall_market.sell_protection", "Sell Protection", "Block high-value Sell Instantly / Sell Sacks / Sell Inventory clicks. Hold Ctrl to override.", SettingType.TOGGLE),
-                setting("qol.stall_market.sell_threshold", "Sell Protection Threshold", "Coin amount above which sells are blocked. Default 1m.", SettingType.NUMBER, "1m"),
-                setting("qol.stall_market.angry_coop", "Angry Co-op Protection", "Block claiming co-op auctions and Claim All on Manage Auctions / Your Bids. Hold Ctrl to override.", SettingType.TOGGLE, "auction"),
                 setting("qol.stall_market.bin_overlay", "BIN Overlay", "Highlight Buy/Confirm slots and show BIN status on BIN Auction View / Confirm Purchase.", SettingType.TOGGLE, "bin"),
-                setting("qol.stall_market.ah_highlight", "Auction Highlights", "Tint AH listings cheaper or more expensive than the latest lowest BIN.", SettingType.TOGGLE, "auction house"),
-                setting("qol.stall_market.search_keybind", "Search Hovered", "Search the bazaar for the hovered or held item name.", SettingType.KEYBIND)));
+                setting("qol.stall_market.ah_highlight", "Auction Highlights", "Tint AH listings cheaper or more expensive than the latest lowest BIN.", SettingType.TOGGLE, "auction house")));
 
         modules.add(module(
                 "qol.click_gui",

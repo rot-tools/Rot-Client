@@ -45,6 +45,11 @@ final class QolOverlayHud {
     private double dragOffsetX;
     private double dragOffsetY;
 
+    /** Feeds and reads the FPS/ping/TPS sampler outside the Performance HUD's own render. */
+    PerformanceHudLayout.Snapshot sampleMetrics(Minecraft client) {
+        return metrics.sample(client, System.currentTimeMillis());
+    }
+
     QolOverlayHud(TrackerConfig config) {
         this.config = config;
     }

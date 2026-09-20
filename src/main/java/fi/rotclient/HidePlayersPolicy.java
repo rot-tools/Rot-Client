@@ -31,6 +31,15 @@ public final class HidePlayersPolicy {
         return distance;
     }
 
+    /**
+     * Hypixel spawns NPCs and scripted mobs as player entities with version 2
+     * UUIDs. Real accounts never have one, so those are not "players" for the
+     * purposes of hiding.
+     */
+    public static boolean isNpcUuid(java.util.UUID uuid) {
+        return uuid != null && uuid.version() == 2;
+    }
+
     public static boolean shouldHideRemotePlayer(
             boolean moduleEnabled,
             boolean onlyInDungeons,

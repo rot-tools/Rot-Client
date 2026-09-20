@@ -102,6 +102,32 @@ public final class ItemRarityRuntime {
         }
     }
 
+    /*
+     * Container screens and the hotbar background used to re-parse every filled
+     * slot's lore on every frame (up to ~90 slots in a double chest). This small
+     * direct-mapped cache keeps a result per stack instance for half a second, which
+     * still picks up an in-place lore change quickly and is render-thread only.
+     */
+    private static final int STACK_CACHE_SIZE = 256;
+    private static final long STACK_CACHE_MS = 500L;
+    private static final ItemStack[] STACK_CACHE_KEY = new ItemStack[STACK_CACHE_SIZE];
+    private static final ItemRarityPolicy.Rarity[] STACK_CACHE_VALUE =
+            new ItemRarityPolicy.Rarity[STACK_CACHE_SIZE];
+    private static final long[] STACK_CACHE_UNTIL = new long[STACK_CACHE_SIZE];
+
+    private static ItemRarityPolicy.Rarity rarityOf(ItemStack stack) {
+        int slot = (System.identityHashCode(stack) & 0x7FFFFFFF) % STACK_CACHE_SIZE;
+        long now = System.currentTimeMillis();
+        if (STACK_CACHE_KEY[slot] == stack && now < STACK_CACHE_UNTIL[slot]) {
+            return STACK_CACHE_VALUE[slot];
+        }
+        ItemRarityPolicy.Rarity rarity = ItemRarityPolicy.parseRarity(lore(stack));
+        STACK_CACHE_KEY[slot] = stack;
+        STACK_CACHE_VALUE[slot] = rarity;
+        STACK_CACHE_UNTIL[slot] = now + STACK_CACHE_MS;
+        return rarity;
+    }
+
     private static ItemRarityPolicy.Rarity resolveHotbarRarity(int slot, ItemStack stack) {
         if (HOTBAR_RARITY_STACK[slot] == stack) {
             return HOTBAR_RARITY_CACHE[slot];
@@ -120,7 +146,7 @@ public final class ItemRarityRuntime {
             QolUtilityConfig qol,
             boolean fill,
             boolean outline) {
-        paint(graphics, x, y, ItemRarityPolicy.parseRarity(lore(stack)), qol, fill, outline);
+        paint(graphics, x, y, rarityOf(stack), qol, fill, outline);
     }
 
     private static void paint(

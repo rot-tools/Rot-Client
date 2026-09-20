@@ -42,11 +42,14 @@ public final class SmoothZoomRuntime {
         lastSampleNanos = now;
 
         boolean canZoom =
-                client.level != null
-                        && client.player != null
-                        && client.getWindow() != null
-                        && qol.zoomKeybind != null
-                        && !qol.zoomKeybind.isBlank();
+                SmoothZoomPolicy.canZoom(
+                        client.level != null
+                                && client.player != null
+                                && client.getWindow() != null,
+                        client.gui != null
+                                && client.gui.screen() != null,
+                        qol.zoomKeybind != null
+                                && !qol.zoomKeybind.isBlank());
 
         boolean held =
                 canZoom

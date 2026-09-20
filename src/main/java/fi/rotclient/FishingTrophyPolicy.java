@@ -15,16 +15,16 @@ public final class FishingTrophyPolicy {
     public static final int GOLDEN_WEAK_HITS = 3;
 
     private static final Pattern TROPHY = Pattern.compile(
-            "TROPHY FISH! You caught an? (.+?) (Bronze|Silver|Gold|Diamond)!",
+            "^TROPHY FISH! You caught an? (.+?) (Bronze|Silver|Gold|Diamond)[.!]",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern GOLDEN_SPAWN = Pattern.compile(
-            "You spot a Golden Fish surface from beneath the lava!", Pattern.CASE_INSENSITIVE);
+            "^You spot a Golden Fish surface from beneath the lava!", Pattern.CASE_INSENSITIVE);
     private static final Pattern GOLDEN_INTERACT = Pattern.compile(
-            "The Golden Fish escapes your hook but looks weakened\\.", Pattern.CASE_INSENSITIVE);
+            "^The Golden Fish escapes your hook but looks weakened\\.", Pattern.CASE_INSENSITIVE);
     private static final Pattern GOLDEN_WEAK = Pattern.compile(
-            "The Golden Fish is weak!", Pattern.CASE_INSENSITIVE);
+            "^The Golden Fish is weak!", Pattern.CASE_INSENSITIVE);
     private static final Pattern GOLDEN_DESPAWN = Pattern.compile(
-            "The Golden Fish swims back beneath the lava\\.", Pattern.CASE_INSENSITIVE);
+            "^The Golden Fish swims back beneath the lava\\.", Pattern.CASE_INSENSITIVE);
 
     public record Catch(String name, String rarity) {
         public int rank() {

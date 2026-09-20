@@ -119,6 +119,19 @@ public final class SlayerRuntime {
     private static long lastTimeMessageAtMillis;
     private static long lastMinibossAlertAtMillis;
     private static SlayerSessionEngine.Snapshot overlaySnapshot;
+    // Ground drops and effigies were found from render() on every frame (an entity query, a NBT
+    // read per item and a scoreboard rebuild). tick() finds them a few times a second instead.
+    private record GroundDrop(ItemEntity item, String label) {
+    }
+
+    private static List<GroundDrop> groundDrops = List.of();
+    private static int groundDropTicks;
+    private static List<SlayerPolishPolicy.BlockCoord> effigyCoords = List.of();
+    private static int effigyTicks;
+    private static AbstractContainerScreen<?> rngScreen;
+    private static long rngObservedMs;
+    private static Map<String, BigDecimal> cachedUnitPrices = Map.of();
+    private static long cachedUnitPricesAtMs;
     private static SlayerFightPolicy.QuestRef latestQuest;
     private static List<String> ownedNametagLines = List.of();
 
@@ -188,6 +201,8 @@ public final class SlayerRuntime {
             resetProgress();
             featuresWereEnabled = enabled;
             scanCooldown = 0;
+            groundDrops = List.of();
+            effigyCoords = List.of();
             return;
         }
         featuresWereEnabled = true;
@@ -202,6 +217,8 @@ public final class SlayerRuntime {
         QolClientFlavorSupport.hooks().slayerAutomationTick(client);
         tickVoidgloomLaser(client, settings);
         tickGummyWarning(client, settings);
+        refreshGroundDrops(client, settings);
+        refreshEffigies(client, settings);
         if (settings.slayerVengeanceEnabled) {
             VENGEANCE.tick();
         } else {
@@ -214,6 +231,63 @@ public final class SlayerRuntime {
         scanCooldown = 2;
         scanEntities(client, settings);
         reapRemoved(client.level);
+    }
+
+    private static void refreshGroundDrops(Minecraft client, QolSkyblockExtras settings) {
+        if (!settings.slayerDropsEnabled
+                || !(settings.slayerDropsGroundHighlight || settings.slayerDropsGroundLabels)) {
+            groundDrops = List.of();
+            groundDropTicks = 0;
+            return;
+        }
+        if (groundDropTicks++ % 4 != 0) {
+            return;
+        }
+        Map<String, BigDecimal> prices = settings.slayerDropsGroundLabels ? slayerUnitPrices() : Map.of();
+        AABB search = client.player.getBoundingBox().inflate(24.0D);
+        List<GroundDrop> found = new ArrayList<>();
+        for (Entity entity : client.level.getEntities(client.player, search)) {
+            if (!(entity instanceof ItemEntity item)) {
+                continue;
+            }
+            String id = SkyBlockItemIdentity.skyBlockId(item.getItem());
+            if (!SlayerItemProfitPolicy.isKnownSlayerDropId(id)) {
+                continue;
+            }
+            found.add(new GroundDrop(item,
+                    settings.slayerDropsGroundLabels ? groundDropLabel(item, id, prices, settings) : null));
+        }
+        groundDrops = found;
+    }
+
+    private static String groundDropLabel(
+            ItemEntity item,
+            String id,
+            Map<String, BigDecimal> prices,
+            QolSkyblockExtras settings) {
+        SlayerRngCatalog.Entry entry = SlayerRngCatalog.byId(id).orElse(null);
+        if (entry == null) {
+            return null;
+        }
+        BigDecimal price = prices.get(entry.skyBlockId());
+        int count = item.getItem().getCount();
+        if (!SlayerGroundDropPolicy.shouldShowLabel(true, price, count, settings.slayerDropsGroundLabelMinimum)) {
+            return null;
+        }
+        BigDecimal totalValue = SlayerGroundDropPolicy.totalValue(price, count);
+        return entry.display() + " ×" + count
+                + " · " + String.format(Locale.ROOT, "%,.2f", totalValue) + " coins";
+    }
+
+    private static void refreshEffigies(Minecraft client, QolSkyblockExtras settings) {
+        if (!settings.slayerVampireMarkersEnabled || !settings.slayerVampireMarkersEffigies) {
+            effigyCoords = List.of();
+            effigyTicks = 0;
+            return;
+        }
+        if (effigyTicks++ % 10 == 0) {
+            effigyCoords = unbrokenEffigies(client);
+        }
     }
 
     static void onChat(Component message) {
@@ -302,7 +376,7 @@ public final class SlayerRuntime {
             if (message == null || !settings.slayerDropsEnabled) {
                 return false;
             }
-            String line = message.getString().replaceAll("§.", "").trim();
+            String line = ChatTextPolicy.stripFormatting(message.getString()).trim();
             if (line.startsWith("[Rot Client]")) {
                 return false;
             }
@@ -763,6 +837,18 @@ public final class SlayerRuntime {
     }
 
     private static Map<String, BigDecimal> slayerUnitPrices() {
+        // The profit HUD and ground labels asked for this every frame, and each ask walked the
+        // whole RNG catalog against the bazaar snapshot. Quotes do not move faster than this.
+        long now = System.currentTimeMillis();
+        if (now - cachedUnitPricesAtMs < 1_000L) {
+            return cachedUnitPrices;
+        }
+        cachedUnitPrices = computeUnitPrices();
+        cachedUnitPricesAtMs = now;
+        return cachedUnitPrices;
+    }
+
+    private static Map<String, BigDecimal> computeUnitPrices() {
         return ClientBoundaryGuard.call("SLAYER_UNIT_PRICES", () -> {
             MiningSessionBazaarPriceCache.CacheSnapshot cache = MiningSessionBazaarPriceCache.capture();
             if (!cache.isAvailable()) return Map.of();
@@ -1154,7 +1240,9 @@ public final class SlayerRuntime {
         Vec3 eye = player.getEyePosition(partialTick);
         if (settings.slayerHighlightsEnabled) {
             int drawn = 0;
-            for (SlayerSessionEngine.ActiveBoss active : ENGINE.snapshot(System.currentTimeMillis()).activeBosses()) {
+            SlayerSessionEngine.Snapshot bossView = overlaySnapshot;
+            for (SlayerSessionEngine.ActiveBoss active
+                    : bossView == null ? List.<SlayerSessionEngine.ActiveBoss>of() : bossView.activeBosses()) {
                 if (drawn >= 24) {
                     break;
                 }
@@ -1202,33 +1290,17 @@ public final class SlayerRuntime {
             }
         }
         if (settings.slayerDropsEnabled && (settings.slayerDropsGroundHighlight || settings.slayerDropsGroundLabels)) {
-            Map<String, BigDecimal> prices = settings.slayerDropsGroundLabels ? slayerUnitPrices() : Map.of();
-            AABB search = player.getBoundingBox().inflate(24.0D);
-            for (Entity entity : client.level.getEntities(player, search)) {
-                if (!(entity instanceof ItemEntity item)) continue;
-                String id = SkyBlockItemIdentity.skyBlockId(item.getItem());
-                if (!SlayerItemProfitPolicy.isKnownSlayerDropId(id)) continue;
+            for (GroundDrop drop : groundDrops) {
+                ItemEntity item = drop.item();
+                if (item.isRemoved()) continue;
                 if (settings.slayerDropsGroundHighlight) {
                     var props = Gizmos.cuboid(interpolatedBox(item, partialTick, 0.15D),
                             GizmoStyle.strokeAndFill(0xFF51E6A8, 2.0F, 0x3351E6A8));
                     if (!settings.slayerHighlightsDepth) QolClientFlavorSupport.hooks().configurePlusGizmo(props);
                 }
-                if (settings.slayerDropsGroundLabels) {
-                    SlayerRngCatalog.Entry entry = SlayerRngCatalog.byId(id).orElse(null);
-                    if (entry == null) continue;
-                    BigDecimal price = prices.get(entry.skyBlockId());
-                    BigDecimal totalValue = SlayerGroundDropPolicy.totalValue(price, item.getItem().getCount());
-                    if (!SlayerGroundDropPolicy.shouldShowLabel(
-                            true,
-                            price,
-                            item.getItem().getCount(),
-                            settings.slayerDropsGroundLabelMinimum)) {
-                        continue;
-                    }
-                    String label = entry.display() + " ×" + item.getItem().getCount();
-                    label += " · " + String.format(Locale.ROOT, "%,.2f", totalValue) + " coins";
+                if (settings.slayerDropsGroundLabels && drop.label() != null) {
                     var text = Gizmos.billboardTextOverBlock(
-                            label,
+                            drop.label(),
                             BlockPos.containing(item.position()),
                             0,
                             0xFF51E6A8,
@@ -1293,7 +1365,7 @@ public final class SlayerRuntime {
         }
         if (settings.slayerVampireMarkersEnabled && settings.slayerVampireMarkersEffigies) {
             int color = 0xFFFF2020;
-            for (SlayerPolishPolicy.BlockCoord coord : unbrokenEffigies(client)) {
+            for (SlayerPolishPolicy.BlockCoord coord : effigyCoords) {
                 var box = Gizmos.cuboid(
                         new AABB(coord.x(), coord.y(), coord.z(),
                                 coord.x() + 1.0D, coord.y() + 1.0D, coord.z() + 1.0D),
@@ -3280,6 +3352,14 @@ public final class SlayerRuntime {
         if (!extras.slayerDropsEnabled || screen == null) {
             return;
         }
+        // Called from the container render pass: every slot's name and lore were read and parsed
+        // on every frame of every open container. Menu contents only change with server packets.
+        long now = System.currentTimeMillis();
+        if (screen == rngScreen && now - rngObservedMs < 250L) {
+            return;
+        }
+        rngScreen = screen;
+        rngObservedMs = now;
         String title = screen.getTitle().getString();
         List<SlayerRngMeterPolicy.SlotView> slots = new ArrayList<>();
         List<Slot> menuSlots = screen.getMenu().slots;

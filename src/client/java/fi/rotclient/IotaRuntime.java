@@ -137,7 +137,7 @@ public final class IotaRuntime {
                 extras.partyCommandConfig(),
                 local,
                 ping,
-                20.0F,
+                currentTps(client),
                 extras.iotaChestCount,
                 extras.iotaRunCount,
                 extras.iotaFailedRunCount,
@@ -169,6 +169,14 @@ public final class IotaRuntime {
         tickArrowTracker(
                 client,
                 extras);
+
+        if (extras.iotaPartyCommands && extras.iotaPartyTps) {
+            // Keep the rolling TPS estimate running so !tps has a real value to send.
+            QolOverlayHud hud = RotClientClient.qolHud();
+            if (hud != null) {
+                hud.sampleMetrics(client);
+            }
+        }
 
         IotaKuudraRuntime.tick(
                 client);
@@ -291,6 +299,14 @@ public final class IotaRuntime {
 
     private static boolean inSkyblock() {
         return SkyBlockAreaDetector.isInSkyblock();
+    }
+
+    private static float currentTps(Minecraft client) {
+        QolOverlayHud hud = RotClientClient.qolHud();
+        if (hud == null) {
+            return Float.NaN;
+        }
+        return hud.sampleMetrics(client).tps().map(Double::floatValue).orElse(Float.NaN);
     }
 
     private static int pingMs(LocalPlayer player) {

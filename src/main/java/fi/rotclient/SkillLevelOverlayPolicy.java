@@ -31,6 +31,11 @@ public final class SkillLevelOverlayPolicy {
     private static final Pattern HOVER_ROMAN =
             Pattern.compile("^(?:[A-Za-z][A-Za-z '\\-/]*?)\\s+([IVXLCDM]{1,6})$");
 
+    private static final Pattern SKILL_NAME = Pattern.compile(
+            "farming|mining|combat|foraging|fishing|enchanting|alchemy|taming|carpentry"
+                    + "|runecrafting|social|hunting|catacombs",
+            Pattern.CASE_INSENSITIVE);
+
     public record Overlay(int level, boolean max) {
     }
 
@@ -179,7 +184,7 @@ public final class SkillLevelOverlayPolicy {
 
     static boolean isSkillName(String hoverName) {
         String hover = MenuKeybindPolicy.stripGuiText(hoverName);
-        return hover.matches("(?i).*(farming|mining|combat|foraging|fishing|enchanting|alchemy|taming|carpentry|runecrafting|social|hunting|catacombs).*");
+        return SKILL_NAME.matcher(hover).find();
     }
 
     static int romanToInt(String raw) {

@@ -126,7 +126,23 @@ public final class InventoryButtonsRuntime {
                 layout.panelHeight() + StorageOverlayPolicy.PLAYER_GAP + StorageOverlayPolicy.PLAYER_HEIGHT};
     }
 
+    // Resolving the icon builds an ItemStack; that used to happen for every button on every frame.
+    private static final java.util.Map<String, ItemStack> ICON_CACHE = new java.util.HashMap<>();
+
     private static ItemStack icon(String raw) {
+        String key = raw == null ? "" : raw;
+        ItemStack cached = ICON_CACHE.get(key);
+        if (cached == null) {
+            cached = resolveIcon(raw);
+            if (ICON_CACHE.size() > 128) {
+                ICON_CACHE.clear();
+            }
+            ICON_CACHE.put(key, cached);
+        }
+        return cached;
+    }
+
+    private static ItemStack resolveIcon(String raw) {
         try {
             Identifier id = Identifier.tryParse(InventoryButtonsPolicy.normalizeIcon(raw));
             var item = id == null ? null : BuiltInRegistries.ITEM.getValue(id);
