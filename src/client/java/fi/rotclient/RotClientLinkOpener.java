@@ -43,24 +43,10 @@ final class RotClientLinkOpener {
         if (!isAllowedExternalUri(uri)) {
             return;
         }
-        String safeUrl = uri.toString();
         try {
             if (Desktop.isDesktopSupported()
                     && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 Desktop.getDesktop().browse(uri);
-                return;
-            }
-        } catch (Exception ignored) {
-            // Fall through to OS-specific launchers.
-        }
-        try {
-            String os = System.getProperty("os.name", "").toLowerCase();
-            if (os.contains("win")) {
-                new ProcessBuilder("cmd", "/c", "start", "", safeUrl).start();
-            } else if (os.contains("mac")) {
-                new ProcessBuilder("open", safeUrl).start();
-            } else {
-                new ProcessBuilder("xdg-open", safeUrl).start();
             }
         } catch (Exception ignored) {
             // Keep UI responsive if no URI opener is available.
