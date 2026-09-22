@@ -253,7 +253,7 @@ public final class DungeonRuntime {
         }
         QolSkyblockExtras extras = extras();
         DungeonAthenSettings athen = extras.athen();
-        if (!extras.dungeonTerminalsEnabled || (!athen.termHideHeader && !athen.termHideTitle)) {
+        if (!plusDungeonFeature(extras.dungeonTerminalsEnabled) || (!athen.termHideHeader && !athen.termHideTitle)) {
             return false;
         }
         return DungeonPolicy.detectTerminal(titleOf(screen)) != DungeonPolicy.Terminal.NONE;
@@ -378,12 +378,12 @@ public final class DungeonRuntime {
         refreshChestProfitHud(client, extras);
         HateDoorsRuntime.scan(client, extras);
         scanDungeonMap(client, extras);
-        if (extras.dungeonF7Enabled && extras.dungeonF7Simon) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Simon)) {
             scanSimon(client);
         }
         if (puzzleScanTicks++ % 8 == 0) {
             scanPuzzles(client, extras);
-            if (extras.dungeonF7Enabled && extras.dungeonF7ArrowAlign) {
+            if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7ArrowAlign)) {
                 scanArrowAlign(client);
             }
         }
@@ -532,7 +532,7 @@ public final class DungeonRuntime {
                 }
             });
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspDoors) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspDoors) {
             TempleDungeonPolicy.doorKeyTitle(TempleDungeonPolicy.doorKeyEvent(raw))
                     .ifPresent(title -> showTitle(client, true, "§e" + title));
         }
@@ -789,7 +789,7 @@ public final class DungeonRuntime {
         }
         DungeonAssistPolicy.ragnarockStrength(raw).ifPresent(strength ->
                 lastRagnarock = "Ragnarock +" + strength);
-        if (extras.dungeonPuzzlesEnabled && (extras.dungeonPuzzlesQuiz || extras.dungeonPuzzlesQuizBoxes)) {
+        if (plusDungeonFeature(extras.dungeonPuzzlesEnabled) && (extras.dungeonPuzzlesQuiz || extras.dungeonPuzzlesQuizBoxes)) {
             DungeonAssistPolicy.quizCorrectOption(raw, lastQuizAnswers).ifPresent(index ->
                     lastQuizOption = index);
             List<String> answers = DungeonAssistPolicy.quizAnswers(raw);
@@ -802,7 +802,7 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (extras.dungeonPuzzlesEnabled && extras.dungeonPuzzlesWeirdos) {
+        if (plusDungeonFeature(extras.dungeonPuzzlesEnabled) && extras.dungeonPuzzlesWeirdos) {
             DungeonAssistPolicy.WeirdoKind kind = DungeonAssistPolicy.weirdoKind(raw);
             if (kind == DungeonAssistPolicy.WeirdoKind.CORRECT) {
                 lastWeirdoNpc = DungeonAssistPolicy.weirdoNpcName(raw).orElse("truth");
@@ -1134,10 +1134,10 @@ public final class DungeonRuntime {
         if (extras.dungeonHudMelodyOther && !melodyOtherOwn && !melodyOtherName.isBlank()) {
             lines.add(DungeonBladePolicy.melodyTeammateHud(melodyOtherHudName(), melodyOtherPercent));
         }
-        if (extras.dungeonHudQuiz && extras.dungeonPuzzlesEnabled && !lastQuiz.isEmpty()) {
+        if (extras.dungeonHudQuiz && plusDungeonFeature(extras.dungeonPuzzlesEnabled) && !lastQuiz.isEmpty()) {
             lines.add(lastQuiz);
         }
-        if (extras.dungeonPuzzlesEnabled && extras.dungeonPuzzlesQuizTimer && quizTicks > 0) {
+        if (plusDungeonFeature(extras.dungeonPuzzlesEnabled) && extras.dungeonPuzzlesQuizTimer && quizTicks > 0) {
             String quizLine = DungeonBladePolicy.quizHudLine(quizStage, quizTicks);
             if (!quizLine.isBlank()) {
                 lines.add(quizLine);
@@ -1236,7 +1236,7 @@ public final class DungeonRuntime {
         if (extras.dungeonMenusEnabled && extras.dungeonMenusChestProfit && !chestProfitHud.isEmpty()) {
             lines.addAll(chestProfitHud);
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspLivid && !lastLivid.isEmpty()) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspLivid && !lastLivid.isEmpty()) {
             addTimer(lines, lastLivid, lividUntil, now);
         }
         if (extras.dungeonLeapEnabled && extras.dungeonLeapCounter && !lastLeapRegion.isEmpty()) {
@@ -1260,7 +1260,7 @@ public final class DungeonRuntime {
         if (extras.dungeonF7Enabled && extras.dungeonF7RelicSpawn) {
             addTimer(lines, "Relic spawn", relicSpawnUntil, now);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SimonProgress
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7SimonProgress)
                 && !simon.remaining().isEmpty()) {
             lines.add("Simon " + simon.remaining().size());
         }
@@ -1296,7 +1296,7 @@ public final class DungeonRuntime {
         if (extras.dungeonF7Enabled && extras.dungeonF7PurplePad && purplePadTicks > 0) {
             lines.add(DungeonF7Policy.purplePadLine(purplePadTicks));
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7ArrowAlign && !arrowClicks.isEmpty()) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7ArrowAlign) && !arrowClicks.isEmpty()) {
             int left = arrowClicks.stream().mapToInt(EmberDungeonPolicy.ArrowClicks::clicks).sum();
             lines.add("Arrows " + left);
         }
@@ -1363,7 +1363,7 @@ public final class DungeonRuntime {
 
     public static boolean enqueueTerminalClick(int slot, int button) {
         QolSkyblockExtras extras = extras();
-        if (!extras.dungeonTerminalsEnabled || !extras.dungeonTerminalsQueue) {
+        if (!plusDungeonFeature(extras.dungeonTerminalsEnabled) || !extras.dungeonTerminalsQueue) {
             return false;
         }
         DungeonLeftoverPolicy.enqueue(termQueue, slot, button);
@@ -1412,7 +1412,7 @@ public final class DungeonRuntime {
         }
         AABB search = player.getBoundingBox().inflate(DungeonPolicy.ESP_SCAN_RANGE);
         Vec3 eye = player.getEyePosition();
-        if (extras.dungeonEspEnabled) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled)) {
             boolean needNamed = needsNamedDungeonEsp(extras);
             if (extras.dungeonEspBats || extras.dungeonEspTeammates || needNamed) {
                 for (DungeonEntitySnapshot.Seen<LivingEntity> seen
@@ -1437,8 +1437,8 @@ public final class DungeonRuntime {
             }
         }
         highlightBlazeOrder(client, player, extras, eye, search);
-        if ((extras.dungeonEspEnabled && extras.dungeonEspSimon)
-                || (extras.dungeonF7Enabled && extras.dungeonF7Simon)) {
+        if ((plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspSimon)
+                || (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Simon))) {
             highlightSimon(client, player, extras, eye);
         }
         if (extras.dungeonF7Enabled && !extras.dungeonF7HideDiorite) {
@@ -1487,7 +1487,7 @@ public final class DungeonRuntime {
                 && DungeonAssistPolicy.isDungeonChestMenu(title)) {
             return chestColor(screen, slotIndex, extras);
         }
-        if (!extras.dungeonTerminalsEnabled || !extras.dungeonTerminalsOverlay) {
+        if (!plusDungeonFeature(extras.dungeonTerminalsEnabled) || !extras.dungeonTerminalsOverlay) {
             return 0;
         }
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
@@ -1574,7 +1574,7 @@ public final class DungeonRuntime {
         }
         QolSkyblockExtras extras = extras();
         DungeonAthenSettings athen = extras.athen();
-        if (!extras.dungeonTerminalsEnabled || !extras.dungeonTerminalsOverlay || !athen.termNumbersShowText) {
+        if (!plusDungeonFeature(extras.dungeonTerminalsEnabled) || !extras.dungeonTerminalsOverlay || !athen.termNumbersShowText) {
             return "";
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
@@ -2130,7 +2130,7 @@ public final class DungeonRuntime {
             QolSkyblockExtras extras,
             Vec3 eye,
             AABB search) {
-        if (extras.dungeonEspEnabled && extras.dungeonEspHateDoors) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspHateDoors) {
             // 1,700 block lookups, each building a registry id string, used to run every frame.
             if (DungeonPolicy.scanDue(dungeonWorldTicks, hateDoorScanTick, HATE_DOOR_SCAN_TICKS)) {
                 hateDoorMarks = scanHateDoors(client, player, extras);
@@ -2140,7 +2140,7 @@ public final class DungeonRuntime {
                 box(blockBox(mark.pos()), mark.color(), extras, eye);
             }
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspSecretWaypoints) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspSecretWaypoints) {
             observeCollectedSecrets(client, extras);
             List<DungeonRoomDataPolicy.MapTile> currentTiles = DungeonMapPolicy.currentRoomTiles(
                     (int) Math.floor(player.getX()),
@@ -2166,13 +2166,13 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspDoors && lastMapBoard.calibration().ok()) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspDoors && lastMapBoard.calibration().ok()) {
             for (DungeonMapPolicy.WorldDoor door : DungeonMapPolicy.worldDoors(lastMapBoard)) {
                 box(new AABB(door.minX(), door.minY(), door.minZ(), door.maxX(), door.maxY(), door.maxZ()),
                         DungeonMapPolicy.doorArgb(door.type()), extras, eye);
             }
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspIcedMobs) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspIcedMobs) {
             boolean holdingSpray = false;
             for (int slot = 0; slot < 9; slot++) {
                 ItemStack stack = player.getInventory().getItem(slot);
@@ -2194,7 +2194,7 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsHitboxes) {
+        if (plusDungeonFeature(extras.dungeonTerminalsEnabled) && extras.dungeonTerminalsHitboxes) {
             DungeonAthenSettings athen = extras.athen();
             for (DungeonEntitySnapshot.Seen<LivingEntity> seen
                     : DungeonEntitySnapshot.living(client, player)) {
@@ -2209,7 +2209,7 @@ public final class DungeonRuntime {
             renderTerminalWaypoints(client, extras, athen, eye);
         }
         DungeonCarryRuntime.renderGizmos(client);
-        if (extras.dungeonF7Enabled && extras.dungeonF7I4
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7I4)
                 && !termTimes.goldorPhase()
                 && player.blockPosition().closerThan(new BlockPos(66, 128, 50), 40.0D)) {
             boolean predicted = false;
@@ -2226,7 +2226,7 @@ public final class DungeonRuntime {
                 box(blockBox(pos), color, extras, eye);
             }
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SharpShooter && termTimes.goldorPhase()) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7SharpShooter) && termTimes.goldorPhase()) {
             renderSharpShooter(extras, eye);
         }
         if (extras.dungeonF7Enabled && extras.dungeonF7Gate) {
@@ -2291,14 +2291,14 @@ public final class DungeonRuntime {
                 tracer(eye, dragon.getBoundingBox().getCenter(), 0xAAFFFFFF, extras);
             }
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7ArrowAlign) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7ArrowAlign)) {
             for (EmberDungeonPolicy.ArrowClicks click : arrowClicks) {
                 EmberDungeonPolicy.IntVec vec = EmberDungeonPolicy.arrowPos(click.index());
                 box(blockBox(new BlockPos(vec.x(), vec.y(), vec.z())),
                         EmberDungeonPolicy.arrowColor(click.clicks()), extras, eye);
             }
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspLivid) {
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspLivid) {
             BlockPos wool = new BlockPos(
                     EmberDungeonPolicy.LIVID_WOOL.x(),
                     EmberDungeonPolicy.LIVID_WOOL.y(),
@@ -2467,7 +2467,7 @@ public final class DungeonRuntime {
 
     static void scanPuzzles(Minecraft client, QolSkyblockExtras extras) {
         puzzleMarks.clear();
-        if (!extras.dungeonPuzzlesEnabled || !SkyBlockDungeonDetector.confidentlyInDungeon()) {
+        if (!plusDungeonFeature(extras.dungeonPuzzlesEnabled) || !SkyBlockDungeonDetector.confidentlyInDungeon()) {
             return;
         }
         LocalPlayer player = client.player;
@@ -2751,7 +2751,7 @@ public final class DungeonRuntime {
     static void scanDungeonMap(Minecraft client, QolSkyblockExtras extras) {
         boolean hideBoss = extras.dungeonHudMapHideBoss && sidebar.boss();
         boolean needPreview = extras.dungeonHudEnabled && extras.dungeonHudMap && !hideBoss;
-        boolean needBoard = extras.dungeonEspEnabled;
+        boolean needBoard = plusDungeonFeature(extras.dungeonEspEnabled);
         if (!needPreview) {
             mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
         }
@@ -3419,7 +3419,7 @@ public final class DungeonRuntime {
 
     static void onBlockUpdate(BlockPos pos, BlockState oldState, BlockState newState) {
         QolSkyblockExtras extras = extras();
-        if (!extras.dungeonF7Enabled || !extras.dungeonF7SharpShooter || pos == null) {
+        if (!extras.dungeonF7Enabled || !plusDungeonFeature(extras.dungeonF7SharpShooter) || pos == null) {
             return;
         }
         if (!termTimes.goldorPhase()
@@ -3439,7 +3439,7 @@ public final class DungeonRuntime {
         Minecraft client = Minecraft.getInstance();
         QolSkyblockExtras extras = extras();
         if (client == null || client.level == null || client.player == null
-                || !extras.dungeonF7Enabled || !extras.dungeonF7SharpShooter
+                || !extras.dungeonF7Enabled || !plusDungeonFeature(extras.dungeonF7SharpShooter)
                 || !termTimes.goldorPhase() || sharpShooter.complete()) {
             return;
         }
@@ -3458,7 +3458,7 @@ public final class DungeonRuntime {
         if (client.player == null || client.level == null) {
             return;
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SharpShooter && termTimes.goldorPhase()
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7SharpShooter) && termTimes.goldorPhase()
                 && !sharpShooter.complete()) {
             sharpShooter = DungeonGoldorPolicy.observeWorld(sharpShooter, vec ->
                     blockId(client, new BlockPos(vec.x(), vec.y(), vec.z())));
@@ -3530,7 +3530,7 @@ public final class DungeonRuntime {
         if (extras.dungeonAnnounceEnabled && extras.dungeonAnnouncePosition) {
             positionCallouts.noteChat(raw);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7SharpShooter && termTimes.goldorPhase()
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7SharpShooter) && termTimes.goldorPhase()
                 && !sharpShooter.complete()
                 && client != null && client.player != null
                 && DungeonGoldorPolicy.inSharpRoom(
@@ -3558,7 +3558,7 @@ public final class DungeonRuntime {
                 && TempleDungeonPolicy.keyPickupClearsDrop(raw)) {
             droppedKey = TempleDungeonPolicy.KeySkull.NONE;
         }
-        if (extras.dungeonEspEnabled && extras.dungeonEspSecretClicked
+        if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspSecretClicked
                 && TempleDungeonPolicy.lockedChestChat(raw)
                 && !clickedSecrets.isEmpty()) {
             ClickedSecret last = clickedSecrets.removeLast();
@@ -3846,7 +3846,7 @@ public final class DungeonRuntime {
         if (extras.dungeonTerminalsProtect && isCloseKey(glfwKey) && protectingTerminal()) {
             return true;
         }
-        if (extras.dungeonTerminalsEnabled
+        if (plusDungeonFeature(extras.dungeonTerminalsEnabled)
                 && DungeonPolicy.detectTerminal(titleOf(screen)) != DungeonPolicy.Terminal.NONE) {
             DungeonAthenSettings athen = extras.athen();
             if (athen.termDropKey && isDropKey(glfwKey)) {
@@ -3877,7 +3877,7 @@ public final class DungeonRuntime {
         if (digit < 1) {
             return false;
         }
-        if (extras.dungeonTerminalsEnabled && extras.dungeonTerminalsMelodyKeys
+        if (plusDungeonFeature(extras.dungeonTerminalsEnabled) && extras.dungeonTerminalsMelodyKeys
                 && DungeonPolicy.detectTerminal(titleOf(screen)) == DungeonPolicy.Terminal.MELODY) {
             int slot = DungeonF7Policy.melodySlotForDigit(
                     digit, DungeonPolicy.melodyPlayRows(snapshot(screen)));
@@ -3914,7 +3914,7 @@ public final class DungeonRuntime {
 
     static boolean protectingTerminal() {
         QolSkyblockExtras extras = extras();
-        return extras.dungeonTerminalsEnabled
+        return plusDungeonFeature(extras.dungeonTerminalsEnabled)
                 && extras.dungeonTerminalsProtect
                 && DungeonF7Policy.protectTerminal(
                         terminalOpenedAt,
@@ -4055,8 +4055,16 @@ public final class DungeonRuntime {
         return RotClientClient.qolConfigPublic().extras();
     }
 
+    /**
+     * Public Lite deliberately does not execute dungeon ESP or solver paths,
+     * including when an older shared profile still has their values saved.
+     */
+    private static boolean plusDungeonFeature(boolean enabled) {
+        return QolFlavorSupport.isPlus() && enabled;
+    }
+
     static boolean terminalOverlayActive(AbstractContainerScreen<?> screen) {
-        if (screen == null || !extras().dungeonTerminalsEnabled || !extras().dungeonTerminalsOverlay) {
+        if (screen == null || !plusDungeonFeature(extras().dungeonTerminalsEnabled) || !extras().dungeonTerminalsOverlay) {
             return false;
         }
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(titleOf(screen));
@@ -4102,7 +4110,7 @@ public final class DungeonRuntime {
         QolSkyblockExtras extras = extras();
         if (client == null || client.player == null
                 || !extras.dungeonF7Enabled
-                || !extras.dungeonF7SimonSounds) {
+                || !plusDungeonFeature(extras.dungeonF7SimonSounds)) {
             return;
         }
         playConfiguredClickSound(client, extras);
@@ -4167,7 +4175,7 @@ public final class DungeonRuntime {
             QolSkyblockExtras extras,
             Vec3 eye,
             AABB search) {
-        if (!extras.dungeonPuzzlesEnabled || !extras.dungeonPuzzlesBlaze || client.level == null) {
+        if (!plusDungeonFeature(extras.dungeonPuzzlesEnabled) || !extras.dungeonPuzzlesBlaze || client.level == null) {
             return;
         }
         if (DungeonPolicy.scanDue(dungeonWorldTicks, blazeOrderTick, BLAZE_ORDER_TICKS)) {
@@ -4601,7 +4609,7 @@ public final class DungeonRuntime {
             return;
         }
         if (!TempleDungeonPolicy.shouldBoxSecretClick(
-                extras.dungeonEspEnabled && extras.dungeonEspSecretClicked,
+                plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspSecretClicked,
                 SkyBlockDungeonDetector.confidentlyInDungeon(),
                 sidebar.boss(),
                 extras.dungeonEspSecretClickedBoss,
@@ -4619,7 +4627,7 @@ public final class DungeonRuntime {
     }
 
     static void renderClickedSecrets(QolSkyblockExtras extras, Vec3 eye) {
-        if (!extras.dungeonEspEnabled || !extras.dungeonEspSecretClicked) {
+        if (!plusDungeonFeature(extras.dungeonEspEnabled) || !extras.dungeonEspSecretClicked) {
             return;
         }
         pruneClickedSecrets();
@@ -4637,7 +4645,7 @@ public final class DungeonRuntime {
             QolSkyblockExtras extras,
             Vec3 eye,
             AABB search) {
-        if (!extras.dungeonEspEnabled || !extras.dungeonEspItems || client.level == null) {
+        if (!plusDungeonFeature(extras.dungeonEspEnabled) || !extras.dungeonEspItems || client.level == null) {
             return;
         }
         for (DungeonEntitySnapshot.Seen<ItemEntity> seen : DungeonEntitySnapshot.items(client, player)) {

@@ -36,10 +36,14 @@ final class QolUtilityCatalogTest {
         assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog_scale");
         assertSettingAbsent("qol.iota", "qol.iota.fix_fishing_hook");
         assertSettingAbsent("qol.mining_helpers", "qol.mining_helpers.break_reset");
-        assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.hate_doors");
-        assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.depth");
-        assertSettingAbsent("qol.dungeon_terminals", "qol.dungeon_terminals.depth_test");
+        assertEquals(null, QolUtilityCatalog.findById("qol.dungeon_esp"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.dungeon_terminals"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.dungeon_puzzles"));
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.hide_diorite");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.simon");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.arrow_align");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.i4");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.sharp_shooter");
         assertSettingAbsent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertNotNull(QolUtilityCatalog.findById("qol.render_optimizer"));
         assertNotNull(QolUtilityCatalog.findById("qol.waypoints"));
@@ -51,6 +55,18 @@ final class QolUtilityCatalogTest {
         assertFalse(joined.contains("gyro"));
         assertFalse(joined.contains("ragnarok"));
         assertFalse(joined.contains("spring boots"));
+    }
+
+    @Test
+    void liteKeepsMovedDungeonSettingsInertForOlderProfiles() {
+        QolUtilityConfig config = new QolUtilityConfig();
+        config.setModuleEnabled("qol.dungeon_esp", true);
+        config.setModuleEnabled("qol.dungeon_terminals", true);
+        config.setModuleEnabled("qol.dungeon_puzzles", true);
+
+        assertFalse(config.isModuleEnabled("qol.dungeon_esp"));
+        assertFalse(config.isModuleEnabled("qol.dungeon_terminals"));
+        assertFalse(config.isModuleEnabled("qol.dungeon_puzzles"));
     }
 
     @Test
@@ -131,11 +147,8 @@ final class QolUtilityCatalogTest {
                 "qol.slayer_inferno",
                 "qol.slayer_quest_warning",
                 "qol.dungeon_hud",
-                "qol.dungeon_esp",
                 "qol.dungeon_announce",
                 "qol.dungeon_leap",
-                "qol.dungeon_terminals",
-                "qol.dungeon_puzzles",
                 "qol.dungeon_f7",
                 "qol.dungeon_menus",
                 "qol.dungeon_carry",
@@ -246,7 +259,6 @@ final class QolUtilityCatalogTest {
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_hud")));
         assertEquals("HUD", QolUtilityCatalog.findById("qol.dungeon_hud").section());
-        assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_terminals").section());
         assertEquals("Kuudra", QolUtilityCatalog.findById("qol.iota").section());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.KUUDRA)
                 .stream()
@@ -254,7 +266,7 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(11, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
+        assertEquals(8, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
@@ -431,7 +443,7 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(94, moduleIds.size());
+        assertEquals(91, moduleIds.size());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {
