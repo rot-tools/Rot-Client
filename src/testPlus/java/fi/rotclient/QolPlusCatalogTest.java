@@ -38,6 +38,9 @@ final class QolPlusCatalogTest {
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.gate");
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.relics");
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.relic_highlight");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.melody_display");
+        assertSettingPresent("qol.dungeon_hud", "qol.dungeon_hud.melody");
+        assertSettingPresent("qol.dungeon_hud", "qol.dungeon_hud.quiz");
         assertSettingPresent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
@@ -79,6 +82,15 @@ final class QolPlusCatalogTest {
         assertTrue(config.isModuleEnabled("qol.dungeon_esp"));
         assertTrue(config.isModuleEnabled("qol.dungeon_terminals"));
         assertTrue(config.isModuleEnabled("qol.dungeon_puzzles"));
+    }
+
+    @Test
+    void plusRetainsRevealHiddenMapModeForExistingProfiles() {
+        QolUtilityConfig config = new QolUtilityConfig();
+        assertTrue(QolFlavorSupport.isPlus());
+        assertTrue(config.writeEnum("qol.dungeon_hud.map_mode", "Cheater"));
+        assertEquals(DungeonMapPolicy.MAP_MODE_REVEAL, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertTrue(config.extras().dungeonMapRevealHidden());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {

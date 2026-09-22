@@ -39,6 +39,14 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     }
 
     @Override
+    public List<DungeonPolicy.TerminalClick> solveDungeonTerminalClicks(
+            DungeonPolicy.Terminal terminal,
+            String title,
+            List<DungeonPolicy.TerminalItem> items) {
+        return DungeonTerminalSolverPolicy.solveClicks(terminal, title, items);
+    }
+
+    @Override
     public boolean isGameplayCheatModule(String moduleId) {
         return "qol.secret_hitboxes".equals(moduleId)
                 || "qol.cheater_wardrobe".equals(moduleId)

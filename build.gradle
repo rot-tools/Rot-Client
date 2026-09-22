@@ -209,6 +209,9 @@ tasks.register('verifyLegitJar') {
 			}
 		}
 		def forbiddenText = [
+				'solveRedGreen',
+				'solveRubixClicks',
+				'extractSelectColor',
 				'qol.auto_clicker',
 				'qol.cheater_wardrobe',
 				'cheaterWardrobeEnabled',

@@ -1127,7 +1127,8 @@ public final class DungeonRuntime {
         if (extras.dungeonHudRagnarock && !lastRagnarock.isEmpty()) {
             lines.add(lastRagnarock);
         }
-        if ((extras.dungeonHudMelody || (extras.dungeonF7Enabled && extras.dungeonF7MelodyDisplay))
+        if ((plusDungeonFeature(extras.dungeonHudMelody)
+                || (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7MelodyDisplay)))
                 && !lastMelody.isEmpty()) {
             lines.add(lastMelody);
         }
@@ -2476,7 +2477,7 @@ public final class DungeonRuntime {
             scanIceFill(client, origin);
         }
         if (extras.dungeonPuzzlesIcePath) {
-            scanIcePath(client);
+            QolClientFlavorSupport.hooks().dungeonScanIcePath(client);
         }
         if (extras.dungeonPuzzlesWater) {
             scanWaterBoard(client, origin);
@@ -2491,7 +2492,7 @@ public final class DungeonRuntime {
             scanCreeperBeams(client);
         }
         if (extras.dungeonPuzzlesTicTacToe) {
-            scanTicTacToe(client);
+            QolClientFlavorSupport.hooks().dungeonScanTicTacToe(client);
         }
         if (extras.dungeonPuzzlesQuizBoxes) {
             scanQuizOptionBoxes(client);
@@ -3250,6 +3251,10 @@ public final class DungeonRuntime {
 
     static AABB blockBox(int x, int y, int z) {
         return new AABB(x, y, z, x + 1, y + 1, z + 1);
+    }
+
+    static void addPuzzleMark(AABB box, int color) {
+        puzzleMarks.add(new Mark(box, color));
     }
 
     static long pack(int x, int z) {
@@ -4457,125 +4462,7 @@ public final class DungeonRuntime {
         puzzleMarks.add(new Mark(blockBox(world.x(), world.y(), world.z()), 0xFF22C55E));
     }
 
-    static void scanTicTacToe(Minecraft client) {
-        if (!hashedRoomIs(client, "Tic Tac Toe") || client.level == null || client.player == null) {
-            return;
-        }
-        int cx = DungeonRoomDataPolicy.roomCenter((int) Math.floor(client.player.getX()));
-        int cz = DungeonRoomDataPolicy.roomCenter((int) Math.floor(client.player.getZ()));
-        AABB box = new AABB(cx - 9, 65, cz - 9, cx + 9, 73, cz + 9);
-        List<ItemFrame> frames = new ArrayList<>();
-        for (ItemFrame frame : client.level.getEntitiesOfClass(ItemFrame.class, box)) {
-            if (frame.getItem().is(Items.FILLED_MAP) && frame.getItem().has(DataComponents.MAP_ID)) {
-                frames.add(frame);
-            }
-        }
-        if (frames.size() == 8 || frames.size() % 2 == 0) {
-            return;
-        }
-        char[] board = new char[9];
-        DungeonTicTacToePolicy.BoardPos leftmost = null;
-        char facing = 'X';
-        int sign = 1;
-        for (ItemFrame frame : frames) {
-            MapId mapId = frame.getItem().get(DataComponents.MAP_ID);
-            if (mapId == null) {
-                continue;
-            }
-            MapItemSavedData mapData = client.level.getMapData(mapId);
-            if (mapData == null || mapData.colors == null || mapData.colors.length <= 8256) {
-                continue;
-            }
-            Direction direction = frame.getDirection();
-            sign = direction == Direction.SOUTH || direction == Direction.WEST ? -1 : 1;
-            BlockPos framePos = frame.blockPosition();
-            boolean alongX = Math.abs(frame.getX() % 0.5D) < 1.0E-6D;
-            facing = alongX ? 'X' : 'Z';
-            int row = 0;
-            for (int i = 2; i >= 0; i--) {
-                int realI = i * sign;
-                BlockPos candidate = alongX
-                        ? framePos.offset(realI, 0, 0)
-                        : framePos.offset(0, 0, realI);
-                String id = blockId(client, candidate);
-                if (id.contains("stone_button") || DungeonPuzzleBoardPolicy.isAir(fullBlockId(client, candidate))) {
-                    leftmost = new DungeonTicTacToePolicy.BoardPos(
-                            candidate.getX(), candidate.getY(), candidate.getZ());
-                    row = i;
-                    break;
-                }
-            }
-            int column = 72 - (int) frame.getY();
-            if (column < 0 || column > 2) {
-                continue;
-            }
-            char mark = DungeonTicTacToePolicy.markFromMapColor(mapData.colors[8256]);
-            if (mark != DungeonTicTacToePolicy.EMPTY) {
-                board[DungeonTicTacToePolicy.boardIndex(column, row)] = mark;
-            }
-        }
-        if (leftmost == null) {
-            return;
-        }
-        for (int index : DungeonTicTacToePolicy.findBestMoves(
-                board, DungeonTicTacToePolicy.PLAYER, DungeonTicTacToePolicy.OPPONENT)) {
-            DungeonTicTacToePolicy.BoardPos pos =
-                    DungeonTicTacToePolicy.indexToPos(index, leftmost, facing, sign);
-            puzzleMarks.add(new Mark(blockBox(pos.x(), pos.y(), pos.z()), 0xFF22C55E));
-        }
-    }
 
-    static void scanIcePath(Minecraft client) {
-        if (!hashedRoomIs(client, "Ice Path") || client.level == null || client.player == null) {
-            return;
-        }
-        DungeonRoomDataPolicy.Rotation rotation = currentHashedRotation(client).orElse(null);
-        if (rotation == null) {
-            return;
-        }
-        DungeonPuzzleBoardPolicy.BlockProbe probe = relativeBlockProbe(client, rotation);
-        boolean[][] blocked = new boolean[DungeonIcePathPolicy.GRID][DungeonIcePathPolicy.GRID];
-        for (int z = 0; z < DungeonIcePathPolicy.GRID; z++) {
-            for (int x = 0; x < DungeonIcePathPolicy.GRID; x++) {
-                DungeonPuzzleBoardPolicy.RelPos rel = DungeonIcePathPolicy.relPos(x, z);
-                blocked[z][x] = !DungeonPuzzleBoardPolicy.isAir(probe.idAt(rel.x(), rel.y(), rel.z()));
-            }
-        }
-        DungeonRoomDataPolicy.IntVec center = DungeonRoomDataPolicy.fromComp(15, 67, 15, rotation);
-        AABB box = new AABB(
-                center.x() - 10, 67, center.z() - 10,
-                center.x() + 11, 68, center.z() + 11);
-        Silverfish fish = null;
-        for (Silverfish candidate : client.level.getEntitiesOfClass(Silverfish.class, box)) {
-            fish = candidate;
-            break;
-        }
-        if (fish == null) {
-            return;
-        }
-        BlockPos fishPos = fish.blockPosition();
-        DungeonRoomDataPolicy.IntVec rel = DungeonRoomDataPolicy.toComp(
-                fishPos.getX(), fishPos.getY(), fishPos.getZ(), rotation);
-        Optional<DungeonIcePathPolicy.GridPos> start =
-                DungeonIcePathPolicy.gridFromRel(rel.x(), rel.z());
-        if (start.isEmpty()) {
-            return;
-        }
-        List<DungeonIcePathPolicy.GridPos> path = DungeonIcePathPolicy.expandPath(
-                DungeonIcePathPolicy.solve(blocked, start.get().x(), start.get().z()));
-        boolean first = true;
-        for (DungeonIcePathPolicy.GridPos cell : path) {
-            if (cell.equals(start.get())) {
-                continue;
-            }
-            DungeonPuzzleBoardPolicy.RelPos worldRel = DungeonIcePathPolicy.relPos(cell.x(), cell.z());
-            DungeonRoomDataPolicy.IntVec world = DungeonPuzzleBoardPolicy.world(worldRel, rotation);
-            puzzleMarks.add(new Mark(
-                    blockBox(world.x(), world.y(), world.z()),
-                    first ? 0xFF22C55E : 0xFF38BDF8));
-            first = false;
-        }
-    }
 
     static boolean blazeMaterialNear(Minecraft client, BlockPos origin, boolean ice) {
         if (client.level == null || origin == null) {

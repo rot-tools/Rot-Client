@@ -2922,6 +2922,9 @@ final class QolSkyblockExtras {
     }
 
     String dungeonMapMode() {
+        if (!QolFlavorSupport.isPlus()) {
+            return DungeonMapPolicy.MAP_MODE_EXPLORED;
+        }
         if (dungeonHudCheaterMap) {
             return DungeonMapPolicy.MAP_MODE_REVEAL;
         }
