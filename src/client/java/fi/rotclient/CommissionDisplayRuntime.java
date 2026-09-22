@@ -10,6 +10,8 @@ import net.minecraft.world.scores.PlayerTeam;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Parses tab-list commission rows for the movable Commission Display HUD.
@@ -18,13 +20,29 @@ import java.util.List;
  * way the overlay draws them.
  */
 final class CommissionDisplayRuntime {
+    private static final Pattern LINE_BREAK = Pattern.compile("\\R");
     private static List<CommissionDisplayPolicy.Commission> commissions = List.of();
+    // The tab snapshot is rebuilt every 250 ms but this ran every tick: the same lines were
+    // parsed a dozen times over. The parse is redone only when a new snapshot arrives.
+    private static List<String> parsedLines;
+    private static List<CommissionDisplayPolicy.Commission> parsed = List.of();
+    private static long lastSeenMillis;
+    private static List<String> hudCache = List.of();
+    private static List<CommissionDisplayPolicy.Commission> hudCacheFor;
+    private static String hudTitle;
+    private static String hudNone;
+    private static String hudRow;
+    private static boolean hudColored;
 
     private CommissionDisplayRuntime() {
     }
 
     static void clear() {
         commissions = List.of();
+        parsed = List.of();
+        parsedLines = null;
+        lastSeenMillis = 0L;
+        hudCacheFor = null;
         SkyBlockTabSnapshotRuntime.clear();
     }
 
@@ -36,24 +54,48 @@ final class CommissionDisplayRuntime {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (!qol.commissionDisplayEnabled || client == null) {
             commissions = List.of();
+            parsedLines = null;
             return;
         }
-        commissions = CommissionDisplayPolicy.parseTabLines(
-                tabLines(client));
+        long now = System.currentTimeMillis();
+        List<String> lines = tabLines(client);
+        if (lines != parsedLines) {
+            parsedLines = lines;
+            parsed = CommissionDisplayPolicy.parseTabLines(lines);
+            if (!parsed.isEmpty()) {
+                lastSeenMillis = now;
+            }
+        }
+        // A refresh that briefly loses the widget keeps the last list up instead of flashing
+        // "No commissions available!".
+        commissions = CommissionDisplayPolicy.retain(parsed, commissions, lastSeenMillis, now);
     }
 
     static List<String> hudLines(QolUtilityConfig qol) {
+        if (commissions == hudCacheFor
+                && qol.commissionDisplayColoredPercent == hudColored
+                && Objects.equals(qol.commissionDisplayTitle, hudTitle)
+                && Objects.equals(qol.commissionDisplayNone, hudNone)
+                && Objects.equals(qol.commissionDisplayRow, hudRow)) {
+            return hudCache;
+        }
         List<String> lines = new ArrayList<>();
         lines.add(CommissionDisplayPolicy.formatTitle(qol.commissionDisplayTitle));
         if (commissions.isEmpty()) {
             lines.add(CommissionDisplayPolicy.formatNone(qol.commissionDisplayNone));
-            return lines;
+        } else {
+            for (CommissionDisplayPolicy.Commission commission : commissions) {
+                lines.add(CommissionDisplayPolicy.formatLine(
+                        qol.commissionDisplayRow, commission, qol.commissionDisplayColoredPercent));
+            }
         }
-        for (CommissionDisplayPolicy.Commission commission : commissions) {
-            lines.add(CommissionDisplayPolicy.formatLine(
-                    qol.commissionDisplayRow, commission, qol.commissionDisplayColoredPercent));
-        }
-        return lines;
+        hudCache = List.copyOf(lines);
+        hudCacheFor = commissions;
+        hudColored = qol.commissionDisplayColoredPercent;
+        hudTitle = qol.commissionDisplayTitle;
+        hudNone = qol.commissionDisplayNone;
+        hudRow = qol.commissionDisplayRow;
+        return hudCache;
     }
 
     static List<String> tabLines(Minecraft client) {
@@ -110,7 +152,7 @@ final class CommissionDisplayRuntime {
         if (text == null || text.isBlank()) {
             return;
         }
-        for (String line : text.split("\\R")) {
+        for (String line : LINE_BREAK.split(text)) {
             if (!line.isBlank()) {
                 lines.add(line);
             }

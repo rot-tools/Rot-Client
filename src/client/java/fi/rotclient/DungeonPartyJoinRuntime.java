@@ -51,9 +51,8 @@ final class DungeonPartyJoinRuntime {
             client.execute(() -> {
                 if (client.player == null) return;
                 if (athen.partyJoinStats || lookup.failed()) {
-                    String line = lookup.failed()
-                            ? name + " stats unavailable (" + lookup.failure() + ")"
-                            : DungeonPartyFinderPolicy.statsLine(name, lookup.stats().orElse(null));
+                    String line = DungeonPartyFinderPolicy.statsLine(
+                            name, lookup.stats().orElse(null), lookup.failure());
                     client.player.sendSystemMessage(Component.literal(line));
                 }
                 if (!lookup.failed()) {
@@ -70,12 +69,17 @@ final class DungeonPartyJoinRuntime {
     }
 
     static java.util.Optional<DungeonPartyFinderPolicy.Stats> cached(String player, String floor) {
+        return cachedLookup(player, floor).flatMap(DungeonProfileStatsService.Lookup::stats);
+    }
+
+    /** The cached lookup, including failures; empty while nothing is cached or a request is pending. */
+    static java.util.Optional<DungeonProfileStatsService.Lookup> cachedLookup(String player, String floor) {
         Cached cached = CACHE.get(key(player, floor));
         if (cached == null || System.currentTimeMillis() >= cached.until()) {
             if (cached != null) CACHE.remove(key(player, floor), cached);
             return java.util.Optional.empty();
         }
-        return cached.lookup().stats();
+        return java.util.Optional.of(cached.lookup());
     }
 
     private static void request(
@@ -126,7 +130,6 @@ final class DungeonPartyJoinRuntime {
 
     private static synchronized void cache(String key, DungeonProfileStatsService.Lookup lookup) {
         long ttl = lookup.failed() ? FAILURE_TTL_MS : STATS_TTL_MS;
-        if (lookup.stats().isEmpty() && !lookup.failed()) return;
         if (CACHE.size() >= MAX_CACHE_ENTRIES && !CACHE.containsKey(key)) {
             long now = System.currentTimeMillis();
             CACHE.entrySet().removeIf(entry -> entry.getValue().until() <= now);

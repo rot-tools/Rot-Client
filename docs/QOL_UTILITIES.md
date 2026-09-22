@@ -37,7 +37,7 @@ children and their executable implementations exist only in Plus source sets.
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Fox; Ghosts; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Legacy SkyBlock Textures; Block Outline; Dark SkyBlock Pack. **Plus:** Fox; Ghosts; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
 
 ## Fox (Plus)
 
@@ -110,6 +110,26 @@ Turning it on in an already-loaded world plays a vanilla-style dusk once, then
 parks the moon. A new world while it is already on snaps to that parked night
 and does not replay dusk. Fullbright is an instant lightmap. End and Nether
 skyboxes are skipped. Automated-tested; Minecraft playtest pending.
+
+## Block Outline
+
+`qol.block_outline` is a Render card, off by default. It replaces how
+Minecraft draws the selection box around the aimed-at block (the main
+outline pass; the high-contrast backing pass is left alone). Vanilla drawing
+resumes the moment the module is off or a draw fails.
+
+| Setting | Effect |
+| --- | --- |
+| Outline Style | `Solid Color` or `Rainbow` |
+| Outline Color | RGB picker with alpha. Rainbow ignores the color but keeps its opacity |
+| Line Width | Multiplier on the vanilla line width, 0.5 to 4.0 (1.0 is vanilla) |
+| Rainbow Speed | 0.1 to 5.0; 1.0 is one full hue cycle every four seconds |
+| Rainbow Spread | 0 to 3; hue cycles across one block. 0 makes the whole outline share one moving hue |
+
+Each edge is split into short pieces with their own hue so the rainbow reads
+as a smooth gradient that travels along the box. The hue math lives in
+`BlockOutlinePolicy` and is unit-tested. It is purely cosmetic and not
+SkyBlock-gated. Automated-tested; Minecraft playtest pending.
 
 ## Wardrobe Swapper
 

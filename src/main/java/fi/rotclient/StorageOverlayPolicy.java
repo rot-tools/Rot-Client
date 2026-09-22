@@ -59,6 +59,8 @@ public final class StorageOverlayPolicy {
     /** Selector index when the page is known but Storage overview was never opened. */
     public static final int COMMAND_SELECTOR_SLOT = -1;
     public static final String CACHE_FILE = "rotclient-storage-cache.json";
+    /** Folder under the config directory holding one cache file per account and SkyBlock profile. */
+    public static final String OWNER_DIR = "rotclient-storage";
     public static final String OVERVIEW_COMMAND = "storage";
     public static final int PREFETCH_SETTLE_TICKS = 8;
     public static final int PREFETCH_TIMEOUT_TICKS = 40;
@@ -444,6 +446,63 @@ public final class StorageOverlayPolicy {
             int cardX, int cardY, int cardWidth, int mouseX, int mouseY) {
         int[] icon = valueIconPosition(cardX, cardY, cardWidth);
         return inside(mouseX, mouseY, icon[0], icon[1], icon[2], icon[2]);
+    }
+
+    /**
+     * File-name key for one player's storage on one SkyBlock profile. Storage differs per
+     * profile, so a single shared cache showed one profile's items on another. Empty means the
+     * owner is not known yet, which keeps the shared legacy file in use.
+     */
+    public static String ownerKey(String playerUuid, String skyBlockProfile) {
+        if (playerUuid == null || playerUuid.isBlank()
+                || skyBlockProfile == null || skyBlockProfile.isBlank()
+                || SkyBlockProfileIdentity.UNKNOWN.equalsIgnoreCase(skyBlockProfile.strip())) {
+            return "";
+        }
+        String uuid = playerUuid.strip().replace("-", "").toLowerCase(java.util.Locale.ROOT);
+        String profile = skyBlockProfile.strip().toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[^a-z0-9_-]+", "_");
+        if (profile.length() > 32) {
+            profile = profile.substring(0, 32);
+        }
+        if (!uuid.matches("[0-9a-f]{32}") || profile.isBlank()) {
+            return "";
+        }
+        return uuid + "_" + profile;
+    }
+
+    /** Short "seen 3h ago" text for a cached page, or empty when there is nothing useful to say. */
+    public static String ageLabel(long seenAtMs, long nowMs) {
+        if (seenAtMs <= 0L) {
+            return "";
+        }
+        long seconds = Math.max(0L, (nowMs - seenAtMs) / 1_000L);
+        if (seconds < 60L) {
+            return "now";
+        }
+        long minutes = seconds / 60L;
+        if (minutes < 60L) {
+            return minutes + "m";
+        }
+        long hours = minutes / 60L;
+        if (hours < 24L) {
+            return hours + "h";
+        }
+        return Math.min(99L, hours / 24L) + "d";
+    }
+
+    /**
+     * What to show next to a page card's name. The open page is live, so it needs no label; a
+     * page the player has never opened says so instead of looking like an empty chest.
+     */
+    public static String freshnessLabel(boolean live, boolean hasContent, long seenAtMs, long nowMs) {
+        if (live) {
+            return "";
+        }
+        if (seenAtMs <= 0L) {
+            return hasContent ? "" : "not opened";
+        }
+        return ageLabel(seenAtMs, nowMs);
     }
 
     public static int headerLabelMaxWidth(int cardWidth) {

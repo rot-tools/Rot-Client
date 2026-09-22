@@ -31,8 +31,8 @@ final class MiningHudAreaVisibilityTest {
                 true, true, true, true, true, true,
                 true);
         assertEquals(HudLayoutMath.AREA_ROW_HEIGHT, with - without);
-        assertEquals(167, without);
-        assertEquals(167 + HudLayoutMath.AREA_ROW_HEIGHT, with);
+        assertEquals(78, without);
+        assertEquals(78 + HudLayoutMath.AREA_ROW_HEIGHT, with);
     }
 
     @Test
@@ -60,7 +60,9 @@ final class MiningHudAreaVisibilityTest {
         int with = HudLayoutMath.gemstoneTopCardHeight(true, true, true);
         assertEquals(HudLayoutMath.AREA_ROW_HEIGHT, with - without);
         assertEquals(
-                without + HudLayoutMath.AREA_ROW_HEIGHT + 6 + 150,
+                without + HudLayoutMath.AREA_ROW_HEIGHT
+                        + HudLayoutMath.SECTION_GAP
+                        + HudLayoutMath.gemstoneLedgerCardHeight(),
                 HudLayoutMath.gemstoneHudHeight(true, true, true));
     }
 

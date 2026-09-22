@@ -27,6 +27,7 @@
     "GuiGraphicsExtractorCustomTooltipMixin",
     "GuiGraphicsExtractorNameHiderMixin",
     "GuiNoCursorResetMixin",
+    "NetherFogDarkeningMixin",
     "GuiRewardClaimMixin",
     "HudActionBarFilterMixin",
     "HudItemRarityMixin",
@@ -50,6 +51,7 @@
     "MouseHandlerCursorAccessor",
     "MouseHandlerStorageOverlayMixin",
     "MouseHandlerCustomTooltipMixin",
+    "MouseHandlerZoomMixin",
     "PackSelectionModelMixin",
     "MultiPlayerGameModeMixin",
     "OptionsCloudsMixin",
@@ -62,6 +64,7 @@
     "SoundEngineSlayerMixin",
     "ScreenCustomCursorMixin",
     "ScreenEffectRendererMixin",
+    "BlockOutlineMixin",
     "SkyRendererExtractMixin",
     "TitleScreenQuickJoinMixin",
     "StuckInBodyLayerMixin"

@@ -58,9 +58,9 @@ public final class FishingToolsPolicy {
 
     public static boolean isBottleChargedChat(String stripped) {
         String text = FishingCreaturesPolicy.strip(stripped).toLowerCase(Locale.ROOT);
-        return text.contains("bottle of thunder has fully charged")
-                || text.contains("bottle of storm has fully charged")
-                || text.contains("bottle of hurricane has fully charged");
+        return ChatTextPolicy.serverLineContains(text, "bottle of thunder has fully charged")
+                || ChatTextPolicy.serverLineContains(text, "bottle of storm has fully charged")
+                || ChatTextPolicy.serverLineContains(text, "bottle of hurricane has fully charged");
     }
 
     public static boolean isTotemNametag(String nametag) {
@@ -68,14 +68,27 @@ public final class FishingToolsPolicy {
                 .contains("totem of corruption");
     }
 
+    /**
+     * The "Remaining: 4m 12s" line. Hypixel holograms are one armor stand per
+     * line, so this is a different stand from the "Totem of Corruption" title.
+     */
+    public static boolean isTotemRemaining(String nametag) {
+        return FishingCreaturesPolicy.strip(nametag).toLowerCase(Locale.ROOT).startsWith("remaining:")
+                && parseTotemSeconds(nametag) != null;
+    }
+
     public static Integer parseTotemSeconds(String nametag) {
         Matcher matcher = TOTEM_TIME.matcher(FishingCreaturesPolicy.strip(nametag));
         if (!matcher.find()) {
             return null;
         }
-        int minutes = matcher.group(1) == null ? 0 : Integer.parseInt(matcher.group(1));
-        int seconds = Integer.parseInt(matcher.group(2));
-        return minutes * 60 + seconds;
+        try {
+            int minutes = matcher.group(1) == null ? 0 : Integer.parseInt(matcher.group(1));
+            int seconds = Integer.parseInt(matcher.group(2));
+            return minutes * 60 + seconds;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     public static String parseTotemOwner(String nametag) {

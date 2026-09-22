@@ -79,8 +79,11 @@ public final class ViewmodelRuntime {
     }
 
     public static void applySwingTranslate(PoseStack matrices, float x, float y, float z) {
+        if (matrices == null) {
+            return;
+        }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
-        if (extras.viewmodelEnabled && matrices != null) {
+        if (extras.viewmodelEnabled) {
             matrices.translate(
                     x * (float) extras.viewmodelSwingX,
                     y * (float) extras.viewmodelSwingY,

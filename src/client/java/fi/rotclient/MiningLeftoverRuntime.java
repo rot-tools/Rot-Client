@@ -34,6 +34,11 @@ public final class MiningLeftoverRuntime {
     private static String titleText = "";
     private static int titleTicks;
     private static boolean hotmOpen;
+    private static final java.util.regex.Pattern LINE_BREAK = java.util.regex.Pattern.compile("\\R");
+    // Commission mobs and Goblin Raid boxes used to come from a 96x48x96 armor-stand query with name
+    // matching on every rendered frame. They are found from tick() four times a second and drawn here.
+    private static List<ArmorStand> markedStands = List.of();
+    private static int markedScanTicks;
 
     private MiningLeftoverRuntime() {
     }
@@ -50,6 +55,8 @@ public final class MiningLeftoverRuntime {
         cold = null;
         corpses = Map.of();
         seenWorms.clear();
+        markedStands = List.of();
+        markedScanTicks = 0;
         titleText = "";
         titleTicks = 0;
         hotmOpen = false;
@@ -133,7 +140,10 @@ public final class MiningLeftoverRuntime {
         if (extras.miningHotmEnabled && extras.miningHotmSkyMall) {
             skyMall = MiningLeftoverPolicy.parseSkyMall(tab).orElse(null);
         }
-        cold = MiningLeftoverPolicy.parseCold(scoreboardLines()).orElse(null);
+        // Only the Cold overlay reads this, and parsing means rebuilding the whole scoreboard.
+        cold = extras.miningGlaciteEnabled && extras.miningGlaciteColdOverlay
+                ? MiningLeftoverPolicy.parseCold(scoreboardLines()).orElse(null)
+                : null;
         if (extras.miningHelpersEnabled && extras.miningHelpersDrillFuel) {
             fuel = MiningLeftoverPolicy.parseDrillFuel(
                     InventoryChromeRuntime.loreLines(client.player.getMainHandItem()))
@@ -161,6 +171,29 @@ public final class MiningLeftoverRuntime {
                 || extras.miningEventsEnabled && extras.miningEventsGoblinEsp) {
             scanWorms(client, extras);
         }
+        boolean mobs = extras.miningHelpersEnabled && extras.miningHelpersCommissionMobs;
+        boolean goblin = extras.miningEventsEnabled
+                && extras.miningEventsGoblinEsp
+                && event == MiningLeftoverPolicy.MiningEvent.GOBLIN_RAID;
+        if (!mobs && !goblin) {
+            markedStands = List.of();
+        } else if (markedScanTicks++ % 4 == 0) {
+            markedStands = scanMarkedStands(client, mobs, goblin);
+        }
+    }
+
+    private static List<ArmorStand> scanMarkedStands(Minecraft client, boolean mobs, boolean goblin) {
+        AABB search = client.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
+        List<ArmorStand> found = new ArrayList<>();
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
+            String name = stand.getName().getString();
+            boolean commission = mobs && MiningLeftoverPolicy.isCommissionMob(name);
+            boolean raid = goblin && name.toLowerCase().contains("goblin");
+            if (commission || raid) {
+                found.add(stand);
+            }
+        }
+        return found;
     }
 
     static void onChat(Component message, boolean overlay) {
@@ -262,20 +295,12 @@ public final class MiningLeftoverRuntime {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         MiningAssistRuntime.renderGizmos();
         SkyBlockUtilityRuntime.renderGizmos();
-        boolean mobs = extras.miningHelpersEnabled && extras.miningHelpersCommissionMobs;
-        boolean goblin = extras.miningEventsEnabled
-                && extras.miningEventsGoblinEsp
-                && event == MiningLeftoverPolicy.MiningEvent.GOBLIN_RAID;
-        if (!mobs && !goblin) {
+        if (markedStands.isEmpty()) {
             return;
         }
         float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        AABB search = client.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
-        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-            String name = stand.getName().getString();
-            boolean commission = mobs && MiningLeftoverPolicy.isCommissionMob(name);
-            boolean raid = goblin && name.toLowerCase().contains("goblin");
-            if (!commission && !raid) {
+        for (ArmorStand stand : markedStands) {
+            if (stand.isRemoved()) {
                 continue;
             }
             EntityLerpPolicy.Offset offset = EntityLerpPolicy.renderOffset(
@@ -355,7 +380,7 @@ public final class MiningLeftoverRuntime {
         if (text.isBlank()) {
             return lines;
         }
-        for (String line : text.split("\\R")) {
+        for (String line : LINE_BREAK.split(text)) {
             if (!line.isBlank()) {
                 lines.add(line);
             }

@@ -184,8 +184,9 @@ Persisted values live in `QolUtilityConfig` (and a few older flags still on
 not grow forever.
 
 `QolModuleEvidence` is the honesty layer. A module can be wired and
-unit-tested and still show **Needs testing** in the UI until a controlled
-Minecraft pass is recorded. Automated tests never promote a module to Ready.
+unit-tested and still show **Needs testing** in the UI until a code review and
+a controlled Minecraft pass are recorded. Automated tests never promote a module
+to Ready. A Ready module simply shows no status banner.
 
 Cheat-tagged options stay off even after the parent module is enabled, until
 the player opts into that child setting.

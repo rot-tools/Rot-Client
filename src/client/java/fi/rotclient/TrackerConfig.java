@@ -96,6 +96,13 @@ final class TrackerConfig {
     private Map<String, MaterialTrackerState> materialStates = new LinkedHashMap<>();
     private Map<String, GemstoneTrackerState> gemstoneStates =
             new LinkedHashMap<>();
+    /**
+     * Shared block count and activity timeline for the All Gemstones
+     * selection. Item ledgers are never duplicated here; they live in the
+     * per-gemstone states and are summed on demand.
+     */
+    private GemstoneTrackerState gemstoneAllState =
+            new GemstoneTrackerState();
 
     TrackerConfig() {
         ensureMaterialStates();
@@ -161,6 +168,11 @@ final class TrackerConfig {
 
     void resetSelectedSessionState() {
         TrackerSelection selection = selectedSelection();
+        if (selection.isAllGemstones()) {
+            gemstoneRegistry().resetAllSessions();
+            gemstoneAggregateState().resetSession();
+            return;
+        }
         if (selection.isGemstone()) {
             gemstoneRegistry().resetSession(selection.gemstone());
             return;
@@ -199,6 +211,61 @@ final class TrackerConfig {
     GemstoneTrackerState gemstoneState(GemstoneType gemstone) {
         ensureGemstoneStates();
         return gemstoneRegistry().state(gemstone);
+    }
+
+    /** Timeline state for All Gemstones; never null. */
+    GemstoneTrackerState gemstoneAggregateState() {
+        if (gemstoneAllState == null) {
+            gemstoneAllState = new GemstoneTrackerState();
+        }
+        return gemstoneAllState;
+    }
+
+    /**
+     * The state that owns blocks and the active-time clock for the current
+     * gemstone selection: the gemstone's own state, or the shared aggregate
+     * for All Gemstones. Only valid while a gemstone selection is active.
+     */
+    GemstoneTrackerState selectedGemstoneTimeline() {
+        return gemstoneTimeline(selectedSelection());
+    }
+
+    GemstoneTrackerState gemstoneTimeline(TrackerSelection selection) {
+        if (selection.isAllGemstones()) {
+            return gemstoneAggregateState();
+        }
+        if (!selection.isGemstone()) {
+            throw new IllegalStateException(
+                    "Selected tracker is not a gemstone: " + selection.id());
+        }
+        return gemstoneState(selection.gemstone());
+    }
+
+    /** Session ledger for the selection; a summed copy for All Gemstones. */
+    GemstoneLedger selectedGemstoneSessionLedger() {
+        return gemstoneSessionLedger(selectedSelection());
+    }
+
+    GemstoneLedger gemstoneSessionLedger(TrackerSelection selection) {
+        if (!selection.isAllGemstones()) {
+            return gemstoneState(selection.gemstone()).sessionLedger();
+        }
+        GemstoneLedger sum = new GemstoneLedger();
+        for (GemstoneType gemstone : selection.gemstones()) {
+            GemstoneLedger ledger = gemstoneState(gemstone).sessionLedger();
+            for (GemstoneTier tier : GemstoneTier.values()) {
+                sum.add(tier, ledger.quantity(tier));
+            }
+        }
+        return sum;
+    }
+
+    /** Clears every per-gemstone activity clock (launch, leaving All). */
+    void clearGemstoneBreakClocks() {
+        for (GemstoneType gemstone : GemstoneType.values()) {
+            gemstoneState(gemstone).lastBreakEpochMillis = 0L;
+        }
+        gemstoneAggregateState().lastBreakEpochMillis = 0L;
     }
 
     GemstoneTrackerRegistry gemstoneRegistry() {
@@ -323,6 +390,7 @@ final class TrackerConfig {
         if (gemstoneStates == null) {
             gemstoneStates = new LinkedHashMap<>();
         }
+        gemstoneAggregateState().normalize();
         GemstoneTrackerRegistry registry =
                 new GemstoneTrackerRegistry(gemstoneStates);
         registry.normalize();

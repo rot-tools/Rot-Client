@@ -302,6 +302,117 @@ final class RotClientProfileManager {
                         currentConfig));
     }
 
+    /**
+     * Adds a profile without selecting it, so the active profile and the live
+     * settings are left exactly as they are.
+     *
+     * Only valid while a profile is already active. With none active,
+     * {@link RotClientProfileConfig#normalize()} would quietly make this one
+     * active, and the periodic autosave would then overwrite it with the live
+     * settings. Callers save the live setup as a profile first.
+     */
+    RotClientProfile addInactive(
+            String name,
+            RotClientProfileSettings settings) {
+
+        config.normalize();
+
+        if (config.activeProfile() == null
+                || !RotClientProfile.isValidName(name)) {
+            return null;
+        }
+
+        String normalizedName =
+                RotClientProfile.normalizeName(name);
+
+        if (containsName(normalizedName, null)) {
+            return null;
+        }
+
+        RotClientProfile profile =
+                RotClientProfile.create(normalizedName);
+
+        profile.settings =
+                settings == null
+                        ? RotClientProfileSettings.defaults()
+                        : settings.copy();
+
+        config.profiles.add(profile);
+
+        if (!saveNow()) {
+            config.profiles.remove(profile);
+            return null;
+        }
+
+        return profile;
+    }
+
+    /**
+     * Live automatic-switching rules. Read-only for callers: mutate through
+     * the setters below so every change is persisted.
+     */
+    RotClientAutoSwitchConfig autoSwitch() {
+        config.normalize();
+        return config.autoSwitch;
+    }
+
+    boolean setAutoSwitchEnabled(boolean enabled) {
+        return mutateAutoSwitch(rules -> rules.enabled = enabled);
+    }
+
+    boolean setAutoSwitchNotify(boolean notify) {
+        return mutateAutoSwitch(rules -> rules.notify = notify);
+    }
+
+    /** Blank profile id clears the rule. */
+    boolean setAutoSwitchRule(
+            AutoProfileContext context,
+            String profileId) {
+
+        if (context == null
+                || (profileId != null
+                && !profileId.isBlank()
+                && config.findById(profileId) == null)) {
+            return false;
+        }
+
+        return mutateAutoSwitch(rules ->
+                rules.setRule(context, profileId));
+    }
+
+    /** Blank profile id clears the fallback. */
+    boolean setAutoSwitchFallback(String profileId) {
+        if (profileId != null
+                && !profileId.isBlank()
+                && config.findById(profileId) == null) {
+            return false;
+        }
+
+        return mutateAutoSwitch(rules ->
+                rules.fallbackProfileId =
+                        profileId == null
+                                ? ""
+                                : profileId.trim());
+    }
+
+    private boolean mutateAutoSwitch(
+            java.util.function.Consumer<RotClientAutoSwitchConfig> change) {
+
+        config.normalize();
+
+        RotClientAutoSwitchConfig previous =
+                config.autoSwitch.copy();
+
+        change.accept(config.autoSwitch);
+
+        if (!saveNow()) {
+            config.autoSwitch = previous;
+            return false;
+        }
+
+        return true;
+    }
+
     boolean saveNow() {
         config.normalize();
         return RotClientProfileStore.save(config);

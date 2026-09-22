@@ -1,5 +1,8 @@
 package fi.rotclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -14,6 +17,16 @@ import java.util.List;
  * drag inside the existing Rot HUD editor / pause editor mode.
  */
 final class QolOverlayHud {
+
+    private final Map<String, HudStyleState> frameStyleCache = new HashMap<>();
+
+    private HudStyleState cachedHudStyle(String id) {
+        return frameStyleCache.computeIfAbsent(
+                id,
+                key -> qol().extras().resolvedHudStyle(key)
+        );
+    }
+
     private static final int PERFORMANCE_EDITOR_WIDTH = 120;
     private static final int PERFORMANCE_EDITOR_HEIGHT = 36;
     private static final int STAT_EDITOR_WIDTH = 110;
@@ -31,6 +44,11 @@ final class QolOverlayHud {
     private String focusId = "";
     private double dragOffsetX;
     private double dragOffsetY;
+
+    /** Feeds and reads the FPS/ping/TPS sampler outside the Performance HUD's own render. */
+    PerformanceHudLayout.Snapshot sampleMetrics(Minecraft client) {
+        return metrics.sample(client, System.currentTimeMillis());
+    }
 
     QolOverlayHud(TrackerConfig config) {
         this.config = config;
@@ -62,6 +80,7 @@ final class QolOverlayHud {
     }
 
     void render(GuiGraphicsExtractor graphics) {
+        frameStyleCache.clear();
         Minecraft client = Minecraft.getInstance();
         if (client == null || RotClientClient.pauseMenuHidesHud()) {
             return;
@@ -72,6 +91,9 @@ final class QolOverlayHud {
         Font font = client.font;
         long now = System.currentTimeMillis();
 
+        if (qol.marketWatchPinsHudEnabled) {
+            renderMarketPins(graphics, font, qol);
+        }
         if (qol.performanceHudEnabled) {
             renderPerformance(graphics, font, qol, metrics.sample(client, now));
         }
@@ -153,21 +175,30 @@ final class QolOverlayHud {
             int x = (client.getWindow().getGuiScaledWidth() - w) / 2;
             RotClientUiDraw.text(graphics, font, iotaTitle, x, 84, 0xFFFF5555, true);
         }
-        renderSlayerPanel(graphics, font, qol, "slayer", SlayerRuntime.displayLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_progress", SlayerRuntime.progressLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_rng", SlayerRuntime.rngLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_profit", SlayerRuntime.profitLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_stats", SlayerRuntime.statsLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_carry", SlayerRuntime.carryLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_cocoon", SlayerRuntime.cocoonLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_attunement", SlayerRuntime.attunementLines(editorOpen));
-        renderSlayerPanel(graphics, font, qol, "slayer_vengeance", SlayerRuntime.vengeanceLines(editorOpen));
+        renderSlayerPanel(graphics, font, qol, "slayer",
+                HudRuntimeCache.get("slayer_display", () -> SlayerRuntime.displayLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_progress",
+                HudRuntimeCache.get("slayer_progress", () -> SlayerRuntime.progressLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_rng",
+                HudRuntimeCache.get("slayer_rng", () -> SlayerRuntime.rngLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_profit",
+                HudRuntimeCache.get("slayer_profit", () -> SlayerRuntime.profitLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_stats",
+                HudRuntimeCache.get("slayer_stats", () -> SlayerRuntime.statsLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_carry",
+                HudRuntimeCache.get("slayer_carry", () -> SlayerRuntime.carryLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_cocoon",
+                HudRuntimeCache.get("slayer_cocoon", () -> SlayerRuntime.cocoonLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_attunement",
+                HudRuntimeCache.get("slayer_attunement", () -> SlayerRuntime.attunementLines(editorOpen)));
+        renderSlayerPanel(graphics, font, qol, "slayer_vengeance",
+                HudRuntimeCache.get("slayer_vengeance", () -> SlayerRuntime.vengeanceLines(editorOpen)));
         renderSlayerPanel(
                 graphics,
                 font,
                 qol,
                 "dungeon",
-                DungeonRuntime.displayLines(editorOpen));
+                HudRuntimeCache.get("dungeon_display", () -> DungeonRuntime.displayLines(editorOpen)));
 
         if (dungeonCarryEditorVisible(qol)) {
             renderSlayerPanel(
@@ -175,7 +206,7 @@ final class QolOverlayHud {
                     font,
                     qol,
                     "dungeon_carry",
-                    DungeonCarryRuntime.hudLines(editorOpen));
+                    HudRuntimeCache.get("dungeon_carry", () -> DungeonCarryRuntime.hudLines(editorOpen)));
         }
 
         if (dungeonWatcherEditorVisible(qol)) {
@@ -184,7 +215,7 @@ final class QolOverlayHud {
                     font,
                     qol,
                     "dungeon_watcher",
-                    DungeonWatcherRuntime.hudLines(editorOpen));
+                    HudRuntimeCache.get("dungeon_watcher", () -> DungeonWatcherRuntime.hudLines(editorOpen)));
         }
         ItemRarityRuntime.renderHotbar(
                 graphics,
@@ -591,7 +622,7 @@ final class QolOverlayHud {
                     barY,
                     barX + barWidth,
                     barY + barHeight,
-                    0x66333333);
+                    HudCardStyle.BAR_TRACK);
 
             int filled =
                     Math.max(
@@ -618,6 +649,50 @@ final class QolOverlayHud {
                 .popMatrix();
     }
 
+    private void renderMarketPins(
+            GuiGraphicsExtractor graphics,
+            Font font,
+            QolUtilityConfig qol) {
+
+        List<MarketWatchPinnedDeal> pins =
+                MarketWatchPinnedDealStore.all();
+
+        if (pins.isEmpty() && !editorOpen) {
+            return;
+        }
+
+        float[] pose = qol.pose("market_pins");
+        int x = Math.round(pose[0]);
+        int y = Math.round(pose[1]);
+        int width = MarketWatchPinnedDealHud.CARD_WIDTH;
+        int height = pins.isEmpty()
+                ? MarketWatchPinnedDealHud.CARD_HEIGHT
+                : MarketWatchPinnedDealHud.contentHeight(pins.size());
+
+        pushHudScale(graphics, "market_pins", x, y);
+
+        if (editorOpen) {
+            drawEditorFrame(graphics, font, x, y, width, height, "market_pins");
+        }
+
+        if (pins.isEmpty()) {
+            RotClientUiDraw.drawElevatedCard(
+                    graphics, x, y, width, MarketWatchPinnedDealHud.CARD_HEIGHT);
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "No pinned deals",
+                    x + 10,
+                    y + 22,
+                    RotClientTheme.TEXT_MUTED,
+                    true);
+        } else {
+            MarketWatchPinnedDealHud.render(graphics, font, pins, x, y);
+        }
+
+        graphics.pose().popMatrix();
+    }
+
     private void renderCommission(
             GuiGraphicsExtractor graphics,
             Font font,
@@ -633,7 +708,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = FishingSuiteRuntime.hudLines(qol);
+        List<String> lines = HudRuntimeCache.get("fishing_lines", () -> FishingSuiteRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -661,7 +736,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = MiningLeftoverRuntime.hudLines(qol);
+        List<String> lines = HudRuntimeCache.get("mining_lines", () -> MiningLeftoverRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -675,7 +750,7 @@ final class QolOverlayHud {
             GuiGraphicsExtractor graphics,
             Font font,
             QolUtilityConfig qol) {
-        List<String> lines = ForagingRuntime.hudLines(qol);
+        List<String> lines = HudRuntimeCache.get("foraging_lines", () -> ForagingRuntime.hudLines(qol));
         if (lines.isEmpty() && !editorOpen) {
             return;
         }
@@ -869,13 +944,17 @@ final class QolOverlayHud {
         int y = Math.round(pose[1]);
         int width = SLAYER_EDITOR_WIDTH;
         boolean dynamicSlayerText = "slayer".equals(id) && qol.extras().slayerDisplayDynamicSize;
-        for (String line : lines) {
+        int lineCount = lines.size();
+        float[] lineScales = new float[lineCount];
+        for (int i = 0; i < lineCount; i++) {
+            int lineWidth = font.width(lines.get(i));
             float scale = dynamicSlayerText
-                    ? SlayerHudTextPolicy.scaleFor(font.width(line), SLAYER_EDITOR_WIDTH - 12)
+                    ? SlayerHudTextPolicy.scaleFor(lineWidth, SLAYER_EDITOR_WIDTH - 12)
                     : 1.0F;
-            width = Math.max(width, Math.round(font.width(line) * scale) + 12);
+            lineScales[i] = scale;
+            width = Math.max(width, Math.round(lineWidth * scale) + 12);
         }
-        int height = Math.max(26, 8 + lines.size() * 10);
+        int height = Math.max(26, 8 + lineCount * 10);
         pushHudScale(graphics, id, x, y);
         if (editorOpen) {
             drawEditorFrame(graphics, font, x, y, width, height, id);
@@ -885,9 +964,10 @@ final class QolOverlayHud {
             graphics.fill(x, y, x + 3, y + height, accentPaint(id));
         }
         List<String> visible = visibleHudLines(id, lines);
+        int skip = lineCount - visible.size();
         int rowY = y + 4;
         for (int i = 0; i < visible.size(); i++) {
-            int color = i == 0 && HudStylePolicy.titleVisible(qol.extras().resolvedHudStyle(id))
+            int color = i == 0 && HudStylePolicy.titleVisible(cachedHudStyle(id))
                     ? accentPaint(id) : textPaint(id, RotClientTheme.TEXT);
             if ("slayer_profit".equals(id)
                     && visible.get(i).startsWith("Latest · ")
@@ -895,9 +975,7 @@ final class QolOverlayHud {
                     && !visible.get(i).equals("Latest · none")) {
                 color = RotClientTheme.SUCCESS;
             }
-            float scale = dynamicSlayerText
-                    ? SlayerHudTextPolicy.scaleFor(font.width(visible.get(i)), SLAYER_EDITOR_WIDTH - 12)
-                    : 1.0F;
+            float scale = lineScales[i + skip];
             if (scale < 1.0F) {
                 graphics.pose().pushMatrix();
                 graphics.pose().translate(x + 7, rowY);
@@ -1580,6 +1658,11 @@ final class QolOverlayHud {
         if (qol.petHudEnabled && inside(mouseX, mouseY, "pet", PET_EDITOR_WIDTH, PET_EDITOR_HEIGHT)) {
             return "pet";
         }
+        if (qol.marketWatchPinsHudEnabled
+                && inside(mouseX, mouseY, "market_pins",
+                        MarketWatchPinnedDealHud.CARD_WIDTH, marketPinsPanelHeight())) {
+            return "market_pins";
+        }
         if (qol.commissionDisplayEnabled && inside(mouseX, mouseY, "commission", 180, 48)) {
             return "commission";
         }
@@ -1812,11 +1895,11 @@ final class QolOverlayHud {
         }
     }
     private boolean panelOn(String id) {
-        return qol().extras().resolvedHudStyle(id).showBackground;
+        return cachedHudStyle(id).showBackground;
     }
 
     private int panelFill(String id, int color, int alpha) {
-        HudStyleState style = qol().extras().resolvedHudStyle(id);
+        HudStyleState style = cachedHudStyle(id);
         if (!style.showBackground) {
             return 0x00000000;
         }
@@ -1848,7 +1931,7 @@ final class QolOverlayHud {
     }
 
     private int textPaint(String id, int fallback) {
-        HudStyleState style = qol().extras().resolvedHudStyle(id);
+        HudStyleState style = cachedHudStyle(id);
         int color = style.textColor == 0 ? fallback : style.textColor;
         return HudStylePolicy.dim(
                 color,
@@ -1903,7 +1986,7 @@ final class QolOverlayHud {
         if (lines == null || lines.isEmpty()) {
             return List.of();
         }
-        if (HudStylePolicy.titleVisible(qol().extras().resolvedHudStyle(id)) || lines.size() <= 1) {
+        if (HudStylePolicy.titleVisible(cachedHudStyle(id)) || lines.size() <= 1) {
             return lines;
         }
         return lines.subList(1, lines.size());
@@ -1938,10 +2021,8 @@ final class QolOverlayHud {
                         lines);
 
         HudStyleState style =
-                qol()
-                        .extras()
-                        .resolvedHudStyle(
-                                id);
+                cachedHudStyle(
+                        id);
 
         boolean title =
                 HudStylePolicy
@@ -2075,7 +2156,7 @@ final class QolOverlayHud {
                 .popMatrix();
     }
     private float styleScale(String id) {
-        return qol().extras().resolvedHudStyle(id).scale;
+        return cachedHudStyle(id).scale;
     }
 
     private void fillHudPanel(
@@ -2101,16 +2182,16 @@ final class QolOverlayHud {
 
         RotClientUiDraw.roundedFill(
                 graphics,
-                x + 2,
-                y + 3,
-                x + width + 2,
-                y + height + 3,
+                x + HudCardStyle.SHADOW_OFFSET_X,
+                y + HudCardStyle.SHADOW_OFFSET_Y,
+                x + width + HudCardStyle.SHADOW_OFFSET_X,
+                y + height + HudCardStyle.SHADOW_OFFSET_Y,
                 RotClientUiDraw.withAlpha(
                         RotClientTheme.SHADOW,
                         editorOpen
-                                ? 0x38
-                                : 0x50),
-                5);
+                                ? HudCardStyle.EDITOR_SHADOW_ALPHA
+                                : HudCardStyle.SHADOW_ALPHA),
+                HudCardStyle.RADIUS);
 
         RotClientUiDraw.roundedFill(
                 graphics,
@@ -2119,13 +2200,13 @@ final class QolOverlayHud {
                 x + width,
                 y + height,
                 fill,
-                5);
+                HudCardStyle.RADIUS);
 
         int border =
                 HudStylePolicy.dim(
                         RotClientUiDraw.withAlpha(
                                 RotClientTheme.BORDER,
-                                0xA8),
+                                HudCardStyle.BORDER_ALPHA),
                         HudStylePolicy.isFocused(
                                 id,
                                 focusId),
@@ -2141,7 +2222,7 @@ final class QolOverlayHud {
                 x + width,
                 y + height,
                 border,
-                5);
+                HudCardStyle.RADIUS);
     }
     String selectedId() {
         return selectedId;
@@ -2160,6 +2241,7 @@ final class QolOverlayHud {
             if (qol.playerDisplaySpeedHud) return "speed";
         }
         if (qol.petHudEnabled) return "pet";
+        if (qol.marketWatchPinsHudEnabled) return "market_pins";
         if (qol.commissionDisplayEnabled) return "commission";
         if (wardrobeHudEnabled(qol)) return "wardrobe";
         if (autoClickerHudEnabled(qol)) return "auto_clicker";
@@ -2193,6 +2275,7 @@ final class QolOverlayHud {
         QolUtilityConfig qol = qol();
         return switch (id) {
             case "performance" -> qol.performanceHudEnabled;
+            case "market_pins" -> qol.marketWatchPinsHudEnabled;
             case "health" -> qol.playerDisplayEnabled && qol.playerDisplayHealthHud;
             case "mana" -> qol.playerDisplayEnabled && qol.playerDisplayManaHud;
             case "overflow" -> qol.playerDisplayEnabled && qol.playerDisplayOverflowManaHud;
@@ -2231,6 +2314,7 @@ final class QolOverlayHud {
     private static String labelFor(String id) {
         return switch (id == null ? "" : id) {
             case "performance" -> "Performance HUD";
+            case "market_pins" -> "Market Watch Pins";
             case "health" -> "Health HUD";
             case "mana" -> "Mana HUD";
             case "overflow" -> "Overflow Mana HUD";
@@ -2270,6 +2354,9 @@ final class QolOverlayHud {
         if ("performance".equals(id)) {
             return PERFORMANCE_EDITOR_WIDTH;
         }
+        if ("market_pins".equals(id)) {
+            return MarketWatchPinnedDealHud.CARD_WIDTH;
+        }
         if ("pet".equals(id)) {
             return PET_EDITOR_WIDTH;
         }
@@ -2294,6 +2381,9 @@ final class QolOverlayHud {
     private static int elementHeight(String id) {
         if ("performance".equals(id)) {
             return PERFORMANCE_EDITOR_HEIGHT;
+        }
+        if ("market_pins".equals(id)) {
+            return marketPinsPanelHeight();
         }
         if ("pet".equals(id)) {
             return PET_EDITOR_HEIGHT;
@@ -2329,7 +2419,19 @@ final class QolOverlayHud {
      * screen clamp always cover the visible panel.
      */
     private static int profitPanelHeight() {
-        return Math.max(68, 8 + SlayerRuntime.profitLines(true).size() * 10);
+        return Math.max(68, 8 + HudRuntimeCache.get("slayer_profit", () -> SlayerRuntime.profitLines(true)).size() * 10);
+    }
+
+    /**
+     * Mirrors {@link #profitPanelHeight()}: the editor's drag target and
+     * screen clamp for the pin stack must cover however many cards are
+     * actually pinned right now, not a fixed guess.
+     */
+    private static int marketPinsPanelHeight() {
+        int count = MarketWatchPinnedDealStore.all().size();
+        return count <= 0
+                ? MarketWatchPinnedDealHud.CARD_HEIGHT
+                : MarketWatchPinnedDealHud.contentHeight(count);
     }
 
     private QolUtilityConfig qol() {

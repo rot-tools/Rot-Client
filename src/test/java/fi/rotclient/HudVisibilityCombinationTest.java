@@ -38,7 +38,7 @@ final class HudVisibilityCombinationTest {
     void noGraphShrinksTopCard() {
         int with = HudLayoutMath.topCardHeight(true, true, true, true);
         int without = HudLayoutMath.topCardHeight(true, false, true, true);
-        assertEquals(with - 39, without);
+        assertEquals(with - HudLayoutMath.GRAPH_SECTION, without);
     }
 
     @Test
@@ -88,7 +88,7 @@ final class HudVisibilityCombinationTest {
         int without = HudLayoutMath.profitCardHeight(
                 true, false, false, false, false, false, 1,
                 false, true, true, true);
-        assertEquals(32, with - without);
+        assertEquals(HudLayoutMath.ITEM_ROW, with - without);
     }
 
     @Test
@@ -99,7 +99,7 @@ final class HudVisibilityCombinationTest {
         int without = HudLayoutMath.profitCardHeight(
                 true, false, false, false, false, false, 1,
                 true, true, true, true, false);
-        assertEquals(14, with - without);
+        assertEquals(HudLayoutMath.HEADING_ROW, with - without);
     }
 
     @Test
@@ -123,7 +123,7 @@ final class HudVisibilityCombinationTest {
                 true, true);
         assertEquals(
                 0.0,
-                HudLayoutMath.clampOrigin(5000, 400, height, 1.5F));
+                HudLayoutMath.clampOrigin(5000, height, height, 1.5F));
         assertTrue(HudLayoutMath.clampOrigin(12, 1080, height, 1.0F) >= 0.0);
     }
 

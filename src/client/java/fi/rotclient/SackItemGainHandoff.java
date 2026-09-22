@@ -54,8 +54,7 @@ final class SackItemGainHandoff {
                     && selection.materialTarget().includes(resource.material());
         }
         if (resource.gemstone() != null) {
-            return selection.isGemstone()
-                    && selection.gemstone() == resource.gemstone();
+            return selection.tracksGemstone(resource.gemstone());
         }
         return false;
     }

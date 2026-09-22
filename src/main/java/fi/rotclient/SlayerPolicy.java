@@ -87,6 +87,7 @@ public final class SlayerPolicy {
     }
 
     private static final Pattern FORMAT_CODE = Pattern.compile("§[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern DROP = Pattern.compile(
             "(?i).*(?:RARE|RNGESUS|PRAY TO RNGESUS|CRAZY RARE|INSANE) DROP!.*?\\(([^)]+)\\).*"                );
     /**
@@ -109,13 +110,14 @@ public final class SlayerPolicy {
 
     public static QuestSignal questSignal(String raw) {
         String line = normalize(raw).trim().toUpperCase(Locale.ROOT);
-        if (line.contains("SLAYER QUEST STARTED!")) {
+        // Anyone can type these phrases into chat; only a server line (no "Name:" before it) counts.
+        if (ChatTextPolicy.serverLineContains(line, "SLAYER QUEST STARTED!")) {
             return QuestSignal.STARTED;
         }
-        if (line.contains("SLAYER QUEST COMPLETE!")) {
+        if (ChatTextPolicy.serverLineContains(line, "SLAYER QUEST COMPLETE!")) {
             return QuestSignal.COMPLETED;
         }
-        if (line.contains("SLAYER QUEST FAILED!")) {
+        if (ChatTextPolicy.serverLineContains(line, "SLAYER QUEST FAILED!")) {
             return QuestSignal.FAILED;
         }
         return QuestSignal.NONE;
@@ -316,8 +318,10 @@ public final class SlayerPolicy {
     }
 
     public static Optional<DropObservation> dropObservation(String raw) {
-        Matcher matcher = DROP.matcher(normalize(raw));
-        if (!matcher.matches()) {
+        String text = normalize(raw);
+        Matcher matcher = DROP.matcher(text);
+        // A player typing "RARE DROP! (Item)" must not count as a drop.
+        if (!matcher.matches() || !ChatTextPolicy.serverLineContains(text.toUpperCase(Locale.ROOT), "DROP!")) {
             return Optional.empty();
         }
         String item = matcher.group(1).trim();
@@ -369,9 +373,8 @@ public final class SlayerPolicy {
         if (raw == null) {
             return "";
         }
-        return FORMAT_CODE.matcher(raw).replaceAll("")
-                .replace('\u00A0', ' ')
-                .replaceAll("\\s+", " ")
+        return WHITESPACE.matcher(FORMAT_CODE.matcher(raw).replaceAll("")
+                .replace('\u00A0', ' ')).replaceAll(" ")
                 .trim();
     }
 

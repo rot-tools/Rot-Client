@@ -48,12 +48,65 @@ and the project uses semantic versioning where practical.
   Stats dumps in the first seconds after a world join, and no longer reprints
   a chat line that would fire `/instancerequeue` again.
 
+### Render
+
+* Added **Block Outline** (`qol.block_outline`), off by default, in the Render
+  group. It recolors the box drawn around the block you are looking at. Pick
+  any color with the RGB picker (opacity included), or switch the style to
+  **Rainbow**, where the hue flows along the edges and keeps moving. Line
+  Width, Rainbow Speed, and Rainbow Spread are sliders; a spread of 0 makes
+  the whole outline change color together. Only the outline drawing changes,
+  never what you can target. Automated-tested; Minecraft runtime validation is
+  pending.
+
 ### Settings profiles
 
 * Visuals → **Profiles** saves named client setups (modules, QoL, HUD layout,
   mining/powder tracker preferences, Fullbright / Always Night). Switch live
   without restarting. Tracker history, sessions, storage cache, and workspace
   stay global. Stored in `rotclient-profiles.json`.
+* **Auto Switch** (Visuals → Profiles → Auto Switch, off by default) switches
+  profile for you when you change place. Pick a profile per place: Dungeons,
+  Kuudra, Dwarven Mines (with Base Camp), Crystal Hollows, Glacite Tunnels,
+  Glacite Mineshaft, Deep Caverns, Garden, Private Island, and Slayer Quest,
+  plus **Everywhere else** for anything without its own rule (leave it unset to
+  keep your current profile). A recognised place must show on two sidebar reads
+  in a row (about a second) before it counts, and "nothing recognised" must
+  hold for 3 seconds, so crossing an area border or a half-loaded sidebar never
+  flaps. Picking a profile by hand is never
+  reverted; the rules apply again the next time the place changes or you join
+  a new world. It only reads the sidebar and never acts outside SkyBlock, and
+  a switch is the same live switch as clicking the profile. An optional chat
+  notice reports each switch. The rules are global, not part of any profile,
+  and are stored in `rotclient-profiles.json` with no schema change; deleting
+  a profile removes the rules that pointed at it. Automated tests cover the
+  classifier, debounce, rules and persistence. Minecraft runtime validation
+  is pending, and the Garden and Private Island sidebar text in particular
+  needs an in-game check.
+* **Example profiles** (Visuals → Profiles → Examples): five ready-made setups
+  to start from, Everyday, Mining, Dungeons, Slayer and Fishing. Each one turns on
+  the Custom Scoreboard and the Pet HUD and adds the HUDs that suit it. They are
+  offered, not installed: nothing is created until you press ADD or ADD ALL, and a
+  new example is added without switching to it, so your current settings are never
+  touched. With no profiles yet, your current setup is saved as "My Setup" first
+  so nothing is lost. HUDs are laid out as anchored stacks and resolved once for
+  your GUI-scaled window size, so they never overlap each other or the scoreboard
+  and stay draggable in the HUD editor afterwards. Examples are JSON files (see
+  `docs/PROFILE_PRESETS.md`), use only shared-catalog modules, and touch no
+  automation option. The Mining example puts the Powder Chest HUD in the top-right
+  corner. The Examples page warns before you add anything if your current GUI scale
+  is too small for a layout (Mining needs about 652px of width). Automated tests
+  cover loading, layout geometry, and that every visible HUD is placed. Minecraft
+  runtime validation is pending.
+* The **Powder Chest HUD** now wears the same card as the Pet HUD: the HUD Layout
+  background colour and opacity, rounded corners, soft shadow and thin border,
+  instead of its own fixed dark panel. The left accent strip is gone, as on the
+  Pet and Mining HUDs. The existing Powder Chest background toggle still works.
+* The saved-profiles list no longer runs past the bottom of a windowed
+  dashboard. It is clipped to the space the window has and scrolls with the mouse
+  wheel or a draggable scrollbar, and it is no longer capped at six profiles (the
+  old "+N more profiles" line is gone). Opening a row's "..." menu scrolls it into
+  view. The Examples and Auto Switch pages scroll the same way in a short window.
 
 ### GUI
 
@@ -62,6 +115,28 @@ and the project uses semantic versioning where practical.
   mayor/party/Maxwell rows, title/footer markup (`&&` colors), and a rounded
   panel. Vanilla sidebar hide is on by default; the module stays off until
   enabled. Catalog lock is **131**.
+* Mining HUD redesigned to be smaller and see-through. The two stacked opaque
+  cards (268 wide, about 425 tall with everything on) are now one card
+  172 wide and about 225 tall, and it now uses the same panel style as the
+  Pet HUD (HUD Layout background colour and opacity, rounded corners, soft
+  shadow, thin border) with no opaque panel strips. Header, blocks,
+  metrics and footer each take one line; the auto-pause countdown is a thin
+  bar; item rows are 12px with scaled icons. Every existing HUD toggle still
+  works. Gemstone HUD uses the same layout and its height now follows the
+  title/status/footer toggles like ore targets do.
+
+* New **All Gemstones** tracker target (Mining Tracker target dropdown, just
+  above Ruby). Every gemstone is tracked at once: each keeps its own ledger,
+  and a shared aggregate carries the block count and active-time clock, so
+  rates are not double counted when you mix gemstones. Current Session and
+  history treat all of them as the target. The HUD shows a compact table with
+  one colour-coded row per gemstone you have actually gained (best rough
+  equivalent first, six rows then "+N more") and Rgh / Flwd / Fine / Flwl /
+  Perf columns (only tiers you actually have get a column), so it grows only
+  with what you mine. Fixed text overlap in the gemstone ledger header and in
+  a few other HUD rows: the game scales the UI font wider than assumed, so
+  table columns, the bazaar TAX label and long values are now laid out from
+  measured text widths instead of fixed positions.
 
 ### Dungeons (Athen / Nebulune port)
 

@@ -141,7 +141,47 @@ final class IotaPolicyTest {
         IotaPolicy.ArrowNotice low = IotaPolicy.arrowChatNotice(
                 "QUIVER! You only have 32 Flint Arrow left!").orElseThrow();
         assertEquals(32, low.count());
-        assertEquals("Flint Arrow left!", low.type());
+        assertEquals("Flint Arrow", low.type());
+    }
+
+    @Test
+    void playersCannotSpoofServerLineTriggersByTypingThePhrase() {
+        assertTrue(IotaPolicy.isLimboKick(IotaPolicy.LIMBO_MESSAGE));
+        assertTrue(IotaPolicy.isLimboKick("§c" + IotaPolicy.LIMBO_MESSAGE));
+        assertFalse(IotaPolicy.isLimboKick("[MVP+] Steve: " + IotaPolicy.LIMBO_MESSAGE));
+        assertFalse(IotaPolicy.isLimboKick("Party > Steve: " + IotaPolicy.LIMBO_MESSAGE));
+
+        assertTrue(IotaPolicy.isPartyJoin("[MVP+] Alex joined the party."));
+        assertFalse(IotaPolicy.isPartyJoin("[MVP+] Steve: Alex joined the party."));
+        assertFalse(IotaPolicy.isPartyJoin("Guild > Steve: Alex joined the party!"));
+
+        assertTrue(IotaPolicy.arrowChatNotice("Your quiver is now completely empty!").isPresent());
+        assertFalse(IotaPolicy.arrowChatNotice(
+                "[MVP+] Steve: Your quiver is now completely empty!").isPresent());
+    }
+
+    @Test
+    void tpsReplyNeverInventsANumber() {
+        Optional<IotaPolicy.PartyAction> real = tpsCommand(19.6F);
+        assertEquals("[Rot] 19.6", real.orElseThrow().payload());
+        assertEquals("[Rot] TPS unavailable", tpsCommand(Float.NaN).orElseThrow().payload());
+        assertEquals("[Rot] TPS unavailable", tpsCommand(0.0F).orElseThrow().payload());
+    }
+
+    private static Optional<IotaPolicy.PartyAction> tpsCommand(float tps) {
+        return IotaPolicy.partyCommand(
+                "Party > Steve: !tps",
+                true,
+                ALL,
+                "Henri",
+                40,
+                tps,
+                0,
+                0,
+                0,
+                0.0D,
+                0L,
+                0L);
     }
 
     @Test

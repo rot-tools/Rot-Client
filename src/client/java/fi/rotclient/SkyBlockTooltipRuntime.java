@@ -114,9 +114,11 @@ public final class SkyBlockTooltipRuntime {
         }
         String floor = DungeonCarryPolicy.normalizeFloor(DungeonRuntime.sidebar().floor());
         DungeonPartyJoinRuntime.prefetch(player, floor);
-        var stats = DungeonPartyJoinRuntime.cached(player, floor);
+        var lookup = DungeonPartyJoinRuntime.cachedLookup(player, floor);
         lines.add(Component.literal(DungeonPartyFinderPolicy.statsLine(
-                player, stats.orElse(null))));
+                player,
+                lookup.flatMap(DungeonProfileStatsService.Lookup::stats).orElse(null),
+                lookup.map(DungeonProfileStatsService.Lookup::failure).orElse(""))));
     }
 
     private static void appendCalendarDates(

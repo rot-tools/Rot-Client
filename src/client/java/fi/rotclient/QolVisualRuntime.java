@@ -90,7 +90,13 @@ public final class QolVisualRuntime {
             return false;
         }
 
-        String name = plainName(entity.getCustomName());
+        // Classifying a nametag lowercases it four times, and this runs for every entity
+        // every frame, so skip it unless one of the SkyBlock hides is actually on.
+        boolean anySkyblockHide = qol.hideArcherPassive
+                || qol.hideHealerFairy
+                || qol.hideSoulWeaver
+                || qol.hideTentacleHead;
+        String name = anySkyblockHide ? plainName(entity.getCustomName()) : "";
         RenderOptimizerPolicy.EntityKind skyKind = classifySkyblock(name);
         if (skyKind != RenderOptimizerPolicy.EntityKind.OTHER
                 && RenderOptimizerPolicy.shouldSuppressEntity(
@@ -204,28 +210,28 @@ public final class QolVisualRuntime {
                 kind)) {
             return true;
         }
-        Identifier particleId = BuiltInRegistries.PARTICLE_TYPE.getKey(options.getType());
-        if (particleId != null
-                && SlayerFightPolicy.shouldHideVoidgloomParticle(particleId.toString())
+        String particleKey = particleIdString(options);
+        if (particleKey != null
+                && SlayerFightPolicy.shouldHideVoidgloomParticle(particleKey)
                 && (Double.isNaN(x) || SlayerRuntime.shouldHideVoidgloomParticleAt(x, y, z))) {
             return true;
         }
-        if (particleId != null
-                && SlayerFightPolicy.shouldHideBlazeParticle(particleId.toString())
+        if (particleKey != null
+                && SlayerFightPolicy.shouldHideBlazeParticle(particleKey)
                 && (Double.isNaN(x) || SlayerRuntime.shouldHideInfernoParticleAt(x, y, z))) {
             return true;
         }
-        if (particleId != null
+        if (particleKey != null
                 && !Double.isNaN(x)
-                && SlayerRuntime.shouldHideSpawnParticleAt(particleId.toString(), x, y, z)) {
+                && SlayerRuntime.shouldHideSpawnParticleAt(particleKey, x, y, z)) {
             return true;
         }
         if (FishingSuiteRuntime.shouldHideParticle(options, x, y, z)) {
             return true;
         }
-        if (particleId != null
+        if (particleKey != null
                 && !Double.isNaN(x)
-                && SkyBlockUtilityRuntime.hideImplosion(particleId.toString(), x, y, z)) {
+                && SkyBlockUtilityRuntime.hideImplosion(particleKey, x, y, z)) {
             return true;
         }
         return RenderOptimizerPolicy.shouldSuppressExtraParticle(
@@ -236,6 +242,25 @@ public final class QolVisualRuntime {
                 extras.hidePowderCoating,
                 kind,
                 SkyBlockDungeonDetector.confidentlyInDungeon());
+    }
+
+    private static final java.util.Map<net.minecraft.core.particles.ParticleType<?>, String> PARTICLE_IDS =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Registry id of a particle as a string, built once per particle type instead of per particle. */
+    private static String particleIdString(ParticleOptions options) {
+        net.minecraft.core.particles.ParticleType<?> type = options.getType();
+        String cached = PARTICLE_IDS.get(type);
+        if (cached != null) {
+            return cached;
+        }
+        Identifier id = BuiltInRegistries.PARTICLE_TYPE.getKey(type);
+        if (id == null) {
+            return null;
+        }
+        String text = id.toString();
+        PARTICLE_IDS.put(type, text);
+        return text;
     }
 
     public static boolean shouldHideFireOverlay() {
@@ -273,7 +298,11 @@ public final class QolVisualRuntime {
     public static float netherFogFactor() {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         Minecraft client = Minecraft.getInstance();
-        if (!qol.renderOptimizerEnabled || client == null || client.player == null) {
+        if (!qol.renderOptimizerEnabled
+                || !qol.extras().netherFog
+                || client == null
+                || client.player == null
+                || !client.player.hasEffect(MobEffects.NIGHT_VISION)) {
             return 1.0F;
         }
         String area = SkyBlockAreaDetector.detect().displayName()
@@ -344,6 +373,12 @@ public final class QolVisualRuntime {
             return null;
         }
         return maybeLegacyItemModel(SkyBlockItemIdentity.skyBlockId(stack), currentModel);
+    }
+
+    /** Cheap gate for the item-model hook, which runs on every component lookup of every stack. */
+    public static boolean legacyItemTexturesActive() {
+        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        return extras.legacyTexturesEnabled && extras.legacyTexturesItems;
     }
 
     public static Identifier maybeLegacyItemModel(CustomData custom, Identifier currentModel) {
@@ -556,6 +591,9 @@ public final class QolVisualRuntime {
     }
 
     private static boolean shouldHidePlayer(Player player, QolUtilityConfig qol) {
+        if (HidePlayersPolicy.isNpcUuid(player.getUUID())) {
+            return false;
+        }
         Minecraft client = Minecraft.getInstance();
         LocalPlayer local = client == null ? null : client.player;
         boolean isLocal = local != null && player.getId() == local.getId();
