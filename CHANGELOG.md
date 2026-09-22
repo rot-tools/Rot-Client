@@ -48,6 +48,17 @@ and the project uses semantic versioning where practical.
   Stats dumps in the first seconds after a world join, and no longer reprints
   a chat line that would fire `/instancerequeue` again.
 
+### Render
+
+* Added **Block Outline** (`qol.block_outline`), off by default, in the Render
+  group. It recolors the box drawn around the block you are looking at. Pick
+  any color with the RGB picker (opacity included), or switch the style to
+  **Rainbow**, where the hue flows along the edges and keeps moving. Line
+  Width, Rainbow Speed, and Rainbow Spread are sliders; a spread of 0 makes
+  the whole outline change color together. Only the outline drawing changes,
+  never what you can target. Automated-tested; Minecraft runtime validation is
+  pending.
+
 ### Settings profiles
 
 * Visuals → **Profiles** saves named client setups (modules, QoL, HUD layout,

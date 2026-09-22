@@ -64,6 +64,7 @@
     "SoundEngineSlayerMixin",
     "ScreenCustomCursorMixin",
     "ScreenEffectRendererMixin",
+    "ShapeOutlineFeatureRendererMixin",
     "SkyRendererExtractMixin",
     "TitleScreenQuickJoinMixin",
     "StuckInBodyLayerMixin"

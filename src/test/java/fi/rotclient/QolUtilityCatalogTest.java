@@ -431,7 +431,7 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(93, moduleIds.size());
+        assertEquals(94, moduleIds.size());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {

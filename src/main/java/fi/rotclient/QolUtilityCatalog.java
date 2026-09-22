@@ -2487,6 +2487,23 @@ public final class QolUtilityCatalog {
                 setting("qol.legacy_textures.items", "Replace Item Models", "Swap hypixel_skyblock custom models back to vanilla. Skulls and unmapped new-pack items stay on the server pack.", SettingType.TOGGLE)));
 
         modules.add(module(
+                "qol.block_outline",
+                "Block Outline",
+                "Recolor the box drawn around the block you are looking at. Pick any color with the RGB picker, or switch to Rainbow for hues that flow along the edges. Visual only; it changes how the outline is drawn, not what you can target.",
+                Group.RENDER,
+                "Outline",
+                false,
+                true,
+                true,
+                List.of("block outline", "selection box", "hitbox", "highlight", "rainbow", "chroma", "outline color"),
+                setting("qol.block_outline.mode", "Outline Style", "Solid Color uses the picker below. Rainbow cycles through every hue and flows along the edges.", SettingType.ENUM,
+                        List.of(BlockOutlinePolicy.MODE_SOLID, BlockOutlinePolicy.MODE_RAINBOW)),
+                setting("qol.block_outline.color", "Outline Color", "Outline color and opacity. RGB picker with alpha. Rainbow mode ignores the color but keeps the opacity.", SettingType.COLOR),
+                setting("qol.block_outline.width", "Line Width", "Thickness compared with Minecraft's own outline. 1.0 is vanilla.", SettingType.NUMBER),
+                setting("qol.block_outline.rainbow_speed", "Rainbow Speed", "How fast the rainbow moves. 1.0 is one full color cycle every four seconds.", SettingType.NUMBER),
+                setting("qol.block_outline.rainbow_spread", "Rainbow Spread", "How much the color changes across one block. 0 makes the whole outline change color together.", SettingType.NUMBER)));
+
+        modules.add(module(
                 "qol.custom_resource_pack",
                 "Dark SkyBlock Pack",
                 "Built-in Rot Client dark world textures for overworld, Crimson Isle, and End. Off by default. Hidden from the vanilla resource-pack list — toggle it here. Works with Legacy SkyBlock Textures: that module remaps SkyBlock items to vanilla models, and this pack then paints those vanilla blocks/items dark.",
