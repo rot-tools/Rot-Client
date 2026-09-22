@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 final class QolModuleEvidenceTest {
     @Test
     void everyParentHasOneHonestEvidenceState() {
-        assertEquals(91, QolUtilityCatalog.modules().size());
+        assertEquals(83, QolUtilityCatalog.modules().size());
         assertEquals(
-                91,
+                83,
                 QolUtilityCatalog.modules().stream()
                         .map(QolUtilityCatalog.ModuleDef::evidenceStatus)
                         .filter(status -> status == QolModuleEvidence.Status.NEEDS_TESTING)

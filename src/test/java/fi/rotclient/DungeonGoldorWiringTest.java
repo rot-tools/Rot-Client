@@ -13,7 +13,7 @@ final class DungeonGoldorWiringTest {
     @Test
     void sharpShooterTermTimesAndCalloutsStayOnExistingParents() throws Exception {
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
+                "src/plusClient/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(runtime.contains("DungeonGoldorPolicy.observeBlock"));
         assertTrue(runtime.contains("DungeonGoldorPolicy.observeWorld"));
         assertTrue(runtime.contains("DungeonGoldorPolicy.applyChat"));
@@ -83,6 +83,6 @@ final class DungeonGoldorWiringTest {
                 "src/client/java/fi/rotclient/DungeonLeapOverlayRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(leap.contains("fromLore"));
         assertTrue(leap.contains("statusLabel"));
-        assertEquals(91, QolUtilityCatalog.modules().size());
+        assertEquals(83, QolUtilityCatalog.modules().size());
     }
 }

@@ -8,7 +8,7 @@ enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Lite | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **91** HUD / QoL parents |
+| Lite | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **83** HUD / QoL parents |
 | Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **135** parents (current full client) |
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
@@ -17,10 +17,10 @@ Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 ## Rot Client (legit)
 
 This is the HUD/QoL playtest edition. Trajectories, World Scanner, Mob
-Highlight, Dungeon ESP, Terminal Solver, Dungeon Puzzles, Auto Sprint's input
+Highlight, the complete Dungeons catalog/runtime, Auto Sprint's input
 override, and Terminal Click Trails are Plus-only. Etherwarp destination boxes respect block occlusion
-in Lite, including when an older profile saved depth check off. Dungeon
-ESP/solvers still require an edition audit before a public Lite release.
+in Lite, including when an older profile saved depth check off. Mixed dungeon
+policy classes still require an edition audit before a public Lite release.
 
 Older profiles retain moved Plus settings, some through shared compatibility
 fields and others as opaque JSON, so switching editions does not erase them.
