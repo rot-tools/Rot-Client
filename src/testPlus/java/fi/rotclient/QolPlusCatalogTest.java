@@ -33,6 +33,11 @@ final class QolPlusCatalogTest {
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.arrow_align");
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.i4");
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.sharp_shooter");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.wither_esp");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.dragon_boxes");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.gate");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.relics");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.relic_highlight");
         assertSettingPresent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));

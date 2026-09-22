@@ -71,12 +71,13 @@ final class DungeonGoldorWiringTest {
         assertTrue(catalog.contains("qol.dungeon_f7.hide_at_ss"));
         assertTrue(catalog.contains("qol.dungeon_f7.hide_after_leap"));
         assertTrue(catalog.contains("qol.dungeon_hud.melody_other"));
-        assertTrue(catalog.contains("qol.dungeon_f7.relic_highlight"));
+        assertTrue(!catalog.contains("qol.dungeon_f7.relic_highlight"));
         String plusCatalog = Files.readString(Path.of(
                 "src/plus/java/fi/rotclient/QolPlusCatalog.java"), StandardCharsets.UTF_8);
         assertTrue(plusCatalog.contains("qol.dungeon_esp.items"));
         assertTrue(plusCatalog.contains("qol.dungeon_esp.secret_clicked"));
         assertTrue(plusCatalog.contains("qol.dungeon_f7.sharp_shooter"));
+        assertTrue(plusCatalog.contains("qol.dungeon_f7.relic_highlight"));
         assertTrue(plusCatalog.contains("qol.dungeon_f7.relic_block_wrong"));
         String leap = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/DungeonLeapOverlayRuntime.java"), StandardCharsets.UTF_8);
