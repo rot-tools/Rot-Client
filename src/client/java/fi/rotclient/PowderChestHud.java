@@ -15,6 +15,8 @@ final class PowderChestHud {
     private static final int MAX_ROWS = 6;
     private static final int BASE_HEIGHT = 80;
     private static final int ROW_HEIGHT = 14;
+    /** HUD Layout element id; falls back to the global HUD Layout style. */
+    private static final String HUD_STYLE_ID = "powder_chest";
 
     private final TrackerConfig config;
     private boolean editorOpen;
@@ -41,36 +43,7 @@ final class PowderChestHud {
                 config.powderChestHudScale,
                 config.powderChestHudScale);
 
-        if (config.powderChestHudShowBackground) {
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    2,
-                    3,
-                    WIDTH + 2,
-                    height + 3,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.SHADOW,
-                            0x50),
-                    5);
-
-            RotClientUiDraw.roundedFill(
-                    graphics,
-                    0,
-                    0,
-                    WIDTH,
-                    height,
-                    RotClientUiDraw.withAlpha(
-                            RotClientTheme.HUD_BACKGROUND, 0xE8));
-            RotClientUiDraw.roundedOutline(
-                    graphics, 0, 0, WIDTH, height, RotClientTheme.HUD_BORDER);
-            graphics.fill(0, 5, 3, height - 5,
-                    presentation.enabled()
-                            ? RotClientTheme.HUD_ACCENT
-                            : RotClientTheme.HUD_TEXT_DIM);
-        } else if (editorOpen) {
-            RotClientUiDraw.roundedOutline(
-                    graphics, 0, 0, WIDTH, height, RotClientTheme.HUD_ACCENT);
-        }
+        drawCard(graphics, 0, 0, WIDTH, height);
         RotClientUiDraw.text(graphics, font(), "POWDER CHEST TRACKER", 10, 8,
                 RotClientTheme.HUD_TEXT, true);
         drawRight(
@@ -128,6 +101,75 @@ final class PowderChestHud {
             }
         }
         graphics.pose().popMatrix();
+    }
+
+    /**
+     * One card behind the whole HUD, styled exactly like the Pet HUD panel:
+     * HUD Layout background colour, rounded corners, soft shadow, thin border.
+     * The old left accent strip is gone, as on the Pet and Mining HUDs.
+     */
+    private void drawCard(
+            GuiGraphicsExtractor graphics,
+            int left,
+            int top,
+            int right,
+            int bottom) {
+
+        if (!config.powderChestHudShowBackground) {
+            if (editorOpen) {
+                RotClientUiDraw.roundedOutline(
+                        graphics, left, top, right, bottom,
+                        RotClientTheme.HUD_ACCENT);
+            }
+
+            return;
+        }
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                left + HudCardStyle.SHADOW_OFFSET_X,
+                top + HudCardStyle.SHADOW_OFFSET_Y,
+                right + HudCardStyle.SHADOW_OFFSET_X,
+                bottom + HudCardStyle.SHADOW_OFFSET_Y,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.SHADOW,
+                        editorOpen
+                                ? HudCardStyle.EDITOR_SHADOW_ALPHA
+                                : HudCardStyle.SHADOW_ALPHA),
+                HudCardStyle.RADIUS);
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                left,
+                top,
+                right,
+                bottom,
+                hudBackgroundColor(),
+                HudCardStyle.RADIUS);
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                left,
+                top,
+                right,
+                bottom,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.BORDER,
+                        HudCardStyle.BORDER_ALPHA),
+                HudCardStyle.RADIUS);
+    }
+
+    /**
+     * Same source the Pet HUD uses: the HUD Layout style, so changing the HUD
+     * Layout background colour or opacity restyles them together.
+     */
+    private int hudBackgroundColor() {
+        if (config.qolUtilities == null) {
+            return HudStylePolicy.DEFAULT_BG;
+        }
+
+        return config.qolUtilities.extras()
+                .resolvedHudStyle(HUD_STYLE_ID).backgroundColor;
     }
 
     int currentHeight() {

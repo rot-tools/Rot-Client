@@ -1,0 +1,25 @@
+{
+  "id": "slayer",
+  "name": "Slayer",
+  "summary": "Boss status, quest progress and session stats while you slay.",
+  "highlights": [
+    "Custom Scoreboard",
+    "Pet HUD",
+    "Slayer Display",
+    "Slayer Progress",
+    "Slayer Stats"
+  ],
+  "modules": [
+    "qol.custom_scoreboard",
+    "qol.pet_hud",
+    "qol.slayer_display",
+    "qol.slayer_progress",
+    "qol.slayer_stats"
+  ],
+  "layout": [
+    {
+      "anchor": "TOP_LEFT",
+      "elements": ["slayer", "slayer_progress", "slayer_stats", "pet"]
+    }
+  ]
+}
