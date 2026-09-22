@@ -158,14 +158,6 @@ final class QolUtilityCatalogTest {
                 "qol.slayer_vampire_markers",
                 "qol.slayer_inferno",
                 "qol.slayer_quest_warning",
-                "qol.dungeon_hud",
-                "qol.dungeon_announce",
-                "qol.dungeon_leap",
-                "qol.dungeon_f7",
-                "qol.dungeon_menus",
-                "qol.dungeon_carry",
-                "qol.dungeon_party_join",
-                "qol.dungeon_watcher",
                 "qol.hud_layout",
                 "qol.custom_cursor",
                 "qol.legacy_textures",
@@ -267,10 +259,7 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.auto_gfs")));
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
-                .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_hud")));
-        assertEquals("HUD", QolUtilityCatalog.findById("qol.dungeon_hud").section());
+        assertEquals(null, QolUtilityCatalog.findById("qol.dungeon_hud"));
         assertEquals("Kuudra", QolUtilityCatalog.findById("qol.iota").section());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.KUUDRA)
                 .stream()
@@ -278,25 +267,16 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.iota")));
-        assertEquals(8, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
-                .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_carry")));
+        assertEquals(0, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.dungeon_hover_terms")));
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
-                .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_party_join")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.dungeon_soulsand")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.dungeon_term_click")));
-        assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.DUNGEONS)
-                .stream()
-                .anyMatch(m -> m.id().equals("qol.dungeon_watcher")));
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.UTILITIES)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.stall_market")));
@@ -347,7 +327,6 @@ final class QolUtilityCatalogTest {
                 List.of(
                         QolUtilityCatalog.Group.COMBAT,
                         QolUtilityCatalog.Group.SLAYER,
-                        QolUtilityCatalog.Group.DUNGEONS,
                         QolUtilityCatalog.Group.KUUDRA,
                         QolUtilityCatalog.Group.MINING,
                         QolUtilityCatalog.Group.FISHING,
@@ -455,7 +434,7 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(91, moduleIds.size());
+        assertEquals(83, moduleIds.size());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {
@@ -466,7 +445,6 @@ final class QolUtilityCatalogTest {
 
     private static void assertSettingAbsent(String moduleId, String settingId) {
         QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
-        assertNotNull(module, moduleId);
-        assertTrue(module.settings().stream().noneMatch(setting -> settingId.equals(setting.id())), settingId);
+        assertTrue(module == null || module.settings().stream().noneMatch(setting -> settingId.equals(setting.id())), settingId);
     }
 }

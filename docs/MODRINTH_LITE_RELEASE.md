@@ -1,6 +1,6 @@
 # Rot Client Lite Modrinth release gate
 
-Status (2026-09-22): **not ready to publish**. Edition separation, the
+Status (2026-09-23): **not ready to publish**. Edition separation, the
 feature-by-feature server-rule audit, Minecraft runtime testing, and
 code/asset provenance review remain open.
 
@@ -11,14 +11,15 @@ different functionality and must remain a separate project and artifact.
 
 The Lite JAR keeps normal Fabric client identification and excludes many
 Plus-only automation, scanner, camera, and mixin classes covered by the release
-verifier. Dungeon ESP, terminal, and puzzle catalog parents are Plus-only.
-Terminal click solutions and the Ice Path and Tic Tac Toe solver policies and
-world scans now compile only into Plus. An older Plus profile cannot activate
-Reveal Hidden dungeon-map mode in Lite; Lite reads it as Explored. Older Plus
-settings remain in parts of the shared configuration schema for compatibility.
+verifier. The entire Dungeons catalog group and bundled Dungeons example
+profile are Plus-only for now. Plus packages the full `DungeonRuntime` and
+`DungeonPuzzlePolicy`; Lite packages small inert compatibility classes. The
+puzzle-board solver and its four data files are absent from Lite. An older Plus
+profile cannot activate the removed dungeon modules through Lite's catalog;
+the reviewed Spirit Leap click overlay is also explicitly Plus-gated.
 
-The shared `DungeonRuntime` still contains other puzzle/terminal helpers and
-the Lite JAR still contains mixed dungeon policy classes. The current verifier
+Lite still carries mixed policy classes such as `DungeonF7Policy` and
+`DungeonGoldorPolicy`, plus shared configuration fields. The current verifier
 does not establish that all unfair functionality has been removed. Do not
 upload this build as a public "legit" release.
 
@@ -28,18 +29,20 @@ it does not prove multiplayer-server approval or runtime correctness.
 
 ## Open release blockers
 
-1. Finish physically separating the remaining terminal, puzzle, and F7
-   solver/overlay code from shared classes, especially `DungeonRuntime`,
-   `DungeonPuzzlePolicy`, `DungeonPuzzleBoardPolicy`, and mixed F7 helpers.
-   Audit all old-profile paths after extraction.
+1. Audit the remaining mixed dungeon policies and configuration (`DungeonF7Policy`,
+   `DungeonGoldorPolicy`, `DungeonAssistPolicy`, `DungeonLeftoverPolicy`, and
+   related classes). Extract any remaining unfair algorithms or state-changing
+   paths to Plus. Test old-profile paths after extraction. Restore individually
+   reviewed passive HUD/map features to Lite later if desired.
 2. Review other Lite features against multiplayer rules. The current Lite
-   catalog still exposes Hotkey Macros and Chat Commands, Leap Menu number-key
-   actions, fishing creature ESP and Thunder sparks, Trophy Fishing geyser and
+   catalog still exposes Hotkey Macros and Chat Commands, fishing creature ESP
+   and Thunder sparks, Trophy Fishing geyser and
    sponge boxes, Slayer Highlights, and other world overlays. Some may need
    Plus-only placement or removal; a depth-tested box is not automatically an
    allowed HUD. Review the compiled behavior as well as its settings.
 3. Run separate Minecraft 26.2 smoke tests for Lite and Plus, including old
-   profile migration, dashboard/HUD navigation, dungeon map and menus,
+   profile migration, dashboard/HUD navigation, absence of Lite dungeon cards
+   and preservation of the full Plus dungeon runtime,
    reconnect, and restart. Automated tests are not runtime evidence.
 4. Establish code and asset provenance before a Modrinth submission. Git
    commit authorship does not reveal whether code or art was AI-generated.

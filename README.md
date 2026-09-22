@@ -92,7 +92,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** currently ships **91** HUD/QoL parents. **Rot Client+** ships
+**Rot Client** currently ships **83** HUD/QoL parents. **Rot Client+** ships
 **135**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
@@ -100,7 +100,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 
 | Area | What you get |
 | --- | --- |
-| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global. **Auto Switch** (off by default) can change profile for you when you enter Dungeons, Kuudra, a mining area, the Garden, and more. **Examples** offers five ready-made setups (Everyday, Mining, Dungeons, Slayer, Fishing) to add with one click |
+| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global. **Auto Switch** (off by default) can change profile for you when you enter Dungeons, Kuudra, a mining area, the Garden, and more. **Examples** offers four Lite setups (Everyday, Mining, Slayer, Fishing); Plus also offers Dungeons |
 | **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
 | **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
 | **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, Cheater Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+; Cheater Wardrobe settings and hidden-equip runtime are excluded from Lite |
@@ -108,7 +108,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Render** | Fullbright, viewmodel, player size, and legacy textures. **Plus:** eye-height fix, Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers are Rot Client+ |
-| **Dungeons** | HUD and map, passive F7 timers, carry tracker, reward reels. Dungeon ESP, terminal and puzzle solvers, F7 Simon/Arrow Align/I4/Sharp Shooter solutions, F7 wither/dragon/gate/relic world boxes, wrong-click blocking, clicked-slot/tooltip hiding, Dungeon Breaker client block rewriting, Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+; remaining Lite dungeon world overlays respect normal depth/occlusion behavior |
+| **Dungeons** | Temporarily Plus-only, including the HUD, map, carry tracker, reward reels, ESP, terminal and puzzle solvers, and F7 helpers. Lite dungeon features will be rebuilt individually after the separation audit. |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
@@ -116,16 +116,16 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 
 On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
 I4, and similar) stay off even after you enable the parent module, until you
-opt in separately. Shared Lite dungeon visuals retain normal depth/occlusion behavior; extended visibility behavior remains Plus-only.
+opt in separately.
 
 The Lite build is packaged from the shared policy/client source sets only.
 Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
 `plus` / `plusClient` source sets. `verifyLegitJar` rejects the separated
 classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
-from older profiles survive in compatibility fields or opaque data. Terminal
-click solutions and the Ice Path and Tic Tac Toe solver policies and scans now
-compile only in Plus, and Lite forces old Reveal Hidden map settings to
-Explored. Other shared dungeon solver code still needs extraction. Auto Clicker's typed
+from older profiles survive in compatibility fields or opaque data. The full
+dungeon runtime and puzzle solver now compile into Plus; Lite contains inert
+compatibility classes while its dungeon catalog and example profile are absent.
+Other mixed dungeon policies still need a bytecode audit. Auto Clicker's typed
 settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
 store them in its typed config. Publication validation is tracked in
 [Modrinth Lite Release](docs/MODRINTH_LITE_RELEASE.md),

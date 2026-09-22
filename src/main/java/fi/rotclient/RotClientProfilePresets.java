@@ -55,7 +55,14 @@ final class RotClientProfilePresets {
     /** Every id in the index whether or not it loaded; for tests. */
     static List<String> indexedIds() {
         String[] ids = read("index.json", String[].class);
-        return ids == null ? List.of() : List.of(ids);
+        if (ids == null) {
+            return List.of();
+        }
+        // The Dungeon preset follows its Plus-only runtime. Keep the shared
+        // index stable so Plus still offers the same profile order.
+        return java.util.Arrays.stream(ids)
+                .filter(id -> QolFlavorSupport.isPlus() || !"dungeons".equals(id))
+                .toList();
     }
 
     /** Reads one preset without validating it; for tests. Null if unreadable. */

@@ -2382,6 +2382,11 @@ public final class QolUtilityCatalog {
                 setting("qol.click_gui.developer_message", "Developer Message", "Optional local debug line. Leave off unless you are testing.", SettingType.TOGGLE),
                 setting("qol.click_gui.keybind", "Open UI Key", "Opens the Rot Client dashboard (Overview, modules, look, mining). Blank uses Right Shift.", SettingType.KEYBIND, "right shift")));
 
+        // The complete dungeon runtime lives in Plus. Keep its cards out of
+        // Lite until the individual HUD/map features are rebuilt there.
+        if (!QolFlavorSupport.isPlus()) {
+            modules.removeIf(module -> module.group() == Group.DUNGEONS);
+        }
         mergePlusModules(modules);
         return finishModules(modules);
     }
