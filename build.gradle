@@ -142,6 +142,12 @@ jar {
 	// dungeon facade never calls these compiled shared classes.
 	exclude 'fi/rotclient/DungeonPuzzleBoardPolicy.class'
 	exclude 'fi/rotclient/DungeonPuzzleBoardPolicy$*.class'
+	// These mixed dungeon policies are compiled for Plus but absent from Lite.
+	for (String policy : ['DungeonF7Policy', 'DungeonGoldorPolicy',
+			'DungeonAssistPolicy', 'DungeonLeftoverPolicy']) {
+		exclude "fi/rotclient/${policy}.class"
+		exclude "fi/rotclient/${policy}\$*.class"
+	}
 
     exclude 'fi/rotclient/MapArtOverridePolicy.class'
     exclude 'fi/rotclient/MapArtOverrideRuntime.class'
@@ -387,10 +393,24 @@ tasks.register('verifyDungeonJarBoundary') {
 				throw new GradleException('Dungeon runtime or puzzle solver landed in the wrong edition')
 			}
 			for (String name : ['fi/rotclient/DungeonPuzzleBoardPolicy.class',
+					'fi/rotclient/DungeonF7Policy.class',
+					'fi/rotclient/DungeonGoldorPolicy.class',
+					'fi/rotclient/DungeonAssistPolicy.class',
+					'fi/rotclient/DungeonLeftoverPolicy.class',
 					'rotclient/dungeons/waterSolutions.json',
 					'assets/rotclient/profile-presets/dungeons.json']) {
 				if (lite.getEntry(name) != null || extended.getEntry(name) == null) {
 					throw new GradleException("Dungeon asset or solver landed in the wrong edition: ${name}")
+				}
+			}
+			for (String policy : ['DungeonF7Policy', 'DungeonGoldorPolicy',
+					'DungeonAssistPolicy', 'DungeonLeftoverPolicy']) {
+				def nestedPrefix = "fi/rotclient/${policy}\$"
+				if (lite.entries().any { it.name.startsWith(nestedPrefix) && it.name.endsWith('.class') }) {
+					throw new GradleException("Lite still contains nested dungeon policy classes: ${policy}")
+				}
+				if (!extended.entries().any { it.name.startsWith(nestedPrefix) && it.name.endsWith('.class') }) {
+					throw new GradleException("Plus is missing nested dungeon policy classes: ${policy}")
 				}
 			}
 		} finally {
@@ -400,6 +420,7 @@ tasks.register('verifyDungeonJarBoundary') {
 	}
 }
 check.dependsOn verifyDungeonJarBoundary
+test.dependsOn jar
 testPlus.dependsOn processPlusResources, processPlusClientResources
 
 tasks.withType(JavaCompile).configureEach {

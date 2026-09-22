@@ -1431,7 +1431,7 @@ public final class QolUtilityCatalog {
                 setting("qol.dungeon_f7.dragon_health", "Dragon Health", "HUD remaining HP of nearby Wither King dragons.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.dragon_priority", "Dragon Priority", "HUD kill order. Paul moves Ice and Soul earlier.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.dragon_paul", "Paul", "Use the Paul split order Ice > Soul > Power > Flame > Apex.", SettingType.TOGGLE),
-                setting("qol.dungeon_f7.dragon_solo_class", "Solo Debuff", "Class shown on the dragon priority HUD.", SettingType.ENUM, DungeonF7Policy.DRAGON_SOLO_CLASSES),
+                setting("qol.dungeon_f7.dragon_solo_class", "Solo Debuff", "Class shown on the dragon priority HUD.", SettingType.ENUM, DungeonSettingsCompat.DRAGON_SOLO_CLASSES),
                 setting("qol.dungeon_f7.dragon_timer", "Dragon Spawn Timer", "HUD countdown after a Wither King dragon spawn.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.p3_display", "P3 Terminal Display", "HUD terminal/device/lever counts from P3 chat.", SettingType.TOGGLE),
                 setting("qol.dungeon_f7.term_times", "Terminal Times", "HUD and local chat section splits from Goldor terminal/device/lever chat.", SettingType.TOGGLE),

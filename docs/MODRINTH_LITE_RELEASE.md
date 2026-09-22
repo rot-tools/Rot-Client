@@ -18,8 +18,10 @@ puzzle-board solver and its four data files are absent from Lite. An older Plus
 profile cannot activate the removed dungeon modules through Lite's catalog;
 the reviewed Spirit Leap click overlay is also explicitly Plus-gated.
 
-Lite still carries mixed policy classes such as `DungeonF7Policy` and
-`DungeonGoldorPolicy`, plus shared configuration fields. The current verifier
+The full `DungeonF7Policy`, `DungeonGoldorPolicy`, `DungeonAssistPolicy`, and
+`DungeonLeftoverPolicy` class families now package only in Plus. Lite retains
+only their saved-setting normalization in `DungeonSettingsCompat`. Other shared
+dungeon policy classes and configuration fields remain. The current verifier
 does not establish that all unfair functionality has been removed. Do not
 upload this build as a public "legit" release.
 
@@ -29,8 +31,8 @@ it does not prove multiplayer-server approval or runtime correctness.
 
 ## Open release blockers
 
-1. Audit the remaining mixed dungeon policies and configuration (`DungeonF7Policy`,
-   `DungeonGoldorPolicy`, `DungeonAssistPolicy`, `DungeonLeftoverPolicy`, and
+1. Audit the remaining dungeon policies and configuration (`DungeonPolicy`,
+   `DungeonMapPolicy`, `DungeonRoomDataPolicy`, `DungeonAthenPortPolicy`, and
    related classes). Extract any remaining unfair algorithms or state-changing
    paths to Plus. Test old-profile paths after extraction. Restore individually
    reviewed passive HUD/map features to Lite later if desired.
