@@ -125,7 +125,8 @@ classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
 from older profiles survive in compatibility fields or opaque data. The full
 dungeon runtime and puzzle solver now compile into Plus; Lite contains inert
 compatibility classes while its dungeon catalog and example profile are absent.
-Other mixed dungeon policies still need a bytecode audit. Auto Clicker's typed
+Four mixed F7/assist/leftover policy families now package only in Plus; other
+dungeon policy classes and callers still need a bytecode audit. Auto Clicker's typed
 settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
 store them in its typed config. Publication validation is tracked in
 [Modrinth Lite Release](docs/MODRINTH_LITE_RELEASE.md),
