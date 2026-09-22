@@ -29,6 +29,10 @@ final class RotClientProfilePresets {
     private RotClientProfilePresets() {
     }
 
+    static void reloadFlavorPresets() {
+        cached = null;
+    }
+
     /** Valid bundled presets, in index order. */
     static List<RotClientProfilePreset> bundled() {
         List<RotClientProfilePreset> presets = cached;
