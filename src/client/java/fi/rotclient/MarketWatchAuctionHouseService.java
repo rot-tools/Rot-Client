@@ -166,7 +166,7 @@ final class MarketWatchAuctionHouseService {
                             .timeout(Duration.ofSeconds(15))
                             .header(
                                     "User-Agent",
-                                    "RotClient/2.0.1+mc26.2")
+                                    "RotClient/2.1.0+mc26.1.2")
                             .GET()
                             .build();
 

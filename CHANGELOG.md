@@ -7,11 +7,23 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+## [2.1.0+mc26.1.2] - 2026-09-22
+
+### Security
+
+* Removed every direct OS process launch (`explorer` / `open` / `xdg-open` /
+  `cmd start`). Opening a link now only ever goes through the JVM's own
+  `Desktop.browse`; if that is unsupported on a system, the client no longer
+  falls back to spawning a shell command, it just does nothing. The
+  "open backgrounds folder" button behaves the same way: it opens the folder
+  when `Desktop` supports it, and quietly no-ops otherwise instead of
+  shelling out.
+
 ### Dual editions
 
 * One `./gradlew build` produces **Rot Client**
-  (`RotClient-2.0.1+mc26.2.jar`, Fabric id `rotclient`, **108** catalog
-  parents) and **Rot Client+** (`RotClientPlus-2.0.1+mc26.2.jar`, id
+  (`RotClient-2.1.0+mc26.1.2.jar`, Fabric id `rotclient`, **108** catalog
+  parents) and **Rot Client+** (`RotClientPlus-2.1.0+mc26.1.2.jar`, id
   `rotclientplus`, **133** parents). Plus holds automation bytecode; the
   legit JAR does not. Playtest and versioned GitHub Releases upload both
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
