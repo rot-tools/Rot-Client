@@ -13,7 +13,7 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **134** Rot Client+ catalog entries (and the **96** Lite subset) are wired
+All **135** Rot Client+ catalog entries (and the **91** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 

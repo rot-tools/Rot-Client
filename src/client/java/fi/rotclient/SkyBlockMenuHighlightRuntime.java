@@ -50,7 +50,7 @@ public final class SkyBlockMenuHighlightRuntime {
                 }
             }
         }
-        if (extras.dungeonLeapEnabled || extras.dungeonTerminalsEnabled || extras.dungeonMenusEnabled) {
+        if (extras.dungeonLeapEnabled || (QolFlavorSupport.isPlus() && extras.dungeonTerminalsEnabled) || extras.dungeonMenusEnabled) {
             DungeonAthenSettings athen = extras.athen();
             int pad = DungeonAthenPortPolicy.overlayPad(athen.termUiPadding);
             int gap = DungeonAthenPortPolicy.overlayGap(athen.termUiSlotGap);

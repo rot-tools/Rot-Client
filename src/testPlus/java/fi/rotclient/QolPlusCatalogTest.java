@@ -29,6 +29,10 @@ final class QolPlusCatalogTest {
         assertSettingPresent("qol.dungeon_esp", "qol.dungeon_esp.depth");
         assertSettingPresent("qol.dungeon_terminals", "qol.dungeon_terminals.depth_test");
         assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.hide_diorite");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.simon");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.arrow_align");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.i4");
+        assertSettingPresent("qol.dungeon_f7", "qol.dungeon_f7.sharp_shooter");
         assertSettingPresent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertEquals("F7", QolUtilityCatalog.findById("qol.dungeon_termsim").section());
         assertNotNull(QolUtilityCatalog.findById("qol.auto_clicker"));
@@ -38,6 +42,9 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.diana_mobs"));
         assertNotNull(QolUtilityCatalog.findById("qol.diana_profit"));
         assertNotNull(QolUtilityCatalog.findById("qol.dungeon_term_click"));
+        assertNotNull(QolUtilityCatalog.findById("qol.dungeon_esp"));
+        assertNotNull(QolUtilityCatalog.findById("qol.dungeon_terminals"));
+        assertNotNull(QolUtilityCatalog.findById("qol.dungeon_puzzles"));
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.diana_burrows")));
         assertTrue(QolUtilityCatalog.hasCheatTag(QolUtilityCatalog.findById("qol.auto_sprint")));
         assertNotNull(QolUtilityCatalog.findById("qol.camera"));
@@ -55,6 +62,18 @@ final class QolPlusCatalogTest {
         assertNotNull(QolUtilityCatalog.findById("qol.trajectories"));
         assertNotNull(QolUtilityCatalog.findById("qol.world_scanner"));
         assertEquals("Fox", QolUtilityCatalog.findById("qol.map_art_override").name());
+    }
+
+    @Test
+    void plusRetainsTheMovedDungeonParents() {
+        QolUtilityConfig config = new QolUtilityConfig();
+        config.setModuleEnabled("qol.dungeon_esp", true);
+        config.setModuleEnabled("qol.dungeon_terminals", true);
+        config.setModuleEnabled("qol.dungeon_puzzles", true);
+
+        assertTrue(config.isModuleEnabled("qol.dungeon_esp"));
+        assertTrue(config.isModuleEnabled("qol.dungeon_terminals"));
+        assertTrue(config.isModuleEnabled("qol.dungeon_puzzles"));
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {

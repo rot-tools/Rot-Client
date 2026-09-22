@@ -1,7 +1,7 @@
 # Rot Client Lite Modrinth release gate
 
-Status: **code and packaging validation passed; Minecraft runtime smoke testing
-and final project-page review are still required before publication**.
+Status: **edition separation remains in progress; Minecraft runtime smoke testing
+and final project-page review are required before publication**.
 
 Upload only `RotClient-2.0.1+mc26.2.jar` to the Lite project. Rot Client+ has
 different functionality and must remain a separate project and artifact.
@@ -9,11 +9,14 @@ different functionality and must remain a separate project and artifact.
 ## Edition boundary
 
 The Lite JAR keeps normal Fabric client identification and excludes the
-Plus-only automation, scanners, extended visibility, block-rewrite, packet
-filtering, camera, fog, item-stack, and fishing-hook mixins covered by the
-release verifier. The dashboard also omits controls whose runtime exists only
-in Plus. Older Plus settings may remain as opaque migration data, but Lite does
-not expose or execute them.
+Plus-only automation, scanners, extended visibility, dungeon ESP, terminal and
+puzzle solvers, block-rewrite, packet filtering, camera, fog, item-stack, and
+fishing-hook mixins covered by the release verifier and edition contracts. The dashboard also omits
+controls whose runtime exists only in Plus. Older Plus settings remain in parts
+of the shared configuration schema for profile compatibility. The moved dungeon
+parents and reviewed F7 solver settings are hidden and gated in Lite, but the
+shared dungeon runtime still needs a physical bytecode split and review before
+the Lite artifact can be considered release-ready.
 
 `verifyLegitJar` checks the built Lite artifact for forbidden Plus classes,
 resources, identifiers, and service registrations. It complements code review;
