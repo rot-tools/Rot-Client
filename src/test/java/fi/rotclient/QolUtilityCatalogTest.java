@@ -49,6 +49,13 @@ final class QolUtilityCatalogTest {
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.gate");
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.relics");
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.relic_highlight");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.melody_display");
+        assertSettingAbsent("qol.dungeon_hud", "qol.dungeon_hud.melody");
+        assertSettingAbsent("qol.dungeon_hud", "qol.dungeon_hud.quiz");
+        assertFalse(HudElementCatalog.inspectorToggles("dungeon").stream()
+                .anyMatch(toggle -> Set.of("qol.dungeon_hud.map_mode",
+                        "qol.dungeon_hud.melody", "qol.dungeon_hud.quiz")
+                        .contains(toggle.settingId())));
         assertSettingAbsent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertNotNull(QolUtilityCatalog.findById("qol.render_optimizer"));
         assertNotNull(QolUtilityCatalog.findById("qol.waypoints"));

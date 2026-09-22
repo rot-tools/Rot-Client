@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.2`** is a development release candidate. Rot Client Lite is being prepared for Modrinth and CurseForge publication; Minecraft runtime smoke testing and server-rule validation remain pending.
+> **`2.0.1+mc26.2`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,7 +48,7 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL Modrinth/CurseForge release candidate. Minecraft smoke testing remains pending. |
+| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
 | `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Playtest JAR
@@ -122,7 +122,10 @@ The Lite build is packaged from the shared policy/client source sets only.
 Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
 `plus` / `plusClient` source sets. `verifyLegitJar` rejects the separated
 classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
-from older profiles survive as opaque compatibility data. Auto Clicker's typed
+from older profiles survive in compatibility fields or opaque data. Terminal
+click solutions and the Ice Path and Tic Tac Toe solver policies and scans now
+compile only in Plus, and Lite forces old Reveal Hidden map settings to
+Explored. Other shared dungeon solver code still needs extraction. Auto Clicker's typed
 settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
 store them in its typed config. Publication validation is tracked in
 [Modrinth Lite Release](docs/MODRINTH_LITE_RELEASE.md),

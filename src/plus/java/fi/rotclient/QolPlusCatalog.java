@@ -865,6 +865,8 @@ public final class QolPlusCatalog {
                     setting("qol.mining_helpers.gemstone_desync", "Gemstone Desync Fix", "Ignore gemstone glass flicker while you are mining that block.", SettingType.TOGGLE, "gemstone")
             );
             case "qol.dungeon_hud" -> List.of(
+                    setting("qol.dungeon_hud.melody", "Melody", "Show Melody column progress while in the terminal.", SettingType.TOGGLE),
+                    setting("qol.dungeon_hud.quiz", "Quiz / Weirdos", "Show Oruo answers and Three Weirdos truth.", SettingType.TOGGLE),
                     setting("qol.dungeon_hud.map_mode", "Map Mode", "Explored follows the Magical Map. Reveal Hidden hashes loaded rooms and paints them behind wither and blood doors.", SettingType.ENUM, DungeonMapPolicy.MAP_MODES, "cheat"),
                     setting("qol.dungeon_hud.cheater_names", "Hidden Names", "Label hidden rooms when Map Mode is Reveal Hidden.", SettingType.TOGGLE, "cheat"),
                     setting("qol.dungeon_hud.cheater_darken", "Darken Hidden", "Darken unopened rooms when Map Mode is Reveal Hidden.", SettingType.TOGGLE, "cheat"),
@@ -917,6 +919,7 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_terminals.resync_timeout", "Resync Timeout", "Retry predicted or queued clicks if the terminal does not update within this many milliseconds.", SettingType.NUMBER)
             );
             case "qol.dungeon_f7" -> List.of(
+                    setting("qol.dungeon_f7.melody_display", "Melody Display", "HUD column progress while Melody is open.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.wither_esp", "Wither ESP", "Per-boss Maxor/Storm/Goldor/Necron box colors.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.maxor_color", "Maxor", "Maxor box color.", SettingType.COLOR),
                     setting("qol.dungeon_f7.storm_color", "Storm", "Storm box color.", SettingType.COLOR),
