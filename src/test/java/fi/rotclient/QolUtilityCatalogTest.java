@@ -44,6 +44,11 @@ final class QolUtilityCatalogTest {
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.arrow_align");
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.i4");
         assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.sharp_shooter");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.wither_esp");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.dragon_boxes");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.gate");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.relics");
+        assertSettingAbsent("qol.dungeon_f7", "qol.dungeon_f7.relic_highlight");
         assertSettingAbsent("qol.slayer_highlights", "qol.slayer_highlights.depth");
         assertNotNull(QolUtilityCatalog.findById("qol.render_optimizer"));
         assertNotNull(QolUtilityCatalog.findById("qol.waypoints"));

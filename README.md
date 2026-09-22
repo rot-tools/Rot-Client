@@ -108,7 +108,7 @@ is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 | **Render** | Fullbright, viewmodel, player size, and legacy textures. **Plus:** eye-height fix, Fox, Ghosts, Free Camera, and clip camera |
 | **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
 | **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers are Rot Client+ |
-| **Dungeons** | HUD and map, passive F7 timers, carry tracker, reward reels. Dungeon ESP, terminal and puzzle solvers, F7 Simon/Arrow Align/I4/Sharp Shooter solutions, wrong-click blocking, clicked-slot/tooltip hiding, Dungeon Breaker client block rewriting, Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+; remaining Lite dungeon world overlays respect normal depth/occlusion behavior |
+| **Dungeons** | HUD and map, passive F7 timers, carry tracker, reward reels. Dungeon ESP, terminal and puzzle solvers, F7 Simon/Arrow Align/I4/Sharp Shooter solutions, F7 wither/dragon/gate/relic world boxes, wrong-click blocking, clicked-slot/tooltip hiding, Dungeon Breaker client block rewriting, Terminal Simulator, Terminal Click Trails, secret hitboxes, auto terms, and hover-terms are Rot Client+; remaining Lite dungeon world overlays respect normal depth/occlusion behavior |
 | **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
 | **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
 | **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |

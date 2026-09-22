@@ -917,6 +917,18 @@ public final class QolPlusCatalog {
                     setting("qol.dungeon_terminals.resync_timeout", "Resync Timeout", "Retry predicted or queued clicks if the terminal does not update within this many milliseconds.", SettingType.NUMBER)
             );
             case "qol.dungeon_f7" -> List.of(
+                    setting("qol.dungeon_f7.wither_esp", "Wither ESP", "Per-boss Maxor/Storm/Goldor/Necron box colors.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.maxor_color", "Maxor", "Maxor box color.", SettingType.COLOR),
+                    setting("qol.dungeon_f7.storm_color", "Storm", "Storm box color.", SettingType.COLOR),
+                    setting("qol.dungeon_f7.goldor_color", "Goldor", "Goldor box color.", SettingType.COLOR),
+                    setting("qol.dungeon_f7.necron_color", "Necron", "Necron box color.", SettingType.COLOR),
+                    setting("qol.dungeon_f7.dragon_boxes", "Dragon Boxes", "Box the five M7 dragon spawn pads.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.dragon_tracers", "Dragon Tracers", "Draw lines to M7 dragon pads and nearby Wither King dragons.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.gate", "Gate Highlight", "Box the P3 coal-block gates while they still exist.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.gate_color", "Outline", "P3 gate outline color.", SettingType.COLOR),
+                    setting("qol.dungeon_f7.relics", "M7 Relics", "Box relic spawn and cauldron pads.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.relic_beacon", "Relic Beacon", "Draw a vertical line from each relic cauldron.", SettingType.TOGGLE),
+                    setting("qol.dungeon_f7.relic_highlight", "Held Relic Pad", "Box the matching cauldron after you pick up a relic.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.sharp_shooter", "Sharp Shooter", "Box marked and current emerald blocks on the Goldor arrows device, and the next aim spots.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.sharp_aim", "Show Aim Positions", "Box up to three greedy double-shot aim spots. Off by default.", SettingType.TOGGLE),
                     setting("qol.dungeon_f7.sharp_complete", "Device Complete Alert", "Local title when you finish the Sharp Shooter device.", SettingType.TOGGLE),

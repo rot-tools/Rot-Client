@@ -1250,7 +1250,7 @@ public final class DungeonRuntime {
                 && debuffPhase != EmberDungeonPolicy.DebuffPhase.NONE) {
             addTimer(lines, EmberDungeonPolicy.debuffLabel(debuffPhase), debuffUntil, now);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Relics && !lastRelic.isEmpty()) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Relics) && !lastRelic.isEmpty()) {
             lines.add(lastRelic);
             if (extras.dungeonF7RelicPlace && relicPickupAt > 0L) {
                 lines.add("Relic place " + String.format(Locale.ROOT, "%.1fs",
@@ -1396,7 +1396,7 @@ public final class DungeonRuntime {
         QolSkyblockExtras extras = extras();
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client == null ? null : client.player;
-        if (!extras.dungeonF7Enabled || !extras.dungeonF7HideDiorite || player == null) {
+        if (!extras.dungeonF7Enabled || !plusDungeonFeature(extras.dungeonF7HideDiorite) || player == null) {
             return false;
         }
         BlockPos origin = player.blockPosition();
@@ -1441,7 +1441,7 @@ public final class DungeonRuntime {
                 || (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Simon))) {
             highlightSimon(client, player, extras, eye);
         }
-        if (extras.dungeonF7Enabled && !extras.dungeonF7HideDiorite) {
+        if (extras.dungeonF7Enabled && QolFlavorSupport.isPlus() && !extras.dungeonF7HideDiorite) {
             markDiorite(client, player, extras, eye);
         }
         highlightEmberWorld(client, player, extras, eye, search);
@@ -2229,7 +2229,7 @@ public final class DungeonRuntime {
         if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7SharpShooter) && termTimes.goldorPhase()) {
             renderSharpShooter(extras, eye);
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Gate) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Gate)) {
             int section = EmberDungeonPolicy.p3Section(player.getX(), player.getY(), player.getZ());
             EmberDungeonPolicy.gateForSection(section).ifPresent(gate -> {
                 BlockPos coal = new BlockPos(gate.coal().x(), gate.coal().y(), gate.coal().z());
@@ -2241,7 +2241,7 @@ public final class DungeonRuntime {
                         extras.dungeonF7GateColor, extras, eye);
             });
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Relics && player.getY() < 20.0D) {
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Relics) && player.getY() < 20.0D) {
             for (EmberDungeonPolicy.Relic relic : EmberDungeonPolicy.relics()) {
                 BlockPos spawn = new BlockPos(relic.spawn().x(), relic.spawn().y(), relic.spawn().z());
                 BlockPos cauldron = new BlockPos(
@@ -2258,7 +2258,7 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7RelicHighlight && !lastRelic.isBlank()
+        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7RelicHighlight) && !lastRelic.isBlank()
                 && player.getY() < 20.0D) {
             EmberDungeonPolicy.relicByName(lastRelic).ifPresent(relic -> {
                 BlockPos cauldron = new BlockPos(
@@ -2268,7 +2268,7 @@ public final class DungeonRuntime {
                 }
             });
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Dragons && extras.dungeonF7DragonBoxes
+        if (extras.dungeonF7Enabled && extras.dungeonF7Dragons && plusDungeonFeature(extras.dungeonF7DragonBoxes)
                 && player.getY() < 30.0D) {
             for (DungeonF7Policy.DragonPad pad : DungeonF7Policy.dragonPads()) {
                 EmberDungeonPolicy.Aabb box = pad.box();
@@ -2276,7 +2276,7 @@ public final class DungeonRuntime {
                         pad.color(), extras, eye);
             }
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Dragons && extras.dungeonF7DragonTracers
+        if (extras.dungeonF7Enabled && extras.dungeonF7Dragons && plusDungeonFeature(extras.dungeonF7DragonTracers)
                 && player.getY() < 40.0D) {
             for (DungeonF7Policy.DragonPad pad : DungeonF7Policy.dragonPads()) {
                 EmberDungeonPolicy.Aabb box = pad.box();
@@ -2948,7 +2948,7 @@ public final class DungeonRuntime {
                 || extras.dungeonEspSpiritBear
                 || extras.dungeonEspLivid
                 || extras.dungeonEspBloodBox
-                || (extras.dungeonF7Enabled && extras.dungeonF7WitherEsp);
+                || (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7WitherEsp));
     }
 
     static void considerNamedEsp(
@@ -2996,7 +2996,7 @@ public final class DungeonRuntime {
             case MIMIC, PRINCE -> extras.dungeonEspMimic ? extras.dungeonEspMimicColor : 0;
             case CRYSTAL, RELIC -> extras.dungeonEspCrystals ? extras.dungeonEspCrystalColor : 0;
             case WITHER -> {
-                if (!extras.dungeonEspWither && !(extras.dungeonF7Enabled && extras.dungeonF7WitherEsp)) {
+                if (!extras.dungeonEspWither && !(extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7WitherEsp))) {
                     yield 0;
                 }
                 yield DungeonF7Policy.witherColor(
