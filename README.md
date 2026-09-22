@@ -167,7 +167,7 @@ The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/Min
 | `/rot session ...` | Pause, resume, reset, copy, or save Current Session |
 | `/rot history ...` | List, open, copy, or delete history records |
 | `/rot slayer ...` | Slayer status, stats, and carry list |
-| `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history |
+| `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history (Rot Client+) |
 | `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (Rot Client+) |
 | `/rot termsim [ping]` | Rot Client+ local terminal simulator hub |
 | `/rot autoclicker ...` | Auto Clicker item whitelist (Rot Client+) |

@@ -1273,6 +1273,7 @@ public final class RotClientClient implements ClientModInitializer {
                                                                 source,
                                                                 StringArgumentType.getString(context, "player"))))))))
                 .then(literal("dcarry")
+                        .requires(source -> QolFlavorSupport.isPlus())
                         .executes(context -> runCommand(
                                 context.getSource(), legacyAlias, RotClientClient::dungeonCarryManager))
                         .then(literal("list")
@@ -4038,7 +4039,7 @@ private static int toggle(FabricClientCommandSource source) {
 
                 Other:
                 /rot slayer status | carry ...
-                /rot dcarry add|remove|list|history
+                /rot dcarry add|remove|list|history (Rot Client+ only)
                 /rot toggle|reset|status
 
                 Old aliases /rotclient, /miningtracker, /miningui still open

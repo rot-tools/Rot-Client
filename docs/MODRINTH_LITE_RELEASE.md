@@ -62,7 +62,7 @@ with Java 25. Verify the SHA-256 values of the exact uploaded files.
 
 Launch Minecraft 26.2 with only Lite enabled and test startup, `/rot`, dashboard
 navigation, profile migration and switching, HUD editing, Market Watch,
-storage, passive dungeon helpers, Slayer, fishing, foraging, mining, reconnect,
+storage, Slayer, fishing, foraging, mining, reconnect,
 and a full restart. Inspect the log for mixin, rendering, networking, and
 configuration exceptions. Launch Plus separately and verify representative
 Plus-only controls and migrated settings.
@@ -78,6 +78,6 @@ Plus-only controls and migrated settings.
 - Keep Rot Client+ out of the Lite project because the editions have different
   functionality.
 
-Rules checked 2026-09-22: [Modrinth Content Rules](https://modrinth.com/legal/rules),
+Rules checked 2026-09-23: [Modrinth Content Rules](https://modrinth.com/legal/rules),
 [Modrinth AI disclosure guidance](https://support.modrinth.com/en/articles/16551575-disclosure-and-usage-of-ai),
 and [Hypixel Allowed Modifications](https://support.hypixel.net/hc/en-us/articles/6472550754962-Hypixel-Allowed-Modifications).
