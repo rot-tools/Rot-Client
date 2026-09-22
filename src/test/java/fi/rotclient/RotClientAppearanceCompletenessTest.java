@@ -148,19 +148,21 @@ final class RotClientAppearanceCompletenessTest {
     }
 
     @Test
-    void appearanceScreenSectionsIncludeChartsAndBackground() throws Exception {
+    void appearanceCardsIncludeChartsAndBackground() throws Exception {
         String source = Files.readString(
-                Path.of("src/client/java/fi/rotclient/RotClientAppearanceScreen.java"),
+                Path.of("src/client/java/fi/rotclient/RotClientAppearanceCards.java"),
+                StandardCharsets.UTF_8)
+                + Files.readString(
+                Path.of("src/main/java/fi/rotclient/AppearanceCards.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(source.contains("CHARTS"));
-        assertTrue(source.contains("BACKGROUND"));
+        assertTrue(source.contains("\"charts\""));
+        assertTrue(source.contains("\"background\""));
         assertTrue(source.contains("openBackgroundsFolder"));
-        assertTrue(source.contains("awaitingResetAllConfirm"));
+        // Reset buttons need a second click, and every card can undo and reset itself.
+        assertTrue(source.contains("confirming"));
         assertTrue(source.contains("enableScissor"));
-        assertTrue(source.contains("Reset current section")
-                || source.contains("Reset Current Section")
-                || source.contains("resetCurrentSection")
-                || source.contains("Reset current"));
+        assertTrue(source.contains("Undo changes"));
+        assertTrue(source.contains("Reset to default"));
     }
 
     @Test

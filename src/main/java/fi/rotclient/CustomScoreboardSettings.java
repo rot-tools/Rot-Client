@@ -5,6 +5,10 @@ package fi.rotclient;
  * so older configs keep loading.
  */
 final class CustomScoreboardSettings {
+    private transient CustomScoreboardPolicy.Options cachedOptions;
+    private transient long cachedOptionsFingerprint;
+    private transient boolean cachedOptionsFingerprintValid;
+
     boolean enabled;
     String appearance = CustomScoreboardPolicy.defaultAppearanceText();
     boolean hideVanilla = true;
@@ -71,7 +75,15 @@ final class CustomScoreboardSettings {
     float hudScale = 1.0F;
 
     CustomScoreboardPolicy.Options options() {
-        return new CustomScoreboardPolicy.Options(
+        long fingerprint = optionsFingerprint();
+
+        if (cachedOptions != null
+                && cachedOptionsFingerprintValid
+                && cachedOptionsFingerprint == fingerprint) {
+            return cachedOptions;
+        }
+
+        cachedOptions = new CustomScoreboardPolicy.Options(
                 CustomScoreboardPolicy.parseAppearance(appearance),
                 CustomScoreboardPolicy.parseEvents(eventPriority),
                 showAllEvents,
@@ -120,6 +132,98 @@ final class CustomScoreboardSettings {
                 hideEmptyEdges,
                 hideIrrelevant,
                 unknownWarning);
+
+        cachedOptionsFingerprint = fingerprint;
+        cachedOptionsFingerprintValid = true;
+
+        return cachedOptions;
+    }
+
+    void invalidateOptions() {
+        cachedOptions = null;
+        cachedOptionsFingerprintValid = false;
+    }
+
+    private long optionsFingerprint() {
+        long hash = 0xCBF29CE484222325L;
+
+        hash = mix(hash, appearance);
+        hash = mix(hash, eventPriority);
+        hash = mix(hash, showAllEvents);
+        hash = mix(hash, hideVanilla);
+        hash = mix(hash, showDiff);
+        hash = mix(hash, useCustomLines);
+        hash = mix(hash, showUnclaimedBits);
+        hash = mix(hash, showMaxPlayers);
+        hash = mix(hash, powderDisplay);
+        hash = mix(hash, numberFormat);
+        hash = mix(hash, numberLayout);
+        hash = mix(hash, time24h);
+        hash = mix(hash, timeExact);
+        hash = mix(hash, dateInLobby);
+        hash = mix(hash, dateFormat);
+        hash = mix(hash, lineSpacing);
+        hash = mix(hash, textAlign);
+        hash = mix(hash, showProfileName);
+        hash = mix(hash, cacheOnSwitch);
+        hash = mix(hash, showOutsideSkyblock);
+        hash = mix(hash, alignH);
+        hash = mix(hash, alignV);
+        hash = mix(hash, margin);
+        hash = mix(hash, arrowMode);
+        hash = mix(hash, colorArrows);
+        hash = mix(hash, chunkedStats);
+        hash = mix(hash, maxStatsPerLine);
+        hash = mix(hash, showMagicalPower);
+        hash = mix(hash, compactTuning);
+        hash = mix(hash, tuningAmount);
+        hash = mix(hash, showMayorPerks);
+        hash = mix(hash, showMayorTime);
+        hash = mix(hash, showExtraMayor);
+        hash = mix(hash, maxParty);
+        hash = mix(hash, partyEverywhere);
+        hash = mix(hash, showPartyLeader);
+        hash = mix(hash, titleAlign);
+        hash = mix(hash, customTitle);
+        hash = mix(hash, useCustomTitle);
+        hash = mix(hash, customTitleOutside);
+        hash = mix(hash, footerAlign);
+        hash = mix(hash, customFooter);
+        hash = mix(hash, customAlphaFooter);
+        hash = mix(hash, hideEmpty);
+        hash = mix(hash, hideConsecutiveEmpty);
+        hash = mix(hash, hideEmptyEdges);
+        hash = mix(hash, hideIrrelevant);
+        hash = mix(hash, unknownWarning);
+
+        return hash;
+    }
+
+    private static long mix(long hash, boolean value) {
+        return mix(hash, value ? 1L : 0L);
+    }
+
+    private static long mix(long hash, int value) {
+        return mix(hash, (long) value);
+    }
+
+    private static long mix(long hash, String value) {
+        if (value == null) {
+            return mix(hash, -1L);
+        }
+
+        hash = mix(hash, value.length());
+
+        for (int index = 0; index < value.length(); index++) {
+            hash = mix(hash, value.charAt(index));
+        }
+
+        return hash;
+    }
+
+    private static long mix(long hash, long value) {
+        hash ^= value;
+        return hash * 0x100000001B3L;
     }
 
     void copyFrom(CustomScoreboardSettings other) {
@@ -190,14 +294,17 @@ final class CustomScoreboardSettings {
         hudX = other.hudX;
         hudY = other.hudY;
         hudScale = other.hudScale;
+        invalidateOptions();
     }
 
     void resetAppearance() {
         appearance = CustomScoreboardPolicy.defaultAppearanceText();
+        invalidateOptions();
     }
 
     void resetEvents() {
         eventPriority = CustomScoreboardPolicy.defaultEventText();
+        invalidateOptions();
     }
 
     Boolean readBoolean(String settingId) {
@@ -272,6 +379,7 @@ final class CustomScoreboardSettings {
                 return false;
             }
         }
+        invalidateOptions();
         return true;
     }
 
@@ -314,6 +422,7 @@ final class CustomScoreboardSettings {
                 return false;
             }
         }
+        invalidateOptions();
         return true;
     }
 
@@ -361,6 +470,7 @@ final class CustomScoreboardSettings {
                 return false;
             }
         }
+        invalidateOptions();
         return true;
     }
 
@@ -390,6 +500,7 @@ final class CustomScoreboardSettings {
                 return false;
             }
         }
+        invalidateOptions();
         return true;
     }
 

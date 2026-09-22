@@ -90,6 +90,14 @@ public final class StorageOverlayRuntime {
     private static StorageOverlayPolicy.Page prefetchWaitingFor;
     private static int prefetchTicksOnPage;
     private static final Map<StorageOverlayPolicy.Page, String> PAGE_FINGERPRINTS = new LinkedHashMap<>();
+    /** When each page's contents were last seen live, so stale or never-opened pages are visible. */
+    private static final Map<StorageOverlayPolicy.Page, Long> PAGE_SEEN_AT = new LinkedHashMap<>();
+    private static final long SEEN_SAVE_INTERVAL_MS = 60_000L;
+    /**
+     * Account and SkyBlock profile the in-memory pages belong to. Empty until the profile is
+     * known, which keeps the shared pre-profile cache file in use.
+     */
+    private static String activeOwner = "";
     private static final Gson CACHE_GSON = new Gson();
     private static final AtomicBoolean CACHE_DIRTY = new AtomicBoolean();
     private static final AtomicBoolean CACHE_SAVE_SCHEDULED = new AtomicBoolean();
@@ -575,6 +583,7 @@ public final class StorageOverlayRuntime {
         CACHE.clear();
         CONFIRMED_EMPTY_PAGES.clear();
         PAGE_FINGERPRINTS.clear();
+        PAGE_SEEN_AT.clear();
 
         loadCache();
 
@@ -664,6 +673,10 @@ public final class StorageOverlayRuntime {
 
     /** Opens Storage if needed and walks every unlocked Ender Chest / Backpack. */
     public static void requestReloadAll() {
+        // Walking every storage page by itself is automation, so it is Plus-only.
+        if (!QolFlavorSupport.isPlus()) {
+            return;
+        }
         userRequestedReload = true;
         prefetchDoneThisOpen = false;
         Minecraft client = Minecraft.getInstance();
@@ -687,6 +700,7 @@ public final class StorageOverlayRuntime {
         SELECTOR_SLOTS.clear();
         CACHE.clear();
         PAGE_FINGERPRINTS.clear();
+        PAGE_SEEN_AT.clear();
         PENDING_REFRESH.clear();
         CONFIRMED_EMPTY_PAGES.clear();
         directoryScanCompleted = false;
@@ -743,10 +757,21 @@ public final class StorageOverlayRuntime {
                 ? extras.storageOverlayOutlineColor
                 : pageSearchMatch ? RotClientTheme.VIOLET : RotClientTheme.BORDER;
         RotClientUiDraw.roundedOutline(graphics, x, y, x + cardWidth, y + cardHeight, border);
+        boolean hasContent = cached.items.stream().anyMatch(stack -> !stack.isEmpty());
+        String freshness = StorageOverlayPolicy.freshnessLabel(
+                active, hasContent, PAGE_SEEN_AT.getOrDefault(cached.page, 0L), System.currentTimeMillis());
+        int freshnessWidth = freshness.isEmpty() ? 0 : RotClientFonts.width(font, freshness) + 6;
         String label = RotClientUiDraw.ellipsize(
-                font, cached.page.label(), StorageOverlayPolicy.headerLabelMaxWidth(cardWidth));
+                font, cached.page.label(),
+                Math.max(24, StorageOverlayPolicy.headerLabelMaxWidth(cardWidth) - freshnessWidth));
         RotClientUiDraw.text(graphics, font, label, x + 5, y + 5,
                 active ? RotClientTheme.HUD_ACCENT : RotClientTheme.TEXT, true);
+        if (!freshness.isEmpty()) {
+            int[] icon = StorageOverlayPolicy.valueIconPosition(x, y, cardWidth);
+            RotClientUiDraw.text(graphics, font, freshness,
+                    icon[0] - 4 - RotClientFonts.width(font, freshness), y + 5,
+                    RotClientTheme.TEXT_MUTED, true);
+        }
         drawValueIcon(graphics, font, cached, selected, screen, x, y, cardWidth, mouseX, mouseY);
         int containerSlots = Math.max(0, screen.getMenu().slots.size() - 36);
         int contentCount = StorageOverlayPolicy.contentSlotCount(containerSlots);
@@ -1241,6 +1266,9 @@ public final class StorageOverlayRuntime {
             copy.add(chosen.isEmpty() ? ItemStack.EMPTY : chosen.copy());
         }
         liveTrustedPage = selected;
+        if (liveTrusted) {
+            markSeen(selected);
+        }
         if (anyItem) CONFIRMED_EMPTY_PAGES.remove(selected);
         else CONFIRMED_EMPTY_PAGES.add(selected);
         boolean existingHasItems = existing != null && existing.items.stream().anyMatch(stack -> !stack.isEmpty());
@@ -1255,6 +1283,16 @@ public final class StorageOverlayRuntime {
         PAGE_FINGERPRINTS.put(selected, fingerprint);
         CACHE.put(selected, new CachedPage(selected, List.copyOf(copy), Math.max(1, (count + 8) / 9)));
         scheduleSave();
+    }
+
+    private static void markSeen(StorageOverlayPolicy.Page page) {
+        long now = System.currentTimeMillis();
+        Long previous = PAGE_SEEN_AT.put(page, now);
+        // Every frame updates the value in memory; the disk copy only needs a fresh timestamp
+        // about once a minute.
+        if (previous == null || now - previous >= SEEN_SAVE_INTERVAL_MS) {
+            scheduleSave();
+        }
     }
 
     private static void rememberSelector(StorageOverlayPolicy.Page page, int slot) {
@@ -1361,7 +1399,92 @@ public final class StorageOverlayRuntime {
     }
 
     private static Path cachePath() {
-        return FabricLoader.getInstance().getConfigDir().resolve(StorageOverlayPolicy.CACHE_FILE);
+        return ownerPath(activeOwner);
+    }
+
+    private static Path ownerPath(String owner) {
+        Path config = FabricLoader.getInstance().getConfigDir();
+        if (owner == null || owner.isEmpty()) {
+            return config.resolve(StorageOverlayPolicy.CACHE_FILE);
+        }
+        return config.resolve(StorageOverlayPolicy.OWNER_DIR).resolve(owner + ".json");
+    }
+
+    private static String desiredOwner() {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null) {
+            return "";
+        }
+        return StorageOverlayPolicy.ownerKey(
+                client.player.getUUID().toString(), RotClientClient.currentProfileId());
+    }
+
+    /**
+     * Storage differs per SkyBlock profile, and an alt account has its own, but the cache was one
+     * shared file, so one profile's items showed on another until each page was reopened. Each
+     * account and profile now has its own file. When the owner changes mid-session the old pages
+     * are saved to their own file first and the new owner's pages are loaded.
+     */
+    private static void syncOwner() {
+        String desired = desiredOwner();
+        if (desired.isEmpty() || desired.equals(activeOwner)) {
+            return;
+        }
+        if (CACHE_DIRTY.get()) {
+            saveOwnerNow(activeOwner);
+        }
+        if (activeOwner.isEmpty()) {
+            migrateLegacyCacheTo(desired);
+        }
+        activeOwner = desired;
+        resetMemory();
+    }
+
+    /** First time a profile is known: the shared legacy file becomes that profile's file, once. */
+    private static void migrateLegacyCacheTo(String owner) {
+        Path target = ownerPath(owner);
+        Path legacy = ownerPath("");
+        if (Files.exists(target) || !Files.exists(legacy)) {
+            return;
+        }
+        try {
+            Files.createDirectories(target.getParent());
+            Files.copy(legacy, target);
+            // Keep the old data on disk, but stop the next profile from adopting it too.
+            Files.move(
+                    legacy,
+                    legacy.resolveSibling(StorageOverlayPolicy.CACHE_FILE + ".migrated"),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void saveOwnerNow(String owner) {
+        if (StorageOverlayPolicy.shouldSkipEmptyStorageSave(
+                cacheMemoryHasItems(), diskHadItems, false, allPagesConfirmedEmpty())) {
+            return;
+        }
+        try {
+            AtomicFileWriter.writeAtomically(ownerPath(owner), buildCacheJson());
+            CACHE_DIRTY.set(false);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void resetMemory() {
+        SELECTOR_SLOTS.clear();
+        CACHE.clear();
+        PAGE_FINGERPRINTS.clear();
+        PAGE_SEEN_AT.clear();
+        PENDING_REFRESH.clear();
+        CONFIRMED_EMPTY_PAGES.clear();
+        directoryScanCompleted = false;
+        sawOverview = false;
+        diskHadItems = false;
+        liveTrustedPage = null;
+        cancelPrefetch();
+        CACHE_DIRTY.set(false);
+        cacheLoaded = false;
     }
 
     private static boolean cacheMemoryEmpty() {
@@ -1380,6 +1503,7 @@ public final class StorageOverlayRuntime {
     }
 
     private static void loadCache() {
+        syncOwner();
         Path path = cachePath();
         boolean fileExists = Files.exists(path);
         Minecraft client = Minecraft.getInstance();
@@ -1453,6 +1577,12 @@ public final class StorageOverlayRuntime {
                     CACHE.putIfAbsent(page, loaded);
                 }
                 PAGE_FINGERPRINTS.putIfAbsent(page, cacheFingerprint(page, loaded.items()));
+                if (pageJson.has("seenAt") && pageJson.get("seenAt").isJsonPrimitive()) {
+                    long seenAt = pageJson.get("seenAt").getAsLong();
+                    if (seenAt > 0L) {
+                        PAGE_SEEN_AT.putIfAbsent(page, seenAt);
+                    }
+                }
             }
 
             if (root.has("selectors") && root.get("selectors").isJsonArray()) {
@@ -1568,9 +1698,10 @@ public final class StorageOverlayRuntime {
         } catch (Exception ignored) {
             return;
         }
+        Path target = cachePath();
         CACHE_IO.execute(() -> {
             try {
-                AtomicFileWriter.writeAtomically(cachePath(), json);
+                AtomicFileWriter.writeAtomically(target, json);
             } catch (Exception ignored) {
             }
         });
@@ -1592,6 +1723,7 @@ public final class StorageOverlayRuntime {
             pageJson.addProperty("kind", cached.page.kind().name());
             pageJson.addProperty("number", cached.page.number());
             pageJson.addProperty("rows", cached.rows);
+            pageJson.addProperty("seenAt", PAGE_SEEN_AT.getOrDefault(cached.page, 0L));
             JsonArray items = new JsonArray();
             for (ItemStack stack : cached.items) {
                 items.add(stackToCache(stack));
@@ -2010,7 +2142,10 @@ public final class StorageOverlayRuntime {
     }
 
     private static void maybeStartPrefetch(boolean overview) {
-        if (!overview) {
+        // The overview used to open every uncached Ender Chest and Backpack on its own. That is
+        // automation, so the standard edition only shows pages the player opens.
+        if (!overview || !QolFlavorSupport.isPlus()) {
+            userRequestedReload = false;
             return;
         }
         boolean idle = PREFETCH.isEmpty() && !prefetchActive;

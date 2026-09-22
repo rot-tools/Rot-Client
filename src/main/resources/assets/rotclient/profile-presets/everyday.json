@@ -1,0 +1,14 @@
+{
+  "id": "everyday",
+  "name": "Everyday",
+  "summary": "Clean and minimal. Just the essentials on the left, scoreboard on the right.",
+  "highlights": ["Custom Scoreboard", "Pet HUD", "Performance HUD"],
+  "modules": [
+    "qol.custom_scoreboard",
+    "qol.pet_hud",
+    "qol.performance_hud"
+  ],
+  "layout": [
+    { "anchor": "TOP_LEFT", "elements": ["pet", "performance"] }
+  ]
+}

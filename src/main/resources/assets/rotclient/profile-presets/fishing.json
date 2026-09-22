@@ -1,0 +1,23 @@
+{
+  "id": "fishing",
+  "name": "Fishing",
+  "summary": "Fishing HUD with bobber timer and sea creature tracking.",
+  "highlights": [
+    "Custom Scoreboard",
+    "Pet HUD",
+    "Fishing HUD",
+    "Sea Creatures"
+  ],
+  "modules": [
+    "qol.custom_scoreboard",
+    "qol.pet_hud",
+    "qol.fishing_helper",
+    "qol.fishing_creatures"
+  ],
+  "settings": {
+    "qol.fishing_creatures.hud": true
+  },
+  "layout": [
+    { "anchor": "TOP_LEFT", "elements": ["fishing", "pet"] }
+  ]
+}

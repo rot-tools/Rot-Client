@@ -37,6 +37,11 @@ final class MarketWatchAuctionHouseService {
             });
 
     private static volatile boolean started;
+    // Failed polls back off instead of restarting the whole crawl every interval.
+    private static volatile boolean roundFailed;
+    private static volatile long retryAfterMillis;
+    private static volatile long backoffUntilMillis;
+    private static int consecutiveFailures;
 
     private MarketWatchAuctionHouseService() {
     }
@@ -56,10 +61,25 @@ final class MarketWatchAuctionHouseService {
     }
 
     private static void refresh() {
+        long now = System.currentTimeMillis();
+        if (now < backoffUntilMillis) {
+            return;
+        }
+        roundFailed = false;
+        retryAfterMillis = 0L;
         try {
             refreshSnapshot();
         } catch (RuntimeException ignored) {
             // A malformed or temporary API response must not affect the client.
+            roundFailed = true;
+        }
+        if (roundFailed) {
+            consecutiveFailures++;
+            backoffUntilMillis = now + MarketWatchBackoffPolicy.delayMillis(
+                    consecutiveFailures, retryAfterMillis);
+        } else {
+            consecutiveFailures = 0;
+            backoffUntilMillis = 0L;
         }
     }
 
@@ -146,7 +166,7 @@ final class MarketWatchAuctionHouseService {
                             .timeout(Duration.ofSeconds(15))
                             .header(
                                     "User-Agent",
-                                    "RotClient/2.0.1+mc26.2")
+                                    "RotClient/2.1.0+mc26.1.2")
                             .GET()
                             .build();
 
@@ -156,6 +176,9 @@ final class MarketWatchAuctionHouseService {
                             HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
+                roundFailed = true;
+                retryAfterMillis = MarketWatchBackoffPolicy.retryAfterMillis(
+                        response.headers().firstValue("Retry-After").orElse(""));
                 return null;
             }
 
@@ -165,6 +188,7 @@ final class MarketWatchAuctionHouseService {
 
             if (parsed == null
                     || !parsed.isJsonObject()) {
+                roundFailed = true;
                 return null;
             }
 
@@ -175,6 +199,7 @@ final class MarketWatchAuctionHouseService {
             Thread.currentThread().interrupt();
             return null;
         } catch (IOException | RuntimeException ignored) {
+            roundFailed = true;
             return null;
         }
     }

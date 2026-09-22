@@ -94,10 +94,13 @@ final class TrackerConfigHudVisibilityTest {
     @Test
     void appearanceResetWiresHudVisibilityReset() throws Exception {
         String source = Files.readString(
-                Path.of("src/client/java/fi/rotclient/RotClientAppearanceScreen.java"),
+                Path.of("src/client/java/fi/rotclient/RotClientAppearanceCards.java"),
+                StandardCharsets.UTF_8)
+                + Files.readString(
+                Path.of("src/main/java/fi/rotclient/AppearanceCards.java"),
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("Reset HUD Visibility"));
         assertTrue(source.contains("resetHudVisibility"));
-        assertTrue(source.contains("awaitingHudVisibilityResetConfirm"));
+        assertTrue(source.contains("Confirm reset HUD visibility"));
     }
 }

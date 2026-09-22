@@ -21,6 +21,19 @@ final class QolUtilityCatalogTest {
         assertEquals(null, QolUtilityCatalog.findById("qol.instant_sneak"));
         assertEquals(null, QolUtilityCatalog.findById("qol.item_count_fix"));
         assertSettingAbsent("qol.render_optimizer", "qol.render_optimizer.hide_fog");
+        // Features that cancel vanilla actions or click menus for the player are Plus-only:
+        // Hypixel's modification rules disallow them, so the standard edition must not offer them.
+        assertEquals(null, QolUtilityCatalog.findById("qol.double_use_fix"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.pet_keybinds"));
+        assertEquals(null, QolUtilityCatalog.findById("qol.loadout_keybinds"));
+        assertSettingAbsent("qol.stall_market", "qol.stall_market.bazaar_search");
+        assertSettingAbsent("qol.stall_market", "qol.stall_market.sell_protection");
+        assertSettingAbsent("qol.stall_market", "qol.stall_market.angry_coop");
+        assertSettingAbsent("qol.storage_overlay", "qol.storage_overlay.reload_pages");
+        assertSettingAbsent("qol.stall_market", "qol.stall_market.search_keybind");
+        // Nether Fog Darkening only thickens fog, so it stays in the standard edition.
+        assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog");
+        assertSettingPresent("qol.render_optimizer", "qol.render_optimizer.nether_fog_scale");
         assertSettingAbsent("qol.iota", "qol.iota.fix_fishing_hook");
         assertSettingAbsent("qol.mining_helpers", "qol.mining_helpers.break_reset");
         assertSettingAbsent("qol.dungeon_esp", "qol.dungeon_esp.hate_doors");
@@ -59,8 +72,6 @@ final class QolUtilityCatalogTest {
                 "qol.player_size",
                 "qol.etherwarp",
                 "qol.command_keybinds",
-                "qol.loadout_keybinds",
-                "qol.pet_keybinds",
                 "qol.inventory_overlay",
                 "qol.skill_levels",
                 "qol.pet_hud",
@@ -94,7 +105,6 @@ final class QolUtilityCatalogTest {
                 "qol.item_scale",
                 "qol.animation_fix",
                 "qol.disconnect_fix",
-                "qol.double_use_fix",
                 "qol.active_pet_highlight",
                 "qol.anvil_helper",
                 "qol.calendar_date",
@@ -421,7 +431,13 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(96, moduleIds.size());
+        assertEquals(94, moduleIds.size());
+    }
+
+    private static void assertSettingPresent(String moduleId, String settingId) {
+        QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+        assertNotNull(module, moduleId);
+        assertTrue(module.settings().stream().anyMatch(setting -> settingId.equals(setting.id())), settingId);
     }
 
     private static void assertSettingAbsent(String moduleId, String settingId) {

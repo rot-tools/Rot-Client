@@ -58,6 +58,73 @@ final class FishingSuitePolicyTest {
     }
 
     @Test
+    void playersCannotSpoofOrHideChatByTypingServerPhrases() {
+        // Only the server line counts, and it may end in "." or "!".
+        assertNotNull(FishingTrophyPolicy.parseCatch("TROPHY FISH! You caught a Blobfish Bronze."));
+        assertNotNull(FishingTrophyPolicy.parseCatch("TROPHY FISH! You caught a Blobfish Bronze!"));
+        assertNull(FishingTrophyPolicy.parseCatch("[MVP+] Steve: TROPHY FISH! You caught a Blobfish Bronze!"));
+        assertEquals(
+                FishingTrophyPolicy.GoldenEvent.NONE,
+                FishingTrophyPolicy.goldenEvent("Steve: The Golden Fish is weak!"));
+        assertEquals(
+                FishingTrophyPolicy.GoldenEvent.WEAK,
+                FishingTrophyPolicy.goldenEvent("The Golden Fish is weak!"));
+        assertTrue(FishingToolsPolicy.isBottleChargedChat("Your Bottle of Thunder has fully charged!"));
+        assertFalse(FishingToolsPolicy.isBottleChargedChat(
+                "Steve: your bottle of thunder has fully charged"));
+    }
+
+    @Test
+    void lochEmperorChatMatchesTheSameNameAsItsNametag() {
+        FishingCreaturesPolicy.Creature spawned =
+                FishingCreaturesPolicy.matchSpawn("The Loch Emperor arises from the depths.");
+        assertEquals("The Loch Emperor", spawned.name());
+        assertEquals(
+                spawned.name(),
+                FishingCreaturesPolicy.matchNametag("[Lv600] The Loch Emperor 5M\u2764").name());
+    }
+
+    @Test
+    void barnTimerIsDueAsALevelNotAShortWindow() {
+        // 340s default. Well past the old 250 ms window, it must still be due.
+        assertTrue(FishingCreaturesPolicy.timerDue(true, true, 3, 340_000L, 340));
+        assertTrue(FishingCreaturesPolicy.timerDue(true, true, 3, 500_000L, 340));
+        assertFalse(FishingCreaturesPolicy.timerDue(true, true, 3, 339_999L, 340));
+        assertFalse(FishingCreaturesPolicy.timerDue(true, true, 0, 500_000L, 340));
+        assertFalse(FishingCreaturesPolicy.timerDue(true, false, 3, 500_000L, 340));
+    }
+
+    @Test
+    void totemRemainingLineIsItsOwnHologramLine() {
+        assertTrue(FishingToolsPolicy.isTotemRemaining("Remaining: 4m 12s"));
+        assertEquals(Integer.valueOf(252), FishingToolsPolicy.parseTotemSeconds("Remaining: 4m 12s"));
+        assertFalse(FishingToolsPolicy.isTotemRemaining("Totem of Corruption"));
+        assertFalse(FishingToolsPolicy.isTotemRemaining("Owner: Steve"));
+        assertNull(FishingToolsPolicy.parseTotemSeconds("Remaining: 99999999999m 1s"));
+    }
+
+    @Test
+    void hotspotOnlyCountsAsGoneWhenItWasNearby() {
+        java.util.List<FishingHotspotPolicy.Circle> before =
+                java.util.List.of(new FishingHotspotPolicy.Circle(100.0D, 70.0D, 100.0D, 8.0D));
+        java.util.Set<String> none = java.util.Set.of();
+        // 20 blocks away: it should have been seen, so it really is gone.
+        assertTrue(FishingHotspotPolicy.vanishedNearby(before, none, 100.0D, 120.0D, 40.0D));
+        // 47 blocks away: it just left scan range, which is not a despawn.
+        assertFalse(FishingHotspotPolicy.vanishedNearby(before, none, 100.0D, 147.0D, 40.0D));
+        assertFalse(FishingHotspotPolicy.vanishedNearby(
+                before, java.util.Set.of(FishingHotspotPolicy.key(100.0D, 100.0D)), 100.0D, 120.0D, 40.0D));
+    }
+
+    @Test
+    void stripFormattingKeepsBehaviourAndSkipsPlainText() {
+        assertEquals("Hello", ChatTextPolicy.stripFormatting("§aHel§r§llo"));
+        assertEquals("Hello", ChatTextPolicy.stripFormatting("&aHel&llo"));
+        assertEquals("plain text", ChatTextPolicy.stripFormatting("plain text"));
+        assertEquals("", ChatTextPolicy.stripFormatting(null));
+    }
+
+    @Test
     void hotspotAndToolsParse() {
         assertTrue(FishingHotspotPolicy.isHotspotNametag("§6Fishing Hotspot"));
         assertTrue(FishingToolsPolicy.isThunderBottleId("THUNDER_IN_A_BOTTLE_EMPTY"));

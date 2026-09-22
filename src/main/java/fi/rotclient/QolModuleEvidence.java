@@ -6,8 +6,9 @@ import java.util.Set;
  * User-facing evidence state for QoL parent modules.
  *
  * <p>Implementation availability and runtime evidence are intentionally
- * separate. A green state requires a controlled Minecraft validation; passing
- * automated tests alone never promotes a module.</p>
+ * separate. A module only reaches {@link Status#READY} after a code review and
+ * a controlled Minecraft validation; passing automated tests alone never
+ * promotes a module. A ready module shows no status banner at all.</p>
  */
 public final class QolModuleEvidence {
     private static final Set<String> RUNTIME_VERIFIED = Set.of();
@@ -36,7 +37,7 @@ public final class QolModuleEvidence {
     }
 
     public enum Status {
-        READY("Ready to use"),
+        READY(""),
         NEEDS_TESTING("Needs testing"),
         WORK_IN_PROGRESS("Work in progress"),
         UPCOMING("Upcoming");
@@ -49,6 +50,11 @@ public final class QolModuleEvidence {
 
         public String label() {
             return label;
+        }
+
+        /** Whether the dashboard should draw a status banner for this state. */
+        public boolean showsBanner() {
+            return this != READY;
         }
     }
 }

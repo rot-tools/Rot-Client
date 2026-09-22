@@ -290,6 +290,15 @@ public final class DungeonPolicy {
         return current >= goal && previous < goal;
     }
 
+    /**
+     * Whether a throttled scan that last ran at {@code last} should run again at {@code now}.
+     * A negative {@code last} means it never ran, and a clock that went backwards (new world)
+     * counts as due too.
+     */
+    public static boolean scanDue(long now, long last, int intervalTicks) {
+        return last < 0L || now < last || now - last >= intervalTicks;
+    }
+
     public static EspKind classifyHologram(String hologram) {
         String text = normalize(hologram).toLowerCase(Locale.ROOT);
         if (text.isBlank()) {

@@ -25,6 +25,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,8 +57,12 @@ public final class FishingSuiteRuntime {
     private static int geyserTicks;
     private static AABB spongeBox;
     private static final List<AABB> THUNDER_SPARKS = new ArrayList<>();
-    private static Set<String> previousHotspotKeys = Set.of();
+    private static List<FishingHotspotPolicy.Circle> previousHotspots = List.of();
     private static String lastBaitName = "";
+    private static boolean timerLatched;
+
+    private record TotemTime(Vec3 position, int seconds) {
+    }
 
     private record LiveCreature(FishingCreaturesPolicy.Creature creature, int entityId, long spawnMs) {
     }
@@ -84,8 +89,9 @@ public final class FishingSuiteRuntime {
         geyserTicks = 0;
         spongeBox = null;
         THUNDER_SPARKS.clear();
-        previousHotspotKeys = Set.of();
+        previousHotspots = List.of();
         lastBaitName = "";
+        timerLatched = false;
     }
 
     static List<String> hudLines(QolUtilityConfig qol) {
@@ -239,6 +245,7 @@ public final class FishingSuiteRuntime {
         }
         pruneDead(client);
         scanWorld(client, qol, extras);
+        maybeTimerNotify(extras, client);
         maybeAutoAttack(client, extras);
         maybeBiteTitle(client, qol);
         if (++baitScanTicks >= 10) {
@@ -425,9 +432,9 @@ public final class FishingSuiteRuntime {
                 && extras.fishingCreaturesHideCommon
                 && entity instanceof ArmorStand commonStand) {
             String commonName = standName(commonStand);
-            FishingCreaturesPolicy.Creature tagged = FishingCreaturesPolicy.matchNametag(commonName);
             if (FishingCreaturesPolicy.looksLikeCreatureHologram(commonName)
-                    && FishingCreaturesPolicy.shouldHideCommonNametag(true, tagged)) {
+                    && FishingCreaturesPolicy.shouldHideCommonNametag(
+                            true, FishingCreaturesPolicy.matchNametag(commonName))) {
                 return true;
             }
         }
@@ -462,6 +469,9 @@ public final class FishingSuiteRuntime {
             }
         }
         FishingHook hook = player.fishing;
+        Set<String> hotspotSeen = new HashSet<>();
+        List<Vec3> totemTitles = new ArrayList<>();
+        List<TotemTime> totemTimes = new ArrayList<>();
         for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
             String name = standName(stand);
             if (qol.fishingHelperEnabled && hook != null && hook.isAlive()
@@ -486,19 +496,27 @@ public final class FishingSuiteRuntime {
                             lastCatch = null;
                         }
                     }
-                    maybeCapAndTimer(extras, client);
+                    maybeCap(extras, client);
                 }
             }
             if (extras.fishingHotspotsEnabled && FishingHotspotPolicy.isHotspotNametag(name)) {
-                HOTSPOTS.add(FishingHotspotPolicy.circleFromStand(
-                        stand.getX(), stand.getY(), stand.getZ(), 8.0D));
+                // A hotspot has several hologram lines; keep one circle per hotspot.
+                FishingHotspotPolicy.Circle circle = FishingHotspotPolicy.circleFromStand(
+                        stand.getX(), stand.getY(), stand.getZ(), 8.0D);
+                if (hotspotSeen.add(FishingHotspotPolicy.key(circle.x(), circle.z()))) {
+                    HOTSPOTS.add(circle);
+                }
             }
-            if (extras.fishingToolsEnabled
-                    && extras.fishingToolsTotemHud
-                    && FishingToolsPolicy.isTotemNametag(name)) {
-                Integer seconds = FishingToolsPolicy.parseTotemSeconds(name);
-                if (seconds != null) {
-                    totemLine = "Totem " + FishingCreaturesPolicy.formatSeconds(seconds);
+            if (extras.fishingToolsEnabled && extras.fishingToolsTotemHud) {
+                if (FishingToolsPolicy.isTotemNametag(name)) {
+                    totemTitles.add(stand.position());
+                    Integer seconds = FishingToolsPolicy.parseTotemSeconds(name);
+                    if (seconds != null) {
+                        totemLine = "Totem " + FishingCreaturesPolicy.formatSeconds(seconds);
+                    }
+                } else if (FishingToolsPolicy.isTotemRemaining(name)) {
+                    totemTimes.add(new TotemTime(
+                            stand.position(), FishingToolsPolicy.parseTotemSeconds(name)));
                 }
             }
             if (extras.fishingCreaturesEnabled
@@ -507,13 +525,22 @@ public final class FishingSuiteRuntime {
                 THUNDER_SPARKS.add(stand.getBoundingBox().inflate(0.2D));
             }
         }
+        for (TotemTime time : totemTimes) {
+            for (Vec3 title : totemTitles) {
+                if (title.distanceToSqr(time.position()) <= 9.0D) {
+                    totemLine = "Totem " + FishingCreaturesPolicy.formatSeconds(time.seconds());
+                    break;
+                }
+            }
+        }
         Set<String> hotspotKeys = FishingHotspotPolicy.keys(HOTSPOTS);
         if (extras.fishingHotspotsEnabled
                 && extras.fishingHotspotsDespawn
-                && FishingHotspotPolicy.vanished(previousHotspotKeys, hotspotKeys)) {
+                && FishingHotspotPolicy.vanishedNearby(
+                        previousHotspots, hotspotKeys, player.getX(), player.getZ(), 40.0D)) {
             flash("Hotspot gone", true, client);
         }
-        previousHotspotKeys = Set.copyOf(hotspotKeys);
+        previousHotspots = List.copyOf(HOTSPOTS);
         if (extras.fishingTrophyEnabled && extras.fishingTrophySponge) {
             spongeBox = nearestSponge(player);
         }
@@ -564,22 +591,32 @@ public final class FishingSuiteRuntime {
         return best;
     }
 
-    private static void maybeCapAndTimer(QolSkyblockExtras extras, Minecraft client) {
+    private static void maybeCap(QolSkyblockExtras extras, Minecraft client) {
         long now = System.currentTimeMillis();
         if (FishingCreaturesPolicy.shouldCapNotify(true, extras.fishingCreaturesCapNotify, LIVE.size())
                 && now - lastCapNotifyAt > 2000L) {
             lastCapNotifyAt = now;
             flash("Sea creature cap", true, client);
         }
-        if (FishingCreaturesPolicy.shouldTimerNotify(
-                true,
+    }
+
+    /**
+     * The barn timer has to be checked every tick. It used to run only when a
+     * new creature spawned, which is almost never the moment the timer is due.
+     */
+    private static void maybeTimerNotify(QolSkyblockExtras extras, Minecraft client) {
+        boolean due = FishingCreaturesPolicy.timerDue(
+                extras.fishingCreaturesEnabled,
                 extras.fishingCreaturesTimerNotify,
                 LIVE.size(),
                 oldestAgeMs(),
-                extras.fishingCreaturesTimerLength)
-                && now - lastTimerNotifyAt > 2000L) {
-            lastTimerNotifyAt = now;
+                extras.fishingCreaturesTimerLength);
+        if (due && !timerLatched) {
+            timerLatched = true;
+            lastTimerNotifyAt = System.currentTimeMillis();
             flash("Barn timer", true, client);
+        } else if (!due) {
+            timerLatched = false;
         }
     }
 

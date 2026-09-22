@@ -15,7 +15,10 @@ public final class DoubleUseFixRuntime {
     public static boolean shouldCancelItemUseOnBlock() {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         Minecraft client = Minecraft.getInstance();
-        if (!extras.doubleUseFixEnabled || client == null || client.hitResult == null) {
+        if (!QolFlavorSupport.isPlus()
+                || !extras.doubleUseFixEnabled
+                || client == null
+                || client.hitResult == null) {
             return false;
         }
         return DoubleUseFixPolicy.cancelItemUseOnBlock(
@@ -27,7 +30,7 @@ public final class DoubleUseFixRuntime {
     public static boolean shouldReplaceBlockUseWithItemUse() {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         Minecraft client = Minecraft.getInstance();
-        if (!extras.doubleUseFixEnabled || client == null) {
+        if (!QolFlavorSupport.isPlus() || !extras.doubleUseFixEnabled || client == null) {
             return false;
         }
         return DoubleUseFixPolicy.replaceBlockUseWithItemUse(true, kind(client));

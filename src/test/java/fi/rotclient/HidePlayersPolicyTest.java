@@ -57,6 +57,16 @@ final class HidePlayersPolicyTest {
     }
 
     @Test
+    void hypixelNpcUuidsAreNotTreatedAsPlayers() {
+        // Version 2 marks Hypixel NPCs and scripted mobs; real accounts are version 4.
+        assertTrue(HidePlayersPolicy.isNpcUuid(new java.util.UUID(0x0000000000002000L, 0L)));
+        assertFalse(HidePlayersPolicy.isNpcUuid(java.util.UUID.randomUUID()));
+        assertFalse(HidePlayersPolicy.isNpcUuid(
+                java.util.UUID.nameUUIDFromBytes("OfflinePlayer:Steve".getBytes())));
+        assertFalse(HidePlayersPolicy.isNpcUuid(null));
+    }
+
+    @Test
     void leapAndSimonSaysHideUseExactPadAndDuration() {
         assertTrue(HidePlayersPolicy.hideAfterLeap(true, true, true, 1000L, 2500L));
         assertFalse(HidePlayersPolicy.hideAfterLeap(true, true, true, 1000L, 4000L));

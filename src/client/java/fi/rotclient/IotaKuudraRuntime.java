@@ -62,6 +62,12 @@ public final class IotaKuudraRuntime {
     private static boolean shardRerolled;
     private static KuudraAlertPolicy.Snapshot alerts = KuudraAlertPolicy.Snapshot.idle();
     private static boolean announcedOwnFresh;
+    // Whole-arena entity queries are too heavy to repeat on every rendered frame,
+    // so the render paths reuse one result per game tick.
+    private static List<Zombie> zombieCache = List.of();
+    private static int zombieCacheTick = -1;
+    private static List<BuildPile> buildCache = List.of();
+    private static int buildCacheTick = -1;
 
     private record PendingChest(IotaKuudraPolicy.ChestKind kind, long lootCoins, long costCoins) {
     }
@@ -99,6 +105,10 @@ public final class IotaKuudraRuntime {
         shardRerolled = false;
         alerts = KuudraAlertPolicy.clearRun();
         announcedOwnFresh = false;
+        zombieCache = List.of();
+        zombieCacheTick = -1;
+        buildCache = List.of();
+        buildCacheTick = -1;
     }
 
     static String overlayTitle() {
@@ -167,7 +177,8 @@ public final class IotaKuudraRuntime {
             }
             return;
         }
-        boolean area = IotaKuudraPolicy.isKuudraArea(SkyBlockSidebar.text());
+        String sidebar = SkyBlockSidebar.text();
+        boolean area = IotaKuudraPolicy.isKuudraArea(sidebar);
         if (inKuudra && !area) {
             clear();
             return;
@@ -179,10 +190,10 @@ public final class IotaKuudraRuntime {
         }
         inKuudra = area;
         if (area && phase == IotaKuudraPolicy.Phase.NONE) {
-            IotaKuudraPolicy.phaseFromScoreboard(SkyBlockSidebar.text()).ifPresent(IotaKuudraRuntime::applyPhase);
+            IotaKuudraPolicy.phaseFromScoreboard(sidebar).ifPresent(IotaKuudraRuntime::applyPhase);
         }
         if (extras.iotaBuildInfo) {
-            KuudraAlertPolicy.parseBuild(SkyBlockSidebar.text()).ifPresent(info ->
+            KuudraAlertPolicy.parseBuild(sidebar).ifPresent(info ->
                     alerts = KuudraAlertPolicy.applyBuild(alerts, info));
         }
         long now = System.currentTimeMillis();
@@ -481,6 +492,22 @@ public final class IotaKuudraRuntime {
         if (!extras.iotaBuildWaypoints) {
             return;
         }
+        for (BuildPile pile : buildPiles(client)) {
+            int color = IotaKuudraPolicy.withOpacity(
+                    IotaKuudraPolicy.buildColor(pile.progress()), IotaKuudraPolicy.BUILD_OPACITY);
+            AABB box = aabb(IotaKuudraPolicy.unitCubeFromLowerCorner(
+                    new IotaKuudraPolicy.Vec3d(pile.position().x() - 0.5D, pile.position().y(), pile.position().z() - 0.5D)));
+            drawBoth(box, color);
+            drawBeam(box, IotaKuudraPolicy.BUILD_BEAM_HEIGHT, color);
+            label(pile.displayName(), pile.position().x(), pile.position().y() + 2.0D, pile.position().z(),
+                    IotaKuudraPolicy.buildColor(pile.progress()), 0.75F);
+        }
+    }
+
+    private static List<BuildPile> buildPiles(Minecraft client) {
+        if (buildCacheTick == tickCounter) {
+            return buildCache;
+        }
         List<BuildPile> piles = new ArrayList<>();
         for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, arenaSearch(client.player))) {
             if (stand.getCustomName() == null) {
@@ -492,16 +519,9 @@ public final class IotaKuudraRuntime {
                             new IotaKuudraPolicy.Vec3d(stand.getX(), stand.getY(), stand.getZ()),
                             name, progress)));
         }
-        for (BuildPile pile : piles) {
-            int color = IotaKuudraPolicy.withOpacity(
-                    IotaKuudraPolicy.buildColor(pile.progress()), IotaKuudraPolicy.BUILD_OPACITY);
-            AABB box = aabb(IotaKuudraPolicy.unitCubeFromLowerCorner(
-                    new IotaKuudraPolicy.Vec3d(pile.position().x() - 0.5D, pile.position().y(), pile.position().z() - 0.5D)));
-            drawBoth(box, color);
-            drawBeam(box, IotaKuudraPolicy.BUILD_BEAM_HEIGHT, color);
-            label(pile.displayName(), pile.position().x(), pile.position().y() + 2.0D, pile.position().z(),
-                    IotaKuudraPolicy.buildColor(pile.progress()), 0.75F);
-        }
+        buildCache = piles;
+        buildCacheTick = tickCounter;
+        return piles;
     }
 
     private static void renderStun(LocalPlayer player, QolSkyblockExtras extras, float partial) {
@@ -785,7 +805,11 @@ public final class IotaKuudraRuntime {
     }
 
     private static List<Zombie> zombies(Minecraft client) {
-        return client.level.getEntitiesOfClass(Zombie.class, arenaSearch(client.player));
+        if (zombieCacheTick != tickCounter) {
+            zombieCache = client.level.getEntitiesOfClass(Zombie.class, arenaSearch(client.player));
+            zombieCacheTick = tickCounter;
+        }
+        return zombieCache;
     }
 
     private static boolean holdingSkull(ItemStack stack) {

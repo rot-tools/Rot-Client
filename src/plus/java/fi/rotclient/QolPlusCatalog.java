@@ -601,6 +601,47 @@ public final class QolPlusCatalog {
                 List.of("diana", "profit", "daedalus", "crown of greed"),
                 setting("qol.diana_profit.hud", "Drop HUD", "Show session Diana drops.", SettingType.TOGGLE),
                 setting("qol.diana_profit.open_hud_editor", "Edit Diana HUD", "Move the Diana HUD.", SettingType.ACTION, "position")));
+        // Moved from the standard edition: these cancel vanilla actions or click menus for the player,
+        // which Hypixel's modification rules disallow, so the standard jar must not offer them.
+        modules.add(module(
+                "qol.double_use_fix",
+                "Double Use Fix",
+                "Stops blaze daggers and fishing rods from activating twice on one click.",
+                Group.UTILITIES,
+                "Fixes",
+                false,
+                true,
+                true,
+                List.of("dagger", "fishing rod", "double use")));
+        modules.add(module(
+                "qol.pet_keybinds",
+                "Pet Keybinds",
+                "Page, unequip, and 1-9 pet binds while the Hypixel Pets GUI is open.",
+                Group.UTILITIES,
+                "Keybinds",
+                false,
+                true,
+                true,
+                List.of("pet", "pets"),
+                setting("qol.pet_keybinds.unequip", "Unequip", "Unequip active pet.", SettingType.KEYBIND),
+                setting("qol.pet_keybinds.next", "Next Page", "Next pets page.", SettingType.KEYBIND),
+                setting("qol.pet_keybinds.previous", "Previous Page", "Previous pets page.", SettingType.KEYBIND),
+                setting("qol.pet_keybinds.disable_unequip", "Disable Unequip", "Prevent accidental pet unequip.", SettingType.TOGGLE),
+                setting("qol.pet_keybinds.close_if_equipped", "Close If Already Equipped", "Close pets UI if already equipped.", SettingType.TOGGLE),
+                setting("qol.pet_keybinds.keybind", "Keybind", "Toggle this module with a key. Blank means unbound.", SettingType.KEYBIND)));
+        modules.add(module(
+                "qol.loadout_keybinds",
+                "Loadout Keybinds",
+                "Page and 1-9 / 0 / - / = slot binds while the Hypixel Loadout GUI is open.",
+                Group.UTILITIES,
+                "Keybinds",
+                false,
+                true,
+                true,
+                List.of("loadout", "loadouts"),
+                setting("qol.loadout_keybinds.next", "Next Page", "Next loadout page.", SettingType.KEYBIND),
+                setting("qol.loadout_keybinds.previous", "Previous Page", "Previous loadout page.", SettingType.KEYBIND)));
+
         return List.copyOf(modules);
     }
 
@@ -774,6 +815,16 @@ public final class QolPlusCatalog {
                     setting("qol.command_keybinds.length_limit", "Length Limit", "Block SEND over this many characters. Default 256.", SettingType.NUMBER, "256", "chars"),
                     setting("qol.command_keybinds.add_history", "Add To History", "Add sent macros to chat history.", SettingType.TOGGLE),
                     setting("qol.command_keybinds.show_hud", "Show HUD Message", "Show the sent macro as an overlay.", SettingType.TOGGLE)
+            );
+            case "qol.stall_market" -> List.of(
+                    setting("qol.stall_market.bazaar_search", "Bazaar Search", "Click the Search slot and fill the sign. /rot bazaarsearch also works.", SettingType.TOGGLE, "bazaar"),
+                    setting("qol.stall_market.sell_protection", "Sell Protection", "Block high-value Sell Instantly / Sell Sacks / Sell Inventory clicks. Hold Ctrl to override.", SettingType.TOGGLE),
+                    setting("qol.stall_market.sell_threshold", "Sell Protection Threshold", "Coin amount above which sells are blocked. Default 1m.", SettingType.NUMBER, "1m"),
+                    setting("qol.stall_market.angry_coop", "Angry Co-op Protection", "Block claiming co-op auctions and Claim All on Manage Auctions / Your Bids. Hold Ctrl to override.", SettingType.TOGGLE, "auction"),
+                    setting("qol.stall_market.search_keybind", "Search Hovered", "Search the bazaar for the hovered or held item name.", SettingType.KEYBIND)
+            );
+            case "qol.storage_overlay" -> List.of(
+                    setting("qol.storage_overlay.reload_pages", "Reload Storage Pages", "Open every unlocked Ender Chest and Backpack from the server. Later overlay opens only reload pages you clicked; use this to refresh all of them.", SettingType.ACTION, "cache", "reload", "refresh")
             );
             default -> List.of();
         };

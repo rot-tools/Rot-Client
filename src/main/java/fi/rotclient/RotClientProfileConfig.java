@@ -22,6 +22,12 @@ final class RotClientProfileConfig {
     String activeProfileId = "";
     List<RotClientProfile> profiles = new ArrayList<>();
 
+    /**
+     * Global (not per-profile) rules for switching profiles automatically by
+     * location. Absent in files written before this feature existed.
+     */
+    RotClientAutoSwitchConfig autoSwitch = new RotClientAutoSwitchConfig();
+
     static RotClientProfileConfig defaults() {
         return new RotClientProfileConfig();
     }
@@ -76,6 +82,12 @@ final class RotClientProfileConfig {
         if (profiles.isEmpty()) {
             activeProfileId = "";
         }
+
+        if (autoSwitch == null) {
+            autoSwitch = new RotClientAutoSwitchConfig();
+        }
+
+        autoSwitch.normalize(id -> findById(id) != null);
     }
 
     RotClientProfile activeProfile() {

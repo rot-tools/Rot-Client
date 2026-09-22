@@ -1,0 +1,24 @@
+{
+  "id": "mining",
+  "name": "Mining",
+  "summary": "Everything for a mining session: tracker, Powder Chest and commissions.",
+  "highlights": [
+    "Custom Scoreboard",
+    "Pet HUD",
+    "Mining Tracker",
+    "Powder Chest",
+    "Commissions"
+  ],
+  "modules": [
+    "qol.custom_scoreboard",
+    "qol.pet_hud",
+    "qol.commission_display"
+  ],
+  "miningTracker": true,
+  "powderChestHud": true,
+  "layout": [
+    { "anchor": "TOP_LEFT", "elements": ["mining_tracker"] },
+    { "anchor": "TOP_LEFT", "elements": ["pet", "commission"] },
+    { "anchor": "TOP_RIGHT", "elements": ["powder_chest"] }
+  ]
+}

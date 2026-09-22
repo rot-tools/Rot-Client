@@ -1,0 +1,28 @@
+{
+  "id": "dungeons",
+  "name": "Dungeons",
+  "summary": "Dungeon HUD with its map, Blood Timers, and a performance readout.",
+  "highlights": [
+    "Custom Scoreboard",
+    "Pet HUD",
+    "Dungeon HUD + map",
+    "Blood Timers",
+    "Performance HUD"
+  ],
+  "modules": [
+    "qol.custom_scoreboard",
+    "qol.pet_hud",
+    "qol.performance_hud",
+    "qol.dungeon_hud",
+    "qol.dungeon_watcher"
+  ],
+  "settings": {
+    "qol.dungeon_watcher.blood_timers": true
+  },
+  "layout": [
+    {
+      "anchor": "TOP_LEFT",
+      "elements": ["dungeon", "dungeon_watcher", "pet", "performance"]
+    }
+  ]
+}

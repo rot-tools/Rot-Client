@@ -8,6 +8,7 @@ final class PlusModuleKeybindRuntime {
     private static boolean sellWasDown;
     private static boolean ghostsWasDown;
     private static boolean freecamWasDown;
+    private static boolean petWasDown;
 
     private PlusModuleKeybindRuntime() {
     }
@@ -18,7 +19,8 @@ final class PlusModuleKeybindRuntime {
             reset();
             return;
         }
-        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        QolUtilityConfig config = RotClientClient.qolConfigPublic();
+        QolSkyblockExtras extras = config.extras();
         long window = client.getWindow().handle();
         gfsWasDown = fire(window, extras.autoGfsKeybind, gfsWasDown,
                 "qol.auto_gfs", "Auto GFS");
@@ -28,6 +30,8 @@ final class PlusModuleKeybindRuntime {
                 "qol.ghosts", "Ghosts");
         freecamWasDown = fire(window, extras.freecamKeybind, freecamWasDown,
                 "qol.freecam", "Free Camera");
+        petWasDown = fire(window, config.petModuleKeybind, petWasDown,
+                "qol.pet_keybinds", "Pet Keybinds");
     }
 
     private static boolean fire(
@@ -47,5 +51,6 @@ final class PlusModuleKeybindRuntime {
         sellWasDown = false;
         ghostsWasDown = false;
         freecamWasDown = false;
+        petWasDown = false;
     }
 }

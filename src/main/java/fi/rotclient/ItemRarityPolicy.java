@@ -23,8 +23,7 @@ public final class ItemRarityPolicy {
     public static final float DEFAULT_OUTLINE_ALPHA = 0.85F;
 
     private static final Pattern RARITY = Pattern.compile(
-            "\\b(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL|VERY SPECIAL)\\b",
-            Pattern.CASE_INSENSITIVE);
+            "\\b(COMMON|UNCOMMON|RARE|EPIC|LEGENDARY|MYTHIC|DIVINE|SPECIAL|VERY SPECIAL)\\b");
 
     public enum Rarity {
         COMMON,
@@ -57,8 +56,9 @@ public final class ItemRarityPolicy {
         if (raw == null) {
             return null;
         }
-        Matcher matcher = RARITY.matcher(
-                ChatTextPolicy.stripFormatting(raw).toUpperCase(Locale.ROOT));
+        // SkyBlock rarity lines are always upper case. Matching case-insensitively made a
+        // menu button whose lore says "rare" or "special" in a sentence look like an item.
+        Matcher matcher = RARITY.matcher(ChatTextPolicy.stripFormatting(raw));
         if (!matcher.find()) {
             return null;
         }
