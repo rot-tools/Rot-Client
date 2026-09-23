@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -186,7 +188,7 @@ public final class  InventoryChromeRuntime {
 
         if (screen == null
                 || hovered == null
-                || mouseButton != 0
+                || mouseButton != InputConstants.MOUSE_BUTTON_LEFT
                 || RotClientPetPickerRuntime.active()) {
 
             return;
@@ -396,7 +398,7 @@ public final class  InventoryChromeRuntime {
             int button,
             boolean controlDown,
             boolean shiftDown) {
-        if (screen == null || button != 0) {
+        if (screen == null || button != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
@@ -450,11 +452,13 @@ public final class  InventoryChromeRuntime {
         if (qol.inventoryOverlayEquipment) {
             int index = InventoryOverlayPolicy.hitEquipmentIndex(leftPos, topPos, mouseX, mouseY);
             if (index >= 0) {
-                ItemStack equipped = EQUIPMENT[index];
+                client.player.connection.sendCommand(InventoryOverlayPolicy.OPEN_WARDROBE_COMMAND);
+                consumeNextRelease = true;
+                return true;
+            }
+            if (InventoryOverlayPolicy.hitArmorColumn(leftPos, topPos, mouseX, mouseY)) {
                 client.player.connection.sendCommand(
-                        equipped.isEmpty()
-                                ? InventoryOverlayPolicy.OPEN_STATS_COMMAND
-                                : InventoryOverlayPolicy.OPEN_WARDROBE_COMMAND);
+                        InventoryOverlayPolicy.OPEN_ARMOR_WARDROBE_COMMAND);
                 consumeNextRelease = true;
                 return true;
             }
@@ -471,11 +475,11 @@ public final class  InventoryChromeRuntime {
             int mouseX,
             int mouseY,
             int button) {
-        if (draggingColorChannel >= 0 && button == 0) {
+        if (draggingColorChannel >= 0 && button == InputConstants.MOUSE_BUTTON_LEFT) {
             applyColorSlider(screen, leftPos, topPos, imageWidth, imageHeight, mouseX);
             return true;
         }
-        if (!draggingPet || button != 0 || !(screen instanceof InventoryScreen)) {
+        if (!draggingPet || button != InputConstants.MOUSE_BUTTON_LEFT || !(screen instanceof InventoryScreen)) {
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
@@ -487,7 +491,7 @@ public final class  InventoryChromeRuntime {
     }
 
     public static boolean handleInventoryRelease(int button) {
-        if (button != 0) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
         if (draggingColorChannel >= 0) {
@@ -590,7 +594,7 @@ public final class  InventoryChromeRuntime {
                     ItemStack hint = new ItemStack(Items.PAPER);
                     hint.set(
                             DataComponents.CUSTOM_NAME,
-                            Component.literal(InventoryOverlayPolicy.OPEN_STATS_LABEL));
+                            Component.literal(InventoryOverlayPolicy.OPEN_WARDROBE_LABEL));
                     graphics.setTooltipForNextFrame(font, hint, mouseX, mouseY);
                 }
             }

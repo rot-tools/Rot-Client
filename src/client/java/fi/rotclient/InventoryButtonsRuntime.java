@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -60,7 +62,7 @@ public final class InventoryButtonsRuntime {
         QolSkyblockExtras extras = settings();
         if (!extras.inventoryButtonsEnabled
                 || !InventoryOverlayPolicy.showSkyblockInventoryUi(SkyBlockAreaDetector.isInSkyblock())
-                || mouseButton != 0
+                || mouseButton != InputConstants.MOUSE_BUTTON_LEFT
                 || screen == null) {
             return false;
         }
@@ -89,7 +91,7 @@ public final class InventoryButtonsRuntime {
 
     public static boolean drag(AbstractContainerScreen<?> screen, int left, int top,
                                int guiWidth, int guiHeight, int mouseX, int mouseY, int mouseButton) {
-        if (dragging == null || mouseButton != 0 || screen == null) {
+        if (dragging == null || mouseButton != InputConstants.MOUSE_BUTTON_LEFT || screen == null) {
             return false;
         }
         int[] anchor = buttonAnchor(screen, left, top, guiWidth, guiHeight);
@@ -105,7 +107,7 @@ public final class InventoryButtonsRuntime {
     }
 
     public static boolean release(int mouseButton) {
-        if (mouseButton != 0 || dragging == null) {
+        if (mouseButton != InputConstants.MOUSE_BUTTON_LEFT || dragging == null) {
             return false;
         }
         dragging = null;

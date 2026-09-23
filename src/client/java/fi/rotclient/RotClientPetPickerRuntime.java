@@ -166,7 +166,7 @@ public final class RotClientPetPickerRuntime {
         /*
          * While picking a pet, only left click has meaning.
          */
-        if (mouseButton != 0) {
+        if (mouseButton != InputConstants.MOUSE_BUTTON_LEFT) {
             return true;
         }
 

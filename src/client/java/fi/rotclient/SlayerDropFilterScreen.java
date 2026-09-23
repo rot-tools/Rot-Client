@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,7 +54,7 @@ final class SlayerDropFilterScreen extends Screen {
     }
 
     @Override public boolean mouseClicked(MouseButtonEvent e, boolean doubleClick) {
-        if (e.button() != 0) return super.mouseClicked(e, doubleClick);
+        if (e.button() != InputConstants.MOUSE_BUTTON_LEFT) return super.mouseClicked(e, doubleClick);
         int mx=(int)Math.round(e.x()), my=(int)Math.round(e.y());
         int x=Math.max(10,(width-720)/2), y=Math.max(10,(height-440)/2);
         SlayerPolicy.SlayerType[] types=SlayerPolicy.SlayerType.values();

@@ -169,7 +169,7 @@ public final class RotClientEquipmentPickerRuntime {
         /*
          * Only left click is meaningful while selecting a set.
          */
-        if (mouseButton != 0) {
+        if (mouseButton != InputConstants.MOUSE_BUTTON_LEFT) {
             return true;
         }
 

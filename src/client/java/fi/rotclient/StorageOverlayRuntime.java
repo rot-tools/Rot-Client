@@ -402,7 +402,7 @@ public final class StorageOverlayRuntime {
             int mouseY,
             int button,
             boolean shiftDown) {
-        if (!settings().storageOverlayEnabled || button != 0 || screen == null || lastLayout == null) {
+        if (!settings().storageOverlayEnabled || button != InputConstants.MOUSE_BUTTON_LEFT || screen == null || lastLayout == null) {
             return false;
         }
         if (!shouldReplaceVanilla(screen)) {

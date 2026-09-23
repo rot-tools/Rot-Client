@@ -28,7 +28,7 @@ public final class MissingEnchantsRuntime {
     }
 
     public static void noteCtrlClick(ItemStack stack, boolean controlDown, int button) {
-        if (!controlDown || button != 0 || stack == null || stack.isEmpty()) {
+        if (!controlDown || button != InputConstants.MOUSE_BUTTON_LEFT || stack == null || stack.isEmpty()) {
             return;
         }
         String identity = SkyBlockItemIdentity.identify(stack);

@@ -827,7 +827,7 @@ public final class QolUtilityCatalog {
                 true,
                 true,
                 List.of("equipment", "recipe book", "pet slot", "inventory", "potion", "effects", "color", "wrench", "dashboard", "value"),
-                setting("qol.inventory_overlay.equipment", "Equipment Slots", "Draw four stacked equipment bars. Last seen pieces stay after a restart. Empty bars show a + and any click opens Stats & Equipment. The vanilla off-hand slot is hidden.", SettingType.TOGGLE, "equipment"),
+                setting("qol.inventory_overlay.equipment", "Equipment Slots", "Draw four stacked equipment bars. Click one to open Equipment Wardrobe, or click a vanilla armor slot to open Wardrobe. Empty slots work too. The vanilla off-hand slot is hidden.", SettingType.TOGGLE, "equipment"),
                 setting("qol.inventory_overlay.hide_recipe_book", "Hide Recipe Book", "Remove the recipe-book button from survival inventory.", SettingType.TOGGLE, "recipe", "book"),
                 setting("qol.inventory_overlay.hide_status_effects", "Hide Inventory Effects", "Hide the potion-effect panel on the right of the inventory screen, including Hypixel lobby.", SettingType.TOGGLE, "potion", "effects"),
                 setting("qol.inventory_overlay.pet_slot", "Pet Slot", "Show the equipped pet to the right of the bottom equipment bar. The last chosen pet stays after a restart. Click to open Pets. Ctrl+left-click and drag to reposition.", SettingType.TOGGLE, "pet"),
