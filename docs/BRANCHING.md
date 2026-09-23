@@ -17,6 +17,8 @@ feature/*                  ●---●   ●-●           one task per branch
 | --- | --- |
 | `main` | Stable, playtested code only. Public versioned GitHub Releases are cut from here. |
 | `development` | Shared integration line. Feature work merges here. The playtest JAR publishes from here. |
+| `release/26.1.2` | Minecraft 26.1.2 Lite playtest maintenance; no Plus build is distributed. |
+| `port/26.3` | Minecraft 26.3 Lite and Plus playtest maintenance. Keep 26.3-specific source changes off the 26.2 `development` branch. |
 | `feature/<short-name>` | One task, branched from `development`, merged back into `development`. |
 | `fix/<short-name>` | Same as a feature branch, for bug fixes. |
 
@@ -47,6 +49,8 @@ lost.
 | Artifact | Source |
 | --- | --- |
 | [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) pre-release | Green push to `development` |
+| [26.1.2 Lite playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | `release/26.1.2` |
+| [26.3 Lite and Plus playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | `port/26.3` |
 | Versioned GitHub Release | Tag on `main` |
 
 ## First-time clone
