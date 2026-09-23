@@ -57,11 +57,11 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | No distributed Plus JAR | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | No playable JAR yet | No playable JAR yet | The [`port/26.3` branch](https://github.com/rot-tools/Rot-Client/tree/port/26.3) does not compile. Do not rename or install a 26.2 JAR as 26.3. |
+| 26.3 | [`2.0.1+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | Automated build, edition checks, and startup smoke tests pass; in-world gameplay validation is pending. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
-CurseForge publication yet.
+CurseForge publication yet. The 26.3 source lives on [`port/26.3`](https://github.com/rot-tools/Rot-Client/tree/port/26.3); the 26.2 `development` branch and its rolling playtest remain separate.
 
 ### Playtest JAR
 
