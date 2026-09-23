@@ -103,8 +103,8 @@ public final class MapArtOverrideRuntime {
         poseStack.pushPose();
         float pivot = MapArtOverridePolicy.MAP_QUAD_CENTER;
         poseStack.translate(pivot, pivot, 0.0F);
-        poseStack.mulPose(Axis.ZP.rotationDegrees(
-                -MapArtOverridePolicy.mapFrameZDegrees(frameRotation)));
+        poseStack.rotateDegrees(Axis.ZP,
+                -MapArtOverridePolicy.mapFrameZDegrees(frameRotation));
         poseStack.translate(-pivot, -pivot, 0.0F);
         submitContainedMapQuad(
                 poseStack,
@@ -148,7 +148,7 @@ public final class MapArtOverrideRuntime {
         }
         int light = MapArtOverridePolicy.packedLight(preferred, state.lightCoords);
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - direction.get2DDataValue() * 90.0F));
+        poseStack.rotateDegrees(Axis.YP, 180.0F - direction.get2DDataValue() * 90.0F);
         submitTextQuad(
                 poseStack,
                 collector,
@@ -278,8 +278,8 @@ public final class MapArtOverrideRuntime {
         }
         int light = MapArtOverridePolicy.packedLight(lightCoords, state.lightCoords);
         poseStack.pushPose();
-        poseStack.mulPose(Axis.ZP.rotationDegrees(
-                -MapArtOverridePolicy.itemFrameZDegrees(state.rotation)));
+        poseStack.rotateDegrees(Axis.ZP,
+                -MapArtOverridePolicy.itemFrameZDegrees(state.rotation));
         submitContainedTextQuad(
                 poseStack,
                 collector,

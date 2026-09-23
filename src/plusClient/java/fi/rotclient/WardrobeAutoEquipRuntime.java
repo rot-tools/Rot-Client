@@ -14,7 +14,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.OptionalInt;
 
@@ -289,7 +288,7 @@ if (loadoutDriven
     }
 
     public static boolean onKeyPress(KeyEvent event, int action) {
-        if (action != GLFW.GLFW_PRESS || event == null) {
+        if (action != InputConstants.PRESS || event == null) {
             return false;
         }
         Minecraft client = Minecraft.getInstance();
@@ -500,9 +499,10 @@ if (loadoutDriven
             Minecraft client,
             QolUtilityConfig qol,
             int key) {
+        String inputName = QolInputRuntime.formatGlfwKey(key);
         if (CheaterWardrobeSettings.from(qol).enabled()) {
             OptionalInt direct = WardrobeKeybindPolicy.customSlotForKey(
-                    key,
+                    inputName,
                     cheaterWardrobeSlotBinds(qol));
             if (direct.isPresent()) {
                 return direct;
@@ -510,6 +510,7 @@ if (loadoutDriven
         }
         if (qol.wardrobeKeybindsEnabled && qol.wardrobeAutoEquip) {
             return WardrobeKeybindPolicy.resolveConfiguredSlotKey(
+                    inputName,
                     key,
                     qol.wardrobeKeybindStyle,
                     qol.wardrobeUseHotbar,

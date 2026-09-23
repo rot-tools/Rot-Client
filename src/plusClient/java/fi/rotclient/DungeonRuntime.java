@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import fi.rotclient.mixin.AbstractContainerScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -42,7 +43,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -3321,20 +3321,20 @@ public final class DungeonRuntime {
     }
 
     static boolean isDropKey(int glfwKey) {
-        return glfwKey == GLFW.GLFW_KEY_Q;
+        return glfwKey == InputConstants.KEY_Q;
     }
 
     static int melodyDigitFromKey(int glfwKey, DungeonAthenSettings athen) {
-        if (QolKeybindNames.resolveGlfwKey(athen.termMelodyKey1, "1") == glfwKey) {
+        if (QolInputRuntime.resolveGlfwKey(athen.termMelodyKey1, "1") == glfwKey) {
             return 1;
         }
-        if (QolKeybindNames.resolveGlfwKey(athen.termMelodyKey2, "2") == glfwKey) {
+        if (QolInputRuntime.resolveGlfwKey(athen.termMelodyKey2, "2") == glfwKey) {
             return 2;
         }
-        if (QolKeybindNames.resolveGlfwKey(athen.termMelodyKey3, "3") == glfwKey) {
+        if (QolInputRuntime.resolveGlfwKey(athen.termMelodyKey3, "3") == glfwKey) {
             return 3;
         }
-        if (QolKeybindNames.resolveGlfwKey(athen.termMelodyKey4, "4") == glfwKey) {
+        if (QolInputRuntime.resolveGlfwKey(athen.termMelodyKey4, "4") == glfwKey) {
             return 4;
         }
         return digitFromKey(glfwKey);
@@ -3857,10 +3857,10 @@ public final class DungeonRuntime {
             if (athen.termDropKey && isDropKey(glfwKey)) {
                 return clickHoveredSolver(screen, 0);
             }
-            if (QolKeybindNames.resolveGlfwKey(athen.termKeybindLeft, "") == glfwKey) {
+            if (QolInputRuntime.resolveGlfwKey(athen.termKeybindLeft, "") == glfwKey) {
                 return clickHoveredSolver(screen, 0);
             }
-            if (QolKeybindNames.resolveGlfwKey(athen.termKeybindRight, "") == glfwKey) {
+            if (QolInputRuntime.resolveGlfwKey(athen.termKeybindRight, "") == glfwKey) {
                 return clickHoveredSolver(screen, 1);
             }
             int melodyDigit = melodyDigitFromKey(glfwKey, athen);
@@ -3955,15 +3955,15 @@ public final class DungeonRuntime {
     }
 
     static boolean isCloseKey(int glfwKey) {
-        return glfwKey == GLFW.GLFW_KEY_ESCAPE || glfwKey == GLFW.GLFW_KEY_E;
+        return glfwKey == InputConstants.KEY_ESCAPE || glfwKey == InputConstants.KEY_E;
     }
 
     static int digitFromKey(int glfwKey) {
-        if (glfwKey >= GLFW.GLFW_KEY_1 && glfwKey <= GLFW.GLFW_KEY_4) {
-            return glfwKey - GLFW.GLFW_KEY_0;
+        if (glfwKey >= InputConstants.KEY_1 && glfwKey <= InputConstants.KEY_4) {
+            return glfwKey - InputConstants.KEY_0;
         }
-        if (glfwKey >= GLFW.GLFW_KEY_KP_1 && glfwKey <= GLFW.GLFW_KEY_KP_4) {
-            return glfwKey - GLFW.GLFW_KEY_KP_0;
+        if (glfwKey >= InputConstants.KEY_NUMPAD1 && glfwKey <= InputConstants.KEY_NUMPAD4) {
+            return glfwKey - InputConstants.KEY_NUMPAD0;
         }
         return -1;
     }

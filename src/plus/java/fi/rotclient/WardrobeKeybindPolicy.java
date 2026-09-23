@@ -77,22 +77,18 @@ public final class WardrobeKeybindPolicy {
         return !empty && !loadingPane && !emptyMarker;
     }
 
-    public static boolean matchesInput(int code, String configured) {
-        Integer mouse = QolKeybindNames.resolveMouseButton(configured);
-        if (mouse != null) {
-            return mouse == code;
-        }
-        return MenuKeybindPolicy.matchesKey(code, configured);
+    public static boolean matchesInput(String inputName, String configured) {
+        return MenuKeybindPolicy.matchesKey(inputName, configured);
     }
 
     public static boolean isPageOrUnequipAction(
-            int code,
+            String inputName,
             String nextKey,
             String previousKey,
             String unequipKey) {
-        return matchesInput(code, nextKey)
-                || matchesInput(code, previousKey)
-                || matchesInput(code, unequipKey);
+        return matchesInput(inputName, nextKey)
+                || matchesInput(inputName, previousKey)
+                || matchesInput(inputName, unequipKey);
     }
 
     public static boolean shouldClickAutoEquip(boolean ready, boolean equipped) {
@@ -144,12 +140,12 @@ public final class WardrobeKeybindPolicy {
         return QolSkyblockExtras.STYLE_SIMPLE;
     }
 
-    public static OptionalInt customSlotForKey(int code, String[] customBinds) {
+    public static OptionalInt customSlotForKey(String inputName, String[] customBinds) {
         if (customBinds == null) {
             return OptionalInt.empty();
         }
         for (int i = 0; i < Math.min(9, customBinds.length); i++) {
-            if (matchesInput(code, customBinds[i])) {
+            if (matchesInput(inputName, customBinds[i])) {
                 return OptionalInt.of(wardrobeSlotIndex(i + 1));
             }
         }
@@ -169,19 +165,20 @@ public final class WardrobeKeybindPolicy {
     }
 
     public static OptionalInt resolveConfiguredSlotKey(
-            int code,
+            String inputName,
+            int rawCode,
             String configuredStyle,
             boolean useHotbar,
             String[] customBinds,
             int[] hotbarGlfwKeys) {
         String style = effectiveStyle(configuredStyle, useHotbar);
         if (QolSkyblockExtras.STYLE_CUSTOM.equals(style)) {
-            return customSlotForKey(code, customBinds);
+            return customSlotForKey(inputName, customBinds);
         }
         if (QolSkyblockExtras.STYLE_HOTBAR.equals(style)) {
-            return hotbarSlotForKey(code, hotbarGlfwKeys);
+            return hotbarSlotForKey(rawCode, hotbarGlfwKeys);
         }
-        int number = MenuKeybindPolicy.numberRowIndex(code);
+        int number = MenuKeybindPolicy.numberRowIndex(inputName);
         if (number < 0 || number >= 9) {
             return OptionalInt.empty();
         }

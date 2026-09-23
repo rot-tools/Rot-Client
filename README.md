@@ -8,15 +8,15 @@
   made by <b>Rot Tools</b><br>
   <b>A client-side Fabric companion for Hypixel SkyBlock</b><br>
   One dashboard for quality-of-life modules, Visuals, mining, and sessions.<br>
-  Built for Minecraft <code>26.2</code>.
+  Built for Minecraft <code>26.3</code> on this branch.
 </p>
 
 <p align="center">
   <a href="https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml"><img src="https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-a855f7.svg" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/Minecraft-26.2-2ea44f?logo=minecraft&logoColor=white" alt="Minecraft 26.2">
+  <img src="https://img.shields.io/badge/Minecraft-26.3-2ea44f?logo=minecraft&logoColor=white" alt="Minecraft 26.3">
   <img src="https://img.shields.io/badge/Java-25-f89820?logo=openjdk&logoColor=white" alt="Java 25">
-  <img src="https://img.shields.io/badge/Fabric-0.19.3-dbd0b4" alt="Fabric 0.19.3">
+  <img src="https://img.shields.io/badge/Fabric-0.19.5-dbd0b4" alt="Fabric 0.19.5">
   <a href="https://discord.gg/8UpMfvZugq"><img src="https://img.shields.io/badge/Discord-community-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
@@ -33,14 +33,14 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.2`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
+> **`2.0.1+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
 
 ## Install
 
-**Requires** Minecraft `26.2`, Java `25`, [Fabric Loader](https://fabricmc.net/use/) `0.19.3` or newer, and [Fabric API](https://modrinth.com/mod/fabric-api) `0.155.2+26.2`. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
+**Requires** Minecraft `26.3`, Java `25`, [Fabric Loader](https://fabricmc.net/use/) `0.19.5` or newer, and [Fabric API](https://modrinth.com/mod/fabric-api) `0.160.5+26.3`. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
 
 Pick **one** edition. Both files can sit in `mods/`; enable only one. They
 `breaks` each other if both load. Skip `-sources.jar`. Remove any legacy
@@ -48,8 +48,8 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
-| `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
+| `RotClient-2.0.1+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.1+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Minecraft version availability
 
@@ -57,7 +57,7 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | No distributed Plus JAR | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | No playable JAR yet | No playable JAR yet | The [`port/26.3` branch](https://github.com/rot-tools/Rot-Client/tree/port/26.3) does not compile. Do not rename or install a 26.2 JAR as 26.3. |
+| 26.3 | [`2.0.1+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | Automated build and edition checks pass; Lite and Plus passed startup smoke tests. In-game feature validation remains pending. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
@@ -65,11 +65,11 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. Each green push to `development` replaces
-the [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
-pre-release with **both** JARs and `SHA256SUMS.txt`:
+Testers do not need to build. The [26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3)
+holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
+tracks `development` and is replaced after green pushes there.
 
-1. Open [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest).
+1. Open the playtest matching your Minecraft version.
 2. Download the edition you want. Skip `-sources.jar`.
 3. Put that file in the instance `mods/` folder. Enable only one Rot Tools JAR.
 
@@ -79,9 +79,9 @@ run if you need a specific commit.
 
 ### Build from source
 
-1. Install Fabric Loader and Fabric API for Minecraft 26.2.
+1. Install Fabric Loader and Fabric API for Minecraft 26.3.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy `RotClient-2.0.1+mc26.2.jar` and/or `RotClientPlus-2.0.1+mc26.2.jar`
+3. Copy `RotClient-2.0.1+mc26.3.jar` and/or `RotClientPlus-2.0.1+mc26.3.jar`
    from `build/libs/` into `mods/`. Enable only one.
 
 Rot Tools includes bounded migration for supported legacy MiningTracker

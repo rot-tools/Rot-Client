@@ -1,6 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.DungeonRuntime;
+import fi.rotclient.ItemProtectRuntime;
 import fi.rotclient.MiningAssistRuntime;
 import fi.rotclient.RotClientClient;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -22,6 +23,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MultiPlayerGameMode.class)
 abstract class MultiPlayerGameModeMixin {
+    @Inject(method = "dropItem", at = @At("HEAD"), cancellable = true)
+    private void rotclient$protectDrop(LocalPlayer player, boolean entireStack, CallbackInfo ci) {
+        if (player != null && ItemProtectRuntime.shouldBlockDrop(player.getMainHandItem())) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "attack", at = @At("HEAD"))
     private void rotclient$recordPlayerAttack(
             Player player,

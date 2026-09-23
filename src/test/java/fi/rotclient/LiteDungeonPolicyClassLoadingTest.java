@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 final class LiteDungeonPolicyClassLoadingTest {
     @Test
     void liteClassesStillLoadWithoutPlusDungeonPolicies() throws Exception {
-        Path jar = Path.of("build/libs/RotClient-2.0.1+mc26.2.jar").toAbsolutePath();
+        Path jar = Path.of("build/libs/RotClient-2.0.1+mc26.3.jar").toAbsolutePath();
         try (URLClassLoader loader = new URLClassLoader(new URL[] {jar.toUri().toURL()}, getClass().getClassLoader()) {
             @Override
             protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {

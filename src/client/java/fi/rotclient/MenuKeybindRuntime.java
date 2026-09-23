@@ -40,7 +40,7 @@ public final class MenuKeybindRuntime {
         if (screen == null) {
             return false;
         }
-        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, rawCode)) {
+        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, rawCode, keyName)) {
             return true;
         }
         if (!QolFlavorSupport.isPlus() || keyName == null || keyName.isBlank()) {

@@ -10,7 +10,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -47,7 +46,7 @@ final class WardrobeMenuKeybindRuntime {
         }
     }
 
-    static boolean handleInput(AbstractContainerScreen<?> screen, int code) {
+    static boolean handleInput(AbstractContainerScreen<?> screen, int code, String inputName) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (screen == null || !qol.wardrobeKeybindsEnabled
                 || MenuKeybindPolicy.parseWardrobeTitle(titleOf(screen)) == null) {
@@ -58,9 +57,10 @@ final class WardrobeMenuKeybindRuntime {
                 && client.getWindow() != null
                 && QolInputRuntime.isBoundDown(
                         client.getWindow().handle(), qol.wardrobeOverrideKey);
-        boolean inventoryOrEscape = code == GLFW.GLFW_KEY_ESCAPE
-                || code == boundKeyValue(client == null ? null : client.options.keyInventory);
-        boolean action = isAction(code, qol, client);
+        boolean inventoryOrEscape = "ESCAPE".equals(inputName)
+                || (isKeyboardInput(inputName)
+                    && code == boundKeyValue(client == null ? null : client.options.keyInventory));
+        boolean action = isAction(code, inputName, qol, client);
         if (WardrobeKeybindPolicy.shouldCancelOtherInput(
                 true, qol.wardrobeCancelAll, overrideHeld, inventoryOrEscape, action)) {
             return true;
@@ -76,26 +76,26 @@ final class WardrobeMenuKeybindRuntime {
                 MenuKeybindPolicy.parseWardrobeTitle(titleOf(screen));
         OptionalInt slot = OptionalInt.empty();
         boolean pageTurn = false;
-        if (WardrobeKeybindPolicy.matchesInput(code, qol.wardrobePreviousKey)) {
+        if (WardrobeKeybindPolicy.matchesInput(inputName, qol.wardrobePreviousKey)) {
             if (page.current() > 1) {
                 slot = OptionalInt.of(MenuKeybindPolicy.WARDROBE_PREVIOUS_SLOT);
                 pageTurn = true;
             }
-        } else if (WardrobeKeybindPolicy.matchesInput(code, qol.wardrobeNextKey)) {
+        } else if (WardrobeKeybindPolicy.matchesInput(inputName, qol.wardrobeNextKey)) {
             if (page.current() < page.total()) {
                 slot = OptionalInt.of(MenuKeybindPolicy.WARDROBE_NEXT_SLOT);
                 pageTurn = true;
             }
-        } else if (WardrobeKeybindPolicy.matchesInput(code, qol.wardrobeUnequipKey)) {
+        } else if (WardrobeKeybindPolicy.matchesInput(inputName, qol.wardrobeUnequipKey)) {
             int equipped = findEquippedSlot(screen);
             if (equipped >= 0) {
                 slot = OptionalInt.of(equipped);
             }
         } else if (qol.wardrobeSwap
-                && WardrobeKeybindPolicy.matchesInput(code, qol.wardrobeSwapKey)) {
+                && WardrobeKeybindPolicy.matchesInput(inputName, qol.wardrobeSwapKey)) {
             slot = resolveSwapSlot(screen, qol);
         } else {
-            slot = resolveSetSlot(screen, code, qol, client);
+            slot = resolveSetSlot(screen, code, inputName, qol, client);
         }
         if (slot.isEmpty()) {
             return qol.wardrobeCancelAll && action;
@@ -110,40 +110,52 @@ final class WardrobeMenuKeybindRuntime {
         return true;
     }
 
-    private static boolean isAction(int code, QolUtilityConfig qol, Minecraft client) {
+    private static boolean isAction(int code, String inputName, QolUtilityConfig qol, Minecraft client) {
         if (WardrobeKeybindPolicy.isPageOrUnequipAction(
-                code, qol.wardrobeNextKey, qol.wardrobePreviousKey, qol.wardrobeUnequipKey)) {
+                inputName, qol.wardrobeNextKey, qol.wardrobePreviousKey, qol.wardrobeUnequipKey)) {
             return true;
         }
         if (qol.wardrobeSwap
-                && WardrobeKeybindPolicy.matchesInput(code, qol.wardrobeSwapKey)) {
+                && WardrobeKeybindPolicy.matchesInput(inputName, qol.wardrobeSwapKey)) {
             return true;
         }
         String style = WardrobeKeybindPolicy.effectiveStyle(
                 qol.wardrobeKeybindStyle, qol.wardrobeUseHotbar);
         if (QolSkyblockExtras.STYLE_CUSTOM.equals(style)) {
-            return WardrobeKeybindPolicy.customSlotForKey(code, customBinds(qol)).isPresent();
+            return WardrobeKeybindPolicy.customSlotForKey(inputName, customBinds(qol)).isPresent();
         }
         if (QolSkyblockExtras.STYLE_HOTBAR.equals(style)) {
-            return WardrobeKeybindPolicy.hotbarSlotForKey(code, hotbarKeys(client)).isPresent();
+            return isKeyboardInput(inputName)
+                    && WardrobeKeybindPolicy.hotbarSlotForKey(code, hotbarKeys(client)).isPresent();
         }
-        return MenuKeybindPolicy.numberRowIndex(code) >= 0;
+        return MenuKeybindPolicy.numberRowIndex(inputName) >= 0;
+    }
+
+    private static boolean isKeyboardInput(String inputName) {
+        return inputName != null && !inputName.isBlank()
+                && !inputName.startsWith("MOUSE_")
+                && !"LMB".equals(inputName)
+                && !"RMB".equals(inputName)
+                && !"MMB".equals(inputName);
     }
 
     private static OptionalInt resolveSetSlot(
             AbstractContainerScreen<?> screen,
             int code,
+            String inputName,
             QolUtilityConfig qol,
             Minecraft client) {
         String style = WardrobeKeybindPolicy.effectiveStyle(
                 qol.wardrobeKeybindStyle, qol.wardrobeUseHotbar);
         OptionalInt index;
         if (QolSkyblockExtras.STYLE_CUSTOM.equals(style)) {
-            index = WardrobeKeybindPolicy.customSlotForKey(code, customBinds(qol));
+            index = WardrobeKeybindPolicy.customSlotForKey(inputName, customBinds(qol));
         } else if (QolSkyblockExtras.STYLE_HOTBAR.equals(style)) {
-            index = WardrobeKeybindPolicy.hotbarSlotForKey(code, hotbarKeys(client));
+            index = isKeyboardInput(inputName)
+                    ? WardrobeKeybindPolicy.hotbarSlotForKey(code, hotbarKeys(client))
+                    : OptionalInt.empty();
         } else {
-            int number = MenuKeybindPolicy.numberRowIndex(code);
+            int number = MenuKeybindPolicy.numberRowIndex(inputName);
             index = number < 0 ? OptionalInt.empty()
                     : OptionalInt.of(MenuKeybindPolicy.WARDROBE_SLOT_BASE + number);
         }

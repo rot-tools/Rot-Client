@@ -258,7 +258,8 @@ public interface QolClientFlavorHooks {
 
     default boolean wardrobeMenuHandleInput(
             net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
-            int code) {
+            int code,
+            String inputName) {
         return false;
     }
 

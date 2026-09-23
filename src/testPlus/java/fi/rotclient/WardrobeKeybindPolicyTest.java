@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.lwjgl.glfw.GLFW;
 
 final class WardrobeKeybindPolicyTest {
     @Test
@@ -53,17 +52,9 @@ final class WardrobeKeybindPolicyTest {
         assertEquals(
                 38,
                 WardrobeKeybindPolicy.hotbarSlotForKey(
-                        GLFW.GLFW_KEY_3,
+                        13,
                         new int[] {
-                            GLFW.GLFW_KEY_1,
-                            GLFW.GLFW_KEY_2,
-                            GLFW.GLFW_KEY_3,
-                            GLFW.GLFW_KEY_4,
-                            GLFW.GLFW_KEY_5,
-                            GLFW.GLFW_KEY_6,
-                            GLFW.GLFW_KEY_7,
-                            GLFW.GLFW_KEY_8,
-                            GLFW.GLFW_KEY_9
+                            11, 12, 13, 14, 15, 16, 17, 18, 19
                         }).orElse(-1));
         assertTrue(WardrobeKeybindPolicy.autoEquipTimedOut(0L, 2001L));
         assertFalse(WardrobeKeybindPolicy.autoEquipTimedOut(0L, 2000L));
@@ -94,21 +85,14 @@ final class WardrobeKeybindPolicyTest {
             "R", "G", "", "", "", "", "", "", ""
         };
         int[] hotbarBinds = {
-            GLFW.GLFW_KEY_1,
-            GLFW.GLFW_KEY_2,
-            GLFW.GLFW_KEY_3,
-            GLFW.GLFW_KEY_4,
-            GLFW.GLFW_KEY_5,
-            GLFW.GLFW_KEY_6,
-            GLFW.GLFW_KEY_7,
-            GLFW.GLFW_KEY_8,
-            GLFW.GLFW_KEY_9
+            11, 12, 13, 14, 15, 16, 17, 18, 19
         };
 
         assertEquals(
                 WardrobeKeybindPolicy.wardrobeSlotIndex(1),
                 WardrobeKeybindPolicy.resolveConfiguredSlotKey(
-                        GLFW.GLFW_KEY_R,
+                        "R",
+                        42,
                         QolSkyblockExtras.STYLE_CUSTOM,
                         false,
                         customBinds,
@@ -116,7 +100,8 @@ final class WardrobeKeybindPolicyTest {
         assertEquals(
                 WardrobeKeybindPolicy.wardrobeSlotIndex(2),
                 WardrobeKeybindPolicy.resolveConfiguredSlotKey(
-                        GLFW.GLFW_KEY_2,
+                        "2",
+                        12,
                         QolSkyblockExtras.STYLE_HOTBAR,
                         true,
                         customBinds,
@@ -124,7 +109,8 @@ final class WardrobeKeybindPolicyTest {
         assertEquals(
                 WardrobeKeybindPolicy.wardrobeSlotIndex(6),
                 WardrobeKeybindPolicy.resolveConfiguredSlotKey(
-                        GLFW.GLFW_KEY_6,
+                        "6",
+                        16,
                         QolSkyblockExtras.STYLE_SIMPLE,
                         false,
                         customBinds,

@@ -22,6 +22,7 @@ abstract class EntityRendererSuppressMixin<T extends Entity> {
             double camX,
             double camY,
             double camZ,
+            float partialTick,
             CallbackInfoReturnable<Boolean> cir) {
         if (QolVisualRuntime.shouldSuppressEntity(entity)) {
             cir.setReturnValue(false);

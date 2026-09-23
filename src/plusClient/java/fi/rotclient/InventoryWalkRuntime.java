@@ -120,11 +120,9 @@ public final class InventoryWalkRuntime {
         long handle = client.getWindow().handle();
         int value = bound.getValue();
         if (bound.getType() == InputConstants.Type.MOUSE) {
-            return org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, value)
-                    == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            return QolInputRuntime.isMouseDown(value);
         }
-        return org.lwjgl.glfw.GLFW.glfwGetKey(handle, value)
-                == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        return QolInputRuntime.isKeyDown(handle, value);
     }
 
     private static void release(KeyMapping[] keys) {

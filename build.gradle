@@ -64,6 +64,8 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+	// LiteDungeonPolicyClassLoadingTest inspects the playable archive itself.
+	dependsOn jar
 }
 
 tasks.register('testPlus', Test) {

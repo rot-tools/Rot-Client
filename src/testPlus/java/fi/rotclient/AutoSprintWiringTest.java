@@ -15,8 +15,11 @@ final class AutoSprintWiringTest {
         String shared = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/LocalPlayerMixin.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(shared.contains("drop(Z)Z"));
-        assertTrue(shared.contains("ItemProtectRuntime.shouldBlockDrop"));
+        String gameMode = Files.readString(Path.of(
+                "src/client/java/fi/rotclient/mixin/MultiPlayerGameModeMixin.java"),
+                StandardCharsets.UTF_8);
+        assertTrue(gameMode.contains("method = \"dropItem\""));
+        assertTrue(gameMode.contains("ItemProtectRuntime.shouldBlockDrop"));
         assertFalse(shared.contains("Input;sprint()Z"));
         String source = Files.readString(Path.of(
                 "src/plusClient/java/fi/rotclient/mixin/LocalPlayerAutoSprintMixin.java"),

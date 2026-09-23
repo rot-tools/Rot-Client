@@ -60,7 +60,7 @@ abstract class GuiGraphicsExtractorNameHiderMixin {
     }
 
     @ModifyVariable(
-            method = "textWithWordWrap(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/FormattedText;IIII)V",
+            method = "textWithWordWrap(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/FormattedText;IIII)I",
             at = @At("HEAD"),
             argsOnly = true,
             ordinal = 0)

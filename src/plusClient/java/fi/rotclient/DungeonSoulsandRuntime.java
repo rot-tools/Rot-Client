@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -41,7 +42,7 @@ final class DungeonSoulsandRuntime {
             return;
         }
         client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
-        player.swing(InteractionHand.MAIN_HAND);
+        player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         lastPlaceMs = now;
     }
 

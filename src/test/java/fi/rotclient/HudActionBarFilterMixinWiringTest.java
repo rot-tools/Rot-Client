@@ -111,10 +111,10 @@ final class HudActionBarFilterMixinWiringTest {
                     .filter(p -> p.getFileName().toString().endsWith(".jar"))
                     .filter(p -> !p.getFileName().toString().contains("-sources"))
                     .filter(p -> p.toString().contains(nameFragment))
-                    .filter(p -> p.toString().contains("26.2"))
+                    .filter(p -> p.toString().contains("26.3"))
                     .findFirst();
             return jar.orElseThrow(() -> new AssertionError(
-                    "No " + nameFragment + " 26.2 jar under " + loom));
+                    "No " + nameFragment + " 26.3 jar under " + loom));
         }
     }
 

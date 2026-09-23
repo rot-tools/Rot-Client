@@ -88,7 +88,7 @@ final class QolChatSlotWaypointWiringTest {
         assertTrue(plusMixins.contains("FishingHookIotaMixin"));
 
         String drop = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/mixin/LocalPlayerMixin.java"),
+                "src/client/java/fi/rotclient/mixin/MultiPlayerGameModeMixin.java"),
                 StandardCharsets.UTF_8);
         assertTrue(drop.contains("ItemProtectRuntime.shouldBlockDrop"));
         String slots = Files.readString(Path.of(

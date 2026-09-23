@@ -421,8 +421,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public boolean wardrobeMenuHandleInput(
             net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen,
-            int code) {
-        return WardrobeMenuKeybindRuntime.handleInput(screen, code);
+            int code,
+            String inputName) {
+        return WardrobeMenuKeybindRuntime.handleInput(screen, code, inputName);
     }
 
     @Override

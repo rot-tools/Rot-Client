@@ -23,7 +23,7 @@ abstract class SoundEngineSlayerMixin {
             method = "play",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/resources/sounds/SoundInstance;resolve(Lnet/minecraft/client/sounds/SoundManager;)Lnet/minecraft/client/sounds/WeighedSoundEvents;",
+                    target = "Lnet/minecraft/client/resources/sounds/SoundInstance;getOrResolve(Lnet/minecraft/client/sounds/SoundManager;)Lnet/minecraft/client/sounds/WeighedSoundEvents;",
                     shift = At.Shift.AFTER),
             cancellable = true)
     private void rotclient$filterSlayerSound(

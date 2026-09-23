@@ -104,7 +104,7 @@ final class IotaStallWiringTest {
                 StandardCharsets.UTF_8);
         assertTrue(sounds.contains("IotaRuntime.shouldMuteSound"));
         assertTrue(sounds.contains("sound.getSound() == null"));
-        assertTrue(sounds.contains("SoundInstance;resolve"));
+        assertTrue(sounds.contains("SoundInstance;getOrResolve"));
         String gizmos = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/mixin/LevelRendererEtherwarpMixin.java"),
                 StandardCharsets.UTF_8);
