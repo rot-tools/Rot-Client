@@ -167,7 +167,7 @@ public final class RotClientWardrobePickerRuntime {
             return false;
         }
 
-        if (mouseButton != 0) {
+        if (mouseButton != InputConstants.MOUSE_BUTTON_LEFT) {
             return true;
         }
 

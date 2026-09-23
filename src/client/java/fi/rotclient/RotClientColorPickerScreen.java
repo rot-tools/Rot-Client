@@ -214,7 +214,7 @@ final class RotClientColorPickerScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() != 0) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return super.mouseClicked(event, doubleClick);
         }
         float uiScale = uiScale();
@@ -294,7 +294,7 @@ final class RotClientColorPickerScreen extends Screen {
             MouseButtonEvent event,
             double deltaX,
             double deltaY) {
-        if (event.button() != 0 || dragTarget == DragTarget.NONE) {
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || dragTarget == DragTarget.NONE) {
             return super.mouseDragged(event, deltaX, deltaY);
         }
         float uiScale = uiScale();
@@ -320,7 +320,7 @@ final class RotClientColorPickerScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             dragTarget = DragTarget.NONE;
         }
         return super.mouseReleased(event);

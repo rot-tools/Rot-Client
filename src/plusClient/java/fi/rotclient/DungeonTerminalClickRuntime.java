@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
@@ -26,7 +27,8 @@ public final class DungeonTerminalClickRuntime {
         if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
             return;
         }
-        TRAILS.add(new Trail(mouseX, mouseY, button == 1, System.currentTimeMillis() + 1_200L));
+        TRAILS.add(new Trail(mouseX, mouseY,
+                button == InputConstants.MOUSE_BUTTON_RIGHT, System.currentTimeMillis() + 1_200L));
         if (TRAILS.size() > 40) {
             TRAILS.removeFirst();
         }
