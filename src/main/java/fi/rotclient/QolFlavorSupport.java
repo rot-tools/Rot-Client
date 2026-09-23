@@ -43,6 +43,7 @@ public final class QolFlavorSupport {
         }
         EXTENSION = extension;
         QolUtilityCatalog.reloadFlavorModules();
+        RotClientProfilePresets.reloadFlavorPresets();
     }
 
     public static QolFlavorExtension extension() {

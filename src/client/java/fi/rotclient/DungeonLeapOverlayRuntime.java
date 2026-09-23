@@ -21,7 +21,8 @@ public final class DungeonLeapOverlayRuntime {
 
     public static boolean active(AbstractContainerScreen<?> screen) {
         QolSkyblockExtras extras = extras();
-        if (screen == null || !extras.dungeonLeapEnabled || !extras.dungeonLeapCustomGui) {
+        if (!QolFlavorSupport.isPlus() || screen == null
+                || !extras.dungeonLeapEnabled || !extras.dungeonLeapCustomGui) {
             return false;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();

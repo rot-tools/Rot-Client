@@ -98,7 +98,7 @@ public final class SkyBlockTooltipRuntime {
             List<String> lore,
             List<Component> lines) {
         DungeonAthenSettings athen = extras.athen();
-        if (!extras.dungeonMenusEnabled || !athen.pfShowStats) {
+        if (!QolFlavorSupport.isPlus() || !extras.dungeonMenusEnabled || !athen.pfShowStats) {
             return;
         }
         if (!DungeonAssistPolicy.isPartyFinderMenu(screenTitle())) {

@@ -1,6 +1,7 @@
 package fi.rotclient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,14 @@ final class QolOverlayHudEditorTest {
 
     @Test
     void hiddenDungeonCarryAndBloodTimerPreviewsRemainFullyEditable() {
+        QolFlavorExtension previous = QolFlavorSupport.extension();
+        QolFlavorSupport.install(new QolFlavorExtension() {
+            @Override
+            public boolean isPlus() {
+                return true;
+            }
+        });
+        try {
         TrackerConfig tracker =
                 new TrackerConfig();
 
@@ -202,6 +211,22 @@ final class QolOverlayHudEditorTest {
                 tracker.qolUtilities
                         .pose("dungeon_watcher")[1],
                 0.01F);
+        } finally {
+            QolFlavorSupport.install(previous);
+        }
+    }
+
+    @Test
+    void liteDoesNotExposeSavedDungeonEditorPreviews() {
+        TrackerConfig tracker = new TrackerConfig();
+        DungeonAthenSettings athen = tracker.qolUtilities.extras().athen();
+        athen.carryDisplay = true;
+        athen.watcherBloodTimers = true;
+        QolOverlayHud overlay = new QolOverlayHud(tracker);
+        overlay.setEditorOpen(true);
+
+        assertFalse(overlay.editorElementLabels().contains("Dungeon Carry Display"));
+        assertFalse(overlay.editorElementLabels().contains("Blood Timers"));
     }
 
     @Test

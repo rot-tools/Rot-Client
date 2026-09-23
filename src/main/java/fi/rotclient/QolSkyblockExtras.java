@@ -1078,15 +1078,15 @@ final class QolSkyblockExtras {
             case "qol.foraging_audio" -> foragingAudioEnabled;
             case "qol.foraging_helpers" -> foragingHelpersEnabled;
             case "qol.foraging_cheats" -> foragingCheatsEnabled;
-            case "qol.dungeon_hud" -> dungeonHudEnabled;
-            case "qol.dungeon_esp" -> dungeonEspEnabled;
-            case "qol.dungeon_announce" -> dungeonAnnounceEnabled;
-            case "qol.dungeon_leap" -> dungeonLeapEnabled;
-            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled;
+            case "qol.dungeon_hud" -> QolFlavorSupport.isPlus() && dungeonHudEnabled;
+            case "qol.dungeon_esp" -> QolFlavorSupport.isPlus() && dungeonEspEnabled;
+            case "qol.dungeon_announce" -> QolFlavorSupport.isPlus() && dungeonAnnounceEnabled;
+            case "qol.dungeon_leap" -> QolFlavorSupport.isPlus() && dungeonLeapEnabled;
+            case "qol.dungeon_terminals" -> QolFlavorSupport.isPlus() && dungeonTerminalsEnabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled;
-            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled;
-            case "qol.dungeon_f7" -> dungeonF7Enabled;
-            case "qol.dungeon_menus" -> dungeonMenusEnabled;
+            case "qol.dungeon_puzzles" -> QolFlavorSupport.isPlus() && dungeonPuzzlesEnabled;
+            case "qol.dungeon_f7" -> QolFlavorSupport.isPlus() && dungeonF7Enabled;
+            case "qol.dungeon_menus" -> QolFlavorSupport.isPlus() && dungeonMenusEnabled;
             case "qol.farm_keys" -> farmKeysEnabled;
             case "qol.slayer_display" -> slayerDisplayEnabled;
             case "qol.slayer_time_messages" -> slayerTimeMessagesEnabled;
@@ -1169,12 +1169,12 @@ final class QolSkyblockExtras {
             case "qol.foraging_helpers" -> foragingHelpersEnabled = enabled;
             case "qol.foraging_cheats" -> foragingCheatsEnabled = enabled;
             case "qol.dungeon_hud" -> dungeonHudEnabled = enabled;
-            case "qol.dungeon_esp" -> dungeonEspEnabled = enabled;
+            case "qol.dungeon_esp" -> dungeonEspEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_announce" -> dungeonAnnounceEnabled = enabled;
             case "qol.dungeon_leap" -> dungeonLeapEnabled = enabled;
-            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled = enabled;
+            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled = enabled;
-            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled = enabled;
+            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_f7" -> dungeonF7Enabled = enabled;
             case "qol.dungeon_menus" -> dungeonMenusEnabled = enabled;
             case "qol.farm_keys" -> farmKeysEnabled = enabled;
@@ -2640,15 +2640,15 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.delay" -> dungeonTerminalsDelay =
                     Math.max(0, Math.min(20, (int) Math.round(value)));
             case "qol.dungeon_terminals.protect_ms" -> dungeonTerminalsProtectMs =
-                    DungeonF7Policy.clampTermProtectMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampTermProtectMs((int) Math.round(value));
             case "qol.dungeon_f7.relic_look_time" -> dungeonF7RelicLookTime =
-                    DungeonF7Policy.clampRelicLookMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampRelicLookMs((int) Math.round(value));
             case "qol.dungeon_f7.relic_spawn_ticks" -> dungeonF7RelicSpawnTicks =
-                    DungeonF7Policy.clampRelicSpawnTicks((int) Math.round(value));
+                    DungeonSettingsCompat.clampRelicSpawnTicks((int) Math.round(value));
             case "qol.dungeon_f7.auto_i4_rotation" -> dungeonF7AutoI4Rotation =
-                    DungeonF7Policy.clampI4RotationMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampI4RotationMs((int) Math.round(value));
             case "qol.dungeon_esp.trigger_delay" -> dungeonEspTriggerDelay =
-                    DungeonLeftoverPolicy.clampTriggerDelay((int) Math.round(value));
+                    DungeonSettingsCompat.clampTriggerDelay((int) Math.round(value));
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor =
                     Math.max(0.0D, Math.min(1.0D, value));
             case "qol.dungeon_hud.map_scale" -> dungeonHudMapScale =
@@ -2668,9 +2668,9 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.party_cata" -> dungeonMenusPartyCata =
                     Math.max(0, Math.min(60, (int) Math.round(value)));
             case "qol.dungeon_esp.opacity" -> dungeonEspOpacity =
-                    DungeonAssistPolicy.clampOpacity((int) Math.round(value));
+                    DungeonSettingsCompat.clampOpacity((int) Math.round(value));
             case "qol.dungeon_announce.score_threshold" -> dungeonAnnounceScoreThreshold =
-                    DungeonAssistPolicy.clampScoreThreshold((int) Math.round(value));
+                    DungeonSettingsCompat.clampScoreThreshold((int) Math.round(value));
             case "qol.auto_sell.randomization" -> autoSellRandomization =
                     Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.slayer_highlights.boss_width" -> slayerHighlightsBossWidth =
@@ -2814,7 +2814,7 @@ final class QolSkyblockExtras {
             return DungeonPolicy.normalizeI4LeapClass(dungeonF7AutoI4LeapClass);
         }
         if ("qol.dungeon_menus.close_chest.mode".equals(settingId)) {
-            return DungeonF7Policy.normalizeCloseChestMode(dungeonMenusCloseChestMode);
+            return DungeonSettingsCompat.normalizeCloseChestMode(dungeonMenusCloseChestMode);
         }
         if ("qol.fishing_creatures.min_rarity".equals(settingId)) {
             return FishingCreaturesPolicy.normalizeRarity(fishingCreaturesMinRarity);
@@ -2832,7 +2832,7 @@ final class QolSkyblockExtras {
             return normalizeGhostHighlight(ghostsHighlightStyle);
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
-            return DungeonF7Policy.normalizeSoloClass(dungeonF7DragonSoloClass);
+            return DungeonSettingsCompat.normalizeSoloClass(dungeonF7DragonSoloClass);
         }
         if ("qol.block_outline.mode".equals(settingId)) {
             return BlockOutlinePolicy.normalizeMode(blockOutlineMode);
@@ -2887,7 +2887,7 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.dungeon_menus.close_chest.mode".equals(settingId)) {
-            dungeonMenusCloseChestMode = DungeonF7Policy.normalizeCloseChestMode(value);
+            dungeonMenusCloseChestMode = DungeonSettingsCompat.normalizeCloseChestMode(value);
             return true;
         }
         if ("qol.fishing_creatures.min_rarity".equals(settingId)) {
@@ -2911,7 +2911,7 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
-            dungeonF7DragonSoloClass = DungeonF7Policy.normalizeSoloClass(value);
+            dungeonF7DragonSoloClass = DungeonSettingsCompat.normalizeSoloClass(value);
             return true;
         }
         if ("qol.block_outline.mode".equals(settingId)) {
@@ -2922,6 +2922,9 @@ final class QolSkyblockExtras {
     }
 
     String dungeonMapMode() {
+        if (!QolFlavorSupport.isPlus()) {
+            return DungeonMapPolicy.MAP_MODE_EXPLORED;
+        }
         if (dungeonHudCheaterMap) {
             return DungeonMapPolicy.MAP_MODE_REVEAL;
         }

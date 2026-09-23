@@ -23,7 +23,7 @@ final class DungeonTerminalQueueSafetyTest {
     @Test
     void runtimeDropsQueuedClicksOutsideTerminalScreens() throws Exception {
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/DungeonRuntime.java"));
+                "src/plusClient/java/fi/rotclient/DungeonRuntime.java"));
 
         assertTrue(runtime.contains(
                 "DungeonPolicy.detectTerminal(title) "

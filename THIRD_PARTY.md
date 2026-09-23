@@ -11,7 +11,7 @@ behavior-level only.
 
 ## Bundled Map Art (project-owner supplied)
 
-`src/plusClient/resources/assets/rotclient/textures/map-art.jpg` is supplied
+`src/plusClient/resources/assets/rotclient/textures/map-art.png` is supplied
 by the project owner for inclusion in Rot Client+ and public GitHub releases.
 The owner confirmed permission to publish and bundle this specific image. It is
 not asserted to be Rot Tools original artwork and must not be reused outside
