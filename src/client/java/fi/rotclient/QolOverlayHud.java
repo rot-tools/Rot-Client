@@ -193,12 +193,14 @@ final class QolOverlayHud {
                 HudRuntimeCache.get("slayer_attunement", () -> SlayerRuntime.attunementLines(editorOpen)));
         renderSlayerPanel(graphics, font, qol, "slayer_vengeance",
                 HudRuntimeCache.get("slayer_vengeance", () -> SlayerRuntime.vengeanceLines(editorOpen)));
-        renderSlayerPanel(
-                graphics,
-                font,
-                qol,
-                "dungeon",
-                HudRuntimeCache.get("dungeon_display", () -> DungeonRuntime.displayLines(editorOpen)));
+        if (QolFlavorSupport.isPlus()) {
+            renderSlayerPanel(
+                    graphics,
+                    font,
+                    qol,
+                    "dungeon",
+                    HudRuntimeCache.get("dungeon_display", () -> DungeonRuntime.displayLines(editorOpen)));
+        }
 
         if (dungeonCarryEditorVisible(qol)) {
             renderSlayerPanel(
@@ -1484,7 +1486,7 @@ final class QolOverlayHud {
         }
         if (qol.extras().slayerAttunementDisplayEnabled) labels.add("Attunement Display");
         if (qol.extras().slayerVengeanceEnabled) labels.add("Vengeance Timer");
-        if (qol.extras().dungeonHudEnabled) labels.add("Dungeon HUD");
+        if (QolFlavorSupport.isPlus() && qol.extras().dungeonHudEnabled) labels.add("Dungeon HUD");
         if (dungeonCarryEditorVisible(qol)) labels.add("Dungeon Carry Display");
         if (dungeonWatcherEditorVisible(qol)) labels.add("Blood Timers");
         if (FishingSuiteRuntime.hudVisible(qol)) labels.add("Fishing HUD");
@@ -1598,7 +1600,7 @@ final class QolOverlayHud {
     private boolean dungeonCarryEditorVisible(
             QolUtilityConfig qol) {
 
-        if (qol == null) {
+        if (!QolFlavorSupport.isPlus() || qol == null) {
             return false;
         }
 
@@ -1611,7 +1613,7 @@ final class QolOverlayHud {
     private boolean dungeonWatcherEditorVisible(
             QolUtilityConfig qol) {
 
-        if (qol == null) {
+        if (!QolFlavorSupport.isPlus() || qol == null) {
             return false;
         }
 
@@ -1737,7 +1739,7 @@ final class QolOverlayHud {
                 && inside(mouseX, mouseY, "slayer_vengeance", SLAYER_EDITOR_WIDTH, 36)) {
             return "slayer_vengeance";
         }
-        if (qol.extras().dungeonHudEnabled
+        if (QolFlavorSupport.isPlus() && qol.extras().dungeonHudEnabled
                 && inside(mouseX, mouseY, "dungeon", SLAYER_EDITOR_WIDTH, 68)) {
             return "dungeon";
         }
@@ -2254,7 +2256,7 @@ final class QolOverlayHud {
         if (qol.extras().slayerCocoonAlertEnabled && qol.extras().slayerCocoonTimer) return "slayer_cocoon";
         if (qol.extras().slayerAttunementDisplayEnabled) return "slayer_attunement";
         if (qol.extras().slayerVengeanceEnabled) return "slayer_vengeance";
-        if (qol.extras().dungeonHudEnabled) return "dungeon";
+        if (QolFlavorSupport.isPlus() && qol.extras().dungeonHudEnabled) return "dungeon";
         if (dungeonCarryEditorVisible(qol)) return "dungeon_carry";
         if (dungeonWatcherEditorVisible(qol)) return "dungeon_watcher";
         if (FishingSuiteRuntime.hudVisible(qol)) return "fishing";
@@ -2296,7 +2298,7 @@ final class QolOverlayHud {
             case "slayer_cocoon" -> qol.extras().slayerCocoonAlertEnabled && qol.extras().slayerCocoonTimer;
             case "slayer_attunement" -> qol.extras().slayerAttunementDisplayEnabled;
             case "slayer_vengeance" -> qol.extras().slayerVengeanceEnabled;
-            case "dungeon" -> qol.extras().dungeonHudEnabled;
+            case "dungeon" -> QolFlavorSupport.isPlus() && qol.extras().dungeonHudEnabled;
             case "dungeon_carry" -> dungeonCarryEditorVisible(qol);
             case "dungeon_watcher" -> dungeonWatcherEditorVisible(qol);
             case "fishing" -> FishingSuiteRuntime.hudVisible(qol);

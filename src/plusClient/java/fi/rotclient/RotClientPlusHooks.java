@@ -75,6 +75,16 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public void dungeonScanIcePath(Minecraft client) {
+        DungeonIcePathRuntime.scan(client);
+    }
+
+    @Override
+    public void dungeonScanTicTacToe(Minecraft client) {
+        DungeonTicTacToeRuntime.scan(client);
+    }
+
+    @Override
     public void onChat(Component message) {
         AutoGfsRuntime.onChat(message);
         AutoConversationRuntime.onChat(message);

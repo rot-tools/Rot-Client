@@ -163,6 +163,14 @@ public interface QolClientFlavorHooks {
     default void dungeonRequeueReset() {
     }
 
+    /** Plus-only Ice Path puzzle scan; Lite has no solver implementation. */
+    default void dungeonScanIcePath(Minecraft client) {
+    }
+
+    /** Plus-only Tic Tac Toe puzzle scan. */
+    default void dungeonScanTicTacToe(Minecraft client) {
+    }
+
     default void fishingCreatureAutoAttackTick(
             Minecraft client, boolean lookingAtTrackedCreature, boolean screenOpen) {
     }

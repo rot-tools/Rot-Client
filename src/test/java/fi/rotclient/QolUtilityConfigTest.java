@@ -256,19 +256,21 @@ final class QolUtilityConfigTest {
     }
 
     @Test
-    void dungeonMapModeUnifiesExploredAndRevealHidden() {
+    void savedRevealHiddenMapModeCannotActivateInLite() {
         QolUtilityConfig config = new QolUtilityConfig();
+        assertFalse(QolFlavorSupport.isPlus());
         assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
         assertFalse(config.extras().dungeonMapRevealHidden());
         assertTrue(config.writeEnum("qol.dungeon_hud.map_mode", "Cheater"));
-        assertEquals(DungeonMapPolicy.MAP_MODE_REVEAL, config.readEnum("qol.dungeon_hud.map_mode"));
-        assertTrue(config.extras().dungeonMapRevealHidden());
+        assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertFalse(config.extras().dungeonMapRevealHidden());
         assertTrue(config.extras().dungeonHudCheaterMap);
         assertTrue(config.writeEnum("qol.dungeon_hud.map_mode", DungeonMapPolicy.MAP_MODE_EXPLORED));
         assertFalse(config.extras().dungeonMapRevealHidden());
         assertFalse(config.extras().dungeonHudCheaterMap);
         config.extras().dungeonHudCheaterMap = true;
-        assertEquals(DungeonMapPolicy.MAP_MODE_REVEAL, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
+        assertFalse(config.extras().dungeonMapRevealHidden());
         assertTrue(config.resetModuleToDefaults("qol.dungeon_hud"));
         assertEquals(DungeonMapPolicy.MAP_MODE_EXPLORED, config.readEnum("qol.dungeon_hud.map_mode"));
         assertFalse(config.extras().dungeonMapRevealHidden());

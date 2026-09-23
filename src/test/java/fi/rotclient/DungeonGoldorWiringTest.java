@@ -13,7 +13,7 @@ final class DungeonGoldorWiringTest {
     @Test
     void sharpShooterTermTimesAndCalloutsStayOnExistingParents() throws Exception {
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
+                "src/plusClient/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(runtime.contains("DungeonGoldorPolicy.observeBlock"));
         assertTrue(runtime.contains("DungeonGoldorPolicy.observeWorld"));
         assertTrue(runtime.contains("DungeonGoldorPolicy.applyChat"));
@@ -55,7 +55,7 @@ final class DungeonGoldorWiringTest {
 
         String catalog = Files.readString(Path.of(
                 "src/main/java/fi/rotclient/QolUtilityCatalog.java"), StandardCharsets.UTF_8);
-        assertTrue(catalog.contains("qol.dungeon_f7.sharp_shooter"));
+        assertTrue(!catalog.contains("qol.dungeon_f7.sharp_shooter"));
         assertTrue(catalog.contains("qol.dungeon_f7.term_times"));
         assertTrue(catalog.contains("qol.dungeon_announce.position"));
         assertTrue(catalog.contains("qol.dungeon_hud.ledge"));
@@ -63,22 +63,26 @@ final class DungeonGoldorWiringTest {
         assertTrue(catalog.contains("qol.dungeon_f7.predev"));
         assertTrue(catalog.contains("qol.dungeon_announce.player_count"));
         assertTrue(catalog.contains("qol.dungeon_announce.location"));
-        assertTrue(catalog.contains("qol.dungeon_esp.items"));
-        assertTrue(catalog.contains("qol.dungeon_esp.secret_clicked"));
+        assertTrue(!catalog.contains("qol.dungeon_esp.items"));
+        assertTrue(!catalog.contains("qol.dungeon_esp.secret_clicked"));
         assertTrue(catalog.contains("qol.dungeon_announce.key_drop"));
         assertTrue(catalog.contains("qol.dungeon_f7.pre4_complete"));
         assertTrue(catalog.contains("qol.dungeon_f7.hide_other_titles"));
         assertTrue(catalog.contains("qol.dungeon_f7.hide_at_ss"));
         assertTrue(catalog.contains("qol.dungeon_f7.hide_after_leap"));
         assertTrue(catalog.contains("qol.dungeon_hud.melody_other"));
-        assertTrue(catalog.contains("qol.dungeon_f7.relic_highlight"));
+        assertTrue(!catalog.contains("qol.dungeon_f7.relic_highlight"));
         String plusCatalog = Files.readString(Path.of(
                 "src/plus/java/fi/rotclient/QolPlusCatalog.java"), StandardCharsets.UTF_8);
+        assertTrue(plusCatalog.contains("qol.dungeon_esp.items"));
+        assertTrue(plusCatalog.contains("qol.dungeon_esp.secret_clicked"));
+        assertTrue(plusCatalog.contains("qol.dungeon_f7.sharp_shooter"));
+        assertTrue(plusCatalog.contains("qol.dungeon_f7.relic_highlight"));
         assertTrue(plusCatalog.contains("qol.dungeon_f7.relic_block_wrong"));
         String leap = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/DungeonLeapOverlayRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(leap.contains("fromLore"));
         assertTrue(leap.contains("statusLabel"));
-        assertEquals(94, QolUtilityCatalog.modules().size());
+        assertEquals(83, QolUtilityCatalog.modules().size());
     }
 }

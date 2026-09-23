@@ -33,7 +33,7 @@ final class HudEditorAndCursorPolicyTest {
                 "",
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.hud_layout.open_hud_editor"));
-        assertTrue(HudElementCatalog.moduleHasHudEditor(
+        assertFalse(HudElementCatalog.moduleHasHudEditor(
                 QolUtilityCatalog.findById("qol.dungeon_hud")));
         assertEquals(
                 "dungeon",
