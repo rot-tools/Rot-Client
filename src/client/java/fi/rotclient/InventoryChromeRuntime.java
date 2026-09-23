@@ -450,11 +450,13 @@ public final class  InventoryChromeRuntime {
         if (qol.inventoryOverlayEquipment) {
             int index = InventoryOverlayPolicy.hitEquipmentIndex(leftPos, topPos, mouseX, mouseY);
             if (index >= 0) {
-                ItemStack equipped = EQUIPMENT[index];
+                client.player.connection.sendCommand(InventoryOverlayPolicy.OPEN_WARDROBE_COMMAND);
+                consumeNextRelease = true;
+                return true;
+            }
+            if (InventoryOverlayPolicy.hitArmorColumn(leftPos, topPos, mouseX, mouseY)) {
                 client.player.connection.sendCommand(
-                        equipped.isEmpty()
-                                ? InventoryOverlayPolicy.OPEN_STATS_COMMAND
-                                : InventoryOverlayPolicy.OPEN_WARDROBE_COMMAND);
+                        InventoryOverlayPolicy.OPEN_ARMOR_WARDROBE_COMMAND);
                 consumeNextRelease = true;
                 return true;
             }
@@ -590,7 +592,7 @@ public final class  InventoryChromeRuntime {
                     ItemStack hint = new ItemStack(Items.PAPER);
                     hint.set(
                             DataComponents.CUSTOM_NAME,
-                            Component.literal(InventoryOverlayPolicy.OPEN_STATS_LABEL));
+                            Component.literal(InventoryOverlayPolicy.OPEN_WARDROBE_LABEL));
                     graphics.setTooltipForNextFrame(font, hint, mouseX, mouseY);
                 }
             }

@@ -40,6 +40,12 @@ public final class ViewmodelRuntime {
         matrices.translate(x, extras.viewmodelOffsetY, extras.viewmodelOffsetZ);
     }
 
+    public static boolean shouldTransform(ItemStack item) {
+        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        return extras.viewmodelEnabled && ViewmodelPolicy.applyToStack(
+                extras.viewmodelApplyToHand, item == null || item.isEmpty());
+    }
+
     public static void applyItemPose(PoseStack matrices) {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         if (!extras.viewmodelEnabled || matrices == null) {

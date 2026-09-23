@@ -34,6 +34,8 @@ public final class InventoryOverlayPolicy {
 
     public static final String OPEN_PETS_LABEL = "Pets";
 
+    public static final String OPEN_ARMOR_WARDROBE_COMMAND = "wardrobe";
+
     /** Pixel offset from the survival-inventory GUI origin. */
     public static final int EQUIPMENT_COLUMN_X = 76;
     public static final int EQUIPMENT_COLUMN_Y = 8;
@@ -295,6 +297,18 @@ public final class InventoryOverlayPolicy {
 
     public static boolean hitOpenStatsSlot(int guiLeft, int guiTop, int mouseX, int mouseY) {
         return hitEquipmentIndex(guiLeft, guiTop, mouseX, mouseY) >= 0;
+    }
+
+    public static boolean hitArmorColumn(int guiLeft, int guiTop, int mouseX, int mouseY) {
+        for (int i = 0; i < EQUIPMENT_SLOT_COUNT; i++) {
+            if (mouseX >= guiLeft + ARMOR_COLUMN_X
+                    && mouseX < guiLeft + ARMOR_COLUMN_X + SLOT_SIZE
+                    && mouseY >= guiTop + ARMOR_COLUMN_Y + i * SLOT_STRIDE
+                    && mouseY < guiTop + ARMOR_COLUMN_Y + i * SLOT_STRIDE + SLOT_SIZE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static int clampPetOffset(int value) {

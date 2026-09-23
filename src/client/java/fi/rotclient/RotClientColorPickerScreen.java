@@ -22,7 +22,7 @@ import java.util.function.IntConsumer;
  */
 final class RotClientColorPickerScreen extends Screen {
     private static final int PANEL_WIDTH = 360;
-    private static final int PANEL_HEIGHT = 280;
+    private static final int PANEL_HEIGHT = 320;
     private static final int SV_SIZE = 140;
     private static final int HUE_HEIGHT = 14;
     private static final int HEX_FIELD_WIDTH = 118;
@@ -328,6 +328,10 @@ final class RotClientColorPickerScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (event.key() == InputConstants.KEY_ESCAPE) {
+            onClose();
+            return true;
+        }
         if (editingHex) {
             if (event.key() == InputConstants.KEY_BACKSPACE) {
                 if (!hexInput.isEmpty()) {
@@ -341,18 +345,18 @@ final class RotClientColorPickerScreen extends Screen {
                 editingHex = false;
                 return true;
             }
-            if (event.key() == InputConstants.KEY_ESCAPE) {
-                editingHex = false;
-                syncHexFromColor();
-                return true;
-            }
         }
-        if (event.key() == InputConstants.KEY_ESCAPE) {
-            restoreOriginal();
-            if (onLive != null) {
-                onLive.accept(originalColor);
-            }
-            Minecraft.getInstance().gui.setScreen(parent);
+        if (event.key() == InputConstants.KEY_LEFT || event.key() == InputConstants.KEY_RIGHT) {
+            hue = (hue + (event.key() == InputConstants.KEY_LEFT ? -1.0F : 1.0F) + 360.0F) % 360.0F;
+            ensureSvCache(hue);
+            syncHexFromColor();
+            publishIfChanged(false);
+            return true;
+        }
+        if (event.key() == InputConstants.KEY_UP || event.key() == InputConstants.KEY_DOWN) {
+            value = clamp01(value + (event.key() == InputConstants.KEY_UP ? 0.01F : -0.01F));
+            syncHexFromColor();
+            publishIfChanged(false);
             return true;
         }
         return super.keyPressed(event);

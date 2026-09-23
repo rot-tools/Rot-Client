@@ -13,7 +13,8 @@ final class InventoryOverlayWiringTest {
         String runtime = Files.readString(Path.of(
                 "src/client/java/fi/rotclient/InventoryChromeRuntime.java"),
                 StandardCharsets.UTF_8);
-        assertTrue(runtime.contains("InventoryOverlayPolicy.OPEN_STATS_COMMAND"));
+        assertTrue(runtime.contains("InventoryOverlayPolicy.hitArmorColumn"));
+        assertTrue(runtime.contains("InventoryOverlayPolicy.OPEN_ARMOR_WARDROBE_COMMAND"));
         assertTrue(runtime.contains("InventoryOverlayPolicy.OPEN_WARDROBE_COMMAND"));
         assertTrue(runtime.contains("sendCommand(InventoryOverlayPolicy.OPEN_PETS_COMMAND)"));
         assertTrue(runtime.contains("renderPetSlot"));
