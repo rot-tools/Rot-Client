@@ -15,6 +15,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (83 HUD/QoL parents) and **Rot Client+** (135 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
 | Minecraft | 26.2 |
 | Mod | 2.0.1+mc26.2 |
+| Other Minecraft targets | `release/26.1.2` builds a Lite `2.1.0+mc26.1.2` playtest with the current dungeon edition split; its Minecraft runtime test is pending. `port/26.3` fails compilation, so no 26.3 JAR is distributed. See `README.md` for the version matrix. |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
 | Package | `fi.rotclient` |
 | Playable JARs | `RotClient-2.0.1+mc26.2.jar` (`rotclient`) and `RotClientPlus-2.0.1+mc26.2.jar` (`rotclientplus`) |

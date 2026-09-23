@@ -44,3 +44,10 @@ Each green push to `development` replaces the
 [playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 pre-release with **both** JARs and `SHA256SUMS.txt`. Versioned GitHub
 Releases do the same.
+
+The [26.1.2 Lite playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2)
+is built from `release/26.1.2` with the current dungeon edition split. It is a
+separate artifact and requires Minecraft 26.1.2. No 26.3 JAR is available:
+`port/26.3` still fails compilation. A 26.2 JAR must not be relabeled for 26.3.
+Every version still needs a matching Minecraft runtime smoke test before
+release claims.

@@ -51,6 +51,18 @@ MiningTracker JAR.
 | `RotClient-2.0.1+mc26.2.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
 | `RotClientPlus-2.0.1+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
 
+### Minecraft version availability
+
+| Minecraft | Rot Client Lite | Rot Client+ | Status |
+| --- | --- | --- | --- |
+| 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | No distributed Plus JAR | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.3 | No playable JAR yet | No playable JAR yet | The [`port/26.3` branch](https://github.com/rot-tools/Rot-Client/tree/port/26.3) does not compile. Do not rename or install a 26.2 JAR as 26.3. |
+
+Install a JAR only into the matching Minecraft version with its matching Fabric
+API. These are playtest artifacts; none is approved for public Modrinth or
+CurseForge publication yet.
+
 ### Playtest JAR
 
 Testers do not need to build. Each green push to `development` replaces

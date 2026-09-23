@@ -166,3 +166,6 @@ secrets*.json
 /fabric-*.mapping
 /fabric-*.accesswidener
 /LICENSE-fabric-*
+
+# Locally assembled playtest downloads; GitHub Releases hold distributed JARs.
+/Playable Jars/
