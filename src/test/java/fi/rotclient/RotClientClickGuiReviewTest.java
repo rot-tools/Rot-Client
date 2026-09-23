@@ -39,12 +39,17 @@ final class RotClientClickGuiReviewTest {
     }
 
     @Test
-    void appearanceColorsScrollbarIsDraggable() throws IOException {
-        String appearance = read(
-                "src/client/java/fi/rotclient/RotClientAppearanceScreen.java");
-        assertTrue(appearance.contains("scroll.beginThumbDrag("));
-        assertTrue(appearance.contains("scroll.dragThumbTo("));
-        assertTrue(appearance.contains("scroll.endThumbDrag()"));
+    void appearanceCardsScrollbarIsDraggable() throws IOException {
+        String dashboard = read(
+                "src/client/java/fi/rotclient/QolUtilityDashboard.java");
+        int landing = dashboard.indexOf("private void drawAppearanceLanding(");
+        assertTrue(landing >= 0);
+        // The Appearance page scrolls with the list scrollbar: it is drawn, pressed and dragged.
+        assertTrue(dashboard.substring(landing).contains("RotClientUiDraw.drawScrollbar("));
+        assertTrue(dashboard.contains("appearanceLanding\n                && handleScrollbarPress(")
+                || dashboard.contains("appearanceLanding\r\n                && handleScrollbarPress("));
+        assertTrue(dashboard.contains("listScroll.dragThumbTo("));
+        assertTrue(dashboard.contains("listScroll.endThumbDrag()"));
     }
 
     @Test

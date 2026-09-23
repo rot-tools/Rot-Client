@@ -17,13 +17,9 @@ final class RotClientUiMotionWiringTest {
         String qol = Files.readString(
                 Path.of("src/client/java/fi/rotclient/QolUtilityDashboard.java"),
                 StandardCharsets.UTF_8);
-        String appearance = Files.readString(
-                Path.of("src/client/java/fi/rotclient/RotClientAppearanceScreen.java"),
-                StandardCharsets.UTF_8);
         assertTrue(mining.contains("RotClientUiClock.beginFrame"));
         assertTrue(mining.contains("pushFractionalScroll"));
         assertTrue(qol.contains("pushFractionalScroll"));
-        assertTrue(appearance.contains("pushFractionalScroll"));
         assertTrue(qol.contains("advanceSeconds(RotClientUiClock.seconds())"));
         assertTrue(mining.contains("fractionalPixel(displayedPanelX())"));
         assertTrue(mining.contains("applyLivePanelDrag"));
@@ -59,7 +55,6 @@ final class RotClientUiMotionWiringTest {
                 Path.of("src/client/java/fi/rotclient/RotClientClient.java"),
                 StandardCharsets.UTF_8);
         assertTrue(client.contains("wantsMonitorRefreshUi"));
-        assertTrue(client.contains("RotClientAppearanceScreen"));
         assertTrue(client.contains("UI_FRAME_PACER"));
         String fabric = Files.readString(
                 Path.of("src/main/resources/fabric.mod.json"),

@@ -62,6 +62,11 @@ public final class SkyBlockStatBarParser {
                     + "(?:combat|mining|farming|foraging|enchanting|alchemy|fishing|"
                     + "taming|carpentry|runecrafting|social|hunting)"
                     + "(?:\\s*\\([^)]*\\))?");
+    private static final Pattern SECTION_CODE = Pattern.compile("§.");
+    private static final Pattern PRIVATE_USE_GLYPH = Pattern.compile("[\\uE000-\\uF8FF]");
+    private static final Pattern WHITESPACE_RUN = Pattern.compile("\\s+");
+    private static final Pattern WHITESPACE_2PLUS = Pattern.compile("\\s{2,}");
+    private static final Pattern ONLY_NUMBER_PUNCTUATION = Pattern.compile("[\\d,./+\\s]+");
     private static final Pattern UNLABELED_PAIR = Pattern.compile(
             "\\b[\\d,]+(?:\\.\\d+)?\\s*/\\s*[\\d,]+(?:\\.\\d+)?\\b");
     /**
@@ -528,12 +533,12 @@ public final class SkyBlockStatBarParser {
         if (hideHealth || hideMana) {
             text = UNLABELED_PAIR.matcher(text).replaceAll("");
         }
-        text = text.replaceAll("\\s{2,}", " ").trim();
+        text = WHITESPACE_2PLUS.matcher(text).replaceAll(" ").trim();
         if (text.isBlank()) {
             return Optional.empty();
         }
         if ((hideHealth || hideDefense || hideMana || hideOverflow || hideSpeed || hideVitality)
-                && text.matches("[\\d,./+\\s]+")) {
+                && ONLY_NUMBER_PUNCTUATION.matcher(text).matches()) {
             return Optional.empty();
         }
         return Optional.of(text);
@@ -552,7 +557,7 @@ public final class SkyBlockStatBarParser {
         for (Pattern pattern : LOCATION_NAME_PATTERNS) {
             stripped = pattern.matcher(stripped).replaceAll(" ");
         }
-        return stripped.replaceAll("\\s{2,}", " ").trim();
+        return WHITESPACE_2PLUS.matcher(stripped).replaceAll(" ").trim();
     }
 
     private static List<Pattern> locationNamePatterns() {
@@ -590,11 +595,9 @@ public final class SkyBlockStatBarParser {
         if (raw == null) {
             return "";
         }
-        return raw.replaceAll("§.", "")
-                .replace('\u00A0', ' ')
-                .replaceAll("[\\uE000-\\uF8FF]", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        String text = SECTION_CODE.matcher(raw).replaceAll("").replace('\u00A0', ' ');
+        text = PRIVATE_USE_GLYPH.matcher(text).replaceAll(" ");
+        return WHITESPACE_RUN.matcher(text).replaceAll(" ").trim();
     }
 
     private static boolean looksLikeVanillaHearts(Pair pair) {

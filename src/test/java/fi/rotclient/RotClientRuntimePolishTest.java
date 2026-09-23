@@ -19,7 +19,7 @@ final class RotClientRuntimePolishTest {
         assertTrue(ui.contains("\"ROT CLIENT\""));
         assertFalse(ui.contains("\"ROT CLIENT · ALPHA\""));
         assertFalse(ui.contains("\"ALPHA · by RotTools\""));
-        assertTrue(ui.contains("\"by OgRudolf\""));
+        assertTrue(ui.contains("\"made by Rot Tools\""));
         // Product-level header must not identify the app as Mining Tracker.
         assertFalse(ui.contains("graphics.text(font, \"MINING TRACKER\", panelX + 16"));
         assertTrue(ui.contains("\"Modules\""));

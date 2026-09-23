@@ -26,7 +26,7 @@ abstract class ItemStackLegacyTexturesMixin {
     private void rotclient$legacyItemModel(
             DataComponentType<?> type,
             CallbackInfoReturnable<Object> cir) {
-        if (type != DataComponents.ITEM_MODEL) {
+        if (type != DataComponents.ITEM_MODEL || !QolVisualRuntime.legacyItemTexturesActive()) {
             return;
         }
         Object original = cir.getReturnValue();

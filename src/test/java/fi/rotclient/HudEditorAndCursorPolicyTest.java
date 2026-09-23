@@ -33,7 +33,7 @@ final class HudEditorAndCursorPolicyTest {
                 "",
                 HudElementCatalog.focusIdForHudEditorSetting(
                         "qol.hud_layout.open_hud_editor"));
-        assertTrue(HudElementCatalog.moduleHasHudEditor(
+        assertFalse(HudElementCatalog.moduleHasHudEditor(
                 QolUtilityCatalog.findById("qol.dungeon_hud")));
         assertEquals(
                 "dungeon",
@@ -172,8 +172,8 @@ final class HudEditorAndCursorPolicyTest {
         assertEquals(0xFF111111, CustomCursorPolicy.effectiveOutline(0xFF08080C));
         String cursorRuntime = java.nio.file.Files.readString(java.nio.file.Path.of(
                 "src/client/java/fi/rotclient/CustomCursorRuntime.java"));
-        assertTrue(cursorRuntime.contains("GLFW_CURSOR_HIDDEN"));
-        assertTrue(cursorRuntime.contains("GLFW_CURSOR_NORMAL"));
+        assertTrue(cursorRuntime.contains("PlatformInputRuntime.setCursorVisible(false)"));
+        assertTrue(cursorRuntime.contains("PlatformInputRuntime.setCursorVisible(true)"));
         assertTrue(cursorRuntime.contains("else if (menuOpen)"));
         assertFalse(cursorRuntime.contains("smoothX"));
         assertTrue(cursorRuntime.contains("keepCursorFromSnapping"));

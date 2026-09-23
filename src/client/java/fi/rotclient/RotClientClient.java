@@ -40,7 +40,7 @@ import net.minecraft.world.scores.PlayerScoreEntry;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.InteractionResult;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -83,6 +83,10 @@ public final class RotClientClient implements ClientModInitializer {
             new RotClientProfileController(
                     SETTINGS_PROFILES,
                     CONFIG);
+    private static final RotClientAutoProfileSwitcher AUTO_PROFILE_SWITCHER =
+            new RotClientAutoProfileSwitcher(
+                    SETTINGS_PROFILES,
+                    SETTINGS_PROFILE_CONTROLLER);
     private static final RotClientLoadoutActivationCoordinator LOADOUT_ACTIVATION =
             new RotClientLoadoutActivationCoordinator(
                     LOADOUTS,
@@ -463,27 +467,10 @@ public final class RotClientClient implements ClientModInitializer {
                                 }));
 
         /*
-         * Opportunity pins are frozen reference cards used while the
-         * player manually works in the Auction House / Bazaar.
+         * Opportunity pins now render from inside QolOverlayHud so they are
+         * movable/hidable through the same HUD editor as every other panel;
+         * see QolOverlayHud.renderMarketPins().
          */
-        HudElementRegistry.addLast(
-                Identifier.fromNamespaceAndPath(
-                        "rotclient",
-                        "market_watch_pinned_deals"),
-                (graphics, delta) ->
-                        ClientBoundaryGuard.run(
-                                "MARKET_WATCH_PINNED_HUD",
-                                () -> {
-                                    if (!StorageOverlayRuntime
-                                            .isOverlayOpen()) {
-
-                                        MarketWatchPinnedDealHud
-                                                .render(
-                                                        graphics,
-                                                        Minecraft
-                                                                .getInstance());
-                                    }
-                                }));
 
         registerVanillaHudHides();
 
@@ -720,8 +707,7 @@ public final class RotClientClient implements ClientModInitializer {
                 }
             } else {
                 GemstoneTrackerState state =
-                        CONFIG.gemstoneState(
-                                selection.gemstone());
+                        CONFIG.selectedGemstoneTimeline();
 
                 state.persistActiveTime(
                         now,
@@ -729,6 +715,9 @@ public final class RotClientClient implements ClientModInitializer {
 
                 state.lastBreakEpochMillis =
                         0L;
+                if (selection.isAllGemstones()) {
+                    CONFIG.clearGemstoneBreakClocks();
+                }
             }
 
             save();
@@ -909,7 +898,7 @@ public final class RotClientClient implements ClientModInitializer {
                     ClientBoundaryGuard.call(
                             "HUD_EDITOR_CLICK",
                             () -> {
-                                if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT
+                                if (event.button() != InputConstants.MOUSE_BUTTON_LEFT
                                         || !event.hasShiftDown()) {
                                     return true;
                                 }
@@ -938,7 +927,7 @@ public final class RotClientClient implements ClientModInitializer {
                                     "HUD_EDITOR_RELEASE",
                                     () -> {
                                         if (event.button()
-                                                != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                                                != InputConstants.MOUSE_BUTTON_LEFT) {
                                             return true;
                                         }
                                         boolean qol = QOL_HUD.endDrag();
@@ -953,14 +942,8 @@ public final class RotClientClient implements ClientModInitializer {
                             ClientBoundaryGuard.call(
                                     "HUD_EDITOR_SCROLL",
                                     () -> {
-                                        boolean shift = GLFW.glfwGetKey(
-                                                client.getWindow().handle(),
-                                                GLFW.GLFW_KEY_LEFT_SHIFT)
-                                                == GLFW.GLFW_PRESS
-                                                || GLFW.glfwGetKey(
-                                                client.getWindow().handle(),
-                                                GLFW.GLFW_KEY_RIGHT_SHIFT)
-                                                == GLFW.GLFW_PRESS;
+                                        boolean shift = QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LSHIFT)
+                                                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RSHIFT);
                                         return !(shift && (
                                                 POWDER_CHEST_HUD.onScroll(
                                                         mouseX,
@@ -1284,6 +1267,7 @@ public final class RotClientClient implements ClientModInitializer {
                                                                 source,
                                                                 StringArgumentType.getString(context, "player"))))))))
                 .then(literal("dcarry")
+                        .requires(source -> QolFlavorSupport.isPlus())
                         .executes(context -> runCommand(
                                 context.getSource(), legacyAlias, RotClientClient::dungeonCarryManager))
                         .then(literal("list")
@@ -2586,7 +2570,6 @@ public final class RotClientClient implements ClientModInitializer {
         return screen instanceof MiningUiScreen
                 || screen instanceof RotClientHomeScreen
                 || screen instanceof RotClientScreen
-                || screen instanceof RotClientAppearanceScreen
                 || screen instanceof RotClientColorPickerScreen;
     }
 
@@ -2602,7 +2585,7 @@ public final class RotClientClient implements ClientModInitializer {
         if (!controller.consumeRestore(System.currentTimeMillis())) {
             return;
         }
-        GLFW.glfwSetCursorPos(
+        PlatformInputRuntime.warpCursor(
                 client.getWindow().handle(),
                 controller.savedX(),
                 controller.savedY());
@@ -2891,8 +2874,8 @@ public final class RotClientClient implements ClientModInitializer {
         Minecraft client = Minecraft.getInstance();
         boolean shift = client != null
                 && client.getWindow() != null
-                && (QolInputRuntime.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT)
-                || QolInputRuntime.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT));
+                && (QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LSHIFT)
+                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RSHIFT));
         if (!container) {
             CustomTooltipRuntime.clear();
         }
@@ -2992,8 +2975,7 @@ private static int toggle(FabricClientCommandSource source) {
     static void resetSessionData() {
         TrackerSelection selection = selectedSelection();
         if (selection.isGemstone()) {
-            CONFIG.gemstoneState(
-                            selection.gemstone())
+            CONFIG.selectedGemstoneTimeline()
                     .persistActiveTime(
                             System.currentTimeMillis(),
                             PAUSE_AFTER_MILLIS);
@@ -3055,12 +3037,7 @@ private static int toggle(FabricClientCommandSource source) {
             SALE_GATES.get(material).reset();
         }
 
-        for (GemstoneType gemstone : GemstoneType.values()) {
-            CONFIG.gemstoneState(
-                    gemstone)
-                    .lastBreakEpochMillis =
-                    0L;
-        }
+        CONFIG.clearGemstoneBreakClocks();
 
         HUD.onMaterialChanged();
         TrackerStore.save(CONFIG);
@@ -3077,8 +3054,7 @@ private static int toggle(FabricClientCommandSource source) {
                     System.currentTimeMillis();
 
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            selection.gemstone());
+                    CONFIG.selectedGemstoneTimeline();
 
             if (!enabled) {
                 state.persistActiveTime(
@@ -3088,6 +3064,9 @@ private static int toggle(FabricClientCommandSource source) {
 
             state.lastBreakEpochMillis =
                     0L;
+            if (selection.isAllGemstones()) {
+                CONFIG.clearGemstoneBreakClocks();
+            }
 
             GEMSTONE_GAIN_DETECTOR.reset();
             CONFIG.enabled = enabled;
@@ -3202,8 +3181,7 @@ private static int toggle(FabricClientCommandSource source) {
         }
         else if (previousSelection.isGemstone()) {
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            previousSelection.gemstone());
+                    CONFIG.gemstoneTimeline(previousSelection);
 
             state.persistActiveTime(
                     now,
@@ -3211,6 +3189,9 @@ private static int toggle(FabricClientCommandSource source) {
 
             state.lastBreakEpochMillis =
                     0L;
+            if (previousSelection.isAllGemstones()) {
+                CONFIG.clearGemstoneBreakClocks();
+            }
         }
 
         CONFIG.setSelectedSelection(safeSelection);
@@ -3263,6 +3244,7 @@ private static int toggle(FabricClientCommandSource source) {
         SkyBlockAreaDetector.clearSkyblockPresence();
         CustomScoreboardRuntime.onWorldChange();
         SkyBlockDungeonDetector.clear();
+        AUTO_PROFILE_SWITCHER.onWorldChanged();
         // Also update a PAUSED Current Session. The controller stores the
         // pending UNKNOWN area without opening a segment, so reconnect cannot
         // briefly reopen the previous world's area before scoreboard data is
@@ -3325,6 +3307,11 @@ private static int toggle(FabricClientCommandSource source) {
         SkyBlockAreaDetector.updateSkyblockPresence(lines);
         SkyBlockDungeonDetector.updateSticky(
                 SkyBlockDungeonDetector.detectFromScoreboardLines(lines));
+        AUTO_PROFILE_SWITCHER.observeSidebar(
+                lines,
+                detected,
+                SkyBlockDungeonDetector.confidentlyInDungeon(),
+                now);
         if (!detected.isUnknown()) {
             SkyBlockLocation previous = SkyBlockAreaDetector.detectLocation();
             SkyBlockAreaDetector.updateCurrentLocation(
@@ -3385,15 +3372,13 @@ private static int toggle(FabricClientCommandSource source) {
                     "Shadow baseline selection cannot be null");
         }
         if (selection.isGemstone()) {
-            GemstoneLedger ledger = CONFIG.gemstoneState(
-                    selection.gemstone()).sessionLedger();
+            GemstoneLedger ledger = CONFIG.gemstoneSessionLedger(selection);
             Map<GemstoneTier, Long> tierQuantities =
                     new EnumMap<>(GemstoneTier.class);
             for (GemstoneTier tier : GemstoneTier.values()) {
                 tierQuantities.put(tier, ledger.quantity(tier));
             }
-            GemstoneTrackerState state = CONFIG.gemstoneState(
-                    selection.gemstone());
+            GemstoneTrackerState state = CONFIG.gemstoneTimeline(selection);
             return MiningSessionParity.LiveBaseline.gemstone(
                     selection,
                     tierQuantities,
@@ -3429,9 +3414,8 @@ private static int toggle(FabricClientCommandSource source) {
             GemstoneType gemstone,
             long epochMillis) {
         if (!isGemstoneTrackingActive()
-                || gemstone == null
-                || CONFIG.selectedGemstone()
-                != gemstone) {
+                || !CONFIG.selectedSelection()
+                .tracksGemstone(gemstone)) {
             SESSION_ENGINE.onConfirmedGemstoneBreak(
                     gemstone,
                     epochMillis);
@@ -3442,7 +3426,9 @@ private static int toggle(FabricClientCommandSource source) {
                 CONFIG.gemstoneState(
                         gemstone);
 
-        state.persistActiveTime(
+        // The clock belongs to the selection: the gemstone itself, or the
+        // shared aggregate when tracking all gemstones.
+        CONFIG.selectedGemstoneTimeline().persistActiveTime(
                 epochMillis,
                 PAUSE_AFTER_MILLIS);
 
@@ -3721,15 +3707,11 @@ private static int toggle(FabricClientCommandSource source) {
                 selectedSelection();
 
         if (selection.isGemstone()) {
-            GemstoneType gemstone =
-                    selection.gemstone();
-
             GemstoneTrackerState state =
-                    CONFIG.gemstoneState(
-                            gemstone);
+                    CONFIG.gemstoneTimeline(selection);
 
             GemstoneLedger ledger =
-                    state.sessionLedger();
+                    CONFIG.gemstoneSessionLedger(selection);
 
             long activeMillis =
                     state.currentSessionActiveMillis(
@@ -3738,7 +3720,7 @@ private static int toggle(FabricClientCommandSource source) {
 
             source.sendFeedback(Component.literal(String.format(
                     Locale.ROOT,
-                    "Rot Client status (%s Gemstone)\n"
+                    "Rot Client status (%s)\n"
                             + "Blocks: %d\n"
                             + "Rough: %d\n"
                             + "Flawed: %d\n"
@@ -3749,7 +3731,9 @@ private static int toggle(FabricClientCommandSource source) {
                             + "Rough equivalent: %d\n"
                             + "Active time: %.1f seconds\n"
                             + "Tracker: %s",
-                    gemstone.displayName(),
+                    selection.isAllGemstones()
+                            ? selection.displayName()
+                            : selection.displayName() + " Gemstone",
                     state.sessionBlocks,
                     ledger.quantity(
                             GemstoneTier.ROUGH),
@@ -4049,7 +4033,7 @@ private static int toggle(FabricClientCommandSource source) {
 
                 Other:
                 /rot slayer status | carry ...
-                /rot dcarry add|remove|list|history
+                /rot dcarry add|remove|list|history (Rot Client+ only)
                 /rot toggle|reset|status
 
                 Old aliases /rotclient, /miningtracker, /miningui still open
@@ -4640,31 +4624,34 @@ private static int toggle(FabricClientCommandSource source) {
                     DiagnosticRecorder.start();
 
             if (selection.isGemstone()) {
-                GemstoneType gemstone =
-                        selection.gemstone();
-
-                GemstoneTrackerState state =
-                        CONFIG.gemstoneState(gemstone);
+                GemstoneLedger sessionLedger =
+                        CONFIG.gemstoneSessionLedger(selection);
+                long totalItems = 0L;
+                long totalRoughEquivalent = 0L;
+                for (GemstoneType gemstone : selection.gemstones()) {
+                    GemstoneLedger total =
+                            CONFIG.gemstoneState(gemstone).totalLedger();
+                    totalItems += total.totalItemCount();
+                    totalRoughEquivalent += total.totalRoughEquivalent();
+                }
 
                 DiagnosticRecorder.record(
                         "SNAPSHOT",
                         "selection=gemstone"
                                 + " gemstone="
-                                + gemstone.id()
+                                + (selection.isAllGemstones()
+                                        ? "ALL"
+                                        : selection.gemstone().id())
                                 + " trackerEnabled="
                                 + CONFIG.enabled
                                 + " sessionItems="
-                                + state.sessionLedger()
-                                        .totalItemCount()
+                                + sessionLedger.totalItemCount()
                                 + " sessionRoughEquivalent="
-                                + state.sessionLedger()
-                                        .totalRoughEquivalent()
+                                + sessionLedger.totalRoughEquivalent()
                                 + " totalItems="
-                                + state.totalLedger()
-                                        .totalItemCount()
+                                + totalItems
                                 + " totalRoughEquivalent="
-                                + state.totalLedger()
-                                        .totalRoughEquivalent());
+                                + totalRoughEquivalent);
             } else {
                 TrackedMaterial material =
                         selectedMaterial();

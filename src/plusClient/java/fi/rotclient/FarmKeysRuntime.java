@@ -5,7 +5,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * Applies Farm Keys remaps on the local client. Previous vanilla
@@ -108,10 +107,10 @@ public final class FarmKeysRuntime {
             return InputConstants.Type.MOUSE.getOrCreate(mouse);
         }
         int glfw = QolInputRuntime.resolveGlfwKey(name, "");
-        if (glfw == GLFW.GLFW_KEY_UNKNOWN) {
+        if (glfw == InputConstants.UNKNOWN.getValue()) {
             return null;
         }
-        return InputConstants.Type.KEYSYM.getOrCreate(glfw);
+        return InputConstants.Type.KEYBOARD.getOrCreate(glfw);
     }
 
     private static String describe(InputConstants.Key key) {

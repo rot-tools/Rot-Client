@@ -16,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(MouseHandler.class)
 abstract class MouseHandlerStorageOverlayMixin {
-    private static final int CURSOR_NORMAL = 212993;
-
     @Inject(method = "releaseMouse", at = @At("HEAD"), cancellable = true)
     private void rotclient$keepStorageOverlayCursor(CallbackInfo ci) {
         if (!StorageOverlayRuntime.shouldKeepUngrabbedCursor()) {
@@ -34,8 +32,7 @@ abstract class MouseHandlerStorageOverlayMixin {
         }
         MouseHandlerCursorAccessor access = (MouseHandlerCursorAccessor) mouse;
         access.rotclient$setMouseGrabbed(false);
-        InputConstants.grabOrReleaseMouse(
-                client.getWindow(), CURSOR_NORMAL, mouse.xpos(), mouse.ypos());
+        InputConstants.releaseMouse(client.getWindow(), mouse.xpos(), mouse.ypos());
         ci.cancel();
     }
 }

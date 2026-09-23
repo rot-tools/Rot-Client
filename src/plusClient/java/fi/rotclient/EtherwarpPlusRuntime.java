@@ -1,9 +1,10 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.world.item.component.SwingAnimation;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -33,7 +34,7 @@ public final class EtherwarpPlusRuntime {
     }
 
     public static boolean onMousePress(int button, int action) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT || action != GLFW.GLFW_PRESS) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT || action != InputConstants.PRESS) {
             return false;
         }
         Minecraft client = Minecraft.getInstance();
@@ -113,7 +114,7 @@ public final class EtherwarpPlusRuntime {
     private static void warpNow(Minecraft client) {
         ClickPulseHelper.pulseUse(client);
         if (client != null && client.player != null) {
-            client.player.swing(InteractionHand.MAIN_HAND);
+            client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         }
     }
 }

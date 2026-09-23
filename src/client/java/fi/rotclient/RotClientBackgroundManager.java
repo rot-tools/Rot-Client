@@ -130,21 +130,7 @@ final class RotClientBackgroundManager {
             }
         } catch (Exception ignored) {
         }
-        try {
-            String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-            if (os.contains("win")) {
-                new ProcessBuilder("explorer", dir.toAbsolutePath().toString()).start();
-                return true;
-            }
-            if (os.contains("mac")) {
-                new ProcessBuilder("open", dir.toAbsolutePath().toString()).start();
-                return true;
-            }
-            new ProcessBuilder("xdg-open", dir.toAbsolutePath().toString()).start();
-            return true;
-        } catch (Exception ignored) {
-            return false;
-        }
+        return false;
     }
 
     static String backgroundsPathHint() {

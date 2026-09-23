@@ -1,7 +1,7 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.CustomTooltipRuntime;
-import fi.rotclient.QolKeybindNames;
+import fi.rotclient.QolInputRuntime;
 import fi.rotclient.StorageOverlayRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;

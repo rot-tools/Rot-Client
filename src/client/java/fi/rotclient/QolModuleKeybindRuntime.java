@@ -1,13 +1,15 @@
 package fi.rotclient;
 
+import java.util.List;
 import net.minecraft.client.Minecraft;
 
 /**
  * Edge-triggered module toggle binds for keybind rows that are
- * otherwise only stored in extras.
+ * otherwise only stored in the config.
  */
 public final class QolModuleKeybindRuntime {
-    private static boolean boardWasDown;
+    private static final List<String> MODULE_IDS = QolModuleKeybindCatalog.TOGGLE_MODULE_IDS;
+    private static final boolean[] WAS_DOWN = new boolean[MODULE_IDS.size()];
 
     private QolModuleKeybindRuntime() {
     }
@@ -22,31 +24,38 @@ public final class QolModuleKeybindRuntime {
             return;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        QolSkyblockExtras extras = qol.extras();
         long window = client.getWindow().handle();
         QolClientFlavorSupport.hooks().plusModuleKeybindTick(client);
-        boardWasDown = fire(
-                window, extras.board().keybind, boardWasDown,
-                CustomScoreboardPolicy.MODULE_ID, "Custom Scoreboard");
+        for (int i = 0; i < MODULE_IDS.size(); i++) {
+            String moduleId = MODULE_IDS.get(i);
+            WAS_DOWN[i] = fire(
+                    window,
+                    qol.readKeybind(QolModuleKeybindCatalog.keybindSettingId(moduleId)),
+                    WAS_DOWN[i],
+                    moduleId);
+        }
     }
 
     private static boolean fire(
             long window,
             String keyName,
             boolean wasDown,
-            String moduleId,
-            String label) {
+            String moduleId) {
         boolean down = QolInputRuntime.isBoundDown(window, keyName);
         if (down && !wasDown) {
             QolUtilityConfig qol = RotClientClient.qolConfigPublic();
             boolean next = !qol.isModuleEnabled(moduleId);
             qol.setModuleEnabled(moduleId, next);
-            RotClientClient.notifyQolModuleToggled(label, next);
+            TrackerStore.save(RotClientClient.trackerConfig());
+            QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(moduleId);
+            RotClientClient.notifyQolModuleToggled(
+                    module == null ? moduleId : module.name(),
+                    next);
         }
         return down;
     }
 
     private static void reset() {
-        boardWasDown = false;
+        java.util.Arrays.fill(WAS_DOWN, false);
     }
 }

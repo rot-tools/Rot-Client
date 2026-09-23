@@ -301,6 +301,12 @@ final class MarketWatchOpportunitiesDashboard {
     private static final int PIN_MANAGER_ACTION_HEIGHT =
             22;
 
+    private static final int PIN_MANAGER_TOGGLE_ROW_HEIGHT =
+            30;
+
+    private static final int PIN_MANAGER_TOGGLE_WIDTH =
+            120;
+
     private static final long PIN_MANAGER_STALE_MILLIS =
             15L * 60L * 1000L;
 
@@ -535,6 +541,48 @@ final class MarketWatchOpportunitiesDashboard {
 
     private VolumeFilter volumeFilter =
             VolumeFilter.ANY;
+
+    /*
+     * filtered() reruns the full filter+sort pass over every opportunity in
+     * the snapshot. The snapshot itself only changes when the background
+     * MarketWatchOpportunityService actually rescans (every few seconds at
+     * best), but filtered() was being called from draw() every rendered
+     * frame -- rebuilding and re-sorting the same list well over a hundred
+     * times a second while Profit Finder was open. These fields cache the
+     * last result and the exact inputs that produced it; the cache is
+     * fingerprint-based rather than invalidated from filter setters so it
+     * stays correct even if a field here is set some other way.
+     */
+    private MarketWatchOpportunitySnapshot filteredCacheSnapshot;
+
+    private double filteredCacheBudget = Double.NaN;
+
+    private Filter filteredCacheFilter;
+
+    private SortMode filteredCacheSortMode;
+
+    private final java.util.EnumSet<RarityFilter> filteredCacheRarityFilters =
+            java.util.EnumSet.noneOf(
+                    RarityFilter.class);
+
+    private final java.util.EnumSet<TypeFilter> filteredCacheTypeFilters =
+            java.util.EnumSet.noneOf(
+                    TypeFilter.class);
+
+    private LiquidityFilter filteredCacheLiquidityFilter;
+
+    private ConfidenceFilter filteredCacheConfidenceFilter;
+
+    private RoiFilter filteredCacheRoiFilter;
+
+    private ProfitFilter filteredCacheProfitFilter;
+
+    private EdgeFilter filteredCacheEdgeFilter;
+
+    private VolumeFilter filteredCacheVolumeFilter;
+
+    private List<MarketWatchOpportunity> filteredCacheResult =
+            List.of();
 
     private int scrollPixels;
 
@@ -2436,6 +2484,35 @@ final class MarketWatchOpportunitiesDashboard {
                             : pins.size()
                             + " SAVED");
 
+            boolean pinsHudVisible =
+                    RotClientClient
+                            .qolConfigPublic()
+                            .marketWatchPinsHudEnabled;
+
+            boolean toggleHovered =
+                    RotClientUiDraw.inside(
+                            mouseX,
+                            mouseY,
+                            x + 10,
+                            y + PIN_MANAGER_HEADER_HEIGHT + 4,
+                            PIN_MANAGER_TOGGLE_WIDTH,
+                            PIN_MANAGER_ACTION_HEIGHT);
+
+            drawPremiumChoiceSurface(
+                    graphics,
+                    font,
+                    x + 10,
+                    y + PIN_MANAGER_HEADER_HEIGHT + 4,
+                    PIN_MANAGER_TOGGLE_WIDTH,
+                    PIN_MANAGER_ACTION_HEIGHT,
+                    pinsHudVisible
+                            ? "HUD SHOWN"
+                            : "HUD HIDDEN",
+                    "",
+                    pinsHudVisible,
+                    toggleHovered,
+                    false);
+
             if (pins.isEmpty()) {
 
                 RotClientUiDraw.text(
@@ -2443,7 +2520,7 @@ final class MarketWatchOpportunitiesDashboard {
                         font,
                         "Pin a promising deal to keep its frozen price target here.",
                         x + 10,
-                        y + PIN_MANAGER_HEADER_HEIGHT + 13,
+                        y + PIN_MANAGER_HEADER_HEIGHT + PIN_MANAGER_TOGGLE_ROW_HEIGHT + 13,
                         RotClientTheme.TEXT_MUTED,
                         false);
 
@@ -2452,7 +2529,8 @@ final class MarketWatchOpportunitiesDashboard {
 
             int rowY =
                     y
-                            + PIN_MANAGER_HEADER_HEIGHT;
+                            + PIN_MANAGER_HEADER_HEIGHT
+                            + PIN_MANAGER_TOGGLE_ROW_HEIGHT;
 
             long now =
                     System.currentTimeMillis();
@@ -2752,10 +2830,12 @@ final class MarketWatchOpportunitiesDashboard {
 
         if (pinCount <= 0) {
             return PIN_MANAGER_HEADER_HEIGHT
+                    + PIN_MANAGER_TOGGLE_ROW_HEIGHT
                     + 42;
         }
 
         return PIN_MANAGER_HEADER_HEIGHT
+                + PIN_MANAGER_TOGGLE_ROW_HEIGHT
                 + pinCount
                 * PIN_MANAGER_ROW_HEIGHT
                 + PIN_MANAGER_FOOTER_HEIGHT;
@@ -3949,13 +4029,38 @@ final class MarketWatchOpportunitiesDashboard {
             return false;
         }
 
+        boolean toggleHit =
+                mouseY
+                        < y + visibleHeight
+                        && RotClientUiDraw.inside(
+                        mouseX,
+                        mouseY,
+                        x + 10,
+                        y + PIN_MANAGER_HEADER_HEIGHT + 4,
+                        PIN_MANAGER_TOGGLE_WIDTH,
+                        PIN_MANAGER_ACTION_HEIGHT);
+
+        if (toggleHit) {
+            QolUtilityConfig qol =
+                    RotClientClient
+                            .qolConfigPublic();
+
+            qol.marketWatchPinsHudEnabled =
+                    !qol.marketWatchPinsHudEnabled;
+
+            RotClientClient.save();
+
+            return true;
+        }
+
         if (pins.isEmpty()) {
             return true;
         }
 
         int rowY =
                 y
-                        + PIN_MANAGER_HEADER_HEIGHT;
+                        + PIN_MANAGER_HEADER_HEIGHT
+                        + PIN_MANAGER_TOGGLE_ROW_HEIGHT;
 
         int rowWidth =
                 width - 12;
@@ -6012,6 +6117,22 @@ if (key == InputConstants.KEY_ESCAPE
                 MarketWatchOpportunityService
                         .budgetCoins();
 
+        if (snapshot == filteredCacheSnapshot
+                && budget == filteredCacheBudget
+                && filter == filteredCacheFilter
+                && sortMode == filteredCacheSortMode
+                && liquidityFilter == filteredCacheLiquidityFilter
+                && confidenceFilter == filteredCacheConfidenceFilter
+                && roiFilter == filteredCacheRoiFilter
+                && profitFilter == filteredCacheProfitFilter
+                && edgeFilter == filteredCacheEdgeFilter
+                && volumeFilter == filteredCacheVolumeFilter
+                && rarityFilters.equals(filteredCacheRarityFilters)
+                && typeFilters.equals(filteredCacheTypeFilters)) {
+
+            return filteredCacheResult;
+        }
+
         List<MarketWatchOpportunity> result =
                 new ArrayList<>();
 
@@ -6056,8 +6177,26 @@ if (key == InputConstants.KEY_ESCAPE
         sortOpportunities(
                 result);
 
-        return List.copyOf(
-                result);
+        filteredCacheSnapshot = snapshot;
+        filteredCacheBudget = budget;
+        filteredCacheFilter = filter;
+        filteredCacheSortMode = sortMode;
+        filteredCacheLiquidityFilter = liquidityFilter;
+        filteredCacheConfidenceFilter = confidenceFilter;
+        filteredCacheRoiFilter = roiFilter;
+        filteredCacheProfitFilter = profitFilter;
+        filteredCacheEdgeFilter = edgeFilter;
+        filteredCacheVolumeFilter = volumeFilter;
+        filteredCacheRarityFilters.clear();
+        filteredCacheRarityFilters.addAll(rarityFilters);
+        filteredCacheTypeFilters.clear();
+        filteredCacheTypeFilters.addAll(typeFilters);
+
+        filteredCacheResult =
+                List.copyOf(
+                        result);
+
+        return filteredCacheResult;
     }
 
     private boolean matchesAdvancedFilters(

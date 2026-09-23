@@ -40,10 +40,11 @@ public final class MenuKeybindRuntime {
         if (screen == null) {
             return false;
         }
-        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, rawCode)) {
+        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, rawCode, keyName)) {
             return true;
         }
-        if (keyName == null || keyName.isBlank()) {
+        if (!QolFlavorSupport.isPlus() || keyName == null || keyName.isBlank()) {
+            // Pet and loadout keybinds click menu slots, so they remain Plus-only.
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();

@@ -153,7 +153,10 @@ public final class SlayerPolishPolicy {
     }
 
     public static boolean isGummyConsumeChat(String line) {
-        return GUMMY_CONSUME.matcher(SlayerFightPolicy.normalize(line)).find();
+        String text = SlayerFightPolicy.normalize(line);
+        java.util.regex.Matcher matcher = GUMMY_CONSUME.matcher(text);
+        // A player mentioning the item in chat must not start the Gummy timer.
+        return matcher.find() && text.lastIndexOf(':', matcher.start(1)) < 0;
     }
 
     public static boolean isGummyActive(long expiresAtMillis, long nowMillis, String tabOrSidebar) {

@@ -2,13 +2,13 @@ package fi.rotclient.mixin;
 
 import fi.rotclient.NoCursorResetController;
 import fi.rotclient.NoCursorResetPolicy;
+import fi.rotclient.PlatformInputRuntime;
 import fi.rotclient.RotClientClient;
 import fi.rotclient.StorageOverlayRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -62,7 +62,7 @@ abstract class GuiNoCursorResetMixin {
         if (!controller.consumeRestore(System.currentTimeMillis())) {
             return;
         }
-        GLFW.glfwSetCursorPos(
+        PlatformInputRuntime.warpCursor(
                 client.getWindow().handle(),
                 controller.savedX(),
                 controller.savedY());

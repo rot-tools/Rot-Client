@@ -1,8 +1,8 @@
 package fi.rotclient.mixin;
 
 import fi.rotclient.QolVisualRuntime;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
+import net.minecraft.client.renderer.state.level.PlayerRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -15,12 +15,12 @@ abstract class ScreenEffectRendererMixin {
     @Redirect(
             method = "submit",
             at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/player/LocalPlayer;isOnFire()Z"))
-    private boolean rotclient$hideFireOverlay(LocalPlayer player) {
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/renderer/state/level/PlayerRenderState;isOnFire:Z"))
+    private boolean rotclient$hideFireOverlay(PlayerRenderState state) {
         if (QolVisualRuntime.shouldHideFireOverlay()) {
             return false;
         }
-        return player.isOnFire();
+        return state.isOnFire;
     }
 }

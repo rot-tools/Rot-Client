@@ -20,6 +20,13 @@ final class MarketWatchSellerNameService {
     private static final long FAILED_RETRY_MILLIS =
             10L * 60L * 1000L;
 
+    // Profit Finder can show dozens of unknown sellers at once; Mojang rate-limits
+    // this endpoint, so only a few lookups run at a time and the rest wait.
+    private static final int MAX_IN_FLIGHT = 4;
+
+    private static final java.util.regex.Pattern UUID_HEX =
+            java.util.regex.Pattern.compile("[0-9a-f]{32}");
+
     private static final HttpClient HTTP =
             HttpClient.newBuilder()
                     .connectTimeout(
@@ -72,7 +79,8 @@ final class MarketWatchSellerNameService {
             return "Unavailable";
         }
 
-        if (PENDING.add(
+        if (PENDING.size() < MAX_IN_FLIGHT
+                && PENDING.add(
                 uuid)) {
 
             resolveAsync(
@@ -173,7 +181,7 @@ final class MarketWatchSellerNameService {
                         + FAILED_RETRY_MILLIS);
     }
 
-    private static String normalizeUuid(
+    static String normalizeUuid(
             String rawUuid) {
 
         if (rawUuid == null) {
@@ -189,8 +197,8 @@ final class MarketWatchSellerNameService {
                         .toLowerCase(
                                 Locale.ROOT);
 
-        if (!value.matches(
-                "[0-9a-f]{32}")) {
+        if (!UUID_HEX.matcher(
+                value).matches()) {
 
             return "";
         }

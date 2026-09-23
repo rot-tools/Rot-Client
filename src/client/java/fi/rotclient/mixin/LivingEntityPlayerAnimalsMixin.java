@@ -19,9 +19,8 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -54,7 +53,7 @@ abstract class LivingEntityPlayerAnimalsMixin {
             method = "submit",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V",
+                    target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V",
                     ordinal = 0))
     private void rotclient$submitAnimalBody(
             SubmitNodeCollector collector,
@@ -65,14 +64,13 @@ abstract class LivingEntityPlayerAnimalsMixin {
             int lightCoords,
             int overlayCoords,
             int tintedColor,
-            TextureAtlasSprite sprite,
-            int outlineColor,
-            ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+            UvMapping mapping,
+            int outlineColor) {
         if (!(state instanceof AvatarRenderState avatar)) {
             submitRaw(
                     collector, originalModel, state, poseStack, originalType,
-                    lightCoords, overlayCoords, tintedColor, sprite,
-                    outlineColor, crumblingOverlay);
+                    lightCoords, overlayCoords, tintedColor, mapping,
+                    outlineColor);
             return;
         }
         PlayerAnimalsRuntime.Appearance appearance =
@@ -80,8 +78,8 @@ abstract class LivingEntityPlayerAnimalsMixin {
         if (appearance == null) {
             submitRaw(
                     collector, originalModel, state, poseStack, originalType,
-                    lightCoords, overlayCoords, tintedColor, sprite,
-                    outlineColor, crumblingOverlay);
+                    lightCoords, overlayCoords, tintedColor, mapping,
+                    outlineColor);
             return;
         }
         GenericQuadrupedModel animal = switch (appearance.species()) {
@@ -99,13 +97,13 @@ abstract class LivingEntityPlayerAnimalsMixin {
                 animal, avatar, poseStack,
                 animal.renderType(appearance.texture()),
                 lightCoords, overlayCoords, -1, null,
-                outlineColor, crumblingOverlay);
+                outlineColor);
         if (appearance.felineOrWolf()) {
             collector.submitModel(
                     animal, avatar, poseStack,
                     animal.renderType(appearance.collarTexture()),
                     lightCoords, overlayCoords, appearance.collarColor(), null,
-                    outlineColor, crumblingOverlay);
+                    outlineColor);
         }
         poseStack.popPose();
     }
@@ -156,12 +154,11 @@ abstract class LivingEntityPlayerAnimalsMixin {
             int light,
             int overlay,
             int tint,
-            TextureAtlasSprite sprite,
-            int outline,
-            ModelFeatureRenderer.CrumblingOverlay crumbling) {
+            UvMapping mapping,
+            int outline) {
         collector.submitModel(
                 model, state, poseStack, type, light, overlay,
-                tint, sprite, outline, crumbling);
+                tint, mapping, outline);
     }
 
     private static final class GenericQuadrupedModel

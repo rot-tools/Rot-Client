@@ -19,7 +19,9 @@ final class SlayerHighlightWiringTest {
         int scan = runtime.indexOf("private static void scanEntities", render);
         String section = runtime.substring(render, scan);
 
-        assertTrue(section.contains("ENGINE.snapshot("));
+        // The engine snapshot is taken once per tick and drawn from every frame.
+        assertTrue(section.contains("overlaySnapshot"));
+        assertTrue(runtime.contains("overlaySnapshot = ENGINE.viewSnapshot()"));
         assertTrue(section.contains("SlayerHighlightPolicy.shouldHighlight"));
         assertTrue(section.contains("SlayerHighlightPolicy.shouldDrawTargetLine"));
         assertTrue(section.contains("Gizmos.line("));

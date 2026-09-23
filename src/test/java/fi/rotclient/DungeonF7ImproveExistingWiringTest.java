@@ -12,7 +12,7 @@ final class DungeonF7ImproveExistingWiringTest {
     @Test
     void solverSoundsDragonsAndRelicsStayOnExistingParents() throws Exception {
         String runtime = Files.readString(Path.of(
-                "src/client/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
+                "src/plusClient/java/fi/rotclient/DungeonRuntime.java"), StandardCharsets.UTF_8);
         String plusInput = Files.readString(Path.of(
                 "src/plusClient/java/fi/rotclient/DungeonPlusInputRuntime.java"), StandardCharsets.UTF_8);
         assertTrue(runtime.contains("melodyLeapName = name"));

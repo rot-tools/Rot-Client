@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.inventory.ContainerInput;
@@ -449,12 +450,6 @@ final class DungeonPlusRuntime {
             return;
         }
         LocalPlayer player = client.player;
-        if (player.connection != null) {
-            player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerActionPacket(
-                    net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.DROP_ITEM,
-                    BlockPos.ZERO,
-                    net.minecraft.core.Direction.DOWN));
-        }
         for (int slot = 0; slot < 9; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (stack == null || stack.isEmpty()) {
@@ -465,7 +460,14 @@ final class DungeonPlusRuntime {
                     InventoryChromeRuntime.loreLines(stack))) {
                 int selected = player.getInventory().getSelectedSlot();
                 player.getInventory().setSelectedSlot(slot);
-                player.drop(false);
+                if (player.connection != null) {
+                    player.connection.send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(slot));
+                    player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerActionPacket(
+                            net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action.DROP_ITEM,
+                            BlockPos.ZERO,
+                            Direction.DOWN));
+                    player.connection.send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(selected));
+                }
                 player.getInventory().setSelectedSlot(selected);
                 return;
             }
@@ -669,7 +671,7 @@ final class DungeonPlusRuntime {
         }
         player.getInventory().setSelectedSlot(slot);
         client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
-        player.swing(InteractionHand.MAIN_HAND);
+        player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         int delay = DungeonAthenPortPolicy.randomBetween(
                 settings.minDelay(), settings.maxDelay());
         superboomCooldown = Math.max(1, delay);
@@ -753,7 +755,7 @@ final class DungeonPlusRuntime {
         }
         if (kind == DungeonLeftoverPolicy.TriggerKind.SECRET && blockHit != null) {
             client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, blockHit);
-            client.player.swing(InteractionHand.MAIN_HAND);
+            client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
             triggerLastMs = now;
             return;
         }

@@ -41,12 +41,13 @@ loom {
 }
 
 sourceSets.named('plusClient').configure {
-	compileClasspath += sourceSets.client.compileClasspath + sourceSets.client.output + sourceSets.plus.output + sourceSets.plus.compileClasspath
-	runtimeClasspath += sourceSets.client.runtimeClasspath + sourceSets.client.output + sourceSets.plus.output + sourceSets.plus.runtimeClasspath
+	// Plus replaces selected Lite facades with full classes of the same name.
+	compileClasspath = sourceSets.plus.output + sourceSets.plus.compileClasspath + sourceSets.client.output + sourceSets.client.compileClasspath
+	runtimeClasspath = sourceSets.plus.output + sourceSets.plus.runtimeClasspath + sourceSets.client.output + sourceSets.client.runtimeClasspath
 }
 sourceSets.named('testPlus').configure {
-	compileClasspath += sourceSets.test.compileClasspath + sourceSets.test.output + sourceSets.plus.output + sourceSets.plusClient.output
-	runtimeClasspath += sourceSets.test.runtimeClasspath + sourceSets.test.output + sourceSets.plus.output + sourceSets.plusClient.output
+	compileClasspath = sourceSets.plusClient.output + sourceSets.plus.output + sourceSets.test.output + sourceSets.test.compileClasspath
+	runtimeClasspath = output + sourceSets.plusClient.output + sourceSets.plus.output + sourceSets.test.output + sourceSets.test.runtimeClasspath
 }
 
 dependencies {
@@ -63,6 +64,8 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+	// LiteDungeonPolicyClassLoadingTest inspects the playable archive itself.
+	dependsOn jar
 }
 
 tasks.register('testPlus', Test) {
@@ -118,8 +121,12 @@ tasks.register('plusJar', Jar) {
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	from(sourceSets.main.output) {
 		exclude 'fabric.mod.json'
+		// Plus replaces the Lite compatibility type with the full solver.
+		exclude 'fi/rotclient/DungeonPuzzlePolicy*.class'
 	}
-	from sourceSets.client.output
+	from(sourceSets.client.output) {
+		exclude 'fi/rotclient/DungeonRuntime.class'
+	}
 	from sourceSets.plus.output
 	from sourceSets.plusClient.output
 	from("LICENSE") {
@@ -133,6 +140,16 @@ tasks.register('plusJar', Jar) {
 // keeps its hooks available to the Plus assembly, while the legit artifact
 // must not carry its implementation classes or registered mixins.
 jar {
+	// The entire puzzle-board solver and its data belong to Plus. The Lite
+	// dungeon facade never calls these compiled shared classes.
+	exclude 'fi/rotclient/DungeonPuzzleBoardPolicy.class'
+	exclude 'fi/rotclient/DungeonPuzzleBoardPolicy$*.class'
+	// These mixed dungeon policies are compiled for Plus but absent from Lite.
+	for (String policy : ['DungeonF7Policy', 'DungeonGoldorPolicy',
+			'DungeonAssistPolicy', 'DungeonLeftoverPolicy']) {
+		exclude "fi/rotclient/${policy}.class"
+		exclude "fi/rotclient/${policy}\$*.class"
+	}
 
     exclude 'fi/rotclient/MapArtOverridePolicy.class'
     exclude 'fi/rotclient/MapArtOverrideRuntime.class'
@@ -158,6 +175,12 @@ tasks.register('verifyLegitJar') {
 	doLast {
 		def jarFile = tasks.named('jar').get().archiveFile.get().asFile
 		def forbiddenNames = [
+				'DungeonPuzzleBoardPolicy.class',
+				'DungeonPuzzleBoardPolicy$',
+				'rotclient/dungeons/waterSolutions.json',
+				'rotclient/dungeons/iceFillFloors.json',
+				'rotclient/dungeons/creeperBeamsSolutions.json',
+				'rotclient/dungeons/boulderSolutions.json',
 				'AutoClickerRuntime.class',
 				'WardrobeAutoEquipRuntime.class',
 				'RotClientPetAutoEquipRuntime.class',
@@ -205,10 +228,18 @@ tasks.register('verifyLegitJar') {
 		]
 		[file('src/plus/java'), file('src/plusClient/java')].each { root ->
 			fileTree(root).matching { include '**/*.java' }.files.each { source ->
-				forbiddenNames << source.name.replaceFirst(/\.java$/, '.class')
+				// DungeonRuntime is deliberately present as an inert Lite facade;
+				// Plus replaces that class with the full runtime at packaging time.
+				if (source.name != 'DungeonRuntime.java'
+						&& source.name != 'DungeonPuzzlePolicy.java') {
+					forbiddenNames << source.name.replaceFirst(/\.java$/, '.class')
+				}
 			}
 		}
 		def forbiddenText = [
+				'solveRedGreen',
+				'solveRubixClicks',
+				'extractSelectColor',
 				'qol.auto_clicker',
 				'qol.cheater_wardrobe',
 				'cheaterWardrobeEnabled',
@@ -306,6 +337,14 @@ tasks.register('verifyLegitJar') {
 		try {
 			zip.entries().each { entry ->
 				String name = entry.name
+				if (name == 'fi/rotclient/DungeonRuntime.class') {
+					String runtimeBytes = new String(zip.getInputStream(entry).bytes, 'ISO-8859-1')
+					['scanPuzzles', 'sendTerminalClick', 'clickSolved', 'puzzleMarks'].each { token ->
+						if (runtimeBytes.contains(token)) {
+							found << "full dungeon runtime token ${token} in Lite facade"
+						}
+					}
+				}
 				forbiddenNames.each { token ->
 					if (name.endsWith(token) || name.contains('/' + token) || name == token) {
 						found << "${token} in ${name}"
@@ -330,6 +369,60 @@ tasks.register('verifyLegitJar') {
 }
 
 check.dependsOn verifyLegitJar
+
+tasks.register('verifyDungeonJarBoundary') {
+	group = 'verification'
+	description = 'Check that Lite carries only dungeon facades while Plus retains the full dungeon runtime and puzzle data.'
+	dependsOn jar, plusJar
+	doLast {
+		def lite = new java.util.zip.ZipFile(tasks.named('jar').get().archiveFile.get().asFile)
+		def extended = new java.util.zip.ZipFile(tasks.named('plusJar').get().archiveFile.get().asFile)
+		try {
+			def runtime = 'fi/rotclient/DungeonRuntime.class'
+			def puzzle = 'fi/rotclient/DungeonPuzzlePolicy.class'
+			for (String name : [runtime, puzzle]) {
+				if (lite.getEntry(name) == null || extended.getEntry(name) == null) {
+					throw new GradleException("Missing dungeon compatibility/full class: ${name}")
+				}
+			}
+			def liteRuntime = new String(lite.getInputStream(lite.getEntry(runtime)).bytes, 'ISO-8859-1')
+			def plusRuntime = new String(extended.getInputStream(extended.getEntry(runtime)).bytes, 'ISO-8859-1')
+			def litePuzzle = new String(lite.getInputStream(lite.getEntry(puzzle)).bytes, 'ISO-8859-1')
+			def plusPuzzle = new String(extended.getInputStream(extended.getEntry(puzzle)).bytes, 'ISO-8859-1')
+			if (liteRuntime.contains('scanPuzzles') || liteRuntime.contains('sendTerminalClick')
+					|| !plusRuntime.contains('scanPuzzles') || !plusRuntime.contains('sendTerminalClick')
+					|| litePuzzle.contains('iceFillPath') || !plusPuzzle.contains('iceFillPath')) {
+				throw new GradleException('Dungeon runtime or puzzle solver landed in the wrong edition')
+			}
+			for (String name : ['fi/rotclient/DungeonPuzzleBoardPolicy.class',
+					'fi/rotclient/DungeonF7Policy.class',
+					'fi/rotclient/DungeonGoldorPolicy.class',
+					'fi/rotclient/DungeonAssistPolicy.class',
+					'fi/rotclient/DungeonLeftoverPolicy.class',
+					'rotclient/dungeons/waterSolutions.json',
+					'assets/rotclient/profile-presets/dungeons.json']) {
+				if (lite.getEntry(name) != null || extended.getEntry(name) == null) {
+					throw new GradleException("Dungeon asset or solver landed in the wrong edition: ${name}")
+				}
+			}
+			for (String policy : ['DungeonF7Policy', 'DungeonGoldorPolicy',
+					'DungeonAssistPolicy', 'DungeonLeftoverPolicy']) {
+				def nestedPrefix = "fi/rotclient/${policy}\$"
+				if (lite.entries().any { it.name.startsWith(nestedPrefix) && it.name.endsWith('.class') }) {
+					throw new GradleException("Lite still contains nested dungeon policy classes: ${policy}")
+				}
+				if (!extended.entries().any { it.name.startsWith(nestedPrefix) && it.name.endsWith('.class') }) {
+					throw new GradleException("Plus is missing nested dungeon policy classes: ${policy}")
+				}
+			}
+		} finally {
+			lite.close()
+			extended.close()
+		}
+	}
+}
+check.dependsOn verifyDungeonJarBoundary
+test.dependsOn jar
 testPlus.dependsOn processPlusResources, processPlusClientResources
 
 tasks.withType(JavaCompile).configureEach {

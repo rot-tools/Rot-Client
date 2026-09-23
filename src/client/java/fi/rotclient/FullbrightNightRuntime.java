@@ -7,6 +7,9 @@ import net.minecraft.client.renderer.state.level.SkyRenderState;
 import net.minecraft.world.level.MoonPhase;
 import net.minecraft.world.level.dimension.DimensionType;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 
 /**
  * Client bridge for Fullbright and Always Night. Mixins stay thin; dusk vs
@@ -65,8 +68,8 @@ public final class FullbrightNightRuntime {
         state.moonAngle = pose.moonAngle();
         state.starAngle = pose.starAngle();
         state.starBrightness = pose.starBrightness();
-        state.skyColor = pose.skyColor();
-        state.sunriseAndSunsetColor = pose.sunriseColor();
+        state.skyColor = rgbVector(pose.skyColor());
+        state.sunriseAndSunsetColor = argbVector(pose.sunriseColor());
         state.moonPhase = MoonPhase.FULL_MOON;
     }
 
@@ -167,8 +170,34 @@ public final class FullbrightNightRuntime {
                 state.moonAngle,
                 state.starAngle,
                 state.starBrightness,
-                state.skyColor,
-                state.sunriseAndSunsetColor,
+                rgbInt(state.skyColor),
+                argbInt(state.sunriseAndSunsetColor),
                 1.0F);
+    }
+
+    private static Vector3f rgbVector(int color) {
+        return new Vector3f(((color >>> 16) & 0xff) / 255.0F,
+                ((color >>> 8) & 0xff) / 255.0F, (color & 0xff) / 255.0F);
+    }
+
+    private static Vector4f argbVector(int color) {
+        return new Vector4f(((color >>> 16) & 0xff) / 255.0F,
+                ((color >>> 8) & 0xff) / 255.0F, (color & 0xff) / 255.0F,
+                ((color >>> 24) & 0xff) / 255.0F);
+    }
+
+    private static int rgbInt(Vector3fc color) {
+        return color == null ? 0 : (channel(color.x()) << 16)
+                | (channel(color.y()) << 8) | channel(color.z());
+    }
+
+    private static int argbInt(Vector4fc color) {
+        return color == null ? 0 : (channel(color.w()) << 24)
+                | (channel(color.x()) << 16) | (channel(color.y()) << 8)
+                | channel(color.z());
+    }
+
+    private static int channel(float value) {
+        return Math.round(Math.max(0.0F, Math.min(1.0F, value)) * 255.0F);
     }
 }

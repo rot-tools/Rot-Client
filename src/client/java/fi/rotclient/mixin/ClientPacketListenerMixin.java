@@ -94,21 +94,21 @@ abstract class ClientPacketListenerMixin {
 
     @Inject(method = "handleParticleEvent", at = @At("HEAD"))
     private void rotclient$dianaParticles(ClientboundLevelParticlesPacket packet, CallbackInfo ci) {
-        if (!onClientThread() || packet == null || packet.getParticle() == null) {
+        if (!onClientThread() || packet == null || packet.particle() == null) {
             return;
         }
-        var type = packet.getParticle().getType();
+        var type = packet.particle().getType();
         var key = BuiltInRegistries.PARTICLE_TYPE.getKey(type);
         QolClientFlavorSupport.hooks().dianaObserveParticlePacket(
                 key == null ? "" : key.toString(),
-                packet.getX(),
-                packet.getY(),
-                packet.getZ(),
-                packet.getCount(),
-                packet.getMaxSpeed(),
-                packet.getXDist(),
-                packet.getYDist(),
-                packet.getZDist());
+                packet.x(),
+                packet.y(),
+                packet.z(),
+                packet.count(),
+                Math.max(packet.xMaxSpeed(), Math.max(packet.yMaxSpeed(), packet.zMaxSpeed())),
+                packet.xDist(),
+                packet.yDist(),
+                packet.zDist());
     }
 
     @Inject(method = "handleContainerSetSlot", at = @At("TAIL"))
@@ -231,7 +231,7 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread() || packet == null) {
             return;
         }
-        var pos = packet.values().position();
+        var pos = packet.position().endPosition();
         fi.rotclient.DungeonRuntime.onLeapEntityPacket(packet.id(), pos.x(), pos.y(), pos.z());
     }
 

@@ -957,6 +957,13 @@ final class QolSkyblockExtras {
     boolean customCursorHoldAnim = true;
     boolean customCursorHideVanilla = true;
 
+    boolean blockOutlineEnabled;
+    String blockOutlineMode = BlockOutlinePolicy.MODE_SOLID;
+    int blockOutlineColor = BlockOutlinePolicy.DEFAULT_COLOR;
+    double blockOutlineWidth = BlockOutlinePolicy.DEFAULT_WIDTH;
+    double blockOutlineRainbowSpeed = BlockOutlinePolicy.DEFAULT_SPEED;
+    double blockOutlineRainbowSpread = BlockOutlinePolicy.DEFAULT_SPREAD;
+
     boolean legacyTexturesEnabled;
     boolean legacyTexturesItems = true;
 
@@ -1071,15 +1078,15 @@ final class QolSkyblockExtras {
             case "qol.foraging_audio" -> foragingAudioEnabled;
             case "qol.foraging_helpers" -> foragingHelpersEnabled;
             case "qol.foraging_cheats" -> foragingCheatsEnabled;
-            case "qol.dungeon_hud" -> dungeonHudEnabled;
-            case "qol.dungeon_esp" -> dungeonEspEnabled;
-            case "qol.dungeon_announce" -> dungeonAnnounceEnabled;
-            case "qol.dungeon_leap" -> dungeonLeapEnabled;
-            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled;
+            case "qol.dungeon_hud" -> QolFlavorSupport.isPlus() && dungeonHudEnabled;
+            case "qol.dungeon_esp" -> QolFlavorSupport.isPlus() && dungeonEspEnabled;
+            case "qol.dungeon_announce" -> QolFlavorSupport.isPlus() && dungeonAnnounceEnabled;
+            case "qol.dungeon_leap" -> QolFlavorSupport.isPlus() && dungeonLeapEnabled;
+            case "qol.dungeon_terminals" -> QolFlavorSupport.isPlus() && dungeonTerminalsEnabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled;
-            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled;
-            case "qol.dungeon_f7" -> dungeonF7Enabled;
-            case "qol.dungeon_menus" -> dungeonMenusEnabled;
+            case "qol.dungeon_puzzles" -> QolFlavorSupport.isPlus() && dungeonPuzzlesEnabled;
+            case "qol.dungeon_f7" -> QolFlavorSupport.isPlus() && dungeonF7Enabled;
+            case "qol.dungeon_menus" -> QolFlavorSupport.isPlus() && dungeonMenusEnabled;
             case "qol.farm_keys" -> farmKeysEnabled;
             case "qol.slayer_display" -> slayerDisplayEnabled;
             case "qol.slayer_time_messages" -> slayerTimeMessagesEnabled;
@@ -1115,6 +1122,7 @@ final class QolSkyblockExtras {
             case "qol.freecam" -> freecamEnabled;
             case "qol.hud_layout" -> hudLayoutEnabled;
             case "qol.custom_cursor" -> customCursorEnabled;
+            case "qol.block_outline" -> blockOutlineEnabled;
             case "qol.legacy_textures" -> legacyTexturesEnabled;
             case "qol.custom_resource_pack" -> customResourcePackEnabled;
             case "qol.iota" -> iotaAddonsEnabled;
@@ -1161,12 +1169,12 @@ final class QolSkyblockExtras {
             case "qol.foraging_helpers" -> foragingHelpersEnabled = enabled;
             case "qol.foraging_cheats" -> foragingCheatsEnabled = enabled;
             case "qol.dungeon_hud" -> dungeonHudEnabled = enabled;
-            case "qol.dungeon_esp" -> dungeonEspEnabled = enabled;
+            case "qol.dungeon_esp" -> dungeonEspEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_announce" -> dungeonAnnounceEnabled = enabled;
             case "qol.dungeon_leap" -> dungeonLeapEnabled = enabled;
-            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled = enabled;
+            case "qol.dungeon_terminals" -> dungeonTerminalsEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_requeue" -> dungeonRequeueEnabled = enabled;
-            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled = enabled;
+            case "qol.dungeon_puzzles" -> dungeonPuzzlesEnabled = QolFlavorSupport.isPlus() && enabled;
             case "qol.dungeon_f7" -> dungeonF7Enabled = enabled;
             case "qol.dungeon_menus" -> dungeonMenusEnabled = enabled;
             case "qol.farm_keys" -> farmKeysEnabled = enabled;
@@ -1204,6 +1212,7 @@ final class QolSkyblockExtras {
             case "qol.freecam" -> freecamEnabled = enabled;
             case "qol.hud_layout" -> hudLayoutEnabled = enabled;
             case "qol.custom_cursor" -> customCursorEnabled = enabled;
+            case "qol.block_outline" -> blockOutlineEnabled = enabled;
             case "qol.legacy_textures" -> legacyTexturesEnabled = enabled;
             case "qol.custom_resource_pack" -> customResourcePackEnabled = enabled;
             case "qol.iota" -> iotaAddonsEnabled = enabled;
@@ -2580,6 +2589,9 @@ final class QolSkyblockExtras {
             case "qol.freecam.speed" -> freecamSpeed;
             case "qol.hud_layout.scale" -> (double) hudLayoutScale;
             case "qol.custom_cursor.size" -> customCursorSize;
+            case "qol.block_outline.width" -> blockOutlineWidth;
+            case "qol.block_outline.rainbow_speed" -> blockOutlineRainbowSpeed;
+            case "qol.block_outline.rainbow_spread" -> blockOutlineRainbowSpread;
             case "qol.camera.distance" -> cameraDistance;
             case "qol.foraging_helpers.sea_lumies_min" -> (double) foragingHelpersSeaLumiesMin;
             case "qol.foraging_cheats.min_cluster" -> (double) foragingCheatsMinCluster;
@@ -2628,15 +2640,15 @@ final class QolSkyblockExtras {
             case "qol.dungeon_terminals.delay" -> dungeonTerminalsDelay =
                     Math.max(0, Math.min(20, (int) Math.round(value)));
             case "qol.dungeon_terminals.protect_ms" -> dungeonTerminalsProtectMs =
-                    DungeonF7Policy.clampTermProtectMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampTermProtectMs((int) Math.round(value));
             case "qol.dungeon_f7.relic_look_time" -> dungeonF7RelicLookTime =
-                    DungeonF7Policy.clampRelicLookMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampRelicLookMs((int) Math.round(value));
             case "qol.dungeon_f7.relic_spawn_ticks" -> dungeonF7RelicSpawnTicks =
-                    DungeonF7Policy.clampRelicSpawnTicks((int) Math.round(value));
+                    DungeonSettingsCompat.clampRelicSpawnTicks((int) Math.round(value));
             case "qol.dungeon_f7.auto_i4_rotation" -> dungeonF7AutoI4Rotation =
-                    DungeonF7Policy.clampI4RotationMs((int) Math.round(value));
+                    DungeonSettingsCompat.clampI4RotationMs((int) Math.round(value));
             case "qol.dungeon_esp.trigger_delay" -> dungeonEspTriggerDelay =
-                    DungeonLeftoverPolicy.clampTriggerDelay((int) Math.round(value));
+                    DungeonSettingsCompat.clampTriggerDelay((int) Math.round(value));
             case "qol.dungeon_hud.cheater_darken_factor" -> dungeonHudCheaterDarkenFactor =
                     Math.max(0.0D, Math.min(1.0D, value));
             case "qol.dungeon_hud.map_scale" -> dungeonHudMapScale =
@@ -2656,9 +2668,9 @@ final class QolSkyblockExtras {
             case "qol.dungeon_menus.party_cata" -> dungeonMenusPartyCata =
                     Math.max(0, Math.min(60, (int) Math.round(value)));
             case "qol.dungeon_esp.opacity" -> dungeonEspOpacity =
-                    DungeonAssistPolicy.clampOpacity((int) Math.round(value));
+                    DungeonSettingsCompat.clampOpacity((int) Math.round(value));
             case "qol.dungeon_announce.score_threshold" -> dungeonAnnounceScoreThreshold =
-                    DungeonAssistPolicy.clampScoreThreshold((int) Math.round(value));
+                    DungeonSettingsCompat.clampScoreThreshold((int) Math.round(value));
             case "qol.auto_sell.randomization" -> autoSellRandomization =
                     Math.max(0, Math.min(5, (int) Math.round(value)));
             case "qol.slayer_highlights.boss_width" -> slayerHighlightsBossWidth =
@@ -2731,6 +2743,12 @@ final class QolSkyblockExtras {
                     hudLayoutScale = HudStylePolicy.clampScale((float) value);
             case "qol.custom_cursor.size" ->
                     customCursorSize = CustomCursorPolicy.clampSize(value);
+            case "qol.block_outline.width" ->
+                    blockOutlineWidth = BlockOutlinePolicy.clampWidth(value);
+            case "qol.block_outline.rainbow_speed" ->
+                    blockOutlineRainbowSpeed = BlockOutlinePolicy.clampSpeed(value);
+            case "qol.block_outline.rainbow_spread" ->
+                    blockOutlineRainbowSpread = BlockOutlinePolicy.clampSpread(value);
             case "qol.camera.distance" ->
                     cameraDistance = TempleDungeonPolicy.clampCameraDistance(value);
             case "qol.foraging_helpers.sea_lumies_min" -> foragingHelpersSeaLumiesMin =
@@ -2796,7 +2814,7 @@ final class QolSkyblockExtras {
             return DungeonPolicy.normalizeI4LeapClass(dungeonF7AutoI4LeapClass);
         }
         if ("qol.dungeon_menus.close_chest.mode".equals(settingId)) {
-            return DungeonF7Policy.normalizeCloseChestMode(dungeonMenusCloseChestMode);
+            return DungeonSettingsCompat.normalizeCloseChestMode(dungeonMenusCloseChestMode);
         }
         if ("qol.fishing_creatures.min_rarity".equals(settingId)) {
             return FishingCreaturesPolicy.normalizeRarity(fishingCreaturesMinRarity);
@@ -2814,7 +2832,10 @@ final class QolSkyblockExtras {
             return normalizeGhostHighlight(ghostsHighlightStyle);
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
-            return DungeonF7Policy.normalizeSoloClass(dungeonF7DragonSoloClass);
+            return DungeonSettingsCompat.normalizeSoloClass(dungeonF7DragonSoloClass);
+        }
+        if ("qol.block_outline.mode".equals(settingId)) {
+            return BlockOutlinePolicy.normalizeMode(blockOutlineMode);
         }
         return athen().readEnum(settingId);
     }
@@ -2866,7 +2887,7 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.dungeon_menus.close_chest.mode".equals(settingId)) {
-            dungeonMenusCloseChestMode = DungeonF7Policy.normalizeCloseChestMode(value);
+            dungeonMenusCloseChestMode = DungeonSettingsCompat.normalizeCloseChestMode(value);
             return true;
         }
         if ("qol.fishing_creatures.min_rarity".equals(settingId)) {
@@ -2890,13 +2911,20 @@ final class QolSkyblockExtras {
             return true;
         }
         if ("qol.dungeon_f7.dragon_solo_class".equals(settingId)) {
-            dungeonF7DragonSoloClass = DungeonF7Policy.normalizeSoloClass(value);
+            dungeonF7DragonSoloClass = DungeonSettingsCompat.normalizeSoloClass(value);
+            return true;
+        }
+        if ("qol.block_outline.mode".equals(settingId)) {
+            blockOutlineMode = BlockOutlinePolicy.normalizeMode(value);
             return true;
         }
         return athen().writeEnum(settingId, value);
     }
 
     String dungeonMapMode() {
+        if (!QolFlavorSupport.isPlus()) {
+            return DungeonMapPolicy.MAP_MODE_EXPLORED;
+        }
         if (dungeonHudCheaterMap) {
             return DungeonMapPolicy.MAP_MODE_REVEAL;
         }
@@ -2999,6 +3027,7 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill;
             case "qol.custom_cursor.outline" -> customCursorOutline;
             case "qol.custom_cursor.accent" -> customCursorAccent;
+            case "qol.block_outline.color" -> blockOutlineColor;
             case "qol.ghosts.fill_color" -> ghostsFillColor;
             case "qol.ghosts.outline_color" -> ghostsOutlineColor;
             default -> athen().readColor(settingId);
@@ -3090,6 +3119,7 @@ final class QolSkyblockExtras {
             case "qol.custom_cursor.fill" -> customCursorFill = argb;
             case "qol.custom_cursor.outline" -> customCursorOutline = argb;
             case "qol.custom_cursor.accent" -> customCursorAccent = argb;
+            case "qol.block_outline.color" -> blockOutlineColor = argb;
             case "qol.ghosts.fill_color" -> ghostsFillColor = argb;
             case "qol.ghosts.outline_color" -> ghostsOutlineColor = argb;
             default -> {
@@ -4128,6 +4158,14 @@ final class QolSkyblockExtras {
                 customCursorClickAnim = d.customCursorClickAnim;
                 customCursorHoldAnim = d.customCursorHoldAnim;
                 customCursorHideVanilla = d.customCursorHideVanilla;
+            }
+            case "qol.block_outline" -> {
+                blockOutlineEnabled = d.blockOutlineEnabled;
+                blockOutlineMode = d.blockOutlineMode;
+                blockOutlineColor = d.blockOutlineColor;
+                blockOutlineWidth = d.blockOutlineWidth;
+                blockOutlineRainbowSpeed = d.blockOutlineRainbowSpeed;
+                blockOutlineRainbowSpread = d.blockOutlineRainbowSpread;
             }
             case "qol.legacy_textures" -> {
                 legacyTexturesEnabled = d.legacyTexturesEnabled;

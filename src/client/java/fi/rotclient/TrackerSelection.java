@@ -1,5 +1,7 @@
 package fi.rotclient;
 
+import java.util.List;
+
 enum TrackerSelection {
     COAL("COAL", TrackingTarget.COAL, null),
     IRON("IRON", TrackingTarget.IRON, null),
@@ -15,6 +17,11 @@ enum TrackerSelection {
             null),
     TUNGSTEN("TUNGSTEN", TrackingTarget.TUNGSTEN, null),
     UMBER("UMBER", TrackingTarget.UMBER, null),
+    /**
+     * Tracks every gemstone at once. Each gemstone keeps its own ledger; a
+     * separate aggregate state carries the shared block count and timeline.
+     */
+    ALL_GEMSTONES("GEMSTONE_ALL", null, null),
     RUBY("GEMSTONE_RUBY", null, GemstoneType.RUBY),
     AMBER("GEMSTONE_AMBER", null, GemstoneType.AMBER),
     SAPPHIRE("GEMSTONE_SAPPHIRE", null, GemstoneType.SAPPHIRE),
@@ -49,6 +56,9 @@ enum TrackerSelection {
         if (isMaterial()) {
             return materialTarget.displayName();
         }
+        if (isAllGemstones()) {
+            return "All Gemstones";
+        }
         return gemstone.displayName();
     }
 
@@ -56,8 +66,29 @@ enum TrackerSelection {
         return materialTarget != null;
     }
 
+    /** True for one gemstone and for {@link #ALL_GEMSTONES}. */
     boolean isGemstone() {
-        return gemstone != null;
+        return gemstone != null || isAllGemstones();
+    }
+
+    boolean isAllGemstones() {
+        return this == ALL_GEMSTONES;
+    }
+
+    /** Whether events for {@code candidate} count as this selection's target. */
+    boolean tracksGemstone(GemstoneType candidate) {
+        if (candidate == null) {
+            return false;
+        }
+        return isAllGemstones() || gemstone == candidate;
+    }
+
+    /** Gemstones this selection covers: one, every one, or none (ores). */
+    List<GemstoneType> gemstones() {
+        if (isAllGemstones()) {
+            return List.of(GemstoneType.values());
+        }
+        return gemstone == null ? List.of() : List.of(gemstone);
     }
 
     boolean supportsLiveTracking() {
@@ -69,6 +100,7 @@ enum TrackerSelection {
         return materialTarget;
     }
 
+    /** The single gemstone, or null for ores and {@link #ALL_GEMSTONES}. */
     GemstoneType gemstone() {
         return gemstone;
     }

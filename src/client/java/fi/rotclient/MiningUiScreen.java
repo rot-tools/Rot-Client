@@ -84,6 +84,7 @@ final class MiningUiScreen extends Screen {
     private int trackerDropdownHighlight;
     private final RotClientScrollState analyticsScroll = new RotClientScrollState();
     private final RotClientScrollState sidebarScroll = new RotClientScrollState();
+    private final RotClientScrollState profilesScroll = new RotClientScrollState();
     private final RotClientExpandState sidebarExpand = new RotClientExpandState();
 
     private int tabStripScroll = 0;
@@ -111,6 +112,11 @@ final class MiningUiScreen extends Screen {
     private String profileNameInput = "";
     private String profileCreateError = "";
     private String profilePageError = "";
+    private boolean profileAutoSwitchOpen;
+    private String autoSwitchError = "";
+    private boolean profileExamplesOpen;
+    private String examplesMessage = "";
+    private boolean examplesMessageIsError;
     private enum ProfileEditMode {
         NONE,
         RENAME,
@@ -812,6 +818,13 @@ final class MiningUiScreen extends Screen {
     }
 
     private boolean profilePanelOpen() {
+        return otherProfilePanelOpen()
+                || profileAutoSwitchOpen
+                || profileExamplesOpen;
+    }
+
+    /** Create / rename / duplicate / delete forms, not the Auto Switch page. */
+    private boolean otherProfilePanelOpen() {
         return profileCreateOpen
                 || profileEditMode != ProfileEditMode.NONE
                 || !profileDeleteProfileId.isBlank();
@@ -2439,6 +2452,16 @@ final class MiningUiScreen extends Screen {
         int createButtonX =
                 contentRight - createButtonWidth;
 
+        if (handleProfileSubpageClick(
+                mouseX,
+                mouseY,
+                contentLeft,
+                contentRight,
+                top)) {
+
+            return true;
+        }
+
         if (!profilePanelOpen()
                 && inside(
                 mouseX,
@@ -2708,13 +2731,29 @@ final class MiningUiScreen extends Screen {
         int listY =
                 cardY + 104 + 18;
 
-        int shown =
-                Math.min(
-                        6,
-                        profiles.size());
+        /*
+         * Only the part of the list that is actually visible is clickable,
+         * and rows are found at their scrolled position.
+         */
+        int clipTop =
+                listY;
+
+        int clipBottom =
+                profilesListClipBottom(panelY);
+
+        refreshProfilesScrollBounds(panelY);
+
+        boolean overList =
+                mouseY >= clipTop
+                        && mouseY < clipBottom;
+
+        listY =
+                clipTop
+                        - profilesScroll.scrollPixels();
 
         for (int i = 0;
-             i < shown;
+             i < profiles.size()
+                     && overList;
              i++) {
 
             RotClientProfile profile =
@@ -2747,6 +2786,13 @@ final class MiningUiScreen extends Screen {
                         menuOpen
                                 ? ""
                                 : profile.id;
+
+                if (!menuOpen) {
+                    revealOpenProfileRow(
+                            i,
+                            profiles.size(),
+                            clipBottom - clipTop);
+                }
 
                 profilePageError = "";
                 return true;
@@ -2871,9 +2917,8 @@ final class MiningUiScreen extends Screen {
             }
 
             listY +=
-                    menuOpen
-                            ? 80
-                            : 48;
+                    RotClientProfileListLayout.pitch(
+                            menuOpen);
         }
 
         /*
@@ -5774,7 +5819,15 @@ final class MiningUiScreen extends Screen {
         RotClientUiDraw.helpText(
                 graphics,
                 font,
-                "Save and switch between complete Rot Client setups.",
+                RotClientUiDraw.ellipsize(
+                        font,
+                        profileAutoSwitchOpen
+                                ? "Switch profile automatically when you change place."
+                                : profileExamplesOpen
+                                ? "Ready-made setups to start from."
+                                : "Save and switch between complete Rot Client setups.",
+                        contentWidth - 126 - AUTO_SWITCH_BUTTON_WIDTH
+                                - EXAMPLES_BUTTON_WIDTH - BUTTON_GAP * 3),
                 contentLeft,
                 top + 16);
 
@@ -5806,6 +5859,26 @@ final class MiningUiScreen extends Screen {
                     top + 29,
                     RotClientTheme.WARNING,
                     false);
+        }
+
+        drawProfileSubpageButtons(
+                graphics,
+                mouseX,
+                mouseY,
+                contentRight,
+                top);
+
+        if (profilesSubpageOpen()) {
+            drawScrolledProfilesSubpage(
+                    graphics,
+                    panelY,
+                    contentLeft,
+                    contentRight,
+                    top,
+                    mouseX,
+                    mouseY);
+
+            return;
         }
 
         int cardY;
@@ -6148,22 +6221,84 @@ final class MiningUiScreen extends Screen {
 
         listY += 18;
 
-        int maxShown =
-                profilePanelOpen()
-                        ? 3
-                        : 6;
+        /*
+         * The list is clipped to the space the window really has and scrolls
+         * inside it, so a short (windowed) dashboard never draws rows past
+         * its own border.
+         */
+        int clipTop =
+                listY;
 
-        int shown =
-                Math.min(
-                        maxShown,
-                        profiles.size());
+        int clipBottom =
+                profilesListClipBottom(panelY);
 
+        if (clipBottom <= clipTop) {
+            profilesScroll.setBounds(0, 0);
+            return;
+        }
+
+        int openIndex = -1;
+
+        if (!profilePanelOpen()) {
+            for (int i = 0;
+                 i < profiles.size();
+                 i++) {
+
+                if (profiles.get(i).matchesId(
+                        profileMenuProfileId)) {
+
+                    openIndex = i;
+                }
+            }
+        }
+
+        int listContentHeight =
+                RotClientProfileListLayout.contentHeight(
+                        profiles.size(),
+                        openIndex);
+
+        profilesScroll.setBounds(
+                listContentHeight,
+                clipBottom - clipTop);
+
+        profilesScroll.advanceSeconds(
+                RotClientUiClock.seconds());
+
+        graphics.enableScissor(
+                contentLeft,
+                clipTop,
+                contentRight + 6,
+                clipBottom);
+
+        RotClientUiMotion.pushFractionalScroll(
+                graphics,
+                profilesScroll);
+
+        listY =
+                clipTop
+                        - profilesScroll.scrollPixels();
+
+        try {
         for (int i = 0;
-             i < shown;
+             i < profiles.size();
              i++) {
 
             RotClientProfile profile =
                     profiles.get(i);
+
+            int rowPitch =
+                    RotClientProfileListLayout.pitch(
+                            i == openIndex);
+
+            if (!profilesScroll.intersects(
+                    listY,
+                    rowPitch,
+                    clipTop,
+                    clipBottom)) {
+
+                listY += rowPitch;
+                continue;
+            }
 
             boolean isActive =
                     active != null
@@ -6172,13 +6307,15 @@ final class MiningUiScreen extends Screen {
 
             boolean rowHover =
                     !profilePanelOpen()
+                            && mouseY >= clipTop
+                            && mouseY < clipBottom
                             && inside(
                             mouseX,
                             mouseY,
                             contentLeft,
                             listY,
                             contentWidth,
-                            40);
+                            RotClientProfileListLayout.CARD_HEIGHT);
 
             float rowHoverAmount =
                     collectionRowHoverAmount(
@@ -6328,23 +6465,1221 @@ final class MiningUiScreen extends Screen {
             }
 
             listY +=
-                    menuOpen
-                            ? 80
-                            : 48;
+                    RotClientProfileListLayout.pitch(
+                            menuOpen);
+        }
+        } finally {
+            RotClientUiMotion.pop(graphics);
+            graphics.disableScissor();
         }
 
-        if (profiles.size() > shown) {
+        if (profilesScroll.canScroll()) {
+            RotClientUiDraw.drawScrollbar(
+                    graphics,
+                    contentRight + 2,
+                    clipTop,
+                    clipBottom,
+                    profilesScroll.contentHeight(),
+                    profilesScroll.scrollPixels(),
+                    false,
+                    profilesScroll.isThumbDragging());
+        }
+    }
+
+    /**
+     * Left press on the saved-profiles scrollbar: grab the thumb, or page
+     * towards the click when it lands on the track.
+     */
+    private boolean handleProfilesScrollbarPress(
+            MouseButtonEvent event,
+            double mouseX,
+            double mouseY,
+            int contentRight,
+            int panelY) {
+
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT
+                || otherProfilePanelOpen()) {
+
+            return false;
+        }
+
+        refreshProfilesScrollBounds(panelY);
+
+        int trackTop =
+                profilesScrollTop(panelY);
+
+        int trackBottom =
+                profilesListClipBottom(panelY);
+
+        if (!profilesScroll.canScroll()
+                || mouseX < contentRight
+                || mouseX >= contentRight
+                + RotClientUiDraw.SCROLLBAR_HIT_WIDTH
+                || mouseY < trackTop
+                || mouseY >= trackBottom) {
+
+            return false;
+        }
+
+        int y =
+                (int) Math.round(mouseY);
+
+        return profilesScroll.beginThumbDrag(
+                y,
+                trackTop,
+                trackBottom,
+                RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)
+                || profilesScroll.clickTrack(
+                y,
+                trackTop,
+                trackBottom,
+                RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT);
+    }
+
+    private boolean profilesSubpageOpen() {
+        return profileAutoSwitchOpen
+                || profileExamplesOpen;
+    }
+
+    /**
+     * Sub-pages scroll below the header buttons. Their content is laid out
+     * from a page top that is simply moved up by the scroll offset, so their
+     * own drawing and click code needs no scroll logic.
+     */
+    private static final int PROFILES_SUBPAGE_CLIP_OFFSET = 30;
+
+    /** Bottom of a sub-page's content, relative to the page top. */
+    private int profilesSubpageContentEnd() {
+        if (profileAutoSwitchOpen) {
+            // Two 12px help lines under the rule grid, plus a little air.
+            return RotClientAutoSwitchLayout.footerY(
+                    autoSwitchGridTop(0),
+                    autoSwitchCells().size())
+                    + 12 + 9 + 6;
+        }
+
+        // Two help lines and the small-window warning line, plus air.
+        return RotClientExamplesLayout.footerY(
+                0,
+                RotClientProfilePresets.bundled().size())
+                + 24 + 9 + 6;
+    }
+
+    /** Top of whatever currently scrolls on the Profiles page. */
+    private int profilesScrollTop(int panelY) {
+        return profilesSubpageOpen()
+                ? panelY + MASTER_Y + PROFILES_SUBPAGE_CLIP_OFFSET
+                : profilesListClipTop(panelY);
+    }
+
+    private void drawScrolledProfilesSubpage(
+            GuiGraphicsExtractor graphics,
+            int panelY,
+            int contentLeft,
+            int contentRight,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        int clipTop =
+                top + PROFILES_SUBPAGE_CLIP_OFFSET;
+
+        int clipBottom =
+                profilesListClipBottom(panelY);
+
+        if (clipBottom <= clipTop) {
+            profilesScroll.setBounds(0, 0);
+            return;
+        }
+
+        refreshProfilesScrollBounds(panelY);
+
+        profilesScroll.advanceSeconds(
+                RotClientUiClock.seconds());
+
+        graphics.enableScissor(
+                contentLeft,
+                clipTop,
+                contentRight + 6,
+                clipBottom);
+
+        RotClientUiMotion.pushFractionalScroll(
+                graphics,
+                profilesScroll);
+
+        try {
+            int shiftedTop =
+                    top
+                            - profilesScroll.scrollPixels();
+
+            if (profileAutoSwitchOpen) {
+                drawAutoSwitchPage(
+                        graphics,
+                        contentLeft,
+                        contentRight,
+                        shiftedTop,
+                        mouseX,
+                        mouseY);
+            } else {
+                drawExamplesPage(
+                        graphics,
+                        contentLeft,
+                        contentRight,
+                        shiftedTop,
+                        mouseX,
+                        mouseY);
+            }
+        } finally {
+            RotClientUiMotion.pop(graphics);
+            graphics.disableScissor();
+        }
+
+        if (profilesScroll.canScroll()) {
+            RotClientUiDraw.drawScrollbar(
+                    graphics,
+                    contentRight + 2,
+                    clipTop,
+                    clipBottom,
+                    profilesScroll.contentHeight(),
+                    profilesScroll.scrollPixels(),
+                    false,
+                    profilesScroll.isThumbDragging());
+        }
+    }
+
+    /** Bottom edge of the saved-profiles list: the window's content edge. */
+    private int profilesListClipBottom(int panelY) {
+        return panelY
+                + panelH()
+                - CONTENT_INSET;
+    }
+
+    /** Top of the list while no form or sub-page pushes it down. */
+    private int profilesListClipTop(int panelY) {
+        return panelY
+                + MASTER_Y
+                + 42
+                + 104
+                + 18;
+    }
+
+    /**
+     * Brings the scroll bounds up to date for the list as it is right now, so
+     * wheel, click and drag all agree with what was last drawn. Only valid
+     * while no form or sub-page is open.
+     */
+    private void refreshProfilesScrollBounds(int panelY) {
+        if (profilesSubpageOpen()) {
+            profilesScroll.setBounds(
+                    Math.max(
+                            0,
+                            profilesSubpageContentEnd()
+                                    - PROFILES_SUBPAGE_CLIP_OFFSET),
+                    Math.max(
+                            0,
+                            profilesListClipBottom(panelY)
+                                    - profilesScrollTop(panelY)));
+
+            return;
+        }
+
+        List<RotClientProfile> profiles =
+                RotClientClient
+                        .settingsProfileController()
+                        .profiles();
+
+        int openIndex = -1;
+
+        for (int i = 0;
+             i < profiles.size();
+             i++) {
+
+            if (profiles.get(i).matchesId(
+                    profileMenuProfileId)) {
+
+                openIndex = i;
+            }
+        }
+
+        profilesScroll.setBounds(
+                RotClientProfileListLayout.contentHeight(
+                        profiles.size(),
+                        openIndex),
+                Math.max(
+                        0,
+                        profilesListClipBottom(panelY)
+                                - profilesListClipTop(panelY)));
+    }
+
+    /** After a row's menu opens, scroll so its whole card and menu show. */
+    private void revealOpenProfileRow(
+            int index,
+            int rowCount,
+            int viewportHeight) {
+
+        profilesScroll.setBounds(
+                RotClientProfileListLayout.contentHeight(
+                        rowCount,
+                        index),
+                viewportHeight);
+
+        profilesScroll.setScrollPixels(
+                RotClientProfileListLayout.scrollToReveal(
+                        index,
+                        index,
+                        profilesScroll.scrollPixels(),
+                        viewportHeight));
+    }
+
+    private static final int AUTO_SWITCH_BUTTON_WIDTH = 124;
+    private static final int AUTO_SWITCH_CARD_HEIGHT = 62;
+    private static final int AUTO_SWITCH_CELL_HEIGHT =
+            RotClientAutoSwitchLayout.CELL_HEIGHT;
+    private static final int AUTO_SWITCH_CELL_GAP = 8;
+
+    private int autoSwitchButtonX(int contentRight) {
+        return contentRight - 126 - BUTTON_GAP - AUTO_SWITCH_BUTTON_WIDTH;
+    }
+
+    private static final int EXAMPLES_BUTTON_WIDTH = 96;
+
+    private int examplesButtonX(int contentRight) {
+        return autoSwitchButtonX(contentRight)
+                - BUTTON_GAP
+                - EXAMPLES_BUTTON_WIDTH;
+    }
+
+    /**
+     * The two sub-page buttons beside Create Profile. The open page's button
+     * turns into a way back; both stay disabled while a create / rename /
+     * duplicate / delete form is open.
+     */
+    private void drawProfileSubpageButtons(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            int contentRight,
+            int top) {
+
+        boolean autoSwitchOn =
+                RotClientClient.settingsProfiles().autoSwitch().enabled;
+
+        boolean enabled =
+                !otherProfilePanelOpen();
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                examplesButtonX(contentRight),
+                top,
+                EXAMPLES_BUTTON_WIDTH,
+                profileExamplesOpen
+                        ? "< PROFILES"
+                        : "EXAMPLES",
+                false,
+                profileExamplesOpen,
+                enabled);
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                autoSwitchButtonX(contentRight),
+                top,
+                AUTO_SWITCH_BUTTON_WIDTH,
+                profileAutoSwitchOpen
+                        ? "< PROFILES"
+                        : autoSwitchOn
+                        ? "AUTO SWITCH: ON"
+                        : "AUTO SWITCH",
+                false,
+                profileAutoSwitchOpen || autoSwitchOn,
+                enabled);
+    }
+
+    /** Rule cells in display order; OTHER stands for "Everywhere else". */
+    private static List<AutoProfileContext> autoSwitchCells() {
+        List<AutoProfileContext> cells =
+                new java.util.ArrayList<>();
+
+        for (AutoProfileContext context
+                : AutoProfileContext.values()) {
+
+            if (context.hasRuleRow()) {
+                cells.add(context);
+            }
+        }
+
+        cells.add(AutoProfileContext.OTHER);
+
+        return cells;
+    }
+
+    private int autoSwitchGridTop(int top) {
+        return top + 42 + AUTO_SWITCH_CARD_HEIGHT + 12 + 18;
+    }
+
+    private int autoSwitchCellWidth(int contentWidth) {
+        return (contentWidth - AUTO_SWITCH_CELL_GAP) / 2;
+    }
+
+    private int autoSwitchCellX(
+            int contentLeft,
+            int contentWidth,
+            int index) {
+
+        return contentLeft
+                + (index % 2)
+                * (autoSwitchCellWidth(contentWidth)
+                + AUTO_SWITCH_CELL_GAP);
+    }
+
+    private int autoSwitchCellY(int gridTop, int index) {
+        return RotClientAutoSwitchLayout.cellY(gridTop, index);
+    }
+
+    private static String autoSwitchCellTitle(
+            AutoProfileContext context) {
+
+        return context == AutoProfileContext.OTHER
+                ? "Everywhere else"
+                : context.displayName();
+    }
+
+    private void drawAutoSwitchPage(
+            GuiGraphicsExtractor graphics,
+            int contentLeft,
+            int contentRight,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        RotClientProfileManager manager =
+                RotClientClient.settingsProfiles();
+
+        RotClientAutoSwitchConfig rules =
+                manager.autoSwitch();
+
+        int contentWidth =
+                contentRight - contentLeft;
+
+        int cardY =
+                top + 42;
+
+        RotClientUiDraw.drawElevatedCard(
+                graphics,
+                contentLeft,
+                cardY,
+                contentWidth,
+                AUTO_SWITCH_CARD_HEIGHT);
+
+        graphics.fill(
+                contentLeft,
+                cardY + 10,
+                contentLeft + 3,
+                cardY + AUTO_SWITCH_CARD_HEIGHT - 10,
+                rules.enabled
+                        ? RotClientTheme.SUCCESS
+                        : RotClientTheme.TEXT_MUTED);
+
+        int toggleX =
+                contentRight - 14 - QolUtilityUiMath.TOGGLE_WIDTH;
+
+        int masterY =
+                cardY + 6;
+
+        int noticeY =
+                cardY + 34;
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Switch profiles automatically",
+                contentLeft + 14,
+                masterY + 6,
+                RotClientTheme.TEXT,
+                true);
+
+        RotClientUiDraw.drawToggle(
+                graphics,
+                toggleX,
+                masterY,
+                rules.enabled,
+                inside(
+                        mouseX,
+                        mouseY,
+                        toggleX,
+                        masterY,
+                        QolUtilityUiMath.TOGGLE_WIDTH,
+                        QolUtilityUiMath.TOGGLE_HEIGHT));
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "Tell me in chat when a switch happens",
+                contentLeft + 14,
+                noticeY + 6,
+                RotClientTheme.TEXT_DIM,
+                false);
+
+        RotClientUiDraw.drawToggle(
+                graphics,
+                toggleX,
+                noticeY,
+                rules.notify,
+                inside(
+                        mouseX,
+                        mouseY,
+                        toggleX,
+                        noticeY,
+                        QolUtilityUiMath.TOGGLE_WIDTH,
+                        QolUtilityUiMath.TOGGLE_HEIGHT));
+
+        List<RotClientProfile> profiles =
+                RotClientClient
+                        .settingsProfileController()
+                        .profiles();
+
+        int labelY =
+                cardY + AUTO_SWITCH_CARD_HEIGHT + 12;
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "WHEN YOU ENTER",
+                contentLeft,
+                labelY);
+
+        if (profiles.isEmpty()) {
             RotClientUiDraw.text(
                     graphics,
                     font,
-                    "+"
-                            + (profiles.size() - shown)
-                            + " more profiles",
-                    contentLeft,
-                    listY + 4,
-                    RotClientTheme.TEXT_MUTED,
+                    "Create a profile first, then pick one for each place.",
+                    contentLeft + 118,
+                    labelY,
+                    RotClientTheme.WARNING,
+                    false);
+        } else if (!autoSwitchError.isBlank()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    autoSwitchError,
+                    contentLeft + 118,
+                    labelY,
+                    RotClientTheme.WARNING,
                     false);
         }
+
+        int gridTop =
+                autoSwitchGridTop(top);
+
+        int cellWidth =
+                autoSwitchCellWidth(contentWidth);
+
+        List<AutoProfileContext> cells =
+                autoSwitchCells();
+
+        for (int i = 0;
+             i < cells.size();
+             i++) {
+
+            AutoProfileContext context =
+                    cells.get(i);
+
+            int x =
+                    autoSwitchCellX(
+                            contentLeft,
+                            contentWidth,
+                            i);
+
+            int y =
+                    autoSwitchCellY(
+                            gridTop,
+                            i);
+
+            String profileId =
+                    context == AutoProfileContext.OTHER
+                            ? rules.fallbackProfileId
+                            : rules.ruleFor(context);
+
+            RotClientProfile profile =
+                    profileById(profileId);
+
+            boolean set =
+                    profile != null;
+
+            boolean hover =
+                    inside(
+                            mouseX,
+                            mouseY,
+                            x,
+                            y,
+                            cellWidth,
+                            AUTO_SWITCH_CELL_HEIGHT);
+
+            RotClientUiDraw.drawInteractiveSurface(
+                    graphics,
+                    x,
+                    y,
+                    cellWidth,
+                    AUTO_SWITCH_CELL_HEIGHT,
+                    collectionRowHoverAmount(
+                            "autoswitch:" + context.id(),
+                            hover),
+                    set,
+                    RotClientTheme.HUD_ACCENT,
+                    RotClientUiDraw.RADIUS_SM);
+
+            int valueMaxWidth =
+                    cellWidth / 2 - 12;
+
+            int titleMaxWidth =
+                    cellWidth - valueMaxWidth - 30;
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            autoSwitchCellTitle(context),
+                            titleMaxWidth),
+                    x + 10,
+                    y + 10,
+                    RotClientTheme.TEXT,
+                    false);
+
+            String value =
+                    set
+                            ? RotClientUiDraw.ellipsize(
+                            font,
+                            profile.name,
+                            valueMaxWidth)
+                            : "NOT SET";
+
+            drawRight(
+                    graphics,
+                    value,
+                    x + cellWidth - 10,
+                    y + 10,
+                    set
+                            ? RotClientTheme.HUD_ACCENT
+                            : RotClientTheme.TEXT_MUTED);
+        }
+
+        int footerY =
+                RotClientAutoSwitchLayout.footerY(
+                        gridTop,
+                        cells.size());
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        "Click a place to cycle through your profiles. "
+                                + "Places without a rule use Everywhere else.",
+                        contentWidth),
+                contentLeft,
+                footerY);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        "Picking a profile yourself is respected until "
+                                + "the place changes.",
+                        contentWidth),
+                contentLeft,
+                footerY + 12);
+    }
+
+    /**
+     * Handles the Examples / Auto Switch header buttons and, while one of
+     * those pages is open, every click on it. Returns true when the click was
+     * consumed.
+     */
+    private boolean handleProfileSubpageClick(
+            double mouseX,
+            double mouseY,
+            int contentLeft,
+            int contentRight,
+            int top) {
+
+        if (!otherProfilePanelOpen()) {
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    examplesButtonX(contentRight),
+                    top,
+                    EXAMPLES_BUTTON_WIDTH,
+                    BUTTON_HEIGHT)) {
+
+                profileExamplesOpen =
+                        !profileExamplesOpen;
+
+                profileAutoSwitchOpen = false;
+                resetProfileSubpageMessages();
+
+                return true;
+            }
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    autoSwitchButtonX(contentRight),
+                    top,
+                    AUTO_SWITCH_BUTTON_WIDTH,
+                    BUTTON_HEIGHT)) {
+
+                profileAutoSwitchOpen =
+                        !profileAutoSwitchOpen;
+
+                profileExamplesOpen = false;
+                resetProfileSubpageMessages();
+
+                return true;
+            }
+        }
+
+        if (!profilesSubpageOpen()) {
+            return false;
+        }
+
+        int panelY =
+                top - MASTER_Y;
+
+        int clipTop =
+                top + PROFILES_SUBPAGE_CLIP_OFFSET;
+
+        // Anything above or below the clipped page is not clickable.
+        if (mouseY < clipTop
+                || mouseY >= profilesListClipBottom(panelY)) {
+
+            return true;
+        }
+
+        refreshProfilesScrollBounds(panelY);
+
+        int shiftedTop =
+                top
+                        - profilesScroll.scrollPixels();
+
+        return profileAutoSwitchOpen
+                ? handleAutoSwitchBodyClick(
+                mouseX,
+                mouseY,
+                contentLeft,
+                contentRight,
+                shiftedTop)
+                : handleExamplesBodyClick(
+                mouseX,
+                mouseY,
+                contentLeft,
+                contentRight,
+                shiftedTop);
+    }
+
+    private void resetProfileSubpageMessages() {
+        profilesScroll.reset();
+        autoSwitchError = "";
+        examplesMessage = "";
+        examplesMessageIsError = false;
+        profileMenuProfileId = "";
+        profilePageError = "";
+    }
+
+    private void closeProfileSubpages() {
+        profileAutoSwitchOpen = false;
+        profileExamplesOpen = false;
+        resetProfileSubpageMessages();
+    }
+
+    private boolean handleAutoSwitchBodyClick(
+            double mouseX,
+            double mouseY,
+            int contentLeft,
+            int contentRight,
+            int top) {
+
+        RotClientProfileManager manager =
+                RotClientClient.settingsProfiles();
+
+        RotClientAutoSwitchConfig rules =
+                manager.autoSwitch();
+
+        int contentWidth =
+                contentRight - contentLeft;
+
+        int cardY =
+                top + 42;
+
+        int toggleX =
+                contentRight - 14 - QolUtilityUiMath.TOGGLE_WIDTH;
+
+        if (inside(
+                mouseX,
+                mouseY,
+                toggleX,
+                cardY + 6,
+                QolUtilityUiMath.TOGGLE_WIDTH,
+                QolUtilityUiMath.TOGGLE_HEIGHT)) {
+
+            autoSwitchError =
+                    manager.setAutoSwitchEnabled(!rules.enabled)
+                            ? ""
+                            : "Could not save.";
+
+            return true;
+        }
+
+        if (inside(
+                mouseX,
+                mouseY,
+                toggleX,
+                cardY + 34,
+                QolUtilityUiMath.TOGGLE_WIDTH,
+                QolUtilityUiMath.TOGGLE_HEIGHT)) {
+
+            autoSwitchError =
+                    manager.setAutoSwitchNotify(!rules.notify)
+                            ? ""
+                            : "Could not save.";
+
+            return true;
+        }
+
+        int gridTop =
+                autoSwitchGridTop(top);
+
+        int cellWidth =
+                autoSwitchCellWidth(contentWidth);
+
+        List<AutoProfileContext> cells =
+                autoSwitchCells();
+
+        for (int i = 0;
+             i < cells.size();
+             i++) {
+
+            if (!inside(
+                    mouseX,
+                    mouseY,
+                    autoSwitchCellX(
+                            contentLeft,
+                            contentWidth,
+                            i),
+                    autoSwitchCellY(
+                            gridTop,
+                            i),
+                    cellWidth,
+                    AUTO_SWITCH_CELL_HEIGHT)) {
+
+                continue;
+            }
+
+            cycleAutoSwitchCell(
+                    manager,
+                    rules,
+                    cells.get(i));
+
+            return true;
+        }
+
+        return true;
+    }
+
+    private void cycleAutoSwitchCell(
+            RotClientProfileManager manager,
+            RotClientAutoSwitchConfig rules,
+            AutoProfileContext context) {
+
+        List<String> ids =
+                new java.util.ArrayList<>();
+
+        for (RotClientProfile profile
+                : RotClientClient
+                .settingsProfileController()
+                .profiles()) {
+
+            if (profile != null) {
+                ids.add(profile.id);
+            }
+        }
+
+        if (ids.isEmpty()) {
+            autoSwitchError = "";
+            return;
+        }
+
+        boolean fallback =
+                context == AutoProfileContext.OTHER;
+
+        String next =
+                RotClientAutoSwitchConfig.nextProfileId(
+                        ids,
+                        fallback
+                                ? rules.fallbackProfileId
+                                : rules.ruleFor(context));
+
+        boolean saved =
+                fallback
+                        ? manager.setAutoSwitchFallback(next)
+                        : manager.setAutoSwitchRule(context, next);
+
+        autoSwitchError =
+                saved
+                        ? ""
+                        : "Could not save.";
+    }
+
+    private boolean examplesAdded(RotClientProfilePreset preset) {
+        for (RotClientProfile profile
+                : RotClientClient
+                .settingsProfileController()
+                .profiles()) {
+
+            if (profile != null
+                    && profile.name != null
+                    && profile.name.equalsIgnoreCase(preset.name)) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void drawExamplesPage(
+            GuiGraphicsExtractor graphics,
+            int contentLeft,
+            int contentRight,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        List<RotClientProfilePreset> presets =
+                RotClientProfilePresets.bundled();
+
+        int contentWidth =
+                contentRight - contentLeft;
+
+        int pending = 0;
+
+        for (RotClientProfilePreset preset : presets) {
+            if (!examplesAdded(preset)) {
+                pending++;
+            }
+        }
+
+        RotClientUiDraw.sectionLabel(
+                graphics,
+                font,
+                "EXAMPLE PROFILES",
+                contentLeft,
+                top + 46);
+
+        drawProfileActionButton(
+                graphics,
+                mouseX,
+                mouseY,
+                contentRight - EXAMPLES_ADD_ALL_WIDTH,
+                top + 36,
+                EXAMPLES_ADD_ALL_WIDTH,
+                "ADD ALL",
+                true,
+                false,
+                pending > 0);
+
+        if (!examplesMessage.isBlank()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            examplesMessage,
+                            contentWidth - 140 - EXAMPLES_ADD_ALL_WIDTH),
+                    contentLeft + 130,
+                    top + 46,
+                    examplesMessageIsError
+                            ? RotClientTheme.WARNING
+                            : RotClientTheme.SUCCESS,
+                    false);
+        }
+
+        if (presets.isEmpty()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    "No example profiles are available.",
+                    contentLeft,
+                    RotClientExamplesLayout.rowY(top, 0) + 6,
+                    RotClientTheme.TEXT_DIM,
+                    false);
+        }
+
+        int textWidth =
+                contentWidth - 14 - EXAMPLES_ADD_WIDTH - 24;
+
+        for (int i = 0;
+             i < presets.size();
+             i++) {
+
+            RotClientProfilePreset preset =
+                    presets.get(i);
+
+            int y =
+                    RotClientExamplesLayout.rowY(top, i);
+
+            boolean added =
+                    examplesAdded(preset);
+
+            int accent =
+                    added
+                            ? RotClientTheme.SUCCESS
+                            : RotClientTheme.HUD_ACCENT;
+
+            RotClientUiDraw.drawInteractiveSurface(
+                    graphics,
+                    contentLeft,
+                    y,
+                    contentWidth,
+                    RotClientExamplesLayout.ROW_HEIGHT,
+                    collectionRowHoverAmount(
+                            "example:" + preset.id,
+                            inside(
+                                    mouseX,
+                                    mouseY,
+                                    contentLeft,
+                                    y,
+                                    contentWidth,
+                                    RotClientExamplesLayout.ROW_HEIGHT)),
+                    added,
+                    accent,
+                    RotClientUiDraw.RADIUS_SM);
+
+            graphics.fill(
+                    contentLeft,
+                    y + 7,
+                    contentLeft + 3,
+                    y + RotClientExamplesLayout.ROW_HEIGHT - 7,
+                    accent);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    preset.name,
+                    contentLeft + 14,
+                    y + 5,
+                    RotClientTheme.TEXT,
+                    true);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            preset.summary,
+                            textWidth),
+                    contentLeft + 14,
+                    y + 18,
+                    RotClientTheme.TEXT_DIM,
+                    false);
+
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            String.join(" \u00b7 ", preset.highlights),
+                            textWidth),
+                    contentLeft + 14,
+                    y + 30,
+                    RotClientTheme.TEXT_MUTED,
+                    false);
+
+            drawProfileActionButton(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    contentRight - EXAMPLES_ADD_WIDTH - 8,
+                    y + 10,
+                    EXAMPLES_ADD_WIDTH,
+                    added
+                            ? "ADDED"
+                            : "ADD",
+                    !added,
+                    false,
+                    !added);
+        }
+
+        int footerY =
+                RotClientExamplesLayout.footerY(
+                        top,
+                        presets.size());
+
+        var window =
+                net.minecraft.client.Minecraft.getInstance().getWindow();
+
+        List<String> tight =
+                new java.util.ArrayList<>();
+
+        for (RotClientProfilePreset preset : presets) {
+            if (!preset.fits(
+                    window.getGuiScaledWidth(),
+                    window.getGuiScaledHeight())) {
+
+                tight.add(preset.name);
+            }
+        }
+
+        if (!tight.isEmpty()) {
+            RotClientUiDraw.text(
+                    graphics,
+                    font,
+                    RotClientUiDraw.ellipsize(
+                            font,
+                            "At this GUI scale " + String.join(", ", tight)
+                                    + " will have overlapping HUDs. Lower the GUI "
+                                    + "scale or move them in the HUD editor.",
+                            contentWidth),
+                    contentLeft,
+                    footerY + 24,
+                    RotClientTheme.WARNING,
+                    false);
+        }
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        "Adds the profile without switching to it. "
+                                + "Your current settings are not changed.",
+                        contentWidth),
+                contentLeft,
+                footerY);
+
+        RotClientUiDraw.helpText(
+                graphics,
+                font,
+                RotClientUiDraw.ellipsize(
+                        font,
+                        RotClientClient
+                                .settingsProfileController()
+                                .hasProfiles()
+                                ? "HUDs are placed for your current screen size. "
+                                + "Fine-tune them in the HUD editor (/rot edit)."
+                                : "You have no profiles yet, so your current settings "
+                                + "are saved as \"My Setup\" first.",
+                        contentWidth),
+                contentLeft,
+                footerY + 12);
+    }
+
+    private static final int EXAMPLES_ADD_ALL_WIDTH = 96;
+    private static final int EXAMPLES_ADD_WIDTH = 78;
+
+    private boolean handleExamplesBodyClick(
+            double mouseX,
+            double mouseY,
+            int contentLeft,
+            int contentRight,
+            int top) {
+
+        List<RotClientProfilePreset> presets =
+                RotClientProfilePresets.bundled();
+
+        if (inside(
+                mouseX,
+                mouseY,
+                contentRight - EXAMPLES_ADD_ALL_WIDTH,
+                top + 36,
+                EXAMPLES_ADD_ALL_WIDTH,
+                BUTTON_HEIGHT)) {
+
+            addExamples(presets);
+            return true;
+        }
+
+        for (int i = 0;
+             i < presets.size();
+             i++) {
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    contentRight - EXAMPLES_ADD_WIDTH - 8,
+                    RotClientExamplesLayout.rowY(top, i) + 10,
+                    EXAMPLES_ADD_WIDTH,
+                    BUTTON_HEIGHT)) {
+
+                addExamples(List.of(presets.get(i)));
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Adds every listed example that is not already there. Layouts are
+     * resolved for the game's current GUI-scaled window size.
+     */
+    private void addExamples(List<RotClientProfilePreset> wanted) {
+        RotClientProfileController controller =
+                RotClientClient.settingsProfileController();
+
+        boolean hadProfiles =
+                controller.hasProfiles();
+
+        var window =
+                net.minecraft.client.Minecraft.getInstance().getWindow();
+
+        int screenWidth =
+                window.getGuiScaledWidth();
+
+        int screenHeight =
+                window.getGuiScaledHeight();
+
+        int added = 0;
+
+        for (RotClientProfilePreset preset : wanted) {
+            if (examplesAdded(preset)) {
+                continue;
+            }
+
+            if (controller.addExample(
+                    preset,
+                    screenWidth,
+                    screenHeight) == null) {
+
+                examplesMessage =
+                        "Could not add \"" + preset.name + "\".";
+
+                examplesMessageIsError = true;
+                return;
+            }
+
+            added++;
+        }
+
+        if (added == 0) {
+            return;
+        }
+
+        examplesMessageIsError = false;
+
+        examplesMessage =
+                (added == 1
+                        ? "Added 1 example."
+                        : "Added " + added + " examples.")
+                        + (hadProfiles
+                        ? ""
+                        : " Your settings are saved as \""
+                        + RotClientProfileController.CURRENT_SETUP_NAME
+                        + "\".");
     }
 
     private void drawProfileActionButton(
@@ -8047,6 +9382,18 @@ int selectorY = masterY + 10;
         }
 
         /*
+         * Auto Switch / Examples pages: Escape returns to the profile list.
+         */
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.PROFILES
+                && (profileAutoSwitchOpen || profileExamplesOpen)
+                && key == InputConstants.KEY_ESCAPE) {
+
+            closeProfileSubpages();
+            return true;
+        }
+
+        /*
          * Create Profile keyboard controls.
          */
         if (RotClientClient.workspace().activeRoute()
@@ -8450,6 +9797,24 @@ int selectorY = masterY + 10;
             }
             sidebarScroll.scrollBySteps(verticalAmount, 40);
             return true;
+        }
+        if (RotClientClient.workspace().activeRoute()
+                == RotClientWorkspaceRoute.PROFILES
+                && !otherProfilePanelOpen()) {
+            int contentLeft = panelX + SIDEBAR_WIDTH + CONTENT_INSET;
+            int contentRight = panelX + panelW() - CONTENT_INSET;
+            int listTop = profilesScrollTop(panelY);
+            int listBottom = profilesListClipBottom(panelY);
+            if (logicalX >= contentLeft
+                    && logicalX < contentRight + RotClientUiDraw.SCROLLBAR_HIT_WIDTH
+                    && logicalY >= listTop
+                    && logicalY < listBottom) {
+                refreshProfilesScrollBounds(panelY);
+                if (profilesScroll.canScroll()) {
+                    profilesScroll.scrollBySteps(verticalAmount, 40);
+                    return true;
+                }
+            }
         }
         if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.MARKET_WATCH) {
@@ -8890,6 +10255,16 @@ int selectorY = masterY + 10;
         if (workspace.activeRoute()
                 == RotClientWorkspaceRoute.PROFILES) {
 
+            if (handleProfilesScrollbarPress(
+                    event,
+                    logicalMouseX,
+                    logicalMouseY,
+                    contentRight,
+                    panelY)) {
+
+                return true;
+            }
+
             return handleProfilesClick(
                     logicalMouseX,
                     logicalMouseY,
@@ -9287,6 +10662,14 @@ if (trackerDropdownOpen) {
                 RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)) {
             return true;
         }
+        if (profilesScroll.isThumbDragging()
+                && profilesScroll.dragThumbTo(
+                snappedMouseY,
+                profilesScrollTop(panelY),
+                profilesListClipBottom(panelY),
+                RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)) {
+            return true;
+        }
         if (selectedModule == DashboardModule.QOL_SETTINGS) {
             int contentTop = panelY + MASTER_Y;
             int contentBottom = qolContentBottom(panelY);
@@ -9369,6 +10752,7 @@ if (trackerDropdownOpen) {
             return true;
         }
         boolean scrollbarReleased = sidebarScroll.endThumbDrag();
+        scrollbarReleased = profilesScroll.endThumbDrag() || scrollbarReleased;
         if (selectedModule == DashboardModule.QOL_SETTINGS) {
             scrollbarReleased = qolDashboard.mouseReleased() || scrollbarReleased;
         }
@@ -9835,15 +11219,6 @@ if (trackerDropdownOpen) {
         ensureSidebarRevealsVisuals(target);
     }
 
-    void openAppearanceCustomizer() {
-        openAppearanceCustomizer(RotClientAppearanceScreen.Section.OVERVIEW);
-    }
-
-    void openAppearanceCustomizer(RotClientAppearanceScreen.Section section) {
-        Minecraft.getInstance().gui.setScreen(
-                new RotClientAppearanceScreen(this, config, hud, section));
-    }
-
     private void ensureSidebarRevealsVisuals(RotClientSidebarNav.HitTarget target) {
         if (target != RotClientSidebarNav.HitTarget.APPEARANCE
                 && target != RotClientSidebarNav.HitTarget.HUD_LAYOUT) {
@@ -10006,8 +11381,7 @@ if (trackerDropdownOpen) {
                 highlightSettingId = "";
                 highlightUntilMillis = 0L;
                 if ("appearance.reset".equals(entry.id())) {
-                    openAppearanceCustomizer(
-                            RotClientAppearanceScreen.Section.RESET);
+                    qolDashboard.openFromSearchId(AppearanceLandingPolicy.OPEN_RESET);
                 } else {
                     openAppearanceLanding();
                 }
@@ -10317,7 +11691,15 @@ private void drawTrackerDropdown(
     }
 
     private float uiScale() {
-        return 1.0F;
+        return RotClientDashboardLayout.uiScale(width, height);
+    }
+
+    private int logicalViewportWidth() {
+        return Math.max(1, Math.round(width / uiScale()));
+    }
+
+    private int logicalViewportHeight() {
+        return Math.max(1, Math.round(height / uiScale()));
     }
 
     private RotClientDashboardLayout.PanelSize resolvedPanelSize() {
@@ -10335,14 +11717,19 @@ private void drawTrackerDropdown(
 
     private RotClientWindowPlacementPolicy.Rect windowRect() {
         RotClientWorkspaceConfig cfg = RotClientClient.workspace().config();
+
+        int logicalWidth = logicalViewportWidth();
+        int logicalHeight = logicalViewportHeight();
+
         RotClientWindowPlacementPolicy.Rect floating =
                 RotClientWindowPlacementPolicy.floatingRect(
-                        width,
-                        height,
+                        logicalWidth,
+                        logicalHeight,
                         cfg.clientUiNormX,
                         cfg.clientUiNormY,
                         cfg.clientUiNormW,
                         cfg.clientUiNormH);
+
         if (Double.isFinite(livePanelX) && Double.isFinite(livePanelY)) {
             floating = new RotClientWindowPlacementPolicy.Rect(
                     (int) Math.round(livePanelX),
@@ -10350,11 +11737,16 @@ private void drawTrackerDropdown(
                     floating.width(),
                     floating.height());
         }
+
         if (panelDragging) {
             return floating;
         }
+
         return RotClientWindowPlacementPolicy.apply(
-                cfg.windowPlacement, width, height, floating);
+                cfg.windowPlacement,
+                logicalWidth,
+                logicalHeight,
+                floating);
     }
 
     private void persistFloatingRect(
@@ -10584,7 +11976,7 @@ private void drawTrackerDropdown(
         RotClientUiDraw.text(graphics, font, "ROT", brandX, brandY, RotClientTheme.HUD_ACCENT, false);
         RotClientUiDraw.text(graphics, font, " CLIENT", brandX + font.width("ROT"), brandY,
                 RotClientTheme.TEXT, false);
-        RotClientUiDraw.text(graphics, font, "by OgRudolf", brandX, brandY + 10,
+        RotClientUiDraw.text(graphics, font, "made by Rot Tools", brandX, brandY + 10,
                 RotClientTheme.TEXT_MUTED, false);
         RotClientHeaderLinksPolicy.Layout headerLinks =
                 RotClientHeaderLinksPolicy.layout(panelX, panelY);
@@ -10654,15 +12046,25 @@ private void drawTrackerDropdown(
                 || RotClientWindowPlacementPolicy.FLOATING.equals(snapPreview)) {
             return;
         }
+
+        int logicalWidth = logicalViewportWidth();
+        int logicalHeight = logicalViewportHeight();
+
         RotClientWindowPlacementPolicy.Rect preview =
                 RotClientWindowPlacementPolicy.apply(
-                        snapPreview, width, height, windowRect());
+                        snapPreview,
+                        logicalWidth,
+                        logicalHeight,
+                        windowRect());
+
         graphics.fill(
                 preview.x(),
                 preview.y(),
                 preview.right(),
                 preview.bottom(),
-                RotClientUiDraw.withAlpha(RotClientTheme.HUD_ACCENT, 0x44));
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.HUD_ACCENT,
+                        0x44));
     }
 
     private int sidebarBottomY(int panelY) {

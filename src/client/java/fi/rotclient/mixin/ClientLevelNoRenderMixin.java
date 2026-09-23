@@ -19,8 +19,8 @@ abstract class ClientLevelNoRenderMixin {
         }
     }
 
-    @Inject(method = "addBreakingBlockEffect", at = @At("HEAD"), cancellable = true)
-    private void rotclient$hideBreakingParticles(BlockPos pos, Direction direction, CallbackInfo ci) {
+    @Inject(method = "addBreakingParticles", at = @At("HEAD"), cancellable = true)
+    private void rotclient$hideBreakingParticles(BlockPos pos, Direction direction, BlockState state, CallbackInfo ci) {
         if (QolVisualRuntime.shouldHideBreakParticles()) {
             ci.cancel();
         }

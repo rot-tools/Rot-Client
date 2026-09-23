@@ -3,10 +3,10 @@ package fi.rotclient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
- * Draws the Rot Client pointer and applies GLFW hide + resize-edge kind.
+ * Draws the Rot Client pointer and applies cursor visibility + resize-edge kind.
  */
 public final class CustomCursorRuntime {
     private static CustomCursorPolicy.ResizeKind resizeKind = CustomCursorPolicy.ResizeKind.NONE;
@@ -33,21 +33,15 @@ public final class CustomCursorRuntime {
         }
         boolean hide = CustomCursorPolicy.shouldHideVanillaCursor(
                 enabled, qol.extras().customCursorHideVanilla, menuOpen);
-        int desired = hide
-                ? GLFW.GLFW_CURSOR_HIDDEN
-                : (menuOpen ? GLFW.GLFW_CURSOR_NORMAL : Integer.MIN_VALUE);
+        int desired = hide ? 1 : (menuOpen ? 0 : Integer.MIN_VALUE);
         if (hide) {
-            GLFW.glfwSetInputMode(
-                    client.getWindow().handle(),
-                    GLFW.GLFW_CURSOR,
-                    GLFW.GLFW_CURSOR_HIDDEN);
-            lastCursorMode = desired;
+            if (desired != lastCursorMode) {
+                PlatformInputRuntime.setCursorVisible(false);
+                lastCursorMode = desired;
+            }
         } else if (menuOpen) {
             if (desired != lastCursorMode) {
-                GLFW.glfwSetInputMode(
-                        client.getWindow().handle(),
-                        GLFW.GLFW_CURSOR,
-                        GLFW.GLFW_CURSOR_NORMAL);
+                PlatformInputRuntime.setCursorVisible(true);
                 lastCursorMode = desired;
             }
         }
@@ -73,9 +67,7 @@ public final class CustomCursorRuntime {
         int x = (int) Math.round(pointer[0]);
         int y = (int) Math.round(pointer[1]);
         long now = System.currentTimeMillis();
-        boolean pressed = GLFW.glfwGetMouseButton(
-                client.getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT)
-                == GLFW.GLFW_PRESS;
+        boolean pressed = QolInputRuntime.isMouseDown(InputConstants.MOUSE_BUTTON_LEFT);
         if (pressed) {
             if (pressStartedAtMs <= 0L) {
                 pressStartedAtMs = now;
@@ -133,7 +125,7 @@ public final class CustomCursorRuntime {
         if (client.getWindow() == null || !controller.consumeRestore(System.currentTimeMillis())) {
             return;
         }
-        GLFW.glfwSetCursorPos(
+        PlatformInputRuntime.warpCursor(
                 client.getWindow().handle(),
                 controller.savedX(),
                 controller.savedY());

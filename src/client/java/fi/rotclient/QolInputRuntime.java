@@ -145,6 +145,10 @@ public final class QolInputRuntime {
         }
     }
 
+    public static boolean isMouseDown(int button) {
+        return MOUSE_DOWN.contains(button);
+    }
+
     public static String formatGlfwKey(int key) {
         if (key == InputConstants.UNKNOWN.getValue() || key == InputConstants.KEY_ESCAPE) {
             return "";

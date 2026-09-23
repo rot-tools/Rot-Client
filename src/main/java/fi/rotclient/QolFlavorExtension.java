@@ -34,6 +34,14 @@ public interface QolFlavorExtension {
         return List.of();
     }
 
+    /** Terminal solutions are supplied only by the Plus policy provider. */
+    default List<DungeonPolicy.TerminalClick> solveDungeonTerminalClicks(
+            DungeonPolicy.Terminal terminal,
+            String title,
+            List<DungeonPolicy.TerminalItem> items) {
+        return List.of();
+    }
+
     default boolean isGameplayCheatModule(String moduleId) {
         return false;
     }

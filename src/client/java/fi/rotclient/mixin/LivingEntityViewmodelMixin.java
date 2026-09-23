@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(LivingEntity.class)
 abstract class LivingEntityViewmodelMixin {
     @ModifyExpressionValue(
-            method = "getCurrentSwingDuration",
+            method = "getModifiedSwingDuration(Lnet/minecraft/world/item/component/SwingAnimation;)I",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/effect/MobEffectUtil;hasDigSpeed(Lnet/minecraft/world/entity/LivingEntity;)Z"))
@@ -19,7 +19,7 @@ abstract class LivingEntityViewmodelMixin {
     }
 
     @ModifyExpressionValue(
-            method = "getCurrentSwingDuration",
+            method = "getModifiedSwingDuration(Lnet/minecraft/world/item/component/SwingAnimation;)I",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z"))
@@ -27,7 +27,7 @@ abstract class LivingEntityViewmodelMixin {
         return ViewmodelRuntime.ignoreSwingEffects((LivingEntity) (Object) this) ? false : original;
     }
 
-    @ModifyReturnValue(method = "getCurrentSwingDuration", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getModifiedSwingDuration(Lnet/minecraft/world/item/component/SwingAnimation;)I", at = @At("RETURN"))
     private int rotclient$swingDuration(int original) {
         return ViewmodelRuntime.swingDuration((LivingEntity) (Object) this, original);
     }

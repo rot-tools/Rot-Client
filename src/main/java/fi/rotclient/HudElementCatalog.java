@@ -145,7 +145,7 @@ public final class HudElementCatalog {
 
     public static List<InspectorToggle> inspectorToggles(String poseId) {
         String id = poseId == null ? "" : poseId.trim().toLowerCase(Locale.ROOT);
-        return switch (id) {
+        List<InspectorToggle> toggles = switch (id) {
             case "performance" -> List.of(
                     new InspectorToggle("qol.performance_hud.show_fps", "FPS text"),
                     new InspectorToggle("qol.performance_hud.show_tps", "TPS text"),
@@ -238,6 +238,14 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.custom_scoreboard.outline", "Outline"));
             default -> QolFlavorSupport.extension().inspectorToggles(id);
         };
+        if (!"dungeon".equals(id) || QolFlavorSupport.isPlus()) {
+            return toggles;
+        }
+        return toggles.stream()
+                .filter(toggle -> !"qol.dungeon_hud.map_mode".equals(toggle.settingId())
+                        && !"qol.dungeon_hud.melody".equals(toggle.settingId())
+                        && !"qol.dungeon_hud.quiz".equals(toggle.settingId()))
+                .toList();
     }
 
     public record HudPiece(

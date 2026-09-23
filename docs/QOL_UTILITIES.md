@@ -13,11 +13,11 @@ implementation state from runtime evidence.
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **134** Rot Client+ catalog entries (and the **96** Lite subset) are wired
+All **135** Rot Client+ catalog entries (and the **83** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
-Rot Client omits 34 Plus-only parents (Auto Sprint, Auto Clicker, wardrobe automation,
+Rot Client omits 52 Plus-only parents (Auto Sprint, Auto Clicker, wardrobe automation,
 Ghosts, Escrow Fix, Free Camera, Farm Keys, and the rest listed in
 [Which JAR](WHICH_JAR.md)). Mixed parents keep passive visual settings; Plus
 children and their executable implementations exist only in Plus source sets.
@@ -29,7 +29,7 @@ children and their executable implementations exist only in Plus source sets.
 | Combat | Hide Players; Etherwarp preview (occluded). **Plus:** Trajectories; Mob Highlight; Auto Clicker; Auto Dojo | Wired · automated tested · runtime matrix pending |
 | Events | Empty on Rot Client. **Plus:** Diana Burrows; Diana Mobs; Diana Profit; Diana Share | Wired · automated tested · runtime matrix pending |
 | Slayer | Slayer Display; Slayer Stats; Slayer Highlights; Miniboss Alert; Slayer Drops Data; Slayer Carry Tracker; Cocoon Alert; Enderman Laser Hider; Attunement Display; Slayer Sounds; Vengeance Timer; Vengeance Damage Tracker; Big Slayer Drops; Disconnect Fix; family extras. **Plus:** Dagger Swap; Auto Soulcry; Auto Start | Wired · automated tested · runtime matrix pending |
-| Dungeons | Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals (overlay); Puzzles; F7 Boss (boxes/HUD); Dungeon Menus (Party Finder lore tints + SkyCrypt stats, chest prize reel); Dungeon Carry Tracker; Party Finder Join Stats; Watcher Helper. **Plus:** Term Sim; Terminal Click Trails; Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell | Wired · automated tested · runtime matrix pending |
+| Dungeons | **Plus only for now:** Dungeon HUD/Map; Dungeon ESP; Dungeon Announce; Leap; Terminals; Puzzles; F7 Boss; Dungeon Menus; Carry Tracker; Party Finder Join Stats; Watcher Helper; Term Sim; Terminal Click Trails; Secret Hitboxes; Requeue; Hover Terms; Soulsand Triggerbot; Auto GFS; Auto Sell. Lite dungeon features may return only after individual review. | Wired · automated tested · runtime matrix pending |
 | Kuudra | Kuudra Tools | Wired · automated tested · runtime matrix pending |
 | Mining | Mining Tracker; Powder Chest Tracker; Mining Session; Mining History; Commission Display; Scatha Alerts; Mining Events; Glacite Mineshaft; Mining Helpers; Heart of the Mountain. **Plus:** World Scanner | Wired · automated tested · runtime matrix pending |
 | Fishing | Fishing Helper; Sea Creatures; Fishing Hotspots; Trophy Fishing; Fishing Visuals; Fishing Tools | Wired · automated tested · runtime matrix pending |
@@ -37,7 +37,7 @@ children and their executable implementations exist only in Plus source sets.
 | Garden | Empty on Rot Client. **Plus:** Farm Keys | Wired · automated tested · runtime matrix pending |
 | GUI | Custom Scoreboard | Wired · automated tested · runtime matrix pending |
 | HUD & Display | Player Display; Performance HUD; Pet HUD; Hide Own Name; Item Tooltips; Skill Levels; Custom Cursor. Appearance, HUD Elements Editor, and Profiles are Visuals-only, not cards on this page. | Wired · automated tested · runtime matrix pending |
-| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Legacy SkyBlock Textures; Dark SkyBlock Pack. **Plus:** Fox; Ghosts; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
+| Render | Fullbright and Night; Render Optimizer; Player Size; Item Rarity Background; Viewmodel; Item Scale; Eye Height Fix; Instant Sneak; Legacy SkyBlock Textures; Block Outline; Dark SkyBlock Pack. **Plus:** Fox; Ghosts; Camera clip; Free Camera | Wired · automated tested · runtime matrix pending |
 
 ## Fox (Plus)
 
@@ -110,6 +110,26 @@ Turning it on in an already-loaded world plays a vanilla-style dusk once, then
 parks the moon. A new world while it is already on snaps to that parked night
 and does not replay dusk. Fullbright is an instant lightmap. End and Nether
 skyboxes are skipped. Automated-tested; Minecraft playtest pending.
+
+## Block Outline
+
+`qol.block_outline` is a Render card, off by default. It replaces how
+Minecraft draws the selection box around the aimed-at block (the main
+outline pass; the high-contrast backing pass is left alone). Vanilla drawing
+resumes the moment the module is off or a draw fails.
+
+| Setting | Effect |
+| --- | --- |
+| Outline Style | `Solid Color` or `Rainbow` |
+| Outline Color | RGB picker with alpha. Rainbow ignores the color but keeps its opacity |
+| Line Width | Multiplier on the vanilla line width, 0.5 to 4.0 (1.0 is vanilla) |
+| Rainbow Speed | 0.1 to 5.0; 1.0 is one full hue cycle every four seconds |
+| Rainbow Spread | 0 to 3; hue cycles across one block. 0 makes the whole outline share one moving hue |
+
+Each edge is split into short pieces with their own hue so the rainbow reads
+as a smooth gradient that travels along the box. The hue math lives in
+`BlockOutlinePolicy` and is unit-tested. It is purely cosmetic and not
+SkyBlock-gated. Automated-tested; Minecraft playtest pending.
 
 ## Wardrobe Swapper
 

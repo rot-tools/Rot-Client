@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,19 +62,27 @@ public final class StallMarketRuntime {
         if (client.getWindow() == null || client.player == null) {
             return;
         }
-        if (!extras.stallBazaarSearch) {
+        boolean plus = QolFlavorSupport.isPlus();
+        if (plus && extras.stallBazaarSearch) {
+            long window = client.getWindow().handle();
+            boolean down = QolInputRuntime.isBoundDown(window, extras.stallSearchKeybind);
+            if (down && !searchKeyWasDown) {
+                searchHoveredOrHeld(client);
+            }
+            searchKeyWasDown = down;
+        } else {
             searchKeyWasDown = false;
-            return;
         }
-        long window = client.getWindow().handle();
-        boolean down = QolInputRuntime.isBoundDown(window, extras.stallSearchKeybind);
-        if (down && !searchKeyWasDown) {
-            searchHoveredOrHeld(client);
-        }
-        searchKeyWasDown = down;
+
         if (currentScreen() instanceof AbstractContainerScreen<?> container) {
-            maybeClickPendingSearch(container);
-            syncBinStatus(container);
+            if (plus && extras.stallBazaarSearch) {
+                maybeClickPendingSearch(container);
+            }
+            // The BIN overlay has its own toggle; it used to be synced only while Bazaar
+            // Search was on, so with search off its status went stale after the first open.
+            if (extras.stallBinOverlay) {
+                syncBinStatus(container);
+            }
         }
     }
 
@@ -89,9 +97,12 @@ public final class StallMarketRuntime {
         }
     }
 
-    public static boolean fillPendingBazaarSign(SignBlockEntity sign, boolean front) {
+    public static boolean fillPendingBazaarSign(
+            SignBlockEntity sign,
+            net.minecraft.world.level.block.entity.SignTextSlot slot) {
         QolSkyblockExtras extras = extras();
         if (!extras.stallMarketEnabled
+                || !QolFlavorSupport.isPlus()
                 || !extras.stallBazaarSearch
                 || pendingBazaarSearch == null
                 || pendingBazaarSearch.isBlank()
@@ -102,23 +113,23 @@ public final class StallMarketRuntime {
         pendingBazaarSearch = null;
         pendingSearchClicked = false;
         try {
-            Component[] messages = sign.getFrontText()
-                    .getMessages(Minecraft.getInstance().isTextFilteringEnabled());
-            if (messages.length < 4) {
+            List<Component> messages = new ArrayList<>(sign.getText(slot)
+                    .getMessages(Minecraft.getInstance().isTextFilteringEnabled()));
+            if (messages.size() < 4) {
                 pendingBazaarSearch = query;
                 return false;
             }
-            messages[0] = Component.literal(query);
-            messages[1] = Component.literal("");
-            messages[2] = Component.literal("");
-            messages[3] = Component.literal("");
+            messages.set(0, Component.literal(query));
+            messages.set(1, Component.literal(""));
+            messages.set(2, Component.literal(""));
+            messages.set(3, Component.literal(""));
             sign.updateText(
                     current -> new SignText(
                             messages,
                             messages,
                             current.getColor(),
                             current.hasGlowingText()),
-                    front);
+                    slot);
         } catch (Exception ignored) {
             pendingBazaarSearch = query;
             return false;
@@ -129,7 +140,7 @@ public final class StallMarketRuntime {
 
     public static void search(String rawName) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallMarketEnabled || !extras.stallBazaarSearch) {
+        if (!extras.stallMarketEnabled || !QolFlavorSupport.isPlus() || !extras.stallBazaarSearch) {
             return;
         }
         String cleaned = StallMarketPolicy.cleanItemNameForSearch(rawName);
@@ -161,7 +172,9 @@ public final class StallMarketRuntime {
         String name = stack.getHoverName().getString();
         List<String> lore = InventoryChromeRuntime.loreLines(stack);
         boolean override = ctrl || ctrlHeld();
-        if (extras.stallSellProtection) {
+        // Cancelling the player's clicks is Plus-only; the standard edition never blocks a click.
+        boolean plus = QolFlavorSupport.isPlus();
+        if (plus && extras.stallSellProtection) {
             StallMarketPolicy.SellBlock sell = StallMarketPolicy.sellProtection(
                     true,
                     true,
@@ -176,7 +189,7 @@ public final class StallMarketRuntime {
                 return true;
             }
         }
-        if (extras.stallAngryCoop) {
+        if (plus && extras.stallAngryCoop) {
             Optional<StallMarketPolicy.CoopScreen> mode =
                     StallMarketPolicy.coopScreen(title(screen));
             if (mode.isPresent()) {
@@ -204,7 +217,10 @@ public final class StallMarketRuntime {
 
     public static void appendTooltip(ItemStack stack, List<Component> lines) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallMarketEnabled || !extras.stallSellProtection || stack == null) {
+        if (!extras.stallMarketEnabled
+                || !QolFlavorSupport.isPlus()
+                || !extras.stallSellProtection
+                || stack == null) {
             return;
         }
         if (!(currentScreen() instanceof AbstractContainerScreen<?> screen)) {
@@ -234,17 +250,40 @@ public final class StallMarketRuntime {
             return 0x6600FF55;
         }
         if (extras.stallAhHighlight && title.toLowerCase(Locale.ROOT).contains("auction")) {
-            double listing = StallMarketPolicy.listingPrice(
-                    InventoryChromeRuntime.loreLines(slot.getItem()));
-            String itemId = SkyBlockItemData.marketId(slot.getItem());
-            double lowest = SkyBlockMarketQuoteService.current().quote(itemId).lowestBin();
-            return switch (StallMarketPolicy.listingHighlight(listing, lowest)) {
-                case UNDER -> 0x6600FF55;
-                case OVER -> 0x66FF3333;
-                case NONE -> null;
-            };
+            int color = auctionHighlightOf(slot.getItem());
+            return color == 0 ? null : color;
         }
         return null;
+    }
+
+    /*
+     * The AH highlight parsed every slot's lore and looked up a price on every frame. This keeps one
+     * result per stack instance for half a second (render-thread only, direct-mapped by identity).
+     */
+    private static final int AH_CACHE_SIZE = 128;
+    private static final long AH_CACHE_MS = 500L;
+    private static final ItemStack[] AH_CACHE_KEY = new ItemStack[AH_CACHE_SIZE];
+    private static final int[] AH_CACHE_VALUE = new int[AH_CACHE_SIZE];
+    private static final long[] AH_CACHE_UNTIL = new long[AH_CACHE_SIZE];
+
+    private static int auctionHighlightOf(ItemStack stack) {
+        int cell = (System.identityHashCode(stack) & 0x7FFFFFFF) % AH_CACHE_SIZE;
+        long now = System.currentTimeMillis();
+        if (AH_CACHE_KEY[cell] == stack && now < AH_CACHE_UNTIL[cell]) {
+            return AH_CACHE_VALUE[cell];
+        }
+        double listing = StallMarketPolicy.listingPrice(InventoryChromeRuntime.loreLines(stack));
+        String itemId = SkyBlockItemData.marketId(stack);
+        double lowest = SkyBlockMarketQuoteService.current().quote(itemId).lowestBin();
+        int color = switch (StallMarketPolicy.listingHighlight(listing, lowest)) {
+            case UNDER -> 0x6600FF55;
+            case OVER -> 0x66FF3333;
+            case NONE -> 0;
+        };
+        AH_CACHE_KEY[cell] = stack;
+        AH_CACHE_VALUE[cell] = color;
+        AH_CACHE_UNTIL[cell] = now + AH_CACHE_MS;
+        return color;
     }
 
     static List<String> hudLines(QolUtilityConfig qol) {
@@ -337,7 +376,8 @@ public final class StallMarketRuntime {
 
     private static void maybeClickPendingSearch(AbstractContainerScreen<?> container) {
         QolSkyblockExtras extras = extras();
-        if (!extras.stallBazaarSearch
+        if (!QolFlavorSupport.isPlus()
+                || !extras.stallBazaarSearch
                 || pendingBazaarSearch == null
                 || pendingSearchClicked
                 || !StallMarketPolicy.isBazaar(title(container), containerSize(container))) {
@@ -425,8 +465,8 @@ public final class StallMarketRuntime {
             return false;
         }
         long window = client.getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return QolInputRuntime.isKeyDown(window, InputConstants.KEY_LCONTROL)
+                || QolInputRuntime.isKeyDown(window, InputConstants.KEY_RCONTROL);
     }
 
     private static String playerName() {

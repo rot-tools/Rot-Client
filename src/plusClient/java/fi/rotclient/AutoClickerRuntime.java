@@ -9,7 +9,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -264,9 +263,9 @@ final class AutoClickerRuntime {
         long handle = client.getWindow().handle();
         int value = bound.getValue();
         if (bound.getType() == InputConstants.Type.MOUSE) {
-            return GLFW.glfwGetMouseButton(handle, value) == GLFW.GLFW_PRESS;
+            return QolInputRuntime.isMouseDown(value);
         }
-        return GLFW.glfwGetKey(handle, value) == GLFW.GLFW_PRESS;
+        return QolInputRuntime.isKeyDown(handle, value);
     }
 
     private static boolean isTargetingBreakableBlock(Minecraft client) {
@@ -294,17 +293,17 @@ final class AutoClickerRuntime {
                 .replace('-', '_');
         switch (token) {
             case "MOUSE_LEFT", "LMB", "LEFT_MOUSE", "MOUSE_1" -> {
-                return isMouseDown(window, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+                return isMouseDown(window, InputConstants.MOUSE_BUTTON_LEFT);
             }
             case "MOUSE_RIGHT", "RMB", "RIGHT_MOUSE", "MOUSE_2" -> {
-                return isMouseDown(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+                return isMouseDown(window, InputConstants.MOUSE_BUTTON_RIGHT);
             }
             case "MOUSE_MIDDLE", "MMB", "MIDDLE_MOUSE", "MOUSE_3" -> {
-                return isMouseDown(window, GLFW.GLFW_MOUSE_BUTTON_MIDDLE);
+                return isMouseDown(window, InputConstants.MOUSE_BUTTON_MIDDLE);
             }
             default -> {
                 int glfwKey = QolInputRuntime.resolveGlfwKey(token, "");
-                if (glfwKey != GLFW.GLFW_KEY_UNKNOWN) {
+                if (glfwKey != InputConstants.UNKNOWN.getValue()) {
                     return QolInputRuntime.isKeyDown(window, glfwKey);
                 }
                 return defaultMouseHeld;
@@ -316,7 +315,7 @@ final class AutoClickerRuntime {
         if (window == 0L) {
             return false;
         }
-        return GLFW.glfwGetMouseButton(window, button) == GLFW.GLFW_PRESS;
+        return QolInputRuntime.isMouseDown(button);
     }
 
     private static void resetAccumulators() {

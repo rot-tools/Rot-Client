@@ -367,6 +367,10 @@ public final class ChatCommandsPolicy {
                 || lower.startsWith("r ");
     }
 
+    /*
+     * Hypixel filters the word "ez" and treats swapping in look-alike characters to get
+     * past its chat filter as a punishable bypass, so there is deliberately no "ez" emote.
+     */
     private static Map<String, String> emotes() {
         Map<String, String> map = new LinkedHashMap<>();
         map.put("<3", "❤");
@@ -382,7 +386,6 @@ public final class ChatCommandsPolicy {
         map.put(":typing:", "✎...");
         map.put(":maths:", "√(π+x)=L");
         map.put(":snail:", "@'-'");
-        map.put("ez", "ｅｚ");
         map.put(":thinking:", "(0.o?)");
         map.put(":gimme:", "༼つ◕_◕༽つ");
         map.put(":wizard:", "('-')⊃━☆ﾟ.*･｡ﾟ");

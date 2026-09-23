@@ -21,6 +21,20 @@ final class MarketWatchItemIconResolver {
             String category,
             String itemName) {
 
+        try {
+            return auctionIconUnsafe(
+                    category,
+                    itemName);
+        } catch (NullPointerException exception) {
+            return recoverComponentsNotBound(
+                    exception);
+        }
+    }
+
+    private static ItemStack auctionIconUnsafe(
+            String category,
+            String itemName) {
+
         ItemStack decoded =
                 MarketWatchSkyBlockItemDecoder
                         .icon(
@@ -113,6 +127,18 @@ final class MarketWatchItemIconResolver {
     }
 
     static ItemStack bazaarIcon(
+            String productId) {
+
+        try {
+            return bazaarIconUnsafe(
+                    productId);
+        } catch (NullPointerException exception) {
+            return recoverComponentsNotBound(
+                    exception);
+        }
+    }
+
+    private static ItemStack bazaarIconUnsafe(
             String productId) {
 
         String id =
@@ -640,6 +666,26 @@ final class MarketWatchItemIconResolver {
         }
 
         return new ItemStack(item);
+    }
+
+    /**
+     * Minecraft 26.x can briefly expose an Item holder before its data
+     * components have been bound. Market Watch icons are cosmetic, so skip
+     * the icon for that frame instead of crashing the dashboard.
+     *
+     * Do not hide unrelated NullPointerExceptions.
+     */
+    static ItemStack recoverComponentsNotBound(
+            NullPointerException exception) {
+
+        if (exception != null
+                && "Components not bound yet"
+                .equals(exception.getMessage())) {
+
+            return ItemStack.EMPTY;
+        }
+
+        throw exception;
     }
 
     private static boolean contains(

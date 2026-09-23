@@ -144,8 +144,7 @@ final class TargetItemGainPipelineTest {
                         selection.id() + " -> " + material.id());
             }
             for (GemstoneType gemstone : GemstoneType.values()) {
-                boolean expected = selection.isGemstone()
-                        && selection.gemstone() == gemstone;
+                boolean expected = selection.tracksGemstone(gemstone);
                 assertEquals(expected, TargetItemGainPipeline.creditGemstone(
                         current,
                         gemstone,

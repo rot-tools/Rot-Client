@@ -278,7 +278,7 @@ public final class RingKeybindsRuntime {
     }
 
     private static InputConstants.Key keyOf(int glfwKey) {
-        return InputConstants.Type.KEYSYM.getOrCreate(glfwKey);
+        return InputConstants.Type.KEYBOARD.getOrCreate(glfwKey);
     }
 
     private static void notifyRateLimit(Minecraft client, String keyName, QolUtilityConfig qol) {
