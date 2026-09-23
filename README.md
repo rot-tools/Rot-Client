@@ -57,7 +57,7 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | No distributed Plus JAR | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.1+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3) | Automated build and edition checks pass; Lite and Plus passed startup smoke tests. In-game feature validation remains pending. |
+| 26.3 | [`2.0.1+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix) | Mouse input and View Model fixes; owner confirmed the reported 26.3 UI interactions in-game. Wider feature validation remains pending. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
@@ -65,7 +65,7 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. The [26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3)
+Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix)
 holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 tracks `development` and is replaced after green pushes there.
 
