@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.function.IntConsumer;
 
@@ -329,25 +329,25 @@ final class RotClientColorPickerScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (editingHex) {
-            if (event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+            if (event.key() == InputConstants.KEY_BACKSPACE) {
                 if (!hexInput.isEmpty()) {
                     hexInput = hexInput.substring(0, hexInput.length() - 1);
                 }
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_ENTER
-                    || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
+            if (event.key() == InputConstants.KEY_RETURN
+                    || event.key() == InputConstants.KEY_NUMPADENTER) {
                 applyHexInput();
                 editingHex = false;
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            if (event.key() == InputConstants.KEY_ESCAPE) {
                 editingHex = false;
                 syncHexFromColor();
                 return true;
             }
         }
-        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (event.key() == InputConstants.KEY_ESCAPE) {
             restoreOriginal();
             if (onLive != null) {
                 onLive.accept(originalColor);

@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -564,16 +564,16 @@ final class HotkeySequenceEditorScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (selected >= 0 && field == 1) {
-            if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            if (event.key() == InputConstants.KEY_ESCAPE) {
                 field = 0;
                 return true;
             }
-            String key = QolKeybindNames.formatGlfwKey(event.key());
+            String key = QolInputRuntime.formatGlfwKey(event.key());
             update(withKey(current(), key));
             field = 0;
             return true;
         }
-        if (selected >= 0 && field != 0 && event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+        if (selected >= 0 && field != 0 && event.key() == InputConstants.KEY_BACKSPACE) {
             String value = fieldValue(current());
             if (!value.isEmpty()) {
                 value = value.substring(0, value.offsetByCodePoints(value.length(), -1));
@@ -581,7 +581,7 @@ final class HotkeySequenceEditorScreen extends Screen {
             }
             return true;
         }
-        if (event.key() == GLFW.GLFW_KEY_TAB && selected >= 0) {
+        if (event.key() == InputConstants.KEY_TAB && selected >= 0) {
             field = field % 3 + 1;
             return true;
         }

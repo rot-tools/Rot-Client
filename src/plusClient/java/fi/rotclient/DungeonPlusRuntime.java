@@ -703,7 +703,7 @@ final class DungeonPlusRuntime {
             return;
         }
         long window = client.getWindow() == null ? 0L : client.getWindow().handle();
-        boolean key = QolKeybindNames.isBoundDown(window, extras.dungeonEspGhostKeybind);
+        boolean key = QolInputRuntime.isBoundDown(window, extras.dungeonEspGhostKeybind);
         boolean stonk = extras.dungeonEspGhostStonk
                 && client.options != null
                 && client.options.keyUse.isDown()

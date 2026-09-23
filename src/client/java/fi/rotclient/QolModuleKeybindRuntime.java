@@ -41,7 +41,7 @@ public final class QolModuleKeybindRuntime {
             String keyName,
             boolean wasDown,
             String moduleId) {
-        boolean down = QolKeybindNames.isBoundDown(window, keyName);
+        boolean down = QolInputRuntime.isBoundDown(window, keyName);
         if (down && !wasDown) {
             QolUtilityConfig qol = RotClientClient.qolConfigPublic();
             boolean next = !qol.isModuleEnabled(moduleId);

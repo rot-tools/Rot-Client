@@ -5,7 +5,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
  * Layout editor for Mining/Powder HUDs, QoL overlays and Client UI ghost panel.
@@ -1464,35 +1464,35 @@ final class RotClientScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
-        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Z && event.hasShiftDown()) {
+        if (event.hasControlDown() && key == InputConstants.KEY_Z && event.hasShiftDown()) {
             applyVisibilityRedo();
             return true;
         }
-        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Z) {
+        if (event.hasControlDown() && key == InputConstants.KEY_Z) {
             applyVisibilityUndo();
             return true;
         }
-        if (event.hasControlDown() && key == GLFW.GLFW_KEY_Y) {
+        if (event.hasControlDown() && key == InputConstants.KEY_Y) {
             applyVisibilityRedo();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_1) {
+        if (key == InputConstants.KEY_1) {
             target = LayoutTarget.MINING_HUD;
             return true;
         }
-        if (key == GLFW.GLFW_KEY_2) {
+        if (key == InputConstants.KEY_2) {
             target = LayoutTarget.POWDER_CHEST_HUD;
             return true;
         }
-        if (key == GLFW.GLFW_KEY_3
-                || key == GLFW.GLFW_KEY_4) {
+        if (key == InputConstants.KEY_3
+                || key == InputConstants.KEY_4) {
 
             target =
                     LayoutTarget.QOL_HUD;
 
             return true;
         }
-        if (key == GLFW.GLFW_KEY_C) {
+        if (key == InputConstants.KEY_C) {
             if (event.hasShiftDown()) {
                 centerSelectedVertically();
             } else if (event.hasControlDown()) {
@@ -1503,15 +1503,15 @@ final class RotClientScreen extends Screen {
             }
             return true;
         }
-        if (key == GLFW.GLFW_KEY_H) {
+        if (key == InputConstants.KEY_H) {
             centerSelectedHorizontally();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_V) {
+        if (key == InputConstants.KEY_V) {
             centerSelectedVertically();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_R) {
+        if (key == InputConstants.KEY_R) {
             if (event.hasShiftDown()) {
                 RotClientClient.resetLayoutPositionsFromUi(true, true);
             } else {
@@ -1522,7 +1522,7 @@ final class RotClientScreen extends Screen {
         if (target == LayoutTarget.MINING_HUD
                 || target == LayoutTarget.POWDER_CHEST_HUD
                 || target == LayoutTarget.QOL_HUD) {
-            if (key == GLFW.GLFW_KEY_LEFT_BRACKET) {
+            if (key == InputConstants.KEY_LBRACKET) {
                 if (target == LayoutTarget.QOL_HUD) {
                     qolHud.nudgeSelectedScale(-0.1F);
                 } else if (target == LayoutTarget.MINING_HUD) {
@@ -1532,7 +1532,7 @@ final class RotClientScreen extends Screen {
                 }
                 return true;
             }
-            if (key == GLFW.GLFW_KEY_RIGHT_BRACKET) {
+            if (key == InputConstants.KEY_RBRACKET) {
                 if (target == LayoutTarget.QOL_HUD) {
                     qolHud.nudgeSelectedScale(0.1F);
                 } else if (target == LayoutTarget.MINING_HUD) {
@@ -1543,15 +1543,15 @@ final class RotClientScreen extends Screen {
                 return true;
             }
         }
-        if (key == GLFW.GLFW_KEY_B) {
+        if (key == InputConstants.KEY_B) {
             toggleSelectedBackground();
             return true;
         }
-        if (target == LayoutTarget.QOL_HUD && key == GLFW.GLFW_KEY_T) {
+        if (target == LayoutTarget.QOL_HUD && key == InputConstants.KEY_T) {
             openSelectedHudColor(false);
             return true;
         }
-        if (target == LayoutTarget.QOL_HUD && key == GLFW.GLFW_KEY_G) {
+        if (target == LayoutTarget.QOL_HUD && key == InputConstants.KEY_G) {
             openSelectedHudColor(true);
             return true;
         }
@@ -1596,7 +1596,7 @@ final class RotClientScreen extends Screen {
                         event.y());
 
         if (event.button()
-                == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                == InputConstants.MOUSE_BUTTON_RIGHT) {
 
             return handleEditorRightClick(
                     mx,
@@ -1604,7 +1604,7 @@ final class RotClientScreen extends Screen {
         }
 
         if (event.button()
-                != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                != InputConstants.MOUSE_BUTTON_LEFT) {
 
             return super.mouseClicked(
                     event,
@@ -1821,25 +1821,25 @@ final class RotClientScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && chromeDragging != null) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && chromeDragging != null) {
             storeChrome(
                     chromeDragging,
                     (int) Math.round(event.x()) - chromeDragOffsetX,
                     (int) Math.round(event.y()) - chromeDragOffsetY);
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT
                 && qolHud.dragTo(event.x(), event.y())) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT
                 && powderHud.dragTo(event.x(), event.y())) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && hud.dragTo(event.x(), event.y())) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && hud.dragTo(event.x(), event.y())) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && clientUiDragging) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && clientUiDragging) {
             int mouseX = (int) Math.round(event.x());
             int mouseY = (int) Math.round(event.y());
             int nextX = RotClientClientUiLayout.clampPanelX(
@@ -1862,22 +1862,22 @@ final class RotClientScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && chromeDragging != null) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && chromeDragging != null) {
             chromeDragging = null;
             RotClientClient.save();
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && qolHud.endDrag()) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && qolHud.endDrag()) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT
                 && powderHud.endDrag()) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && hud.endDrag()) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && hud.endDrag()) {
             return true;
         }
-        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && clientUiDragging) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && clientUiDragging) {
             clientUiDragging = false;
             RotClientClient.workspace().saveNow();
             return true;

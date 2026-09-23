@@ -19,12 +19,12 @@ public final class MenuKeybindRuntime {
     private MenuKeybindRuntime() {
     }
 
-    public static boolean handleKeyPressed(AbstractContainerScreen<?> screen, int glfwKey) {
-        return handleContainerInput(screen, glfwKey);
+    public static boolean handleKeyPressed(AbstractContainerScreen<?> screen, int keyCode) {
+        return handleContainerInput(screen, keyCode, QolInputRuntime.formatGlfwKey(keyCode));
     }
 
     public static boolean handleMousePressed(AbstractContainerScreen<?> screen, int button) {
-        return handleContainerInput(screen, button);
+        return handleContainerInput(screen, button, QolInputRuntime.formatMouseButton(button));
     }
 
     public static boolean shouldCancelContainerRender(AbstractContainerScreen<?> screen) {
@@ -35,16 +35,16 @@ public final class MenuKeybindRuntime {
         QolClientFlavorSupport.hooks().wardrobeMenuTick(client);
     }
 
-    private static boolean handleContainerInput(AbstractContainerScreen<?> screen, int code) {
+    private static boolean handleContainerInput(
+            AbstractContainerScreen<?> screen, int rawCode, String keyName) {
         if (screen == null) {
             return false;
         }
-        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, code)) {
+        if (QolClientFlavorSupport.hooks().wardrobeMenuHandleInput(screen, rawCode)) {
             return true;
         }
-        if (!QolFlavorSupport.isPlus()) {
-            // Pet and loadout keybinds click menu slots for the player, which Hypixel's rules
-            // do not allow, so they only run in the Plus edition.
+        if (!QolFlavorSupport.isPlus() || keyName == null || keyName.isBlank()) {
+            // Pet and loadout keybinds click menu slots, so they remain Plus-only.
             return false;
         }
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
@@ -54,7 +54,7 @@ public final class MenuKeybindRuntime {
             int equipped = findEquippedPetSlot(screen);
             OptionalInt preview = MenuKeybindPolicy.resolvePetsSlot(
                     title,
-                    code,
+                    keyName,
                     qol.petNextKey,
                     qol.petPreviousKey,
                     qol.petUnequipKey,
@@ -67,7 +67,7 @@ public final class MenuKeybindRuntime {
                             loreLines(stackIn(screen, preview.getAsInt())));
             slot = MenuKeybindPolicy.resolvePetsSlot(
                     title,
-                    code,
+                    keyName,
                     qol.petNextKey,
                     qol.petPreviousKey,
                     qol.petUnequipKey,
@@ -78,7 +78,7 @@ public final class MenuKeybindRuntime {
         } else if (qol.loadoutKeybindsEnabled
                 && MenuKeybindPolicy.parseLoadoutTitle(title) != null) {
             slot = MenuKeybindPolicy.resolveLoadoutSlot(
-                    title, code, qol.loadoutNextKey, qol.loadoutPreviousKey);
+                    title, keyName, qol.loadoutNextKey, qol.loadoutPreviousKey);
         }
         if (slot.isEmpty()) {
             return false;

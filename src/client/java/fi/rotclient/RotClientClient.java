@@ -40,7 +40,7 @@ import net.minecraft.world.scores.PlayerScoreEntry;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.InteractionResult;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -898,7 +898,7 @@ public final class RotClientClient implements ClientModInitializer {
                     ClientBoundaryGuard.call(
                             "HUD_EDITOR_CLICK",
                             () -> {
-                                if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT
+                                if (event.button() != InputConstants.MOUSE_BUTTON_LEFT
                                         || !event.hasShiftDown()) {
                                     return true;
                                 }
@@ -927,7 +927,7 @@ public final class RotClientClient implements ClientModInitializer {
                                     "HUD_EDITOR_RELEASE",
                                     () -> {
                                         if (event.button()
-                                                != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                                                != InputConstants.MOUSE_BUTTON_LEFT) {
                                             return true;
                                         }
                                         boolean qol = QOL_HUD.endDrag();
@@ -942,14 +942,8 @@ public final class RotClientClient implements ClientModInitializer {
                             ClientBoundaryGuard.call(
                                     "HUD_EDITOR_SCROLL",
                                     () -> {
-                                        boolean shift = GLFW.glfwGetKey(
-                                                client.getWindow().handle(),
-                                                GLFW.GLFW_KEY_LEFT_SHIFT)
-                                                == GLFW.GLFW_PRESS
-                                                || GLFW.glfwGetKey(
-                                                client.getWindow().handle(),
-                                                GLFW.GLFW_KEY_RIGHT_SHIFT)
-                                                == GLFW.GLFW_PRESS;
+                                        boolean shift = QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LSHIFT)
+                                                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RSHIFT);
                                         return !(shift && (
                                                 POWDER_CHEST_HUD.onScroll(
                                                         mouseX,
@@ -2591,7 +2585,7 @@ public final class RotClientClient implements ClientModInitializer {
         if (!controller.consumeRestore(System.currentTimeMillis())) {
             return;
         }
-        GLFW.glfwSetCursorPos(
+        PlatformInputRuntime.warpCursor(
                 client.getWindow().handle(),
                 controller.savedX(),
                 controller.savedY());
@@ -2730,9 +2724,9 @@ public final class RotClientClient implements ClientModInitializer {
             return;
         }
         QolUtilityConfig qol = qolConfig();
-        int glfwKey = QolKeybindNames.resolveGlfwKey(
+        int glfwKey = QolInputRuntime.resolveGlfwKey(
                 qol.clickGuiKeybind, "RIGHT_SHIFT");
-        boolean down = QolKeybindNames.isKeyDown(
+        boolean down = QolInputRuntime.isKeyDown(
                 client.getWindow().handle(), glfwKey);
         boolean consuming = isTextInputConsuming(client);
         boolean open = isRotClientUiOpen();
@@ -2880,8 +2874,8 @@ public final class RotClientClient implements ClientModInitializer {
         Minecraft client = Minecraft.getInstance();
         boolean shift = client != null
                 && client.getWindow() != null
-                && (QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT)
-                || QolKeybindNames.isKeyDown(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT));
+                && (QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LSHIFT)
+                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RSHIFT));
         if (!container) {
             CustomTooltipRuntime.clear();
         }

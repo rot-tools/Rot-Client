@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.lwjgl.glfw.GLFW;
 
 final class ClickGuiKeyPolicyTest {
     @Test
@@ -42,11 +41,11 @@ final class ClickGuiKeyPolicyTest {
     @Test
     void defaultKeybindResolvesRightShift() {
         assertEquals(
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
-                QolKeybindNames.resolveGlfwKey("", "RIGHT_SHIFT"));
+                "RIGHT_SHIFT",
+                QolKeybindNames.canonicalKeyName("", "RIGHT_SHIFT"));
         assertEquals(
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
-                QolKeybindNames.resolveGlfwKey("right shift", "RIGHT_SHIFT"));
+                "RIGHT_SHIFT",
+                QolKeybindNames.canonicalKeyName("right shift", "RIGHT_SHIFT"));
     }
 
     @Test

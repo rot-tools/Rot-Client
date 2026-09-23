@@ -1,5 +1,6 @@
 package fi.rotclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -54,10 +55,10 @@ public final class MissingEnchantsRuntime {
             return;
         }
         boolean unbound = qol.missingEnchantsKeybind == null || qol.missingEnchantsKeybind.isBlank();
-        boolean held = QolKeybindNames.isBoundDown(
+        boolean held = QolInputRuntime.isBoundDown(
                 client.getWindow().handle(), qol.missingEnchantsKeybind);
-        boolean ctrl = QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_CONTROL)
-                || QolKeybindNames.isKeyDown(client.getWindow().handle(), org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_CONTROL);
+        boolean ctrl = QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_LCONTROL)
+                || QolInputRuntime.isKeyDown(client.getWindow().handle(), InputConstants.KEY_RCONTROL);
         boolean pinned = !pinnedIdentity.isBlank()
                 && pinnedIdentity.equals(SkyBlockItemIdentity.identify(stack));
         if (!MissingEnchantsPolicy.shouldShow(true, unbound, held || ctrl || pinned)) {

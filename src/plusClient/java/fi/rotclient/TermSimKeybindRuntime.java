@@ -13,7 +13,7 @@ final class TermSimKeybindRuntime {
             return;
         }
         TermSimSettings settings = TermSimSettings.from(RotClientClient.qolConfigPublic());
-        boolean down = QolKeybindNames.isBoundDown(client.getWindow().handle(), settings.keybind());
+        boolean down = QolInputRuntime.isBoundDown(client.getWindow().handle(), settings.keybind());
         if (down && !wasDown && settings.enabled()) TermSimRuntime.openHub();
         wasDown = down;
     }

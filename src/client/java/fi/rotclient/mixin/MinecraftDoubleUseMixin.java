@@ -4,6 +4,7 @@ import fi.rotclient.DoubleUseFixRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.component.SwingAnimation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,7 +29,7 @@ abstract class MinecraftDoubleUseMixin {
         Minecraft client = (Minecraft) (Object) this;
         if (client.gameMode != null && player != null) {
             client.gameMode.useItem(player, InteractionHand.MAIN_HAND);
-            player.swing(InteractionHand.MAIN_HAND);
+            player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
         }
         ci.cancel();
     }

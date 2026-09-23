@@ -26,7 +26,7 @@ final class RotClientLinkOpener {
                     }
                     client.gui.setScreen(parent);
                 },
-                url,
+                URI.create(url),
                 true));
     }
 

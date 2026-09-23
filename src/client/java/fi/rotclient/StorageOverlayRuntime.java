@@ -18,7 +18,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -527,16 +527,16 @@ public final class StorageOverlayRuntime {
         }
         QolSkyblockExtras extras = settings();
         int key = event.key();
-        if (key == GLFW.GLFW_KEY_BACKSPACE) {
+        if (key == InputConstants.KEY_BACKSPACE) {
             extras.storageOverlaySearchQuery = StorageOverlayPolicy.deleteSearchChar(
                     extras.storageOverlaySearchQuery);
             return true;
         }
-        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
             searchFocused = false;
             return true;
         }
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             if (StorageOverlayPolicy.searching(extras.storageOverlaySearchQuery)) {
                 extras.storageOverlaySearchQuery = "";
                 return true;

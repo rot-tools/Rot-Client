@@ -45,9 +45,9 @@ public final class ViewmodelRuntime {
         if (!extras.viewmodelEnabled || matrices == null) {
             return;
         }
-        matrices.mulPose(Axis.XP.rotationDegrees((float) extras.viewmodelRotX));
-        matrices.mulPose(Axis.YP.rotationDegrees((float) extras.viewmodelRotY));
-        matrices.mulPose(Axis.ZP.rotationDegrees((float) extras.viewmodelRotZ));
+        matrices.rotateDegrees(Axis.XP, (float) extras.viewmodelRotX);
+        matrices.rotateDegrees(Axis.YP, (float) extras.viewmodelRotY);
+        matrices.rotateDegrees(Axis.ZP, (float) extras.viewmodelRotZ);
         matrices.scale(
                 (float) extras.viewmodelScaleX,
                 (float) extras.viewmodelScaleY,

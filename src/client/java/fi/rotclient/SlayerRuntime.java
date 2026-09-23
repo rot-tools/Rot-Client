@@ -19,7 +19,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.spider.CaveSpider;
@@ -967,7 +967,7 @@ public final class SlayerRuntime {
                 continue;
             }
             Entity boss = client.level.getEntity(active.entityId());
-            if (!(boss instanceof EnderMan)) {
+            if (!(boss instanceof Enderman)) {
                 continue;
             }
             boolean carry = snapshot.carries().stream().anyMatch(candidate ->
@@ -1856,7 +1856,7 @@ public final class SlayerRuntime {
                 int ownedId = scanOwnedVoidgloomEntityId;
                 AABB box = client.player.getBoundingBox().inflate(
                         SlayerHighlightPolicy.YANG_GLYPH_PLAYER_RANGE);
-                for (EnderMan enderman : level.getEntitiesOfClass(EnderMan.class, box)) {
+                for (Enderman enderman : level.getEntitiesOfClass(Enderman.class, box)) {
                     if (enderman.getId() == ownedId || !holdingBeacon(enderman)) {
                         continue;
                     }
@@ -2022,7 +2022,7 @@ public final class SlayerRuntime {
             return SlayerIrrelevantMobsPolicy.MobKind.SPIDER;
         }
         if (entity instanceof Wolf) return SlayerIrrelevantMobsPolicy.MobKind.WOLF;
-        if (entity instanceof EnderMan) return SlayerIrrelevantMobsPolicy.MobKind.ENDERMAN;
+        if (entity instanceof Enderman) return SlayerIrrelevantMobsPolicy.MobKind.ENDERMAN;
         if (entity instanceof Blaze) return SlayerIrrelevantMobsPolicy.MobKind.BLAZE;
         return SlayerIrrelevantMobsPolicy.MobKind.OTHER;
     }
@@ -2752,7 +2752,7 @@ public final class SlayerRuntime {
             Entity entity,
             long now) {
         Vec3 ownedPos = cachedOwnedPosition(SlayerPolicy.SlayerType.VOIDGLOOM);
-        boolean ownedEnderman = entity instanceof EnderMan
+        boolean ownedEnderman = entity instanceof Enderman
                 && entity.getId() == scanOwnedVoidgloomEntityId;
         double distOwned = ownedPos == null ? Double.NaN : entity.position().distanceTo(ownedPos);
         boolean onOwnedFight = ownedEnderman
@@ -2773,7 +2773,7 @@ public final class SlayerRuntime {
         }
         SlayerFightPolicy.hitsRemaining(hologram).ifPresent(hits -> voidgloomHits = hits);
         SlayerFightPolicy.compactHealth(hologram).ifPresent(health -> voidgloomHealth = health);
-        if (!(entity instanceof EnderMan enderman)) {
+        if (!(entity instanceof Enderman enderman)) {
             return;
         }
         boolean ownedVoidgloom = ownedEnderman;
@@ -2821,7 +2821,7 @@ public final class SlayerRuntime {
         }
     }
 
-    private static boolean holdingBeacon(EnderMan enderman) {
+    private static boolean holdingBeacon(Enderman enderman) {
         BlockState carried = enderman.getCarriedBlock();
         return carried != null && carried.is(Blocks.BEACON);
     }

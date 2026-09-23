@@ -2,7 +2,7 @@ package fi.rotclient;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
  * Top-level Market Watch workspace.
@@ -679,13 +679,13 @@ final class MarketWatchDashboard {
 
         if (infoPopupOpen
                 && button
-                != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                != InputConstants.MOUSE_BUTTON_LEFT) {
 
             return true;
         }
 
         if (button
-                == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                == InputConstants.MOUSE_BUTTON_LEFT) {
 
             if (RotClientUiDraw.inside(
                     mx,
@@ -929,7 +929,7 @@ final class MarketWatchDashboard {
 
         if (infoPopupOpen) {
 
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (key == InputConstants.KEY_ESCAPE) {
                 infoPopupOpen =
                         false;
             }

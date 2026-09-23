@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +65,7 @@ public final class StallMarketRuntime {
         boolean plus = QolFlavorSupport.isPlus();
         if (plus && extras.stallBazaarSearch) {
             long window = client.getWindow().handle();
-            boolean down = QolKeybindNames.isBoundDown(window, extras.stallSearchKeybind);
+            boolean down = QolInputRuntime.isBoundDown(window, extras.stallSearchKeybind);
             if (down && !searchKeyWasDown) {
                 searchHoveredOrHeld(client);
             }
@@ -73,6 +73,7 @@ public final class StallMarketRuntime {
         } else {
             searchKeyWasDown = false;
         }
+
         if (currentScreen() instanceof AbstractContainerScreen<?> container) {
             if (plus && extras.stallBazaarSearch) {
                 maybeClickPendingSearch(container);
@@ -96,7 +97,9 @@ public final class StallMarketRuntime {
         }
     }
 
-    public static boolean fillPendingBazaarSign(SignBlockEntity sign, boolean front) {
+    public static boolean fillPendingBazaarSign(
+            SignBlockEntity sign,
+            net.minecraft.world.level.block.entity.SignTextSlot slot) {
         QolSkyblockExtras extras = extras();
         if (!extras.stallMarketEnabled
                 || !QolFlavorSupport.isPlus()
@@ -110,23 +113,23 @@ public final class StallMarketRuntime {
         pendingBazaarSearch = null;
         pendingSearchClicked = false;
         try {
-            Component[] messages = sign.getFrontText()
-                    .getMessages(Minecraft.getInstance().isTextFilteringEnabled());
-            if (messages.length < 4) {
+            List<Component> messages = new ArrayList<>(sign.getText(slot)
+                    .getMessages(Minecraft.getInstance().isTextFilteringEnabled()));
+            if (messages.size() < 4) {
                 pendingBazaarSearch = query;
                 return false;
             }
-            messages[0] = Component.literal(query);
-            messages[1] = Component.literal("");
-            messages[2] = Component.literal("");
-            messages[3] = Component.literal("");
+            messages.set(0, Component.literal(query));
+            messages.set(1, Component.literal(""));
+            messages.set(2, Component.literal(""));
+            messages.set(3, Component.literal(""));
             sign.updateText(
                     current -> new SignText(
                             messages,
                             messages,
                             current.getColor(),
                             current.hasGlowingText()),
-                    front);
+                    slot);
         } catch (Exception ignored) {
             pendingBazaarSearch = query;
             return false;
@@ -462,8 +465,8 @@ public final class StallMarketRuntime {
             return false;
         }
         long window = client.getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return QolInputRuntime.isKeyDown(window, InputConstants.KEY_LCONTROL)
+                || QolInputRuntime.isKeyDown(window, InputConstants.KEY_RCONTROL);
     }
 
     private static String playerName() {

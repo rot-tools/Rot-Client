@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.function.IntConsumer;
 
@@ -117,7 +117,7 @@ public final class RotClientEquipmentPickerRuntime {
 
         if (!active()
                 || screen == null
-                || glfwKey != GLFW.GLFW_KEY_ESCAPE) {
+                || glfwKey != InputConstants.KEY_ESCAPE) {
 
             return false;
         }

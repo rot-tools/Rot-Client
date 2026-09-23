@@ -1,7 +1,5 @@
 package fi.rotclient;
 
-import org.lwjgl.glfw.GLFW;
-
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.regex.Matcher;
@@ -120,7 +118,7 @@ public final class MenuKeybindPolicy {
 
     public static OptionalInt resolveWardrobeSlot(
             String title,
-            int glfwKey,
+            String keyName,
             String nextKey,
             String previousKey,
             String unequipKey,
@@ -131,22 +129,22 @@ public final class MenuKeybindPolicy {
         if (page == null) {
             return OptionalInt.empty();
         }
-        if (matchesKey(glfwKey, nextKey)) {
+        if (matchesKey(keyName, nextKey)) {
             return page.current() >= page.total()
                     ? OptionalInt.empty()
                     : OptionalInt.of(WARDROBE_NEXT_SLOT);
         }
-        if (matchesKey(glfwKey, previousKey)) {
+        if (matchesKey(keyName, previousKey)) {
             return page.current() <= 1
                     ? OptionalInt.empty()
                     : OptionalInt.of(WARDROBE_PREVIOUS_SLOT);
         }
-        if (matchesKey(glfwKey, unequipKey)) {
+        if (matchesKey(keyName, unequipKey)) {
             return equippedSlotIndex >= 0
                     ? OptionalInt.of(equippedSlotIndex)
                     : OptionalInt.empty();
         }
-        int index = numberRowIndex(glfwKey);
+        int index = numberRowIndex(keyName);
         if (index < 0 || index > 8) {
             return OptionalInt.empty();
         }
@@ -162,7 +160,7 @@ public final class MenuKeybindPolicy {
 
     public static OptionalInt resolvePetsSlot(
             String title,
-            int glfwKey,
+            String keyName,
             String nextKey,
             String previousKey,
             String unequipKey,
@@ -174,22 +172,22 @@ public final class MenuKeybindPolicy {
         if (page == null) {
             return OptionalInt.empty();
         }
-        if (matchesKey(glfwKey, nextKey)) {
+        if (matchesKey(keyName, nextKey)) {
             return page.current() >= page.total()
                     ? OptionalInt.empty()
                     : OptionalInt.of(PETS_NEXT_SLOT);
         }
-        if (matchesKey(glfwKey, previousKey)) {
+        if (matchesKey(keyName, previousKey)) {
             return page.current() <= 1
                     ? OptionalInt.empty()
                     : OptionalInt.of(PETS_PREVIOUS_SLOT);
         }
-        if (matchesKey(glfwKey, unequipKey)) {
+        if (matchesKey(keyName, unequipKey)) {
             return equippedSlotIndex >= 0
                     ? OptionalInt.of(equippedSlotIndex)
                     : OptionalInt.empty();
         }
-        int index = numberRowIndex(glfwKey);
+        int index = numberRowIndex(keyName);
         if (index < 0 || index >= PET_SLOTS.length) {
             return OptionalInt.empty();
         }
@@ -207,59 +205,65 @@ public final class MenuKeybindPolicy {
 
     public static OptionalInt resolveLoadoutSlot(
             String title,
-            int glfwKey,
+            String keyName,
             String nextKey,
             String previousKey) {
         PageTitle page = parseLoadoutTitle(title);
         if (page == null) {
             return OptionalInt.empty();
         }
-        if (matchesKey(glfwKey, nextKey)) {
+        if (matchesKey(keyName, nextKey)) {
             return page.current() >= page.total()
                     ? OptionalInt.empty()
                     : OptionalInt.of(LOADOUT_NEXT_SLOT);
         }
-        if (matchesKey(glfwKey, previousKey)) {
+        if (matchesKey(keyName, previousKey)) {
             return page.current() <= 1
                     ? OptionalInt.empty()
                     : OptionalInt.of(LOADOUT_PREVIOUS_SLOT);
         }
-        int index = loadoutIndex(glfwKey);
+        int index = loadoutIndex(keyName);
         if (index < 0 || index >= LOADOUT_SLOTS.length) {
             return OptionalInt.empty();
         }
         return OptionalInt.of(LOADOUT_SLOTS[index]);
     }
 
-    public static boolean matchesKey(int glfwKey, String configured) {
-        if (configured == null || configured.isBlank()) {
+    public static boolean matchesKey(String keyName, String configured) {
+        if (keyName == null || keyName.isBlank() || configured == null || configured.isBlank()) {
             return false;
         }
-        int expected = QolKeybindNames.resolveGlfwKey(configured, "");
-        return expected != GLFW.GLFW_KEY_UNKNOWN && expected == glfwKey;
+        String actual = QolKeybindNames.canonicalKeyName(keyName, "");
+        String expected = QolKeybindNames.canonicalKeyName(configured, "");
+        return !expected.isEmpty() && expected.equals(actual);
     }
 
-    static int numberRowIndex(int glfwKey) {
-        if (glfwKey >= GLFW.GLFW_KEY_1 && glfwKey <= GLFW.GLFW_KEY_9) {
-            return glfwKey - GLFW.GLFW_KEY_1;
-        }
-        return -1;
+    static int numberRowIndex(String keyName) {
+        String key = QolKeybindNames.canonicalKeyName(keyName, "");
+        return switch (key) {
+            case "1" -> 0;
+            case "2" -> 1;
+            case "3" -> 2;
+            case "4" -> 3;
+            case "5" -> 4;
+            case "6" -> 5;
+            case "7" -> 6;
+            case "8" -> 7;
+            case "9" -> 8;
+            default -> -1;
+        };
     }
 
-    static int loadoutIndex(int glfwKey) {
-        int number = numberRowIndex(glfwKey);
+    static int loadoutIndex(String keyName) {
+        int number = numberRowIndex(keyName);
         if (number >= 0) {
             return number;
         }
-        if (glfwKey == GLFW.GLFW_KEY_0) {
-            return 9;
-        }
-        if (glfwKey == GLFW.GLFW_KEY_MINUS) {
-            return 10;
-        }
-        if (glfwKey == GLFW.GLFW_KEY_EQUAL) {
-            return 11;
-        }
-        return -1;
+        return switch (QolKeybindNames.canonicalKeyName(keyName, "")) {
+            case "0" -> 9;
+            case "MINUS" -> 10;
+            case "EQUAL" -> 11;
+            default -> -1;
+        };
     }
 }

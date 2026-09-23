@@ -1,7 +1,5 @@
 package fi.rotclient;
 
-import org.lwjgl.glfw.GLFW;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -94,17 +92,7 @@ public final class RingPolicy {
     }
 
     public static boolean sameBind(String left, String right) {
-        if (blank(left) || blank(right)) {
-            return false;
-        }
-        Integer mouseLeft = QolKeybindNames.resolveMouseButton(left);
-        Integer mouseRight = QolKeybindNames.resolveMouseButton(right);
-        if (mouseLeft != null || mouseRight != null) {
-            return mouseLeft != null && mouseLeft.equals(mouseRight);
-        }
-        int glfwLeft = QolKeybindNames.resolveGlfwKey(left, "");
-        int glfwRight = QolKeybindNames.resolveGlfwKey(right, "");
-        return glfwLeft != GLFW.GLFW_KEY_UNKNOWN && glfwLeft == glfwRight;
+        return QolKeybindNames.sameBind(left, right);
     }
 
     public static List<MacroDef> parseMacroList(

@@ -3,7 +3,7 @@ package fi.rotclient;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -5582,9 +5582,9 @@ final class MarketWatchOpportunitiesDashboard {
             int bottom) {
 
         if (button
-                != GLFW.GLFW_MOUSE_BUTTON_LEFT
+                != InputConstants.MOUSE_BUTTON_LEFT
                 && button
-                != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                != InputConstants.MOUSE_BUTTON_RIGHT) {
 
             return false;
         }
@@ -5596,7 +5596,7 @@ final class MarketWatchOpportunitiesDashboard {
         int my =
                 (int) Math.round(
                         mouseY);
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+        if (button == InputConstants.MOUSE_BUTTON_LEFT
                 && beginScrollbarDrag(
                 mx,
                 my)) {
@@ -5605,7 +5605,7 @@ final class MarketWatchOpportunitiesDashboard {
         }
 
         if (button
-                == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                == InputConstants.MOUSE_BUTTON_LEFT
                 && handlePinnedDealsClick(
                         mx,
                         my,
@@ -5618,7 +5618,7 @@ final class MarketWatchOpportunitiesDashboard {
         }
 
         if (button
-                == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                == InputConstants.MOUSE_BUTTON_LEFT
                 && handlePinButtonClick(
                         mx,
                         my)) {
@@ -5627,7 +5627,7 @@ final class MarketWatchOpportunitiesDashboard {
         }
 
         if (button
-                == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                == InputConstants.MOUSE_BUTTON_RIGHT) {
 
             /*
              * Never let an animated Sort / Filters popup right-click
@@ -5999,7 +5999,7 @@ final class MarketWatchOpportunitiesDashboard {
     boolean captureKey(
             int key) {
 
-if (key == GLFW.GLFW_KEY_ESCAPE
+if (key == InputConstants.KEY_ESCAPE
                 && (sortMenuOpen
                 || filterMenuOpen)) {
 
@@ -6012,7 +6012,7 @@ if (key == GLFW.GLFW_KEY_ESCAPE
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_ESCAPE
+        if (key == InputConstants.KEY_ESCAPE
                 && !expandedOpportunityId.isBlank()) {
 
             expandedOpportunityId = "";
@@ -6026,12 +6026,12 @@ if (key == GLFW.GLFW_KEY_ESCAPE
             return false;
         }
 
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             budgetFocused = false;
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_BACKSPACE) {
+        if (key == InputConstants.KEY_BACKSPACE) {
             if (!budgetText.isEmpty()) {
                 budgetText =
                         budgetText.substring(
@@ -6043,8 +6043,8 @@ if (key == GLFW.GLFW_KEY_ESCAPE
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_ENTER
-                || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_RETURN
+                || key == InputConstants.KEY_NUMPADENTER) {
 
             applyBudget();
             return true;

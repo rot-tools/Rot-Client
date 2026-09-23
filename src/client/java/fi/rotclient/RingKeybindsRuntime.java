@@ -16,7 +16,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.ArrayListDeque;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,24 +52,24 @@ public final class RingKeybindsRuntime {
         }
         long window = client.getWindow() == null ? 0L : client.getWindow().handle();
         for (RingPolicy.DueSend send : SESSION.tick(name ->
-                QolKeybindNames.isBoundDown(window, name))) {
+                QolInputRuntime.isBoundDown(window, name))) {
             dispatch(client, qol, send);
         }
     }
 
     public static boolean onKeyPress(int glfwKey, int action) {
-        if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) {
+        if (action != InputConstants.PRESS && action != InputConstants.REPEAT) {
             return false;
         }
-        return handlePress(QolKeybindNames.formatGlfwKey(glfwKey), keyOf(glfwKey));
+        return handlePress(QolInputRuntime.formatGlfwKey(glfwKey), keyOf(glfwKey));
     }
 
     public static boolean onMousePress(int button, int action) {
-        if (action != GLFW.GLFW_PRESS) {
+        if (action != InputConstants.PRESS) {
             return false;
         }
         return handlePress(
-                QolKeybindNames.formatMouseButton(button),
+                QolInputRuntime.formatMouseButton(button),
                 InputConstants.Type.MOUSE.getOrCreate(button));
     }
 
@@ -130,7 +129,7 @@ public final class RingKeybindsRuntime {
         boolean enforceLimit = client.getSingleplayerServer() == null || qol.commandBindRatelimitSp;
         RingPolicy.KeyPressResult result = SESSION.handleKey(
                 keyName,
-                name -> QolKeybindNames.isBoundDown(window, name),
+                name -> QolInputRuntime.isBoundDown(window, name),
                 hasVanillaConflict(client, vanillaKey),
                 SkyBlockAreaDetector.isInSkyblock(),
                 new RingPolicy.RateSettings(
@@ -279,7 +278,7 @@ public final class RingKeybindsRuntime {
     }
 
     private static InputConstants.Key keyOf(int glfwKey) {
-        return InputConstants.Type.KEYSYM.getOrCreate(glfwKey);
+        return InputConstants.Type.KEYBOARD.getOrCreate(glfwKey);
     }
 
     private static void notifyRateLimit(Minecraft client, String keyName, QolUtilityConfig qol) {

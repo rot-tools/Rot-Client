@@ -115,7 +115,7 @@ public final class SmoothZoomRuntime {
                                 && !qol.zoomKeybind.isBlank());
 
         return canZoom
-                && QolKeybindNames.isBoundDown(
+                && QolInputRuntime.isBoundDown(
                         client.getWindow().handle(),
                         qol.zoomKeybind);
     }

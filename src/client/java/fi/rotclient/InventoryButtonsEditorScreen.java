@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 
@@ -512,7 +512,7 @@ final class InventoryButtonsEditorScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (field != 0 && !extras().inventoryButtons.isEmpty()) {
-            if (event.key() == GLFW.GLFW_KEY_BACKSPACE) {
+            if (event.key() == InputConstants.KEY_BACKSPACE) {
                 var b = current();
                 String value = field == 1 ? b.command : b.icon;
                 if (value != null && !value.isEmpty()) {
@@ -526,7 +526,7 @@ final class InventoryButtonsEditorScreen extends Screen {
                 save();
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_TAB || event.key() == GLFW.GLFW_KEY_ENTER) {
+            if (event.key() == InputConstants.KEY_TAB || event.key() == InputConstants.KEY_RETURN) {
                 field = field == 1 ? 2 : 1;
                 return true;
             }

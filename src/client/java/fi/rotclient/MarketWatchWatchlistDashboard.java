@@ -2,7 +2,7 @@ package fi.rotclient;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.List;
 import java.util.Locale;
@@ -776,7 +776,7 @@ RotClientUiDraw.text(
             int right,
             int bottom) {
 
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
 

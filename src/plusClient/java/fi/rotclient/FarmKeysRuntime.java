@@ -103,11 +103,11 @@ public final class FarmKeysRuntime {
         if (name == null || name.isBlank()) {
             return null;
         }
-        Integer mouse = QolKeybindNames.resolveMouseButton(name);
+        Integer mouse = QolInputRuntime.resolveMouseButton(name);
         if (mouse != null) {
             return InputConstants.Type.MOUSE.getOrCreate(mouse);
         }
-        int glfw = QolKeybindNames.resolveGlfwKey(name, "");
+        int glfw = QolInputRuntime.resolveGlfwKey(name, "");
         if (glfw == GLFW.GLFW_KEY_UNKNOWN) {
             return null;
         }
@@ -119,9 +119,9 @@ public final class FarmKeysRuntime {
             return "";
         }
         if (key.getType() == InputConstants.Type.MOUSE) {
-            return QolKeybindNames.formatMouseButton(key.getValue());
+            return QolInputRuntime.formatMouseButton(key.getValue());
         }
-        return QolKeybindNames.formatGlfwKey(key.getValue());
+        return QolInputRuntime.formatGlfwKey(key.getValue());
     }
 
     private static QolSkyblockExtras extras() {
