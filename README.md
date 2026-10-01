@@ -222,3 +222,7 @@ Rot Client is created and owned by **Rot Tools**.
 [MIT](LICENSE). Bundled third-party works (Adobe Source Sans OFL, Hypixel
 public data facts, Minecraft EULA for any vanilla pack paths) are listed in
 [THIRD_PARTY.md](THIRD_PARTY.md) and [NOTICE](NOTICE).
+
+## Mining/Pet repair candidate — 2026-10-01
+
+Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](docs/MINING_HUD_FIXES.md).

@@ -89,6 +89,7 @@ public final class CommissionDisplayPolicy {
             return List.of();
         }
         boolean inSection = false;
+        String pendingName = null;
         for (String raw : strippedLines) {
             String line = normalizeLine(raw);
             if (line.isEmpty()) {
@@ -96,12 +97,15 @@ public final class CommissionDisplayPolicy {
             }
             if (isCommissionsHeader(line)) {
                 inSection = true;
+                pendingName = null;
                 continue;
             }
             if (!inSection) {
                 continue;
             }
             Commission row = parseRow(line);
+            if (row == null && pendingName != null) row = parseRow(pendingName + ": " + line);
+            pendingName = null;
             if (row != null) {
                 out.put(row.name().toLowerCase(Locale.ROOT), row);
                 if (out.size() >= MAX_COMMISSIONS) {
@@ -112,6 +116,8 @@ public final class CommissionDisplayPolicy {
             // The next widget ends the section, whether or not it is a header we have heard of.
             if (isSectionHeader(line)) {
                 inSection = false;
+            } else if (looksLikeCommissionName(line) && line.matches("(?i)^[a-z '’\\-]+(?:miner|slayer|hunter|collector|hoarder|explorer)$")) {
+                pendingName = line;
             }
         }
         return List.copyOf(out.values());

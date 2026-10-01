@@ -52,7 +52,9 @@ final class CommissionDisplayRuntime {
 
     static void tick(Minecraft client) {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
-        if (!qol.commissionDisplayEnabled || client == null) {
+        if (client == null || client.level == null || client.player == null
+                || !(qol.commissionDisplayEnabled || qol.extras().miningHelpersEnabled
+                && qol.extras().miningHelpersCommissionMobs)) {
             commissions = List.of();
             parsedLines = null;
             return;
