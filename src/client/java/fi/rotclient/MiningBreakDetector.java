@@ -70,7 +70,7 @@ final class MiningBreakDetector {
         DiagnosticRecorder.record("COUNT_BLOCK_PACKET",
                 "material=" + material.id()
                         + " source=" + (pickobulus ? "pickobulus" : "mining/spread"));
-        RotClientClient.onBlocksBroken(material, 1, baseDrop);
+        RotClientClient.onBlocksBroken(material, 1, baseDrop, pickobulus);
     }
 
     void tick(

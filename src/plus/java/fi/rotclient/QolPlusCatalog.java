@@ -859,7 +859,14 @@ public final class QolPlusCatalog {
                     setting("qol.mining_glacite.shaft_party", "Announce Shaft", "Party-chat when a mineshaft portal is found. Cheat, off by default.", SettingType.TOGGLE, "cheat"),
                     setting("qol.mining_glacite.enter_party", "Enter Party Chat", "Also send the enter line on /pc. Cheat, off by default.", SettingType.TOGGLE, "cheat")
             );
+            case "qol.pickobulus" -> List.of(
+                    setting("qol.pickobulus.preview", "Estimated Block Preview", "Plus-only candidate outline; server break shape and eligibility are not guaranteed.", SettingType.TOGGLE),
+                    setting("qol.pickobulus.preview_radius", "Preview Radius", "Calibrated candidate radius in blocks, 1–5.", SettingType.NUMBER),
+                    setting("qol.pickobulus.preview_range", "Aim Range", "Straight aim ray range, 4–64 blocks; not a verified projectile path.", SettingType.NUMBER),
+                    setting("qol.pickobulus.preview_sphere", "Spherical Footprint", "Use a sphere instead of a cube candidate footprint.", SettingType.TOGGLE),
+                    setting("qol.pickobulus.preview_through_walls", "Through-wall Preview", "Plus-only candidate outlines through terrain; off by default.", SettingType.TOGGLE));
             case "qol.mining_helpers" -> List.of(
+                    setting("qol.mining_helpers.puzzler", "Puzzler Helper", "Mark the block from Puzzler NPC arrows. Plus-only, manual mining.", SettingType.TOGGLE),
                     setting("qol.mining_helpers.call_king", "Call King", "Send /call mismyla after commission complete. Cheat, off by default.", SettingType.TOGGLE, "cheat"),
                     setting("qol.mining_helpers.break_reset", "Break Reset Fix", "Ignore same-block mining updates that reset break progress.", SettingType.TOGGLE, "mining"),
                     setting("qol.mining_helpers.gemstone_desync", "Gemstone Desync Fix", "Ignore gemstone glass flicker while you are mining that block.", SettingType.TOGGLE, "gemstone")

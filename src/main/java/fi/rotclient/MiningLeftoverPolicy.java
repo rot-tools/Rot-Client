@@ -119,7 +119,7 @@ public final class MiningLeftoverPolicy {
             "(?<name>Pickobulus|Mining Speed Boost|Maniac Miner|Vein Seeker|Gemstone Infusion):\\s*(?<status>.+)",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern SKY_MALL = Pattern.compile(
-            "Sky Mall:?\\s*(?<perk>.+)", Pattern.CASE_INSENSITIVE);
+            "Sky\\s*Mall:?\\s*(?<perk>.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern COLD = Pattern.compile(
             "Cold:\\s*-?(?<cold>\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FETCHUR = Pattern.compile(
@@ -278,16 +278,54 @@ public final class MiningLeftoverPolicy {
     }
 
     public static Optional<SkyMall> parseSkyMall(List<String> tabLines) {
-        if (tabLines == null) {
-            return Optional.empty();
-        }
-        for (String line : tabLines) {
-            Matcher matcher = SKY_MALL.matcher(strip(line));
-            if (matcher.find()) {
-                return Optional.of(new SkyMall(matcher.group("perk").trim()));
+        if (tabLines == null) return Optional.empty();
+        for (int i = 0; i < tabLines.size(); i++) {
+            String line = CommissionDisplayPolicy.normalizeLine(tabLines.get(i));
+            if (line.matches("(?i)^Sky\\s*Mall:?$")) {
+                if (i + 1 < tabLines.size()) {
+                    String perk = CommissionDisplayPolicy.normalizeLine(tabLines.get(i + 1));
+                    if (!perk.isEmpty() && !perk.endsWith(":")) return Optional.of(new SkyMall(perk));
+                }
+                continue;
             }
+            Matcher matcher = SKY_MALL.matcher(line);
+            if (matcher.matches()) return Optional.of(new SkyMall(matcher.group("perk").trim()));
         }
         return Optional.empty();
+    }
+
+    public static Optional<SkyMall> parseSkyMallChat(String message) {
+        String line = CommissionDisplayPolicy.normalizeLine(message);
+        if (!line.startsWith("New buff: ")) return Optional.empty();
+        String perk = line.substring("New buff: ".length()).trim();
+        return perk.isEmpty() ? Optional.empty() : Optional.of(new SkyMall(perk));
+    }
+
+    /** Only the current selection in Sky Mall lore is authority, never the list of possible buffs. */
+    public static Optional<SkyMall> parseSkyMallLore(List<String> lore) {
+        if (lore == null) return Optional.empty();
+        for (int i = 0; i < lore.size(); i++) {
+            String line = CommissionDisplayPolicy.normalizeLine(lore.get(i));
+            Matcher marker = Pattern.compile("(?i)^(?:Current|Active|Today's|Today.s) (?:perk|buff|bonus):\\s*(.*)$").matcher(line);
+            if (!marker.matches()) continue;
+            String perk = marker.group(1).trim();
+            if (perk.isEmpty() && i + 1 < lore.size()) perk = CommissionDisplayPolicy.normalizeLine(lore.get(i + 1));
+            if (!perk.isEmpty() && !perk.endsWith(":")) return Optional.of(new SkyMall(perk));
+        }
+        return Optional.empty();
+    }
+
+    public static boolean matchesActiveCommission(String nametag, List<CommissionDisplayPolicy.Commission> commissions) {
+        if (commissions == null || !isCommissionMob(nametag)) return false;
+        String name = strip(nametag).toLowerCase(Locale.ROOT).replace("ice walker", "glacite walker");
+        for (var commission : commissions) {
+            if (commission.done()) continue;
+            String task = commission.name().toLowerCase(Locale.ROOT).replace("ice walker", "glacite walker");
+            for (String mob : COMMISSION_MOBS) {
+                if (name.contains(mob) && task.contains(mob)) return true;
+            }
+        }
+        return false;
     }
 
     public static Optional<Cold> parseCold(List<String> scoreboardLines) {
