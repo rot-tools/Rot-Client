@@ -1621,6 +1621,10 @@ public final class RotClientClient implements ClientModInitializer {
 
     public static void onBlocksBroken(
             TrackedMaterial material, int count, long baseDrops) {
+        onBlocksBroken(material, count, baseDrops, false);
+    }
+
+    static void onBlocksBroken(TrackedMaterial material, int count, long baseDrops, boolean pickobulus) {
         long now = System.currentTimeMillis();
         if (count <= 0 || material == null) {
             return;
@@ -1640,12 +1644,14 @@ public final class RotClientClient implements ClientModInitializer {
                         "REJECTED",
                         TrackingRuntimeTrace.Reason.REJECTED_COLLECTION_INACTIVE.name());
             }
+            if (pickobulus && SESSION_ENGINE.isCollectionActive()) PickobulusRuntime.acceptedBreak(count, false);
             SESSION_ENGINE.onConfirmedMaterialBreak(
                     material,
                     count,
                     now);
             return;
         }
+        if (pickobulus) PickobulusRuntime.acceptedBreak(count, true);
         if (selectedTarget().isCombined()) {
             persistCombinedActiveTime(now);
             CONFIG.combinedLastBreakEpochMillis = now;

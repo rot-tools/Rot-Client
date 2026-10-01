@@ -237,6 +237,8 @@ tasks.register('verifyLegitJar') {
 			}
 		}
 		def forbiddenText = [
+				'qol.pickobulus.preview',
+				'qol.mining_helpers.puzzler',
 				'solveRedGreen',
 				'solveRubixClicks',
 				'extractSelectColor',

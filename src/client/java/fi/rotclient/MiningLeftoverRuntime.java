@@ -8,6 +8,9 @@ import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ public final class MiningLeftoverRuntime {
     private static MiningLeftoverPolicy.TreasureDistance treasure;
     private static MiningLeftoverPolicy.MiningEvent event = MiningLeftoverPolicy.MiningEvent.NONE;
     private static MiningLeftoverPolicy.SkyMall skyMall;
+    private static long skyMallSeenAt;
     private static MiningLeftoverPolicy.Cold cold;
     private static Map<MiningLeftoverPolicy.CorpseType, Boolean> corpses = Map.of();
     private static final Set<Integer> seenWorms = new HashSet<>();
@@ -37,7 +41,7 @@ public final class MiningLeftoverRuntime {
     private static final java.util.regex.Pattern LINE_BREAK = java.util.regex.Pattern.compile("\\R");
     // Commission mobs and Goblin Raid boxes used to come from a 96x48x96 armor-stand query with name
     // matching on every rendered frame. They are found from tick() four times a second and drawn here.
-    private static List<ArmorStand> markedStands = List.of();
+    private static List<Entity> markedStands = List.of();
     private static int markedScanTicks;
 
     private MiningLeftoverRuntime() {
@@ -52,6 +56,7 @@ public final class MiningLeftoverRuntime {
         treasure = null;
         event = MiningLeftoverPolicy.MiningEvent.NONE;
         skyMall = null;
+        skyMallSeenAt = 0;
         cold = null;
         corpses = Map.of();
         seenWorms.clear();
@@ -61,6 +66,7 @@ public final class MiningLeftoverRuntime {
         titleTicks = 0;
         hotmOpen = false;
         MiningAssistRuntime.clear();
+        PickobulusRuntime.clear();
     }
 
     static boolean hudVisible(QolUtilityConfig qol) {
@@ -82,7 +88,7 @@ public final class MiningLeftoverRuntime {
             return List.of();
         }
         QolSkyblockExtras extras = qol.extras();
-        return MiningLeftoverPolicy.hudLines(
+        List<String> lines = new ArrayList<>(MiningLeftoverPolicy.hudLines(
                 extras.miningGlaciteEnabled && extras.miningGlacitePityHud ? pity : null,
                 extras.miningHelpersEnabled && extras.miningHelpersAbilityHud ? ability : null,
                 extras.miningHelpersEnabled && extras.miningHelpersDrillFuel ? fuel : null,
@@ -91,7 +97,24 @@ public final class MiningLeftoverRuntime {
                 extras.miningScathaEnabled && extras.miningScathaHud ? wormCooldown : 0,
                 extras.miningScathaEnabled ? lastWorm : MiningLeftoverPolicy.WormKind.NONE,
                 extras.miningHotmEnabled && extras.miningHotmSkyMall ? skyMall : null,
-                extras.miningGlaciteEnabled && extras.miningGlaciteCorpseHud ? corpses : Map.of());
+                extras.miningGlaciteEnabled && extras.miningGlaciteCorpseHud ? corpses : Map.of()));
+        if (extras.miningHotmEnabled && extras.miningHotmSkyMall && skyMall == null)
+            lines.add("Sky Mall: unknown — open /hotm to read the current perk");
+        return List.copyOf(lines);
+    }
+
+    private static void observeSkyMall(MiningLeftoverPolicy.SkyMall observed) {
+        skyMall = observed;
+        skyMallSeenAt = System.currentTimeMillis();
+    }
+
+    public static void renderScreenHint(Screen screen, net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
+        Minecraft client = Minecraft.getInstance();
+        QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        if (client == null || graphics == null || screen == null || !extras.miningHotmEnabled
+                || !extras.miningHotmScreenHint || !MiningLeftoverPolicy.isHotmScreen(screen.getTitle().getString())) return;
+        String hint = skyMall == null ? "Sky Mall: current perk not observed yet" : "Sky Mall: " + skyMall.perk();
+        graphics.text(client.font, hint, 8, screen.height - 20, 0xFFFFCC55, true);
     }
 
     static String overlayTitle() {
@@ -119,6 +142,7 @@ public final class MiningLeftoverRuntime {
         if (client == null || client.player == null) {
             return;
         }
+        PickobulusRuntime.tick(client);
         MiningAssistRuntime.tick(client);
         SkyBlockUtilityRuntime.tick(client);
         boolean any = extras.miningScathaEnabled
@@ -127,6 +151,7 @@ public final class MiningLeftoverRuntime {
                 || extras.miningHelpersEnabled
                 || extras.miningHotmEnabled;
         if (!any) {
+            markedStands = List.of();
             return;
         }
         List<String> tab = CommissionDisplayRuntime.tabLines(client);
@@ -138,7 +163,8 @@ public final class MiningLeftoverRuntime {
             ability = MiningLeftoverPolicy.parseAbility(tab).orElse(null);
         }
         if (extras.miningHotmEnabled && extras.miningHotmSkyMall) {
-            skyMall = MiningLeftoverPolicy.parseSkyMall(tab).orElse(null);
+            MiningLeftoverPolicy.parseSkyMall(tab).ifPresent(MiningLeftoverRuntime::observeSkyMall);
+            if (System.currentTimeMillis() - skyMallSeenAt > 1_200_000L) skyMall = null;
         }
         // Only the Cold overlay reads this, and parsing means rebuilding the whole scoreboard.
         cold = extras.miningGlaciteEnabled && extras.miningGlaciteColdOverlay
@@ -151,6 +177,14 @@ public final class MiningLeftoverRuntime {
         }
         Screen screen = client.gui == null ? null : client.gui.screen();
         String title = screen == null || screen.getTitle() == null ? "" : screen.getTitle().getString();
+        if (extras.miningHotmEnabled && MiningLeftoverPolicy.isHotmScreen(title)
+                && screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container) {
+            for (var slot : container.getMenu().slots) {
+                if (CommissionDisplayPolicy.normalizeLine(slot.getItem().getHoverName().getString()).equalsIgnoreCase("Sky Mall"))
+                    MiningLeftoverPolicy.parseSkyMallLore(InventoryChromeRuntime.loreLines(slot.getItem()))
+                            .ifPresent(MiningLeftoverRuntime::observeSkyMall);
+            }
+        }
         boolean hotmNow = extras.miningHotmEnabled
                 && extras.miningHotmScreenHint
                 && MiningLeftoverPolicy.isHotmScreen(title);
@@ -182,15 +216,27 @@ public final class MiningLeftoverRuntime {
         }
     }
 
-    private static List<ArmorStand> scanMarkedStands(Minecraft client, boolean mobs, boolean goblin) {
+    private static List<Entity> scanMarkedStands(Minecraft client, boolean mobs, boolean goblin) {
         AABB search = client.player.getBoundingBox().inflate(48.0D, 24.0D, 48.0D);
-        List<ArmorStand> found = new ArrayList<>();
+        List<Entity> found = new ArrayList<>();
         for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
             String name = stand.getName().getString();
-            boolean commission = mobs && MiningLeftoverPolicy.isCommissionMob(name);
+            boolean commission = mobs && (SkyBlockAreaDetector.detect() == SkyBlockArea.DWARVEN_MINES
+                    || SkyBlockAreaDetector.detect() == SkyBlockArea.CRYSTAL_HOLLOWS)
+                    && MiningLeftoverPolicy.matchesActiveCommission(name, CommissionDisplayRuntime.commissions())
+                    && client.player.hasLineOfSight(stand);
             boolean raid = goblin && name.toLowerCase().contains("goblin");
             if (commission || raid) {
-                found.add(stand);
+                // Hypixel's floating name is an armor stand above the actual mob.
+                // Draw the nearby mob body when present, not a tall box around its label.
+                Entity body = client.level.getEntitiesOfClass(LivingEntity.class,
+                                stand.getBoundingBox().inflate(0.8D, 2.5D, 0.8D),
+                                entity -> !(entity instanceof ArmorStand) && !(entity instanceof Player)
+                                        && entity.isAlive() && !entity.isInvisible()
+                                        && client.player.hasLineOfSight(entity))
+                        .stream().min(java.util.Comparator.comparingDouble(stand::distanceToSqr))
+                        .map(entity -> (Entity) entity).orElse(stand);
+                if (!found.contains(body)) found.add(body);
             }
         }
         return found;
@@ -201,7 +247,10 @@ public final class MiningLeftoverRuntime {
             return;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        if (!overlay) PickobulusRuntime.onChat(message);
         String text = message.getString();
+        if (!overlay && extras.miningHotmEnabled && SkyBlockAreaDetector.detect() == SkyBlockArea.DWARVEN_MINES)
+            MiningLeftoverPolicy.parseSkyMallChat(text).ifPresent(MiningLeftoverRuntime::observeSkyMall);
         if (!overlay) {
             SkyBlockUtilityRuntime.onChat(message);
         }
@@ -293,13 +342,14 @@ public final class MiningLeftoverRuntime {
             return;
         }
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
+        DwarvenWaypointRuntime.renderGizmos();
         MiningAssistRuntime.renderGizmos();
         SkyBlockUtilityRuntime.renderGizmos();
         if (markedStands.isEmpty()) {
             return;
         }
         float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        for (ArmorStand stand : markedStands) {
+        for (Entity stand : markedStands) {
             if (stand.isRemoved()) {
                 continue;
             }
@@ -310,7 +360,8 @@ public final class MiningLeftoverRuntime {
             AABB box = stand.getBoundingBox()
                     .move(offset.x(), offset.y(), offset.z())
                     .inflate(0.2D, 0.6D, 0.2D);
-            QolClientFlavorSupport.hooks().configurePlusGizmo(Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FF55, 2.0F)));
+            if (client.player.hasLineOfSight(stand))
+                Gizmos.cuboid(box, GizmoStyle.stroke(0xFF55FF55, 2.0F));
         }
     }
 
