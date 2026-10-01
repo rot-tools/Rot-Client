@@ -195,6 +195,15 @@ final class QolSkyblockExtras {
     boolean miningGlaciteKeyAnnounce = true;
     boolean miningGlaciteEnterParty;
 
+    boolean pickobulusEnabled;
+    boolean pickobulusTimerHud = true;
+    boolean pickobulusReadyPopup = true;
+    boolean pickobulusReadySound;
+    boolean pickobulusConfirmedCounts = true;
+    boolean pickobulusAutoCooldown = true;
+    double pickobulusCooldownSeconds = 60;
+    float pickobulusHudX = 12, pickobulusHudY = 280;
+    int pickobulusColor = 0xFF55FFFF;
     boolean miningHelpersEnabled;
     boolean miningHelpersFetchur = true;
     boolean miningHelpersFossilMuncher = true;
@@ -202,6 +211,7 @@ final class QolSkyblockExtras {
     boolean miningHelpersAbilityHud = true;
     boolean miningHelpersCommissionGui = true;
     boolean miningHelpersCommissionMobs;
+    boolean miningHelpersDwarvenWaypoints;
     boolean miningHelpersNotifyPortal = true;
     boolean miningHelpersNotifyScrap = true;
     boolean miningHelpersNotifyGoblin = true;
@@ -1072,6 +1082,7 @@ final class QolSkyblockExtras {
             case "qol.mining_scatha" -> miningScathaEnabled;
             case "qol.mining_events" -> miningEventsEnabled;
             case "qol.mining_glacite" -> miningGlaciteEnabled;
+            case "qol.pickobulus" -> pickobulusEnabled;
             case "qol.mining_helpers" -> miningHelpersEnabled;
             case "qol.mining_hotm" -> miningHotmEnabled;
             case "qol.foraging_trees" -> foragingTreesEnabled;
@@ -1162,6 +1173,7 @@ final class QolSkyblockExtras {
             case "qol.mining_scatha" -> miningScathaEnabled = enabled;
             case "qol.mining_events" -> miningEventsEnabled = enabled;
             case "qol.mining_glacite" -> miningGlaciteEnabled = enabled;
+            case "qol.pickobulus" -> pickobulusEnabled = enabled;
             case "qol.mining_helpers" -> miningHelpersEnabled = enabled;
             case "qol.mining_hotm" -> miningHotmEnabled = enabled;
             case "qol.foraging_trees" -> foragingTreesEnabled = enabled;
@@ -1347,11 +1359,17 @@ final class QolSkyblockExtras {
             case "qol.mining_glacite.enter_party" -> miningGlaciteEnterParty;
             case "qol.mining_glacite.corpse_waypoints" -> miningGlaciteCorpseWaypoints;
             case "qol.mining_glacite.key_announce" -> miningGlaciteKeyAnnounce;
+            case "qol.pickobulus.timer_hud" -> pickobulusTimerHud;
+            case "qol.pickobulus.ready_popup" -> pickobulusReadyPopup;
+            case "qol.pickobulus.ready_sound" -> pickobulusReadySound;
+            case "qol.pickobulus.confirmed_counts" -> pickobulusConfirmedCounts;
+            case "qol.pickobulus.auto_cooldown" -> pickobulusAutoCooldown;
             case "qol.mining_helpers.fetchur" -> miningHelpersFetchur;
             case "qol.mining_helpers.fossil_muncher" -> miningHelpersFossilMuncher;
             case "qol.mining_helpers.drill_fuel" -> miningHelpersDrillFuel;
             case "qol.mining_helpers.ability_hud" -> miningHelpersAbilityHud;
             case "qol.mining_helpers.commission_gui" -> miningHelpersCommissionGui;
+            case "qol.mining_helpers.dwarven_waypoints" -> miningHelpersDwarvenWaypoints;
             case "qol.mining_helpers.commission_mobs" -> miningHelpersCommissionMobs;
             case "qol.mining_helpers.notify_portal" -> miningHelpersNotifyPortal;
             case "qol.mining_helpers.notify_scrap" -> miningHelpersNotifyScrap;
@@ -1976,11 +1994,17 @@ final class QolSkyblockExtras {
             case "qol.mining_glacite.enter_party" -> miningGlaciteEnterParty = value;
             case "qol.mining_glacite.corpse_waypoints" -> miningGlaciteCorpseWaypoints = value;
             case "qol.mining_glacite.key_announce" -> miningGlaciteKeyAnnounce = value;
+            case "qol.pickobulus.timer_hud" -> pickobulusTimerHud = value;
+            case "qol.pickobulus.ready_popup" -> pickobulusReadyPopup = value;
+            case "qol.pickobulus.ready_sound" -> pickobulusReadySound = value;
+            case "qol.pickobulus.confirmed_counts" -> pickobulusConfirmedCounts = value;
+            case "qol.pickobulus.auto_cooldown" -> pickobulusAutoCooldown = value;
             case "qol.mining_helpers.fetchur" -> miningHelpersFetchur = value;
             case "qol.mining_helpers.fossil_muncher" -> miningHelpersFossilMuncher = value;
             case "qol.mining_helpers.drill_fuel" -> miningHelpersDrillFuel = value;
             case "qol.mining_helpers.ability_hud" -> miningHelpersAbilityHud = value;
             case "qol.mining_helpers.commission_gui" -> miningHelpersCommissionGui = value;
+            case "qol.mining_helpers.dwarven_waypoints" -> miningHelpersDwarvenWaypoints = value;
             case "qol.mining_helpers.commission_mobs" -> miningHelpersCommissionMobs = value;
             case "qol.mining_helpers.notify_portal" -> miningHelpersNotifyPortal = value;
             case "qol.mining_helpers.notify_scrap" -> miningHelpersNotifyScrap = value;
@@ -2586,6 +2610,7 @@ final class QolSkyblockExtras {
             case "qol.storage_overlay.scroll_speed" -> (double) storageOverlayScrollSpeed;
             case "qol.storage_overlay.padding" -> (double) storageOverlayPadding;
             case "qol.storage_overlay.margin" -> (double) storageOverlayMargin;
+            case "qol.pickobulus.cooldown_seconds" -> pickobulusCooldownSeconds;
             case "qol.freecam.speed" -> freecamSpeed;
             case "qol.hud_layout.scale" -> (double) hudLayoutScale;
             case "qol.custom_cursor.size" -> customCursorSize;
@@ -2610,6 +2635,7 @@ final class QolSkyblockExtras {
             return true;
         }
         switch (settingId) {
+            case "qol.pickobulus.cooldown_seconds" -> pickobulusCooldownSeconds = Double.isFinite(value) ? Math.max(1, Math.min(600, value)) : 60;
             case "qol.price_tooltips.burgers" ->
                     priceBurgerCount = PriceTooltipsPolicy.clampBurgers((int) Math.round(value));
             case "qol.viewmodel.swing_speed" ->
@@ -3030,6 +3056,7 @@ final class QolSkyblockExtras {
             case "qol.block_outline.color" -> blockOutlineColor;
             case "qol.ghosts.fill_color" -> ghostsFillColor;
             case "qol.ghosts.outline_color" -> ghostsOutlineColor;
+            case "qol.pickobulus.color" -> pickobulusColor;
             default -> athen().readColor(settingId);
         };
     }
@@ -3040,6 +3067,7 @@ final class QolSkyblockExtras {
             return true;
         }
         switch (settingId) {
+            case "qol.pickobulus.color" -> pickobulusColor = argb;
             case "qol.active_pet_highlight.color" -> activePetHighlightColor = argb;
             case "qol.anvil_helper.color" -> anvilHelperColor = argb;
             case "qol.slayer_highlights.boss_color" -> slayerHighlightsBossColor = argb;
@@ -3333,6 +3361,16 @@ final class QolSkyblockExtras {
                 miningGlaciteKeyAnnounce = d.miningGlaciteKeyAnnounce;
                 miningGlaciteEnterParty = d.miningGlaciteEnterParty;
             }
+            case "qol.pickobulus" -> {
+                pickobulusEnabled = d.pickobulusEnabled;
+                pickobulusTimerHud = d.pickobulusTimerHud;
+                pickobulusReadyPopup = d.pickobulusReadyPopup;
+                pickobulusReadySound = d.pickobulusReadySound;
+                pickobulusConfirmedCounts = d.pickobulusConfirmedCounts;
+                pickobulusAutoCooldown = d.pickobulusAutoCooldown;
+                pickobulusCooldownSeconds = d.pickobulusCooldownSeconds;
+                pickobulusColor = d.pickobulusColor;
+            }
             case "qol.mining_helpers" -> {
                 miningHelpersEnabled = d.miningHelpersEnabled;
                 miningHelpersFetchur = d.miningHelpersFetchur;
@@ -3340,6 +3378,7 @@ final class QolSkyblockExtras {
                 miningHelpersDrillFuel = d.miningHelpersDrillFuel;
                 miningHelpersAbilityHud = d.miningHelpersAbilityHud;
                 miningHelpersCommissionGui = d.miningHelpersCommissionGui;
+                miningHelpersDwarvenWaypoints = d.miningHelpersDwarvenWaypoints;
                 miningHelpersCommissionMobs = d.miningHelpersCommissionMobs;
                 miningHelpersNotifyPortal = d.miningHelpersNotifyPortal;
                 miningHelpersNotifyScrap = d.miningHelpersNotifyScrap;

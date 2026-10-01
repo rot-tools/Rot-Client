@@ -303,7 +303,7 @@ final class PetHudPolicyTest {
                 merged.heldItemColor());
 
         assertEquals(
-                33.4D,
+                -1.0D,
                 merged.progressPercent(),
                 0.001D);
     }

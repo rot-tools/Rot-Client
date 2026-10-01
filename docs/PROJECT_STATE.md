@@ -12,7 +12,7 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (83 HUD/QoL parents) and **Rot Client+** (135 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (84 HUD/QoL parents) and **Rot Client+** (136 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
 | Minecraft | 26.3 on this port branch |
 | Mod | 2.0.1+mc26.3 |
 | Other Minecraft targets | `release/26.1.2` provides a Lite `2.1.0+mc26.1.2` playtest. `development` retains the Lite and Plus `2.0.1+mc26.2` playtest. See `README.md` for the version matrix. |
@@ -363,3 +363,7 @@ Add or extend a source only after it has a precise identity, credible provenance
   separate server-detection branch is planned.
 - Stall AH listing highlight crash contained (VAL-075): if/else ARGB mapping,
   no `StallMarketRuntime$1`, `ClientBoundaryGuard` around stall/menu highlights.
+
+## Mining/Pet repair candidate — 2026-10-01
+
+Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](MINING_HUD_FIXES.md).

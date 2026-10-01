@@ -19,6 +19,7 @@ public final class HudElementCatalog {
         if (!id.endsWith("_hud_editor") && !id.endsWith(".open_hud_editor")) {
             return "";
         }
+        if (id.contains("pickobulus")) return "pickobulus";
         if (id.contains("mining_tracker")) {
             return "mining_tracker";
         }
@@ -132,12 +133,12 @@ public final class HudElementCatalog {
             case SQUARE -> "Square latch. Off is idle; on fills red.";
         };
         if (detail.isBlank()) {
-            return label.isBlank() ? typeHint : label + " — " + typeHint;
+            return label.isBlank() ? typeHint : label + " â€” " + typeHint;
         }
         if (detail.length() >= 48) {
-            return label.isBlank() ? detail : label + " — " + detail;
+            return label.isBlank() ? detail : label + " â€” " + detail;
         }
-        return (label.isBlank() ? "" : label + " — ") + detail + " " + typeHint;
+        return (label.isBlank() ? "" : label + " â€” ") + detail + " " + typeHint;
     }
 
     public record InspectorToggle(String settingId, String label) {
@@ -223,6 +224,7 @@ public final class HudElementCatalog {
                     new InspectorToggle("qol.dungeon_hud.run_timers", "Run timers"),
                     new InspectorToggle("qol.dungeon_hud.show_split_pbs", "Split PBs"),
                     new InspectorToggle("qol.dungeon_hud.kuudra_splits", "Kuudra splits"));
+            case "pickobulus" -> List.of(new InspectorToggle("qol.pickobulus.timer_hud", "Timer HUD"), new InspectorToggle("qol.pickobulus.confirmed_counts", "Accepted block counts"));
             case "mining" -> List.of(
                     new InspectorToggle("qol.mining_helpers.metal_distance", "Treasure meters"),
                     new InspectorToggle("qol.mining_helpers.ability_hud", "Ability HUD"),
