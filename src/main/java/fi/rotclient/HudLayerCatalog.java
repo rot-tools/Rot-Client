@@ -58,6 +58,7 @@ public final class HudLayerCatalog {
         layers.add(rotSetting("qol.slayer_drops.rng_hud", "RNG Meter"));
         layers.add(rotSetting("qol.slayer_drops.profit_hud", "Slayer Item Profit"));
         layers.add(rotModule("qol.slayer_stats", "Slayer Stats"));
+        layers.add(rotSetting("qol.pickobulus.timer_hud", "Pickobulus HUD"));
         layers.add(rotSetting("qol.mining_helpers.ability_hud", "Mining HUD"));
         layers.add(rotSetting("qol.foraging_trees.progress_hud", "Foraging HUD"));
         return List.copyOf(layers);

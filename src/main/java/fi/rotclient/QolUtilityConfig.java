@@ -1402,6 +1402,7 @@ final class QolUtilityConfig {
             case "dungeon_carry" -> new float[] {extras().athen().carryHudX, extras().athen().carryHudY, 1.0F};
             case "dungeon_watcher" -> new float[] {extras().athen().watcherHudX, extras().athen().watcherHudY, 1.0F};
             case "fishing" -> new float[] {fishingHudX, fishingHudY, 1.0F};
+            case "pickobulus" -> new float[] {extras().pickobulusHudX, extras().pickobulusHudY, 1.0F};
             case "mining" -> new float[] {extras().miningHudX, extras().miningHudY, 1.0F};
             case "diana" -> new float[] {extras().dianaHudX, extras().dianaHudY, 1.0F};
             case "foraging" -> new float[] {extras().foragingHudX, extras().foragingHudY, 1.0F};
@@ -1517,6 +1518,7 @@ final class QolUtilityConfig {
                 fishingHudX = clampPos(x);
                 fishingHudY = clampPos(y);
             }
+            case "pickobulus" -> { extras().pickobulusHudX = clampPos(x); extras().pickobulusHudY = clampPos(y); }
             case "mining" -> {
                 extras().miningHudX = clampPos(x);
                 extras().miningHudY = clampPos(y);

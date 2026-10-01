@@ -340,20 +340,20 @@ public final class PetHudPolicy {
             return existing;
         }
 
+        if (!tab.name().isEmpty() && !tab.name().equalsIgnoreCase(existing.name())) {
+            return tab; // Never attach another pet's XP, held item or rarity to a new pet.
+        }
+        boolean liveProgress = tab.hasProgress() || tab.maxLevel();
+        boolean sameLevel = tab.level() < 0 || tab.level() == existing.level();
         return new Snapshot(
-                tab.level() >= 0
-                        ? tab.level()
-                        : existing.level(),
-                tab.name().isEmpty()
-                        ? existing.name()
-                        : tab.name(),
-                existing.heldItem(),
-                existing.experience(),
-                existing.petColor(),
-                existing.heldItemColor(),
-                existing.progressPercent(),
-                existing.nextLevel(),
-                existing.maxLevel());
+                tab.level() >= 0 ? tab.level() : existing.level(),
+                tab.name().isEmpty() ? existing.name() : tab.name(),
+                tab.heldItem().isEmpty() ? existing.heldItem() : tab.heldItem(),
+                tab.experience() >= 0 ? tab.experience() : existing.experience(),
+                existing.petColor(), existing.heldItemColor(),
+                liveProgress ? tab.progressPercent() : sameLevel ? existing.progressPercent() : -1,
+                liveProgress ? tab.nextLevel() : sameLevel ? existing.nextLevel() : -1,
+                liveProgress ? tab.maxLevel() : sameLevel && existing.maxLevel());
     }
 
     static double parseExperience(
@@ -580,82 +580,61 @@ public final class PetHudPolicy {
                 false);
     }
 
-    public static Optional<Snapshot> parseTabText(
-            String text) {
-
-        if (text == null
-                || text.isBlank()) {
-
+    public static Optional<Snapshot> parseTabText(String text) {
+        if (text == null || text.isBlank()) return Optional.empty();
+        List<String> lines = text.lines().map(CommissionDisplayPolicy::normalizeLine).toList();
+        String title = null;
+        int start = -1;
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.equalsIgnoreCase("Pet:") || line.equalsIgnoreCase("Active Pet:")) {
+                for (int j = i + 1; j < Math.min(lines.size(), i + 4); j++) {
+                    if (LVL_NAME.matcher(lines.get(j)).matches()) { title = lines.get(j); start = j; break; }
+                }
+                break;
+            }
+            Matcher labeled = PET_LABEL.matcher(line);
+            if (labeled.matches()) { title = labeled.group(1).trim(); start = i; break; }
+        }
+        // Compatibility for a standalone pet row, never arbitrary player list entries.
+        if (title == null && lines.size() == 1 && LVL_NAME.matcher(lines.getFirst()).matches()) {
+            title = lines.getFirst(); start = 0;
+        }
+        if (title == null || title.equalsIgnoreCase("none") || title.equals("-") || title.equals("✖"))
             return Optional.empty();
+        List<String> details = new java.util.ArrayList<>();
+        for (int i = start + 1; i < Math.min(lines.size(), start + 7); i++) {
+            String line = lines.get(i);
+            if (line.isEmpty()) continue;
+            if (line.matches("(?i)^(?:Skills|Commissions|Area|Stats|Players|Forge|Profile):.*")) break;
+            details.add(line);
         }
-
-        Optional<Snapshot> fromLvl =
-                Optional.empty();
-
-        for (String rawLine
-                : MenuKeybindPolicy
-                .stripGuiText(text)
-                .split("\\R")) {
-
-            String line =
-                    rawLine.trim();
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            Matcher labeled =
-                    PET_LABEL.matcher(
-                            line);
-
-            if (labeled.find()) {
-                String rest =
-                        labeled.group(1)
-                                .trim();
-
-                if (rest.equalsIgnoreCase(
-                        "none")
-                        || rest.equals("-")
-                        || rest.equals(
-                        "\u2716")
-                        || rest.isEmpty()) {
-
-                    continue;
-                }
-
-                Optional<Snapshot> parsed =
-                        parse(
-                                rest,
-                                List.of());
-
-                if (parsed.isPresent()) {
-                    return parsed;
-                }
-
-                return Optional.of(
-                        new Snapshot(
-                                -1,
-                                rest,
-                                ""));
-            }
-
-            Matcher lvl =
-                    LVL_NAME.matcher(
-                            line);
-
-            if (lvl.find()) {
-                fromLvl =
-                        Optional.of(
-                                new Snapshot(
-                                        Integer.parseInt(
-                                                lvl.group(1)),
-                                        lvl.group(2)
-                                                .trim(),
-                                        ""));
+        Optional<Snapshot> result = parse(title, details);
+        if (result.isEmpty() || result.get().hasProgress() || result.get().maxLevel()) return result;
+        Snapshot pet = result.get();
+        Pattern fraction = Pattern.compile("(?i)^(?:EXP|XP|Pet EXP|Pet XP)?\\s*:?\\s*([0-9,.]+[kmb]?)\\s*/\\s*([0-9,.]+[kmb]?)(?:\\s.*)?$");
+        Pattern percent = Pattern.compile("(?i)^(?:Progress|EXP|XP):\\s*([0-9.]+)%$");
+        for (String line : details) {
+            Matcher f = fraction.matcher(line), pc = percent.matcher(line);
+            double progress = -1;
+            if (f.matches()) {
+                double current = tabNumber(f.group(1)), total = tabNumber(f.group(2));
+                if (total > 0 && current >= 0 && current <= total) progress = 100 * current / total;
+            } else if (pc.matches()) progress = tabNumber(pc.group(1));
+            if (progress >= 0 && progress <= 100 && pet.level() >= 0) {
+                return Optional.of(new Snapshot(pet.level(), pet.name(), pet.heldItem(), -1,
+                        pet.petColor(), pet.heldItemColor(), progress, pet.level() + 1, false));
             }
         }
+        return result;
+    }
 
-        return fromLvl;
+    private static double tabNumber(String raw) {
+        String number = raw.toLowerCase(Locale.ROOT).replace(",", "");
+        double scale = number.endsWith("k") ? 1_000 : number.endsWith("m") ? 1_000_000 : number.endsWith("b") ? 1_000_000_000 : 1;
+        if (scale != 1) number = number.substring(0, number.length() - 1);
+        try { return Double.parseDouble(number) * scale; }
+        catch (NumberFormatException ignored) { return -1; }
     }
 
     public static boolean loreMeansEquipped(

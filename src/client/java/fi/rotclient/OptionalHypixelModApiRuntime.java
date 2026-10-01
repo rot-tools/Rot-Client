@@ -3,6 +3,7 @@ package fi.rotclient;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,12 +42,46 @@ final class OptionalHypixelModApiRuntime {
                     .invoke(api, packetType);
             Consumer<Object> handler = packet ->
                     sink.accept(readLocationPacket(packet));
-            apiType.getMethod("createHandler", Class.class, Consumer.class)
-                    .invoke(api, packetType, handler);
+            registerPacketHandler(api, packetType, handler);
             registered = true;
         } catch (ReflectiveOperationException | LinkageError ignored) {
             // API initialization may run after Rot Client; retry on a later tick.
         }
+    }
+
+    /** Support both the historical Consumer bridge and the official 1.x handler interface. */
+    static void registerPacketHandler(Object api, Class<?> packetType, Consumer<Object> sink)
+            throws ReflectiveOperationException {
+        try {
+            api.getClass().getMethod("createHandler", Class.class, Consumer.class)
+                    .invoke(api, packetType, sink);
+            return;
+        } catch (NoSuchMethodException oldSignatureAbsent) {
+            // Current Mod API uses its own functional interface, not java.util.function.Consumer.
+        }
+        Class<?> handlerType = Class.forName(
+                "net.hypixel.modapi.handler.ClientboundPacketHandler", true, api.getClass().getClassLoader());
+        registerInterfaceHandler(api, packetType, handlerType, sink);
+    }
+
+    static void registerInterfaceHandler(Object api, Class<?> packetType, Class<?> handlerType,
+                                         Consumer<Object> sink) throws ReflectiveOperationException {
+        Object handler = Proxy.newProxyInstance(handlerType.getClassLoader(), new Class<?>[]{handlerType},
+                (proxy, method, arguments) -> {
+                    if (method.getDeclaringClass() == Object.class) {
+                        return switch (method.getName()) {
+                            case "toString" -> "Rot Client location handler";
+                            case "hashCode" -> System.identityHashCode(proxy);
+                            case "equals" -> arguments != null && proxy == arguments[0];
+                            default -> null;
+                        };
+                    }
+                    if (method.getName().equals("handle") && arguments != null && arguments.length == 1) {
+                        sink.accept(arguments[0]);
+                    }
+                    return null;
+                });
+        api.getClass().getMethod("createHandler", Class.class, handlerType).invoke(api, packetType, handler);
     }
 
     static List<String> locationHints(LocationPacket packet) {

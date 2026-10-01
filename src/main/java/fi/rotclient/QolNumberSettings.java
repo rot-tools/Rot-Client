@@ -73,6 +73,7 @@ public final class QolNumberSettings {
             return flavored;
         }
         return switch (settingId) {
+            case "qol.pickobulus.cooldown_seconds" -> new Spec(1, 600, 1, true);
             case "qol.zoom.amount" ->
                     new Spec(
                             SmoothZoomPolicy.MIN_AMOUNT,

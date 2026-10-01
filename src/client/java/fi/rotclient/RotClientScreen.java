@@ -950,7 +950,7 @@ final class RotClientScreen extends Screen {
         }
 
         return switch (id) {
-            case "commission",
+            case "pickobulus", "commission",
                     "fishing",
                     "mining",
                     "diana",

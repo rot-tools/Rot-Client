@@ -1088,6 +1088,7 @@ public final class QolUtilityCatalog {
                 setting("qol.mining_helpers.drill_fuel", "Drill Fuel HUD", "Show Fuel remaining from held drill lore.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.ability_hud", "Ability HUD", "Show Pickobulus / mining ability status from tab.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.commission_gui", "Completed Highlight", "Mark COMPLETED books in the Commissions GUI.", SettingType.TOGGLE),
+                setting("qol.mining_helpers.dwarven_waypoints", "Dwarven Area Waypoints", "Static public Dwarven Mines landmark names and distance labels.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.commission_mobs", "Commission Mobs", "Box tab-matching commission mobs in Dwarven Mines and Hollows.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.notify_portal", "Mineshaft Portal", "Title when a Glacite Mineshaft portal is found.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.notify_scrap", "Suspicious Scrap", "Title when Suspicious Scrap drops.", SettingType.TOGGLE),
@@ -1101,6 +1102,17 @@ public final class QolUtilityCatalog {
                 setting("qol.mining_helpers.wishing_compass", "Wishing Compass Guess", "Record two compass uses and box their intersection in the Crystal Hollows. Off by default.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.open_hud_editor", "Edit Mining HUD", "Move the combined mining leftover HUD.", SettingType.ACTION, "position")));
 
+        modules.add(module(
+                "qol.pickobulus", "Pickobulus", "Observed ability cooldown, ready alerts and tracker-accepted block summary. Plus adds an estimated aim footprint.",
+                Group.MINING, "Abilities", false, true, true, List.of("pickobulus", "ability", "cooldown"),
+                setting("qol.pickobulus.timer_hud", "Timer HUD", "Show the independent ability timer HUD.", SettingType.TOGGLE),
+                setting("qol.pickobulus.auto_cooldown", "Read Cooldown Lore", "Read base cooldown from ability lore; tab/server status corrects estimates.", SettingType.TOGGLE),
+                setting("qol.pickobulus.cooldown_seconds", "Fallback Cooldown", "Configured estimated cooldown in seconds when lore is missing.", SettingType.NUMBER),
+                setting("qol.pickobulus.ready_popup", "Ability Ready Popup", "Show one ready notification per cooldown; estimates are labelled.", SettingType.TOGGLE),
+                setting("qol.pickobulus.ready_sound", "Ready Sound", "Play a note when the cooldown ends.", SettingType.TOGGLE),
+                setting("qol.pickobulus.confirmed_counts", "Tracker Block Counts", "Project accepted tracker break callbacks from the ability window. Never credit from preview.", SettingType.TOGGLE),
+                setting("qol.pickobulus.color", "Preview Color", "Color of the Plus candidate block outlines.", SettingType.COLOR),
+                setting("qol.pickobulus.open_hud_editor", "Edit Pickobulus HUD", "Move and scale the independent timer HUD.", SettingType.ACTION)));
         modules.add(module(
                 "qol.mining_hotm",
                 "Heart of the Mountain",

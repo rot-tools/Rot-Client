@@ -982,17 +982,8 @@ public final class  InventoryChromeRuntime {
 
     private static void observeLiveHudSources(Minecraft client) {
         StringBuilder tabText = new StringBuilder();
-        if (client.gui != null && client.gui.hud != null) {
-            PlayerTabOverlayAccessor tab =
-                    (PlayerTabOverlayAccessor) client.gui.hud.getTabList();
-            Component header = tab.rotclient$getHeader();
-            Component footer = tab.rotclient$getFooter();
-            if (header != null) {
-                appendLine(tabText, header.getString());
-            }
-            if (footer != null) {
-                appendLine(tabText, footer.getString());
-            }
+        for (String line : CommissionDisplayRuntime.tabLines(client)) {
+            appendLine(tabText, line);
         }
         if (client.level != null) {
             Scoreboard scoreboard = client.level.getScoreboard();

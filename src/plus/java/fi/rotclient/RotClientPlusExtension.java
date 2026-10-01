@@ -250,6 +250,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return SuperboomSettings.readBoolean(config, settingId);
         }
         return switch (settingId) {
+            case "qol.pickobulus.preview" -> PlusOpaqueSettings.bool(config, "pickobulusPreview", false);
+            case "qol.pickobulus.preview_sphere" -> PlusOpaqueSettings.bool(config, "pickobulusPreviewSphere", false);
+            case "qol.pickobulus.preview_through_walls" -> PlusOpaqueSettings.bool(config, "pickobulusPreviewThroughWalls", false);
+            case "qol.mining_helpers.puzzler" -> PlusOpaqueSettings.bool(config, "miningPuzzler", false);
             case "qol.mob_highlight.highlight_key" -> MobHighlightSettings.from(config).requireKey();
             case "qol.etherwarp.depth" -> PlusOpaqueSettings.bool(config, "etherwarpDepth", true);
             case "qol.mob_highlight.depth" -> MobHighlightSettings.from(config).depth();
@@ -307,6 +311,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return SuperboomSettings.writeBoolean(config, settingId, value);
         }
         switch (settingId) {
+            case "qol.pickobulus.preview" -> PlusOpaqueSettings.write(config, "pickobulusPreview", value);
+            case "qol.pickobulus.preview_sphere" -> PlusOpaqueSettings.write(config, "pickobulusPreviewSphere", value);
+            case "qol.pickobulus.preview_through_walls" -> PlusOpaqueSettings.write(config, "pickobulusPreviewThroughWalls", value);
+            case "qol.mining_helpers.puzzler" -> PlusOpaqueSettings.write(config, "miningPuzzler", value);
             case "qol.mob_highlight.highlight_key", "qol.mob_highlight.depth",
                  "qol.mob_highlight.tracers" -> MobHighlightSettings.writeBoolean(config, settingId, value);
             case "qol.etherwarp.depth" -> PlusOpaqueSettings.write(config, "etherwarpDepth", value);
@@ -356,6 +364,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             return SuperboomSettings.readNumber(config, settingId);
         }
         return switch (settingId) {
+            case "qol.pickobulus.preview_radius" -> (double) PlusOpaqueSettings.integer(config, "pickobulusPreviewRadius", 3);
+            case "qol.pickobulus.preview_range" -> (double) PlusOpaqueSettings.integer(config, "pickobulusPreviewRange", 32);
             case "qol.trajectories.range" -> (double) TrajectoriesSettings.from(config).range();
             case "qol.trajectories.width" -> (double) TrajectoriesSettings.from(config).width();
             case "qol.trajectories.box_size" -> (double) TrajectoriesSettings.from(config).boxSize();
@@ -395,6 +405,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             case "qol.trajectories.range", "qol.trajectories.width",
                  "qol.trajectories.box_size", "qol.trajectories.plane_size" ->
                     TrajectoriesSettings.writeNumber(config, settingId, value);
+            case "qol.pickobulus.preview_radius" -> PlusOpaqueSettings.write(config, "pickobulusPreviewRadius", (int) Math.max(1, Math.min(5, Math.round(value))));
+            case "qol.pickobulus.preview_range" -> PlusOpaqueSettings.write(config, "pickobulusPreviewRange", (int) Math.max(4, Math.min(64, Math.round(value))));
             case "qol.auto_conversation.delay" -> AutoConversationSettings.delayTicks(config, (int) Math.round(value));
             case "qol.inventory_walk.ping" -> InventoryWalkSettings.pingMs(config, (int) Math.round(value));
             default -> {
@@ -532,6 +544,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
             DungeonTerminalClickSettings.reset(config);
             return true;
         }
+        if ("qol.pickobulus".equals(moduleId)) PlusOpaqueSettings.reset(config, "pickobulusPreview", "pickobulusPreviewRadius", "pickobulusPreviewRange", "pickobulusPreviewSphere", "pickobulusPreviewThroughWalls");
+        if ("qol.mining_helpers".equals(moduleId)) PlusOpaqueSettings.reset(config, "miningPuzzler");
         if (DianaSettings.reset(config, moduleId)) return true;
         if ("qol.experiment_solver".equals(moduleId)) {
             ExperimentSolverSettings.reset(config);
@@ -620,6 +634,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public QolNumberSettings.Spec numberSpec(String settingId) {
+        if ("qol.pickobulus.preview_radius".equals(settingId)) return new QolNumberSettings.Spec(1, 5, 1, true);
+        if ("qol.pickobulus.preview_range".equals(settingId)) return new QolNumberSettings.Spec(4, 64, 1, true);
         if (settingId == null || settingId.isBlank()) {
             return null;
         }

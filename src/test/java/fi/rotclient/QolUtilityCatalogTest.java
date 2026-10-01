@@ -124,6 +124,7 @@ final class QolUtilityCatalogTest {
                 "qol.mining_events",
                 "qol.mining_glacite",
                 "qol.mining_helpers",
+                "qol.pickobulus",
                 "qol.mining_hotm",
                 "qol.foraging_trees",
                 "qol.foraging_audio",
@@ -294,7 +295,7 @@ final class QolUtilityCatalogTest {
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING)
                 .stream()
                 .anyMatch(m -> m.id().equals("qol.mining_scatha")));
-        assertEquals(10, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING).size());
+        assertEquals(11, QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.MINING).size());
         assertTrue(QolUtilityCatalog.modulesInGroup(QolUtilityCatalog.Group.COMBAT)
                 .stream()
                 .noneMatch(m -> m.id().equals("qol.trajectories")));
@@ -434,7 +435,7 @@ final class QolUtilityCatalogTest {
         }
 
         assertTrue(duplicates.isEmpty(), "Duplicate QoL identifiers: " + duplicates);
-        assertEquals(83, moduleIds.size());
+        assertEquals(84, moduleIds.size());
     }
 
     private static void assertSettingPresent(String moduleId, String settingId) {
