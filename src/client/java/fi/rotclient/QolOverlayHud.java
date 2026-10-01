@@ -115,6 +115,7 @@ final class QolOverlayHud {
         if (FishingSuiteRuntime.hudVisible(qol)) {
             renderFishing(graphics, font, qol);
         }
+        if (PickobulusRuntime.hudVisible(qol)) drawStyledHudLines(graphics, font, "pickobulus", PickobulusRuntime.hudLines(), 168);
         if (MiningLeftoverRuntime.hudVisible(qol)) {
             renderMiningLeftover(graphics, font, qol);
         }
@@ -154,6 +155,9 @@ final class QolOverlayHud {
             int x = (client.getWindow().getGuiScaledWidth() - w) / 2;
             RotClientUiDraw.text(graphics, font, miningTitle, x, 42, 0xFFFFAA00, true);
         }
+        String pickobulusPopup = PickobulusRuntime.popup();
+        if (!pickobulusPopup.isBlank()) RotClientUiDraw.text(graphics, font, pickobulusPopup,
+                (client.getWindow().getGuiScaledWidth() - font.width(pickobulusPopup)) / 2, 28, 0xFF55FF55, true);
         String dianaTitle = QolClientFlavorSupport.hooks().dianaOverlayTitle();
         if (!dianaTitle.isBlank()) {
             int w = font.width(dianaTitle);
@@ -1665,6 +1669,7 @@ final class QolOverlayHud {
                         MarketWatchPinnedDealHud.CARD_WIDTH, marketPinsPanelHeight())) {
             return "market_pins";
         }
+        if (PickobulusRuntime.hudVisible(qol) && inside(mouseX, mouseY, "pickobulus", 200, 68)) return "pickobulus";
         if (qol.commissionDisplayEnabled && inside(mouseX, mouseY, "commission", 180, 48)) {
             return "commission";
         }
@@ -2244,6 +2249,7 @@ final class QolOverlayHud {
         }
         if (qol.petHudEnabled) return "pet";
         if (qol.marketWatchPinsHudEnabled) return "market_pins";
+        if (PickobulusRuntime.hudVisible(qol)) return "pickobulus";
         if (qol.commissionDisplayEnabled) return "commission";
         if (wardrobeHudEnabled(qol)) return "wardrobe";
         if (autoClickerHudEnabled(qol)) return "auto_clicker";
@@ -2286,6 +2292,7 @@ final class QolOverlayHud {
             case "ehp" -> qol.playerDisplayEnabled && qol.playerDisplayEhpHud;
             case "speed" -> qol.playerDisplayEnabled && qol.playerDisplaySpeedHud;
             case "pet" -> qol.petHudEnabled;
+            case "pickobulus" -> PickobulusRuntime.hudVisible(qol);
             case "commission" -> qol.commissionDisplayEnabled;
             case "wardrobe" -> wardrobeHudEnabled(qol);
             case "auto_clicker" -> autoClickerHudEnabled(qol);
@@ -2325,6 +2332,7 @@ final class QolOverlayHud {
             case "ehp" -> "EHP HUD";
             case "speed" -> "Speed HUD";
             case "pet" -> "Pet HUD";
+            case "pickobulus" -> "Pickobulus HUD";
             case "commission" -> "Commission Display";
             case "wardrobe" -> "Wardrobe Equipping";
             case "auto_clicker" -> "Auto Clicker CPS HUD";
@@ -2362,6 +2370,7 @@ final class QolOverlayHud {
         if ("pet".equals(id)) {
             return PET_EDITOR_WIDTH;
         }
+        if ("pickobulus".equals(id)) return 200;
         if ("commission".equals(id)) {
             return 180;
         }
@@ -2381,6 +2390,7 @@ final class QolOverlayHud {
     }
 
     private static int elementHeight(String id) {
+        if ("pickobulus".equals(id)) return 92;
         if ("performance".equals(id)) {
             return PERFORMANCE_EDITOR_HEIGHT;
         }

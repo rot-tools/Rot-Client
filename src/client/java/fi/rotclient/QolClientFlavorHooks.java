@@ -51,6 +51,8 @@ public interface QolClientFlavorHooks {
         return false;
     }
 
+    default List<String> pickobulusPreviewHudLines() { return List.of(); }
+
     default void renderWorldGizmos() {
     }
 

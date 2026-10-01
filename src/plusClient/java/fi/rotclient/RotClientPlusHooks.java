@@ -50,6 +50,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void tickStart(Minecraft client) {
+        PickobulusPreviewRuntime.tick(client);
         ClientBoundaryGuard.run("AUTO_CLICKER", () -> AutoClickerRuntime.tick(client));
         ClientBoundaryGuard.run("AUTO_EXPERIMENTS", () -> AutoExperimentsRuntime.tick(client));
         ClientBoundaryGuard.run("AUTO_HARP", () -> AutoHarpRuntime.tick(client));
@@ -86,6 +87,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onChat(Component message) {
+        PuzzlerRuntime.onChat(message);
         AutoGfsRuntime.onChat(message);
         AutoConversationRuntime.onChat(message);
         AutoDojoRuntime.onChat(message == null ? "" : message.getString());
@@ -103,6 +105,8 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onWorldChanged() {
+        PuzzlerRuntime.clear();
+        PickobulusPreviewRuntime.clear();
         AutoDojoRuntime.onWorldChanged();
         DungeonPlusRuntime.onWorldChanged();
         FishingPlusRuntime.clear();
@@ -125,9 +129,14 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public java.util.List<String> pickobulusPreviewHudLines() { return PickobulusPreviewRuntime.hudLines(); }
+
+    @Override
     public void renderWorldGizmos() {
         GhostsRuntime.renderGizmos();
         MobHighlightRuntime.renderGizmos();
+        PuzzlerRuntime.renderGizmos();
+        PickobulusPreviewRuntime.renderGizmos();
     }
 
     @Override

@@ -20,6 +20,7 @@ abstract class ScreenCustomCursorMixin {
             CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
         if (client != null) {
+            fi.rotclient.MiningLeftoverRuntime.renderScreenHint((Screen) (Object) this, graphics);
             CustomCursorRuntime.render(graphics, client.font, mouseX, mouseY);
         }
     }

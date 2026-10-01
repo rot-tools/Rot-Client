@@ -39,8 +39,7 @@ final class RenderHotPathWiringTest {
                 "src/client/java/fi/rotclient/InventoryChromeRuntime.java"),
                 StandardCharsets.UTF_8);
         assertFalse(runtime.contains("getOnlinePlayers"));
-        assertTrue(runtime.contains("rotclient$getHeader"));
-        assertTrue(runtime.contains("rotclient$getFooter"));
+        assertTrue(runtime.contains("CommissionDisplayRuntime.tabLines(client)"));
         assertTrue(runtime.contains("DisplaySlot.SIDEBAR"));
     }
 

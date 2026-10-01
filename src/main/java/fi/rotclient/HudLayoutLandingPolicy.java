@@ -89,7 +89,7 @@ public final class HudLayoutLandingPolicy {
         addExtra(grouped, extra(
                 MiningTrackerCatalogPolicy.TRACKER,
                 "Mining Tracker HUD",
-                "Live mining overlay. Settings match Modules → Mining Tracker.",
+                "Live mining overlay. Settings match Modules â†’ Mining Tracker.",
                 true,
                 MiningTrackerCatalogPolicy.TRACKER,
                 "Mining"));
@@ -103,21 +103,21 @@ public final class HudLayoutLandingPolicy {
         addExtra(grouped, extra(
                 "qol.dungeon_carry.display",
                 "Dungeon Carry Display",
-                "Active dungeon-floor carry progress. Settings match Modules → Dungeon Carry Tracker.",
+                "Active dungeon-floor carry progress. Settings match Modules â†’ Dungeon Carry Tracker.",
                 false,
                 "qol.dungeon_carry",
                 "Dungeons"));
         addExtra(grouped, extra(
                 "qol.dungeon_watcher.blood_timers",
                 "Blood Timers",
-                "Watcher speak/move/spawn timers. Settings match Modules → Watcher Helper.",
+                "Watcher speak/move/spawn timers. Settings match Modules â†’ Watcher Helper.",
                 false,
                 "qol.dungeon_watcher",
                 "Dungeons"));
         addExtra(grouped, extra(
                 "qol.slayer_carry",
                 "Slayer Carry Display",
-                "Active carry progress. Settings match Modules → Slayer Carry.",
+                "Active carry progress. Settings match Modules â†’ Slayer Carry.",
                 true,
                 "qol.slayer_carry",
                 "Slayer"));
@@ -166,7 +166,7 @@ public final class HudLayoutLandingPolicy {
         addExtra(grouped, extra(
                 "qol.custom_scoreboard",
                 "Custom Scoreboard",
-                "Rebuilt SkyBlock sidebar. Settings match Modules → GUI.",
+                "Rebuilt SkyBlock sidebar. Settings match Modules â†’ GUI.",
                 true,
                 "qol.custom_scoreboard",
                 "GUI"));
@@ -264,6 +264,7 @@ public final class HudLayoutLandingPolicy {
             case "ehp" -> new Disable("qol.player_display.ehp_hud", false);
             case "speed" -> new Disable("qol.player_display.speed_hud", false);
             case "pet" -> new Disable("qol.pet_hud", true);
+            case "pickobulus" -> new Disable("qol.pickobulus.timer_hud", false);
             case "commission" -> new Disable("qol.commission_display", true);
             case "fishing" -> new Disable("qol.fishing_helper.hook_timer_hud", false);
             case "mining" -> new Disable("qol.mining_helpers.ability_hud", false);
@@ -338,7 +339,7 @@ public final class HudLayoutLandingPolicy {
         if (id.contains("auto_clicker")) {
             return "Combat";
         }
-        if (id.contains("mining") || id.contains("powder") || id.contains("commission")) {
+        if (id.contains("pickobulus") || id.contains("mining") || id.contains("powder") || id.contains("commission")) {
             return "Mining";
         }
         if (id.contains("fishing")) {
