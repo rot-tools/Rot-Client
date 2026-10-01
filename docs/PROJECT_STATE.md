@@ -366,3 +366,5 @@ Add or extend a source only after it has a precise identity, credible provenance
 ## Mining/Pet repair candidate — 2026-10-01
 
 Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](MINING_HUD_FIXES.md).
+
+26.1.2 Plus now has matching 26.1.2 loader metadata and a compile/test-verified candidate. Its first controlled Minecraft startup/gameplay test remains pending.

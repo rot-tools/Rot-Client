@@ -48,3 +48,5 @@ The catalog is now 84 Lite / 136 Plus parents. Pickobulus material-block statist
 ## Automated checkpoint
 
 26.2: `build` passed with 2,429 shared tests and 208 Plus tests (zero failures/errors/skips), both client compilers, `verifyLegitJar` and `verifyDungeonJarBoundary`. The version ports are validated separately.
+
+26.1.2 port: 2,430 shared tests and 208 Plus tests passed. Plus metadata now targets Minecraft 26.1.2 and Fabric API 0.155.3+26.1.2; the previous unused Plus artifact incorrectly declared 26.2. This is the first 26.1.2 Plus playtest candidate, not runtime-verified support.
