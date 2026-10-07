@@ -1,5 +1,10 @@
 package fi.rotclient;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 /**
  * Retry delay for the Market Watch API polls. A failed poll used to be retried
  * at the normal interval, and a failed auction crawl restarted from page zero,
@@ -27,16 +32,34 @@ public final class MarketWatchBackoffPolicy {
         return Math.max(exponential, serverAsked);
     }
 
-    /** Parses a Retry-After header in seconds; anything else means "not supplied". */
+    /** Retry-After accepts either delay-seconds or an HTTP date. */
     public static long retryAfterMillis(String headerValue) {
+        return retryAfterMillis(headerValue, System.currentTimeMillis());
+    }
+
+    public static long retryAfterMillis(String headerValue, long nowMillis) {
         if (headerValue == null || headerValue.isBlank()) {
             return 0L;
         }
         try {
             long seconds = Long.parseLong(headerValue.trim());
-            return seconds <= 0L ? 0L : Math.min(MAX_MILLIS, seconds * 1_000L);
+            // Clamp before multiplying: a huge valid header must not overflow to a negative delay.
+            return seconds <= 0L ? 0L : Math.min(MAX_MILLIS / 1_000L, seconds) * 1_000L;
         } catch (NumberFormatException ignored) {
-            return 0L;
+            try {
+                Instant date = ZonedDateTime.parse(headerValue.trim(), DateTimeFormatter.RFC_1123_DATE_TIME)
+                        .toInstant();
+                Instant now = Instant.ofEpochMilli(nowMillis);
+                if (!date.isAfter(now)) {
+                    return 0L;
+                }
+                if (date.isAfter(now.plusMillis(MAX_MILLIS))) {
+                    return MAX_MILLIS;
+                }
+                return date.toEpochMilli() - nowMillis;
+            } catch (DateTimeParseException ignoredDate) {
+                return 0L;
+            }
         }
     }
 }

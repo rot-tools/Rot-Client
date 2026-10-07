@@ -187,6 +187,7 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) return;
         Minecraft client = Minecraft.getInstance();
         if (client.level == null || packet == null) return;
+        fi.rotclient.SlayerRuntime.onEntityAdded(client.level.getEntity(packet.getId()));
         fi.rotclient.RotClientClient.onSpawnedCombatProjectile(
                 client.level.getEntity(packet.getId()),
                 packet.getData());

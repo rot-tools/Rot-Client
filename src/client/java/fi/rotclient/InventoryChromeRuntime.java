@@ -1004,7 +1004,16 @@ public final class  InventoryChromeRuntime {
         String blob = tabText.toString();
         if (!blob.isBlank()) {
             RotClientClient.observeHudSourceStats(blob);
-            applyTabPet(PetHudPolicy.parseTabText(blob));
+            if (PetHudPolicy.tabReportsNoPet(blob)
+                    && System.currentTimeMillis() >= petGuiAuthoritativeUntilMs) {
+                equippedPet = ItemStack.EMPTY;
+                petHud = null;
+                petKnownEmpty = true;
+                petCachedFromGui = false;
+                persistObserved();
+            } else {
+                applyTabPet(PetHudPolicy.parseTabText(blob));
+            }
         }
     }
 
@@ -1026,6 +1035,13 @@ public final class  InventoryChromeRuntime {
         }
         PetHudPolicy.Snapshot snapshot =
                 tabPet.get();
+
+        if (petHud != null && !PetHudPolicy.samePetIdentity(petHud, snapshot)) {
+            // A confirmed different pet invalidates the old menu texture and market metadata.
+            // The normal fallback below provides an unpriced generic head until its GUI is seen.
+            equippedPet = ItemStack.EMPTY;
+            petCachedFromGui = false;
+        }
 
         if (petCachedFromGui
                 && petHud != null) {

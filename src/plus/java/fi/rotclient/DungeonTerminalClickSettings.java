@@ -9,8 +9,8 @@ record DungeonTerminalClickSettings(boolean enabled, int radius, int thickness,
     static DungeonTerminalClickSettings from(QolUtilityConfig config) {
         return new DungeonTerminalClickSettings(
                 bool(config, "termClickEnabled", false),
-                integer(config, "termClickRadius", 4),
-                integer(config, "termClickThickness", 2),
+                Math.max(1, Math.min(16, integer(config, "termClickRadius", 4))),
+                Math.max(1, Math.min(8, integer(config, "termClickThickness", 2))),
                 integer(config, "termClickLeftColor", 0xFFC084FC),
                 integer(config, "termClickRightColor", 0xFFFDBA74));
     }

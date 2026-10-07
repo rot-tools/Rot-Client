@@ -139,9 +139,15 @@ final class BazaarPriceService {
             }
             return best;
         }
+
+        boolean available() {
+            return !byMaterial.isEmpty() || !byGemstoneProductId.isEmpty() || !byProductId.isEmpty();
+        }
     }
 
     private static final URI BAZAAR_URI = URI.create("https://api.hypixel.net/v2/skyblock/bazaar");
+    private int consecutiveFailures;
+    private long backoffUntilMillis;
     private final HttpClient client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(8))
             .build();
@@ -157,31 +163,51 @@ final class BazaarPriceService {
     }
 
     private void fetch(PriceListener onPrice) {
+        if (System.currentTimeMillis() < backoffUntilMillis) {
+            return;
+        }
         try {
             HttpRequest request = HttpRequest.newBuilder(BAZAAR_URI)
                     .timeout(Duration.ofSeconds(12))
-                    .header("User-Agent", "RotClient/2.0.0+mc26.2")
+                    .header("User-Agent", "RotClient-MarketData")
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) return;
+            if (response.statusCode() != 200) {
+                failedPoll(MarketWatchBackoffPolicy.retryAfterMillis(
+                        response.headers().firstValue("Retry-After").orElse("")));
+                return;
+            }
 
             JsonElement parsed = JsonParser.parseString(response.body());
             if (parsed == null || !parsed.isJsonObject()) {
+                failedPoll(0L);
                 return;
             }
 
             JsonObject root = parsed.getAsJsonObject();
+            if (!root.has("success") || !root.get("success").getAsBoolean()) {
+                failedPoll(0L);
+                return;
+            }
             JsonObject products =
                     root.has("products")
                             && root.get("products").isJsonObject()
                             ? root.getAsJsonObject("products")
                             : null;
-
+            if (products == null || products.isEmpty()) {
+                failedPoll(0L);
+                return;
+            }
             MarketPrices marketPrices = parseMarketPrices(products);
 
             MarketWatchBazaarSnapshot marketWatchSnapshot =
                     MarketWatchBazaarParser.parse(root);
+
+            if (!marketPrices.available() && marketWatchSnapshot.products().isEmpty()) {
+                failedPoll(0L);
+                return;
+            }
 
             if (!marketWatchSnapshot.products().isEmpty()) {
                 long marketWatchObservedAtMillis =
@@ -196,15 +222,23 @@ final class BazaarPriceService {
                         marketWatchObservedAtMillis);
             }
 
-            if (!marketPrices.byMaterial().isEmpty()
-                    || !marketPrices.byGemstoneProductId().isEmpty()
-                    || !marketPrices.byProductId().isEmpty()) {
+            if (marketPrices.available()) {
                 onPrice.onPrice(marketPrices);
             }
+            consecutiveFailures = 0;
+            backoffUntilMillis = 0L;
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
         } catch (IOException | RuntimeException ignored) {
+            failedPoll(0L);
         }
+    }
+
+    private void failedPoll(long retryAfterMillis) {
+        consecutiveFailures = Math.min(consecutiveFailures + 1, MarketWatchBackoffPolicy.MAX_DOUBLINGS + 1);
+        backoffUntilMillis = System.currentTimeMillis()
+                + MarketWatchBackoffPolicy.delayMillis(consecutiveFailures, retryAfterMillis);
+        // Retain the last observed quote; a failed response is never a zero-price update.
     }
 
     static MarketPrices parseMarketPrices(JsonObject products) {

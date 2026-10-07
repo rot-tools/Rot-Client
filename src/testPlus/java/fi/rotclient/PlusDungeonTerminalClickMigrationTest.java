@@ -8,6 +8,16 @@ import org.junit.jupiter.api.Test;
 
 final class PlusDungeonTerminalClickMigrationTest {
     @Test
+    void handEditedLegacyTrailSizesAreBoundedBeforeRendering() {
+        QolUtilityConfig config = new TrackerConfig().qolUtilities;
+        config.extras().athen().extensionFields = new JsonObject();
+        config.extras().athen().extensionFields.addProperty("termClickRadius", Integer.MAX_VALUE);
+        config.extras().athen().extensionFields.addProperty("termClickThickness", -40);
+        assertEquals(16, DungeonTerminalClickSettings.from(config).radius());
+        assertEquals(1, DungeonTerminalClickSettings.from(config).thickness());
+    }
+
+    @Test
     void oldAthenFieldsMigrateThroughPlusRoutes() {
         QolFlavorExtension previous = QolFlavorSupport.extension();
         QolFlavorSupport.install(new RotClientPlusExtension());

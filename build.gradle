@@ -102,6 +102,11 @@ processResources {
 	filesMatching("fabric.mod.json") {
 		expand "version": version
 	}
+	// Preserve upstream notices in both playable editions, including binary distributions.
+	from('docs/third-party') {
+		include '*-LICENSE.txt'
+		into 'META-INF/licenses'
+	}
 }
 
 processPlusResources {
