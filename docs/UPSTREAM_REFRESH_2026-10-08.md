@@ -78,3 +78,5 @@ Modrinth/CurseForge approval. This update adds no public-release approval claim.
 ## Automated checkpoint
 
 Minecraft 26.3: Gradle `build` passes, including 2,456 shared and 227 Plus tests (zero failures/errors/skips), both client compilers, `verifyLegitJar` and `verifyDungeonJarBoundary`. Both playable archives contain all six retained source-license files. Minecraft runtime validation remains pending.
+
+The 26.2 port passes 2,456 shared + 227 Plus tests; 26.1.2 passes 2,457 shared + 227 Plus tests. All six editions pass build/metadata/boundary checks. Download the [26.1.2](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh), [26.2](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-upstream-refresh), or [26.3](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) candidate for your exact Minecraft version.
