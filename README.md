@@ -55,9 +55,9 @@ MiningTracker JAR.
 
 | Minecraft | Rot Client Lite | Rot Client+ | Status |
 | --- | --- | --- | --- |
-| 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.1+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Mining HUD candidate passes automated tests and edition checks; new gameplay features await runtime validation. Earlier UI fixes were owner-tested. |
+| 26.3 | [`2.0.2+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Upstream module candidate passes automated checks; new gameplay behavior awaits runtime validation. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
