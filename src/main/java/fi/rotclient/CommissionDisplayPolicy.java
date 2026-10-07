@@ -32,6 +32,10 @@ public final class CommissionDisplayPolicy {
             "^(.+?)\\s*[:\\-–—]\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*/\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*$");
     private static final Pattern BARE_PERCENT = Pattern.compile(
             "^(.+?)\\s+([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*%\\s*$");
+    private static final Pattern SPLIT_TASK_NAME = Pattern.compile(
+            "(?i)^[a-z '’\\-]*(?:miner|slayer|hunter|collector|hoarder|explorer|puncher|mithril|titanium|glacite|umber|tungsten|ruby|amber|sapphire|jade|amethyst|topaz|jasper|aquamarine|citrine|onyx|peridot)$");
+    private static final Pattern COMPLETION_LINE = Pattern.compile(
+            "(?i)^(?:Status:\\s*)?(?:DONE|COMPLETE|COMPLETED)[!.]*$");
     private static final Set<String> SECTION_HEADERS = Set.of(
             "area",
             "profile",
@@ -76,7 +80,8 @@ public final class CommissionDisplayPolicy {
     public record Commission(String name, float progressPercent, boolean done) {
         public Commission {
             name = name == null ? "" : name.trim();
-            progressPercent = Math.max(0.0F, Math.min(100.0F, progressPercent));
+            progressPercent = Float.isFinite(progressPercent)
+                    ? Math.max(0.0F, Math.min(100.0F, progressPercent)) : 0.0F;
         }
     }
 
@@ -116,8 +121,10 @@ public final class CommissionDisplayPolicy {
             // The next widget ends the section, whether or not it is a header we have heard of.
             if (isSectionHeader(line)) {
                 inSection = false;
-            } else if (looksLikeCommissionName(line) && line.matches("(?i)^[a-z '’\\-]+(?:miner|slayer|hunter|collector|hoarder|explorer)$")) {
-                pendingName = line;
+            } else {
+                String candidate = sanitizeName(line);
+                if (looksLikeCommissionName(candidate)
+                        && SPLIT_TASK_NAME.matcher(candidate).matches()) pendingName = candidate;
             }
         }
         return List.copyOf(out.values());
@@ -187,6 +194,7 @@ public final class CommissionDisplayPolicy {
         }
         try {
             float percent = Float.parseFloat(matcher.group(3).replace(",", ""));
+            if (!Float.isFinite(percent)) return null;
             return new Commission(name, percent, percent >= 100.0F);
         } catch (NumberFormatException ignored) {
             return null;
@@ -205,10 +213,11 @@ public final class CommissionDisplayPolicy {
         try {
             float current = Float.parseFloat(matcher.group(2).replace(",", ""));
             float max = Float.parseFloat(matcher.group(3).replace(",", ""));
-            if (max <= 0.0F) {
+            if (!Float.isFinite(current) || !Float.isFinite(max) || max <= 0.0F) {
                 return null;
             }
             float percent = 100.0F * current / max;
+            if (!Float.isFinite(percent)) return null;
             return new Commission(name, percent, percent >= 100.0F);
         } catch (NumberFormatException ignored) {
             return null;
@@ -226,6 +235,7 @@ public final class CommissionDisplayPolicy {
         }
         try {
             float percent = Float.parseFloat(matcher.group(2).replace(",", ""));
+            if (!Float.isFinite(percent)) return null;
             return new Commission(name, percent, percent >= 100.0F);
         } catch (NumberFormatException ignored) {
             return null;
@@ -242,10 +252,8 @@ public final class CommissionDisplayPolicy {
             return false;
         }
         for (String line : lore) {
-            String text = line == null
-                    ? ""
-                    : SECTION_CODE.matcher(line).replaceAll("").toUpperCase(Locale.ROOT);
-            if (text.contains("COMPLETED")) {
+            String text = normalizeLine(line);
+            if (COMPLETION_LINE.matcher(text).matches()) {
                 return true;
             }
         }

@@ -18,7 +18,8 @@ final class ThirdPartyNoticesTest {
         assertTrue(inventory.contains("SIL Open Font License 1.1"));
         assertTrue(inventory.contains("does **not** vendor other SkyBlock client source trees"));
         assertTrue(inventory.contains("legacy-item-models.json"));
-        assertFalse(inventory.toLowerCase().contains("skyhanni"));
+        assertTrue(inventory.contains("their implementation was not copied"));
+        assertTrue(inventory.contains("META-INF/licenses/"));
         assertFalse(inventory.toLowerCase().contains("nofrills"));
     }
 
@@ -27,5 +28,25 @@ final class ThirdPartyNoticesTest {
         String gradle = Files.readString(Path.of("build.gradle"), StandardCharsets.UTF_8);
         assertTrue(gradle.contains("from(\"NOTICE\")"));
         assertTrue(gradle.contains("from(\"THIRD_PARTY.md\")"));
+    }
+
+    @Test
+    void playableLiteRetainsFullUpstreamBinaryNotices() throws Exception {
+        java.util.Properties properties = new java.util.Properties();
+        try (var reader = Files.newBufferedReader(Path.of("gradle.properties"))) {
+            properties.load(reader);
+        }
+        try (var jar = new java.util.zip.ZipFile("build/libs/RotClient-"
+                + properties.getProperty("mod_version") + ".jar")) {
+            for (String project : java.util.List.of("Athen", "Nebulune", "Odin", "OdinClient")) {
+                String file = project + "-LICENSE.txt";
+                var entry = jar.getEntry("META-INF/licenses/" + file);
+                org.junit.jupiter.api.Assertions.assertNotNull(entry, file);
+                try (var stream = jar.getInputStream(entry)) {
+                    org.junit.jupiter.api.Assertions.assertArrayEquals(
+                            Files.readAllBytes(Path.of("docs/third-party", file)), stream.readAllBytes(), file);
+                }
+            }
+        }
     }
 }

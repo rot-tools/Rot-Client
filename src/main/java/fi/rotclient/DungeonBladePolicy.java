@@ -281,12 +281,16 @@ public final class DungeonBladePolicy {
     }
 
     public static Optional<String> melodyProgressParty(int clayRow) {
-        return switch (clayRow) {
-            case 2 -> Optional.of("Melody 25%");
-            case 3 -> Optional.of("Melody 50%");
-            case 4 -> Optional.of("Melody 75%");
-            default -> Optional.empty();
-        };
+        return melodyProgressParty(clayRow, DungeonPolicy.DEFAULT_MELODY_PLAY_ROWS);
+    }
+
+    public static Optional<String> melodyProgressParty(int clayRow, int observedRows) {
+        if (observedRows < DungeonPolicy.MIN_MELODY_PLAY_ROWS
+                || observedRows > DungeonPolicy.LEGACY_MELODY_PLAY_ROWS
+                || clayRow < 2 || clayRow > observedRows) return Optional.empty();
+        // Completed rows are one less than the current green-clay row. Integer
+        // percentages preserve 33/66 on current three-row and 25/50/75 on legacy.
+        return Optional.of("Melody " + ((clayRow - 1) * 100 / observedRows) + "%");
     }
 
     public static String sectionObjectiveHud(String lastObjective, int completed, int total) {
@@ -326,7 +330,9 @@ public final class DungeonBladePolicy {
 
     public static String melodyTeammateHud(String displayName, int percent) {
         String name = displayName == null || displayName.isBlank() ? "Someone" : displayName;
-        return name + " has melody! " + melodyQuarters(percent) + "/4";
+        // A third-party party message carries a percentage, not the sender's
+        // terminal layout. Do not invent a /3 or /4 denominator for that player.
+        return name + " has melody! " + Math.max(0, Math.min(100, percent)) + "%";
     }
 
     public static boolean atThirdDevice(double x, double z) {

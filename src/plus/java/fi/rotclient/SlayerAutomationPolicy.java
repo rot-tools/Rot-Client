@@ -14,6 +14,7 @@ public final class SlayerAutomationPolicy {
     public static final int MIN_DAGGER_VARIANCE_TICKS = 0;
     public static final int MAX_DAGGER_VARIANCE_TICKS = 10;
     public static final int SOULCRY_ABILITY_COOLDOWN_TICKS = 80;
+    public static final int MAX_DAGGER_PENDING_TICKS = 40;
 
     private static final Set<String> SOULCRY_KATANAS = Set.of(
             "VOIDEDGE_KATANA", "VORPAL_KATANA", "ATOMSPLIT_KATANA");
@@ -27,6 +28,7 @@ public final class SlayerAutomationPolicy {
         private SlayerMechanicsPolicy.DaggerAttunement lastObserved;
         private SlayerMechanicsPolicy.DaggerAttunement pending;
         private int remainingTicks = -1;
+        private int pendingAgeTicks;
 
         public boolean observe(String tag, int delayTicks, int sampledVarianceTicks) {
             Optional<SlayerMechanicsPolicy.DaggerAttunement> observed =
@@ -37,12 +39,19 @@ public final class SlayerAutomationPolicy {
             lastObserved = observed.get();
             pending = observed.get();
             remainingTicks = clampDelay(delayTicks) + clampVariance(sampledVarianceTicks);
+            pendingAgeTicks = 0;
             return true;
         }
 
         public void tick() {
-            if (pending != null && remainingTicks >= 0) {
-                remainingTicks--;
+            if (pending != null) {
+                if (++pendingAgeTicks > MAX_DAGGER_PENDING_TICKS) {
+                    reset();
+                    return;
+                }
+                if (remainingTicks >= 0) {
+                    remainingTicks--;
+                }
             }
         }
 
@@ -53,6 +62,24 @@ public final class SlayerAutomationPolicy {
         public void complete() {
             pending = null;
             remainingTicks = -1;
+            pendingAgeTicks = 0;
+        }
+
+        /**
+         * One right-click toggles the held dagger. Do not keep toggling while
+         * waiting for the server to publish the updated item NBT.
+         * Adapted from Starred's BSD-3-Clause Nebulune fix fddba105:
+         * https://github.com/skies-starred/Nebulune/blob/3191833087c36ec7085b5095c06402e8658bca99/src/main/kotlin/foo/starred/nebulune/modules/impl/slayer/DaggerSwap.kt
+         * Copyright (c) 2025, Starred. See docs/third-party/Nebulune-LICENSE.txt.
+         */
+        public boolean finishHeldDagger(int observedMode) {
+            Optional<SlayerMechanicsPolicy.DaggerAttunement> ready = ready();
+            if (ready.isEmpty()) {
+                return false;
+            }
+            complete();
+            return observedMode >= 0 && observedMode <= 3
+                    && observedMode != ready.get().mode();
         }
 
         public void reset() {

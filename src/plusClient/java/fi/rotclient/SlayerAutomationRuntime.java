@@ -52,7 +52,15 @@ final class SlayerAutomationRuntime {
             tryAttackSoulcry(client, entity, settings);
         }
         if (!settings.slayerDaggerSwapEnabled || entity == null
-                || client == null || client.level == null) {
+                || client == null || client.level == null || client.player == null
+                || (client.gui != null && client.gui.screen() != null)) {
+            return;
+        }
+        SlayerPolicy.EntityDescriptor target = SlayerRuntime.automationDescriptor(entity);
+        if (target == null || target.type() != SlayerPolicy.SlayerType.INFERNO
+                || (target.role() != SlayerPolicy.EntityRole.BOSS
+                && target.role() != SlayerPolicy.EntityRole.DEMON)
+                || (target.role() == SlayerPolicy.EntityRole.BOSS && target.owner().isBlank())) {
             return;
         }
         String attunementLine = SlayerRuntime.automationAttunementLine(entity);
@@ -91,6 +99,16 @@ final class SlayerAutomationRuntime {
     }
 
     private static void tickDaggerSwap(Minecraft client) {
+        if (client == null || client.player == null || client.level == null
+                || (client.gui != null && client.gui.screen() != null)) {
+            resetDaggerSwap();
+            return;
+        }
+        Entity target = client.level.getEntity(lastDaggerTargetEntityId);
+        if (target == null || !target.isAlive()) {
+            resetDaggerSwap();
+            return;
+        }
         if (daggerUseCooldown > 0) {
             daggerUseCooldown--;
         }
@@ -108,13 +126,10 @@ final class SlayerAutomationRuntime {
         ItemStack held = player.getMainHandItem();
         if (SlayerAutomationPolicy.supportsDagger(
                 SkyBlockItemIdentity.skyBlockId(held), attunement)) {
-            if (attunementMode(held) == attunement.mode()) {
-                DAGGER_SWAP.complete();
-                return;
-            }
             if (daggerUseCooldown <= 0) {
-                ClickPulseHelper.pulseUse(client);
-                daggerUseCooldown = 2;
+                if (DAGGER_SWAP.finishHeldDagger(attunementMode(held))) {
+                    ClickPulseHelper.pulseUse(client);
+                }
             }
             return;
         }
@@ -206,9 +221,13 @@ final class SlayerAutomationRuntime {
         if (client == null || client.player == null || client.level == null || entity == null) {
             return;
         }
+        if (client.gui != null && client.gui.screen() != null) {
+            return;
+        }
         SlayerPolicy.EntityDescriptor descriptor = SlayerRuntime.automationDescriptor(entity);
         if (descriptor == null || descriptor.role() != SlayerPolicy.EntityRole.BOSS
-                || descriptor.type() != SlayerPolicy.SlayerType.VOIDGLOOM) {
+                || descriptor.type() != SlayerPolicy.SlayerType.VOIDGLOOM
+                || descriptor.owner().isBlank()) {
             return;
         }
         boolean owned = descriptor.owner().equalsIgnoreCase(client.player.getGameProfile().name());
