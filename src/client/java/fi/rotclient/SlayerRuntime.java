@@ -63,6 +63,12 @@ public final class SlayerRuntime {
             new SlayerMechanicsPolicy.VengeanceTimer();
     private static final SlayerProgressPolicy.ThresholdState PROGRESS_THRESHOLD =
             new SlayerProgressPolicy.ThresholdState();
+    private static final SlayerSpawnPolicy.State LOCAL_SPAWNS = new SlayerSpawnPolicy.State();
+    private static final Map<Integer, RecentSlayerSpawn> RECENT_SLAYER_SPAWNS = new LinkedHashMap<>();
+    private static final Map<Integer, SlayerPolicy.EntityDescriptor> LOCAL_SPAWN_OWNERS = new LinkedHashMap<>();
+
+    private record RecentSlayerSpawn(SlayerPolicy.SlayerType bodyFamily, long addedAtMillis) {
+    }
     private static SlayerMechanicsPolicy.AttunementDisplay lastAttunement;
     private static SlayerProgressPolicy.Progress latestProgress;
     private static boolean featuresWereEnabled;
@@ -207,6 +213,7 @@ public final class SlayerRuntime {
         }
         featuresWereEnabled = true;
         syncSidebarQuest(settings);
+        resolveLocalSpawn(client);
         overlaySnapshot = ENGINE.viewSnapshot();
         if (!settings.slayerCocoonAlertEnabled) {
             COCOON_TIMER.reset();
@@ -305,6 +312,7 @@ public final class SlayerRuntime {
             alertCocoon(Minecraft.getInstance(), settings);
         }
         String line = message.getString();
+        LOCAL_SPAWNS.observe(line, now);
         if (SlayerMinibossAlertPolicy.shouldAnnounce(
                 settings.slayerMinibossAlertEnabled,
                 SlayerMinibossAlertPolicy.isSpawnChat(line),
@@ -325,6 +333,8 @@ public final class SlayerRuntime {
         SlayerPolicy.QuestSignal questSignal = ENGINE.onChat(line, now, false);
         if (questSignal != SlayerPolicy.QuestSignal.NONE) {
             resetProgress();
+            LOCAL_SPAWNS.reset();
+            LOCAL_SPAWN_OWNERS.clear();
         }
         if (questSignal == SlayerPolicy.QuestSignal.COMPLETED) {
             if (settings.slayerTimeMessagesEnabled
@@ -473,6 +483,88 @@ public final class SlayerRuntime {
             return null;
         }
         return descriptor(client.level, entity);
+    }
+
+    /** Packet arrival is evidence of freshness only; it never establishes ownership. */
+    public static void onEntityAdded(Entity entity) {
+        ClientBoundaryGuard.run("SLAYER_ENTITY_ADDED", () -> {
+            if (entity == null || !anyFeatureEnabled(settings())) {
+                return;
+            }
+            SlayerPolicy.SlayerType family = spawnBodyFamily(entity);
+            if (family == null) {
+                return;
+            }
+            RECENT_SLAYER_SPAWNS.putIfAbsent(entity.getId(),
+                    new RecentSlayerSpawn(family, System.currentTimeMillis()));
+            while (RECENT_SLAYER_SPAWNS.size() > 128) {
+                RECENT_SLAYER_SPAWNS.remove(RECENT_SLAYER_SPAWNS.keySet().iterator().next());
+            }
+        });
+    }
+
+    private static SlayerPolicy.SlayerType spawnBodyFamily(Entity entity) {
+        if (entity instanceof EnderMan) return SlayerPolicy.SlayerType.VOIDGLOOM;
+        if (entity instanceof Blaze) return SlayerPolicy.SlayerType.INFERNO;
+        if (entity instanceof Spider) return SlayerPolicy.SlayerType.TARANTULA;
+        if (entity instanceof Wolf) return SlayerPolicy.SlayerType.SVEN;
+        if (entity instanceof Zombie) return SlayerPolicy.SlayerType.REVENANT;
+        // Rift Bloodfiend body identity has not been verified for the new protocol.
+        return null;
+    }
+
+    private static void resolveLocalSpawn(Minecraft client) {
+        long now = System.currentTimeMillis();
+        RECENT_SLAYER_SPAWNS.entrySet().removeIf(entry ->
+                now < entry.getValue().addedAtMillis()
+                        || now - entry.getValue().addedAtMillis() > 2_000L);
+        LOCAL_SPAWN_OWNERS.keySet().removeIf(id -> {
+            Entity entity = client.level.getEntity(id);
+            return entity == null || !entity.isAlive();
+        });
+        List<SlayerSpawnPolicy.Candidate> candidates = new ArrayList<>();
+        for (Map.Entry<Integer, RecentSlayerSpawn> entry : RECENT_SLAYER_SPAWNS.entrySet()) {
+            Entity entity = client.level.getEntity(entry.getKey());
+            if (entity == null) {
+                continue;
+            }
+            candidates.add(new SlayerSpawnPolicy.Candidate(
+                    entry.getKey(), entry.getValue().bodyFamily(), entry.getValue().addedAtMillis(),
+                    spawnCandidateDescriptor(client.level, entity), entity.isAlive()));
+        }
+        LOCAL_SPAWNS.resolve(candidates, client.player.getGameProfile().name(), now)
+                .ifPresent(resolution -> LOCAL_SPAWN_OWNERS.put(resolution.entityId(), resolution.descriptor()));
+    }
+
+    private static SlayerPolicy.EntityDescriptor spawnCandidateDescriptor(ClientLevel level, Entity entity) {
+        // The new ownership fallback requires the direct name/tier stand used
+        // by the wire protocol, not a name borrowed from a nearby living mob.
+        Entity tag = level.getEntity(entity.getId() + 1);
+        if (!isNameHologram(tag) || !hologramBelongsTo(entity, tag)) {
+            return null;
+        }
+        SlayerPolicy.EntityDescriptor direct = SlayerPolicy.classifyTag(name(tag), "").orElse(null);
+        if (direct == null || direct.role() != SlayerPolicy.EntityRole.BOSS) {
+            return null;
+        }
+        SlayerPolicy.EntityDescriptor full = descriptor(level, entity);
+        return full != null && full.role() == direct.role() && full.type() == direct.type()
+                ? full : null;
+    }
+
+    private static SlayerPolicy.EntityDescriptor withLocalSpawnOwner(
+            Entity entity, SlayerPolicy.EntityDescriptor descriptor) {
+        if (descriptor == null || !descriptor.owner().isBlank()
+                || descriptor.role() != SlayerPolicy.EntityRole.BOSS) {
+            return descriptor;
+        }
+        SlayerPolicy.EntityDescriptor observed = LOCAL_SPAWN_OWNERS.get(entity.getId());
+        if (observed == null || observed.type() != descriptor.type()) {
+            return descriptor;
+        }
+        return new SlayerPolicy.EntityDescriptor(
+                descriptor.role(), descriptor.type(), observed.tier(), observed.owner(),
+                descriptor.displayName(), descriptor.bigMiniboss(), descriptor.attunement());
     }
 
     static String automationAttunementLine(Entity entity) {
@@ -1467,7 +1559,8 @@ public final class SlayerRuntime {
                 }
                 lines = List.of(self);
             }
-            SlayerPolicy.EntityDescriptor descriptor = SlayerPolicy.classifyHolograms(lines).orElse(null);
+            SlayerPolicy.EntityDescriptor descriptor = withLocalSpawnOwner(entity,
+                    SlayerPolicy.classifyHolograms(lines).orElse(null));
             if (descriptor == null || !SlayerPolicy.shouldTrackLiveEntity(descriptor)) {
                 continue;
             }
@@ -1573,7 +1666,7 @@ public final class SlayerRuntime {
         if (!self.isBlank()) {
             lines.add(self);
         }
-        return SlayerPolicy.classifyHolograms(lines).orElse(null);
+        return withLocalSpawnOwner(entity, SlayerPolicy.classifyHolograms(lines).orElse(null));
     }
 
     private static String attachedAttunementLine(ClientLevel level, Entity entity) {
@@ -2105,6 +2198,9 @@ public final class SlayerRuntime {
     }
 
     private static void resetAdditionalMechanics() {
+        LOCAL_SPAWNS.reset();
+        RECENT_SLAYER_SPAWNS.clear();
+        LOCAL_SPAWN_OWNERS.clear();
         VENGEANCE.reset();
         lastAttunement = null;
         dropScaleWindow = null;

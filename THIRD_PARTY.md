@@ -85,7 +85,27 @@ The optional gameplay font pack points Minecraft's default font at Rot's
 bundled Source Sans 3 file. Adobe's OFL still applies; see the OFL files in
 that pack.
 
-## Minecraft and Fabric
+## 2026-10-08 module adaptations
+
+The terminal color rules, single-use dagger completion rule and local Slayer
+spawn announcement contract include adaptations from these permitted sources:
+
+- Athen and Nebulune, copyright Starred, BSD-3-Clause.
+- Odin and OdinClient, BSD-3-Clause; full upstream copyright statements are
+  retained in their license files.
+- NoammAddons and Blade Addons, CC0-1.0.
+
+Pinned source files and the distinction between adapted code and Rot's own
+integration are documented in [Slayer audit](docs/UPSTREAM_SLAYER_AUDIT.md)
+and [dungeon audit](docs/UPSTREAM_DUNGEON_AUDIT.md). Complete license texts live
+under `docs/third-party/` in the repository and `META-INF/licenses/` in both
+playable JARs. These upstream projects do not endorse Rot Client.
+
+SkyHanni (LGPL-2.1), Skyblocker (LGPL-3.0), Devonian (GPL-3.0), and SkyCofl
+(AGPL-3.0) were reviewed for observable behavior and current data contracts;
+their implementation was not copied. See [shared audit](docs/UPSTREAM_SHARED_AUDIT.md).
+
+## Minecraft and Fabric distribution
 
 Minecraft is Mojang / Microsoft. Fabric Loader and Fabric API are separate
 mods the user installs; they are not nested inside the Rot Client JAR.

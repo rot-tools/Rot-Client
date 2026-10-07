@@ -237,6 +237,26 @@ final class CommissionDisplayPolicyTest {
         assertFalse(CommissionDisplayPolicy.loreCompleted(List.of()));
         assertFalse(CommissionDisplayPolicy.loreCompleted(null));
         assertFalse(CommissionDisplayPolicy.loreCompleted(java.util.Arrays.asList("x", null)));
+        assertFalse(CommissionDisplayPolicy.loreCompleted(List.of("NOT COMPLETED")));
+        assertFalse(CommissionDisplayPolicy.loreCompleted(List.of("Completed commissions: 45")));
+    }
+
+    @Test
+    void splitMineralAndPuncherTasksKeepTheirProgress() {
+        List<CommissionDisplayPolicy.Commission> parsed = parse(
+                "Commissions:", "• Star Sentry Puncher", "20%", "Umber", "1,234/2,500",
+                "Rampart's Quarry Titanium", "COMPLETED", "Fossil Dust:", "Dust", "50%");
+        assertEquals(List.of("Star Sentry Puncher", "Umber", "Rampart's Quarry Titanium"), names(parsed));
+        assertEquals(49.36F, parsed.get(1).progressPercent(), 0.01F);
+        assertTrue(parsed.get(2).done());
+    }
+
+    @Test
+    void malformedNumbersCannotBecomeCompletedCommissions() {
+        String huge = "9".repeat(100);
+        assertNull(CommissionDisplayPolicy.parseRow("Mithril Miner: " + huge + "%"));
+        assertNull(CommissionDisplayPolicy.parseRow("Umber: " + huge + "/" + huge));
+        assertEquals(0.0F, new CommissionDisplayPolicy.Commission("Mithril Miner", Float.NaN, false).progressPercent());
     }
 
     @Test
