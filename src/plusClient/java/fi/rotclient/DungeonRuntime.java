@@ -1372,7 +1372,7 @@ public final class DungeonRuntime {
             return false;
         }
         Minecraft client = Minecraft.getInstance();
-        if (client == null || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) return false;
+        if (client == null || !(client.screen instanceof AbstractContainerScreen<?> screen)) return false;
         observeTerminalOpen(client, extras);
         String title = titleOf(screen);
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
@@ -1691,7 +1691,7 @@ public final class DungeonRuntime {
             QolSkyblockExtras extras,
             DungeonPolicy.TerminalClick click) {
         if (client == null || client.player == null || client.gameMode == null || screen == null
-                || click == null || client.gui.screen() != screen) return;
+                || click == null || client.screen != screen) return;
         observeTerminalOpen(client, extras);
         String terminalTitle = titleOf(screen);
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(terminalTitle);

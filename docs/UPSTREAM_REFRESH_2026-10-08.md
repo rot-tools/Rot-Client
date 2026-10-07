@@ -78,3 +78,5 @@ Modrinth/CurseForge approval. This update adds no public-release approval claim.
 ## Automated checkpoint
 
 Minecraft 26.3: Gradle `build` passes, including 2,456 shared and 227 Plus tests (zero failures/errors/skips), both client compilers, `verifyLegitJar` and `verifyDungeonJarBoundary`. Both playable archives contain all six retained source-license files. Minecraft runtime validation remains pending.
+
+26.1.2 port: `build` passes with 2,457 shared and 227 Plus tests (zero failures/errors/skips). Older screen/EnderMan/mouse bindings remain in place.

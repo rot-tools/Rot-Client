@@ -53,7 +53,7 @@ final class SlayerAutomationRuntime {
         }
         if (!settings.slayerDaggerSwapEnabled || entity == null
                 || client == null || client.level == null || client.player == null
-                || (client.gui != null && client.gui.screen() != null)) {
+                || (client.screen != null)) {
             return;
         }
         SlayerPolicy.EntityDescriptor target = SlayerRuntime.automationDescriptor(entity);
@@ -100,7 +100,7 @@ final class SlayerAutomationRuntime {
 
     private static void tickDaggerSwap(Minecraft client) {
         if (client == null || client.player == null || client.level == null
-                || (client.gui != null && client.gui.screen() != null)) {
+                || (client.screen != null)) {
             resetDaggerSwap();
             return;
         }
@@ -172,7 +172,7 @@ final class SlayerAutomationRuntime {
         SOULCRY_ABILITY.tick();
         if (!settings.slayerAutoSoulcryEnabled || !settings.slayerAutoSoulcryTickBased
                 || client == null || client.player == null || client.level == null
-                || (client.gui != null && client.screen != null)) {
+                || (client.screen != null)) {
             SOULCRY.reset();
             return;
         }
@@ -221,7 +221,7 @@ final class SlayerAutomationRuntime {
         if (client == null || client.player == null || client.level == null || entity == null) {
             return;
         }
-        if (client.gui != null && client.gui.screen() != null) {
+        if (client.screen != null) {
             return;
         }
         SlayerPolicy.EntityDescriptor descriptor = SlayerRuntime.automationDescriptor(entity);
