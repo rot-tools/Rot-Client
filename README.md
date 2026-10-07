@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.1+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
+> **`2.0.2+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,16 +48,16 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.1+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
-| `RotClientPlus-2.0.1+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
+| `RotClient-2.0.2+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.2+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Minecraft version availability
 
 | Minecraft | Rot Client Lite | Rot Client+ | Status |
 | --- | --- | --- | --- |
-| 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2) | No distributed Plus JAR | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-mining-hud) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-mining-hud) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.1+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix) | Mouse input and View Model fixes; owner confirmed the reported 26.3 UI interactions in-game. Wider feature validation remains pending. |
+| 26.3 | [`2.0.2+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Upstream compatibility/terminal/Slayer/Pet repair candidate. New behavior awaits runtime validation; earlier UI fixes were owner-tested. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
@@ -65,7 +65,7 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-ui-fix)
+Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh)
 holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 tracks `development` and is replaced after green pushes there.
 
@@ -81,7 +81,7 @@ run if you need a specific commit.
 
 1. Install Fabric Loader and Fabric API for Minecraft 26.3.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy `RotClient-2.0.1+mc26.3.jar` and/or `RotClientPlus-2.0.1+mc26.3.jar`
+3. Copy `RotClient-2.0.2+mc26.3.jar` and/or `RotClientPlus-2.0.2+mc26.3.jar`
    from `build/libs/` into `mods/`. Enable only one.
 
 Rot Tools includes bounded migration for supported legacy MiningTracker
@@ -237,3 +237,7 @@ public data facts, Minecraft EULA for any vanilla pack paths) are listed in
 ## Mining/Pet repair candidate — 2026-10-01
 
 Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](docs/MINING_HUD_FIXES.md).
+
+## Upstream module refresh (2026-10-08)
+
+The 26.3 candidate repairs terminal colors, ordering and container-bound input; single-use Slayer dagger behavior and local spawn ownership; Pet and commission observations; and API retry handling. Current terminal simulator defaults are three Melody rows and ten numbers; observed legacy layouts remain supported. Shared HUD fixes apply to Lite and Plus, while terminal/dagger actions remain Plus-only. See [source comparison and remaining work](docs/UPSTREAM_REFRESH_2026-10-08.md).

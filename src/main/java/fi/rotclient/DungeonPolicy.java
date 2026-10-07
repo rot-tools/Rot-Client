@@ -105,15 +105,15 @@ public final class DungeonPolicy {
     public static final List<String> MELODY_SKIP_MODES = List.of("Edges", "All");
     public static final List<String> I4_LEAP_CLASSES = List.of("Tank", "Mage", "Healer", "Archer");
     /**
-     * Live F7 Melody play rows (slots 16, 25, 34, 43). A 3-row chest is still
-     * detected from the snapshot.
+     * Current F7 Melody has three rows (Hypixel 0.27.2). Legacy four-row
+     * menus remain detectable from the observed snapshot.
      */
-    public static final int DEFAULT_MELODY_PLAY_ROWS = 4;
+    public static final int DEFAULT_MELODY_PLAY_ROWS = 3;
     public static final int MIN_MELODY_PLAY_ROWS = 3;
     public static final int LEGACY_MELODY_PLAY_ROWS = 4;
-    /** Live Click in order: 7×2 red panes numbered by stack count. */
-    public static final int DEFAULT_NUMBERS_COUNT = 14;
-    public static final int LEGACY_NUMBERS_COUNT = 10;
+    /** Hypixel 0.27.2 reduced Click in order to ten red panes. */
+    public static final int DEFAULT_NUMBERS_COUNT = 10;
+    public static final int LEGACY_NUMBERS_COUNT = 14;
 
     public static final long BONZO_MILLIS = 3_000L;
     public static final long SPIRIT_MILLIS = 3_000L;
@@ -498,16 +498,27 @@ public final class DungeonPolicy {
         Integer button = null;
         Integer current = null;
         Integer correct = null;
+        boolean duplicateTarget = false;
+        boolean duplicatePointer = false;
         for (TerminalItem item : items) {
-            String id = item.itemId().toLowerCase(Locale.ROOT);
-            if (id.contains("magenta_stained_glass") && correct == null) {
-                correct = item.index() - 1;
+            if (item == null || item.index() < 0 || item.index() >= 45) continue;
+            String id = item.itemId() == null ? "" : item.itemId().toLowerCase(Locale.ROOT);
+            int row = item.index() / 9;
+            int col = item.index() % 9;
+            // The mirrored bottom border is decorative. Only the top target
+            // and a pointer in the playable interior provide timing evidence.
+            if (row == 0 && col >= 1 && col <= 5 && id.contains("magenta_stained_glass")) {
+                duplicateTarget |= correct != null;
+                correct = col - 1;
             }
-            if (id.contains("lime_stained_glass")) {
-                button = item.index() / 9 - 1;
-                current = item.index() % 9 - 1;
+            if (row >= 1 && row <= LEGACY_MELODY_PLAY_ROWS && col >= 1 && col <= 5
+                    && id.contains("lime_stained_glass")) {
+                duplicatePointer |= current != null;
+                button = row - 1;
+                current = col - 1;
             }
         }
+        if (duplicateTarget || duplicatePointer) return new MelodyState(null, null, null);
         return new MelodyState(button, current, correct);
     }
 
@@ -517,16 +528,17 @@ public final class DungeonPolicy {
             return DEFAULT_MELODY_PLAY_ROWS;
         }
         for (TerminalItem item : items) {
+            if (item == null || item.index() < 0) continue;
             int row = item.index() / 9;
             int col = item.index() % 9;
             if (row < 1 || row > LEGACY_MELODY_PLAY_ROWS || col < 1 || col > 7) {
                 continue;
             }
-            String id = item.itemId().toLowerCase(Locale.ROOT);
-            if (id.contains("magenta")) {
-                continue;
-            }
-            if (id.contains("stained_glass") || id.contains("terracotta")) {
+            String id = item.itemId() == null ? "" : item.itemId().toLowerCase(Locale.ROOT);
+            boolean button = col == 7 && (id.endsWith("red_terracotta") || id.endsWith("lime_terracotta"));
+            boolean playPane = col <= 5 && (id.contains("white_stained_glass")
+                    || id.contains("red_stained_glass") || id.contains("lime_stained_glass"));
+            if (button || playPane) {
                 maxRow = Math.max(maxRow, row);
             }
         }

@@ -330,4 +330,68 @@ final class PetHudPolicyTest {
                         List.of(
                                 "Click to summon!")));
     }
+
+    @Test
+    void cosmeticLevelsAndSkinsDoNotChangePetIdentity() {
+        PetHudPolicy.Snapshot gui = PetHudPolicy.parse(
+                "⭐ [Lvl 200] [1,234✦] Golden Dragon ✦",
+                List.of("Held Item: Lucky Clover", "MAX LEVEL")).orElseThrow();
+        assertEquals("Golden Dragon", gui.name());
+        var tab = PetHudPolicy.parseTabText("Pet:\n[Lvl 200] [1,235✦] Golden Dragon").orElseThrow();
+        assertEquals("Lucky Clover", PetHudPolicy.mergeTabSnapshot(gui, tab).heldItem());
+        assertTrue(PetHudPolicy.mergeTabSnapshot(gui, tab).maxLevel());
+        // Older cache entries used the decorated name; they must migrate without losing XP.
+        var oldCache = new PetHudPolicy.Snapshot(200, "[1,234✦] Golden Dragon ✦", "Textbook");
+        assertEquals("Textbook", PetHudPolicy.mergeTabSnapshot(oldCache, tab).heldItem());
+        assertTrue(PetHudPolicy.samePetIdentity(oldCache, tab));
+        assertFalse(PetHudPolicy.samePetIdentity(oldCache, new PetHudPolicy.Snapshot(200, "Rose Dragon", "")));
+        assertFalse(PetHudPolicy.samePetIdentity(null, tab));
+    }
+
+    @Test
+    void newNamesAndSpecialPhoenixRaritiesNeedNoPetRegistryUpdate() {
+        assertEquals("Eagle", PetHudPolicy.parseTabText("Pet: [Lvl 12] Eagle").orElseThrow().name());
+        assertEquals("T-Rex", PetHudPolicy.parseTabText("Pet: [Lvl 67] T-Rex ✦").orElseThrow().name());
+        assertEquals(ItemRarityPolicy.DEFAULT_SPECIAL,
+                PetHudPolicy.petRarityColor("{\"tier\":\"SPECIAL\"}", 0));
+        assertEquals(ItemRarityPolicy.DEFAULT_SPECIAL,
+                PetHudPolicy.petRarityColor("{\"tier\":\"VERY_SPECIAL\"}", 0));
+        assertFalse(PetHudPolicy.parseTabText("Pet: [Lvl 12] Eagle").orElseThrow().hasProgress());
+    }
+
+    @Test
+    void serverPercentageWinsOverRoundedXpAbbreviations() {
+        var pet = PetHudPolicy.parseTabText(
+                "Pet:\n[Lvl 70] Rabbit\n931,886.2/1.4M XP (67.2%)").orElseThrow();
+        assertEquals(67.2D, pet.progressPercent(), 0.001D);
+        assertEquals(71, pet.nextLevel());
+    }
+
+    @Test
+    void otherWidgetsCannotSupplyPetProgressOrPetNames() {
+        var pet = PetHudPolicy.parseTabText(
+                "Pet:\n[Lvl 70] Rabbit\nGarden Level:\nXP: 75%").orElseThrow();
+        assertFalse(pet.hasProgress());
+        assertTrue(PetHudPolicy.parseTabText("Pet:\nPlayers:\n[Lvl 50] Someone").isEmpty());
+        assertFalse(PetHudPolicy.parseTabText("Pet:\n[Lvl 70] Rabbit\n+123,456 XP").orElseThrow().hasProgress());
+    }
+
+    @Test
+    void explicitNoPetIsDifferentFromAnAbsentOrUnpopulatedWidget() {
+        assertTrue(PetHudPolicy.tabReportsNoPet("Pet: None"));
+        assertTrue(PetHudPolicy.tabReportsNoPet("Pet:\nNo pet selected\nSkills:"));
+        assertTrue(PetHudPolicy.tabReportsNoPet("Active Pet:\n✖"));
+        assertFalse(PetHudPolicy.tabReportsNoPet("Pet:\n\nSkills:"));
+        assertFalse(PetHudPolicy.tabReportsNoPet("Skills:\nNone"));
+        assertFalse(PetHudPolicy.tabReportsNoPet(""));
+        assertFalse(PetHudPolicy.tabReportsNoPet(null));
+        assertTrue(PetHudPolicy.parseTabText("Pet:\nNo pet selected").isEmpty());
+    }
+
+    @Test
+    void malformedServerLevelsCannotThrowOrOverflowNextLevel() {
+        assertTrue(PetHudPolicy.parse("[Lvl 99999999999999] Bee", List.of()).isEmpty());
+        assertFalse(PetHudPolicy.parseTabText(
+                "Pet: [Lvl 2,147,483,647] Bee\nXP: 10%").orElseThrow().hasProgress());
+    }
 }
