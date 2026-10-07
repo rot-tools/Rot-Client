@@ -53,18 +53,18 @@ MiningTracker JAR.
 
 ### Playtest JAR
 
-Testers do not need to build. The Minecraft 26.1.2 Lite test build is available
+Testers do not need to build. Both Minecraft 26.1.2 edition test builds are available
 from the [26.1.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh)
 pre-release with `SHA256SUMS.txt`. The `development` branch publishes the
 separate Minecraft 26.2 playtest:
 
 1. Open [26.1.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh).
-2. Download `RotClient-2.1.1+mc26.1.2.jar`. Skip `-sources.jar`.
+2. Download either `RotClient-2.1.1+mc26.1.2.jar` or `RotClientPlus-2.1.1+mc26.1.2.jar`. Skip `-sources.jar`.
 3. Put that file in a Minecraft 26.1.2 Fabric instance `mods/` folder.
 
 Both editions are attached as artifact `RotClient-playable` on the matching
 green [Build](https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml)
-run if you need to test a specific commit. The 26.1.2 pre-release offers only Lite.
+run if you need to test a specific commit. The 26.1.2 pre-release offers Lite and Plus; new gameplay validation is pending.
 
 ### Build from source
 
