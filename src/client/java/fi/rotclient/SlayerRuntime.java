@@ -504,7 +504,7 @@ public final class SlayerRuntime {
     }
 
     private static SlayerPolicy.SlayerType spawnBodyFamily(Entity entity) {
-        if (entity instanceof Enderman) return SlayerPolicy.SlayerType.VOIDGLOOM;
+        if (entity instanceof EnderMan) return SlayerPolicy.SlayerType.VOIDGLOOM;
         if (entity instanceof Blaze) return SlayerPolicy.SlayerType.INFERNO;
         if (entity instanceof Spider) return SlayerPolicy.SlayerType.TARANTULA;
         if (entity instanceof Wolf) return SlayerPolicy.SlayerType.SVEN;
