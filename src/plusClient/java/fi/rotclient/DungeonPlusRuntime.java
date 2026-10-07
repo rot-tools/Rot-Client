@@ -149,9 +149,10 @@ final class DungeonPlusRuntime {
             melodySkipQueue.clear();
             return;
         }
+        QolSkyblockExtras extras = extras();
+        observeTerminalOpen(client, extras);
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
-        QolSkyblockExtras extras = extras();
         if (terminal == DungeonPolicy.Terminal.NONE
                 || !DungeonPolicy.shouldAutoSolve(
                 terminal,
@@ -169,7 +170,7 @@ final class DungeonPlusRuntime {
             return;
         }
         List<DungeonPolicy.TerminalClick> live =
-                DungeonPolicy.solveTerminalClicks(terminal, title, items);
+                liveTerminalClicks(terminal, title, items);
         if (live.isEmpty()) {
             maybePlayTerminalComplete(client, extras);
             clearPredictedClicks();
@@ -190,8 +191,12 @@ final class DungeonPlusRuntime {
         if (clicks.isEmpty()) {
             return;
         }
-        clicks = DungeonAthenPortPolicy.orderClicks(
-                clicks, lastTerminalSlot, athen.termOrder, extras.dungeonTerminalsHumanOrder);
+        // Numeric order is a server requirement. Human/nearest ordering is for
+        // unordered terminals and must never choose 2 before 1.
+        if (terminal != DungeonPolicy.Terminal.NUMBERS) {
+            clicks = DungeonAthenPortPolicy.orderClicks(
+                    clicks, lastTerminalSlot, athen.termOrder, extras.dungeonTerminalsHumanOrder);
+        }
         DungeonPolicy.TerminalClick click = clicks.getFirst();
         if (terminal == DungeonPolicy.Terminal.RUBIX && athen.termRubixLeftOnly) {
             click = new DungeonPolicy.TerminalClick(click.slot(), 0);
@@ -596,6 +601,7 @@ final class DungeonPlusRuntime {
     }
 
     static void flushTermQueue(Minecraft client, QolSkyblockExtras extras) {
+        observeTerminalOpen(client, extras);
         if (terminalCooldown > 0 || client.gameMode == null || client.player == null
                 || !(client.screen instanceof AbstractContainerScreen<?> screen)) {
             if (!(client.screen instanceof AbstractContainerScreen<?>)) {
@@ -630,8 +636,14 @@ final class DungeonPlusRuntime {
             return;
         }
         DungeonLeftoverPolicy.QueuedClick click = next.get();
-        int packetButton = extras.dungeonTerminalsClone ? 2 : click.button();
-        ContainerInput input = extras.dungeonTerminalsClone ? ContainerInput.CLONE : ContainerInput.PICKUP;
+        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
+        List<DungeonPolicy.TerminalItem> items = snapshot(screen);
+        if (!DungeonTerminalClickPolicy.canQueueClick(terminal, click.slot(), click.button(),
+                liveTerminalClicks(terminal, title, items), DungeonPolicy.melodyPlayRows(items))) return;
+        DungeonTerminalClickPolicy.PacketClick packet = DungeonTerminalClickPolicy.packetClick(
+                click.button(), extras.dungeonTerminalsClone);
+        int packetButton = packet.button();
+        ContainerInput input = packet.cloneInput() ? ContainerInput.CLONE : ContainerInput.PICKUP;
         client.gameMode.handleContainerInput(
                 screen.getMenu().containerId, click.slot(), packetButton, input, client.player);
         armTerminalCooldown(extras);

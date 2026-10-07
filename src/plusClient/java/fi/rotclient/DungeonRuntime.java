@@ -30,6 +30,8 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -194,6 +196,7 @@ public final class DungeonRuntime {
     static boolean melodyWasOpen;
     static int lastTerminalSlot = 22;
     static String lastTermTitle = "";
+    static AbstractContainerMenu terminalMenu;
     static long terminalOpenedAt;
     static final List<Integer> terminalPredictedSlots = new ArrayList<>();
     static long terminalPredictedAt;
@@ -966,6 +969,7 @@ public final class DungeonRuntime {
         melodyWasOpen = false;
         lastTerminalSlot = 22;
         lastTermTitle = "";
+        terminalMenu = null;
         terminalOpenedAt = 0L;
         clearPredictedClicks();
         closeChestArmed = false;
@@ -1367,7 +1371,20 @@ public final class DungeonRuntime {
         if (!plusDungeonFeature(extras.dungeonTerminalsEnabled) || !extras.dungeonTerminalsQueue) {
             return false;
         }
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || !(client.screen instanceof AbstractContainerScreen<?> screen)) return false;
+        observeTerminalOpen(client, extras);
+        String title = titleOf(screen);
+        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(title);
+        if (!DungeonTerminalSolverPolicy.supportsTitle(terminal, title)) return false;
+        List<DungeonPolicy.TerminalItem> items = snapshot(screen);
+        if (!DungeonTerminalClickPolicy.canQueueClick(terminal, slot, button,
+                liveTerminalClicks(terminal, title, items), DungeonPolicy.melodyPlayRows(items))) return false;
+        for (DungeonLeftoverPolicy.QueuedClick pending : termQueue) {
+            if (pending.slot() == slot && pending.button() == button) return true;
+        }
         DungeonLeftoverPolicy.enqueue(termQueue, slot, button);
+        termQueueUpdatedAt = System.currentTimeMillis();
         rememberPredictedClick(DungeonPolicy.detectTerminal(lastTermTitle), slot);
         return true;
     }
@@ -1673,6 +1690,16 @@ public final class DungeonRuntime {
             AbstractContainerScreen<?> screen,
             QolSkyblockExtras extras,
             DungeonPolicy.TerminalClick click) {
+        if (client == null || client.player == null || client.gameMode == null || screen == null
+                || click == null || client.screen != screen) return;
+        observeTerminalOpen(client, extras);
+        String terminalTitle = titleOf(screen);
+        DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(terminalTitle);
+        if (!DungeonTerminalSolverPolicy.supportsTitle(terminal, terminalTitle)) return;
+        List<DungeonPolicy.TerminalItem> terminalItems = snapshot(screen);
+        if (!DungeonTerminalClickPolicy.canQueueClick(terminal, click.slot(), click.button(),
+                liveTerminalClicks(terminal, terminalTitle, terminalItems),
+                DungeonPolicy.melodyPlayRows(terminalItems))) return;
         if (QolClientFlavorSupport.hooks().termSimIsOpen()) {
             QolClientFlavorSupport.hooks().termSimClick(click.slot(), click.button());
             armTerminalCooldown(extras);
@@ -1683,6 +1710,9 @@ public final class DungeonRuntime {
             return;
         }
         if (extras.dungeonTerminalsQueue) {
+            for (DungeonLeftoverPolicy.QueuedClick pending : termQueue) {
+                if (pending.slot() == click.slot() && pending.button() == click.button()) return;
+            }
             DungeonLeftoverPolicy.enqueue(termQueue, click.slot(), click.button());
             playTerminalClickSound(client, extras);
             lastTerminalSlot = click.slot();
@@ -2448,8 +2478,10 @@ public final class DungeonRuntime {
 
     static List<DungeonPolicy.TerminalItem> snapshot(AbstractContainerScreen<?> screen) {
         List<DungeonPolicy.TerminalItem> items = new ArrayList<>();
+        if (screen == null || !(screen.getMenu() instanceof ChestMenu chest)) return items;
         List<Slot> slots = screen.getMenu().slots;
-        int limit = Math.min(54, slots.size());
+        int limit = Math.min(54, Math.min(chest.getContainer().getContainerSize(), slots.size()));
+        boolean startsWith = DungeonPolicy.detectTerminal(titleOf(screen)) == DungeonPolicy.Terminal.STARTS_WITH;
         for (int i = 0; i < limit; i++) {
             Slot slot = slots.get(i);
             ItemStack stack = slot == null ? ItemStack.EMPTY : slot.getItem();
@@ -2459,7 +2491,14 @@ public final class DungeonRuntime {
                 var key = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 id = key == null ? "" : key.getPath();
             }
-            boolean enchanted = !stack.isEmpty() && stack.hasFoil();
+            // Adapted from Odin StartsWithHandler's native-glint exemptions.
+            // Copyright (c) 2025, odtheking; BSD-3-Clause, full notice in
+            // docs/third-party/Odin-LICENSE.txt. Server-selected ordinary items
+            // gain glint; intrinsically glowing items were already glowing.
+            boolean intrinsicGlint = !stack.isEmpty()
+                    && (stack.getItem().components().has(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)
+                    || stack.is(Items.GOLDEN_APPLE));
+            boolean enchanted = !stack.isEmpty() && stack.hasFoil() && !(startsWith && intrinsicGlint);
             int count = stack.isEmpty() ? 0 : stack.getCount();
             items.add(new DungeonPolicy.TerminalItem(i, name, id, enchanted, count));
         }
@@ -3077,8 +3116,10 @@ public final class DungeonRuntime {
                     sendParty(client, DungeonBladePolicy.melodyPartyMessage(extras.dungeonAnnounceMelodyMessage));
                 }
                 if (extras.dungeonAnnounceEnabled && extras.dungeonAnnounceMelodyProgress) {
-                    DungeonBladePolicy.melodyClayRow(snapshot(screen)).ifPresent(row ->
-                            DungeonBladePolicy.melodyProgressParty(row).ifPresent(text -> {
+                    List<DungeonPolicy.TerminalItem> melodyItems = snapshot(screen);
+                    DungeonBladePolicy.melodyClayRow(melodyItems).ifPresent(row ->
+                            DungeonBladePolicy.melodyProgressParty(row,
+                                    DungeonPolicy.melodyPlayRows(melodyItems)).ifPresent(text -> {
                                 if (!text.equals(lastMelodyProgress)) {
                                     lastMelodyProgress = text;
                                     sendParty(client, text);
@@ -3931,11 +3972,17 @@ public final class DungeonRuntime {
         if (!(client.screen instanceof AbstractContainerScreen<?> screen)) {
             // Pingless terminals keep the same chest open. A 1-frame empty screen
             // must not re-arm first-click delay between Auto Terms clicks.
+            termQueue.clear();
+            melodySkipQueue.clear();
+            termQueueUpdatedAt = 0L;
+            clearPredictedClicks();
             return;
         }
         String title = titleOf(screen);
-        if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
+        if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE
+                || !DungeonTerminalSolverPolicy.supportsTitle(DungeonPolicy.detectTerminal(title), title)) {
             lastTermTitle = "";
+            terminalMenu = null;
             terminalOpenedAt = 0L;
             termQueue.clear();
             melodySkipQueue.clear();
@@ -3943,8 +3990,10 @@ public final class DungeonRuntime {
             clearPredictedClicks();
             return;
         }
-        if (!title.equals(lastTermTitle)) {
+        if (!title.equals(lastTermTitle)
+                || !DungeonTerminalClickPolicy.sameSession(terminalMenu, lastTermTitle, screen.getMenu(), title)) {
             lastTermTitle = title;
+            terminalMenu = screen.getMenu();
             terminalOpenedAt = System.currentTimeMillis();
             terminalHadClicks = false;
             termQueue.clear();
@@ -4125,7 +4174,16 @@ public final class DungeonRuntime {
             DungeonPolicy.Terminal terminal,
             String title,
             List<DungeonPolicy.TerminalItem> items) {
-        return pinglessRemaining(terminal, DungeonPolicy.solveTerminalClicks(terminal, title, items));
+        return pinglessRemaining(terminal, liveTerminalClicks(terminal, title, items));
+    }
+
+    static List<DungeonPolicy.TerminalClick> liveTerminalClicks(
+            DungeonPolicy.Terminal terminal, String title, List<DungeonPolicy.TerminalItem> items) {
+        List<DungeonPolicy.TerminalClick> clicks = DungeonPolicy.solveTerminalClicks(terminal, title, items);
+        if (terminal == DungeonPolicy.Terminal.RUBIX && extras().athen().termRubixLeftOnly) {
+            return clicks.stream().map(click -> new DungeonPolicy.TerminalClick(click.slot(), 0)).toList();
+        }
+        return clicks;
     }
 
     static List<DungeonPolicy.TerminalClick> pinglessRemaining(

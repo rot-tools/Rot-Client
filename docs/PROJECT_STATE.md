@@ -14,10 +14,10 @@ This document is the maintainer-facing snapshot of the current engineering state
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
 | Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (84 HUD/QoL parents) and **Rot Client+** (136 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
 | Minecraft | 26.1.2 |
-| Mod | 2.1.0+mc26.1.2 |
+| Mod | 2.1.1+mc26.1.2 |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
 | Package | `fi.rotclient` |
-| Playable JARs | `RotClient-2.1.0+mc26.1.2.jar` (`rotclient`) and `RotClientPlus-2.1.0+mc26.1.2.jar` (`rotclientplus`) |
+| Playable JARs | `RotClient-2.1.1+mc26.1.2.jar` (`rotclient`) and `RotClientPlus-2.1.1+mc26.1.2.jar` (`rotclientplus`) |
 | Java | 25 |
 | Gradle wrapper | 9.5.1 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
@@ -285,7 +285,7 @@ For a class-by-class briefing of the shipped JAR (what to open first, Policy vs 
 3. Run `./gradlew compileClientJava compilePlusJava compilePlusClientJava`.
 4. Run `git diff --check`.
 5. Run `./gradlew clean build`.
-6. Select `RotClient-2.1.0+mc26.1.2.jar` and `RotClientPlus-2.1.0+mc26.1.2.jar` from `build/libs/`; never select the sources JAR.
+6. Select `RotClient-2.1.1+mc26.1.2.jar` and `RotClientPlus-2.1.1+mc26.1.2.jar` from `build/libs/`; never select the sources JAR.
 7. Back up the installed JARs and copy both playable files into a Serveri instance's `minecraft/mods/` directory. Remove any MiningTracker JAR first. Enable only one in Prism.
 8. Verify the deployed artifact and runtime-test the feature before claiming completion.
 
@@ -368,3 +368,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](MINING_HUD_FIXES.md).
 
 26.1.2 Plus now has matching 26.1.2 loader metadata and a compile/test-verified candidate. Its first controlled Minecraft startup/gameplay test remains pending.
+
+## Upstream compatibility checkpoint (2026-10-08)
+
+Ported shared Pet/commission/API parsing and Plus terminal/dagger corrections, preserving this Minecraft version's bindings and metadata. See docs/UPSTREAM_REFRESH_2026-10-08.md for source comparisons and open runtime/engineering work.

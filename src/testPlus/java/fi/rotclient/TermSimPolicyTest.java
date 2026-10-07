@@ -75,7 +75,7 @@ final class TermSimPolicyTest {
             }
         }
         assertEquals(TermSimPolicy.NUMBERS_COUNT, red);
-        assertEquals(14, remaining.size());
+        assertEquals(10, remaining.size());
     }
 
     @Test
@@ -136,7 +136,7 @@ final class TermSimPolicyTest {
     }
 
     @Test
-    void melodyCompletesAfterFourRows() {
+    void melodyCompletesAfterCurrentThreeRows() {
         TermSimPolicy.Layout current = TermSimPolicy.generate(TermSimPolicy.Kind.MELODY, new Random(9));
         int completed = 0;
         for (int step = 0; step < 12; step++) {
@@ -149,12 +149,12 @@ final class TermSimPolicyTest {
             current = click.layout();
             completed++;
             if (click.complete()) {
-                assertEquals(4, completed);
+                assertEquals(3, completed);
                 assertEquals(TermSimPolicy.MELODY_PLAY_ROWS + 1, current.melody().currentRow());
                 return;
             }
         }
-        throw new AssertionError("4-row Melody should complete after four matching clicks");
+        throw new AssertionError("Current 3-row Melody should complete after three matching clicks");
     }
 
     @Test

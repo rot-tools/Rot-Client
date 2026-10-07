@@ -2,6 +2,7 @@ package fi.rotclient;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -13,20 +14,26 @@ public final class DungeonTerminalClickRuntime {
     }
 
     private static final List<Trail> TRAILS = new ArrayList<>();
+    private static AbstractContainerMenu trailMenu;
 
     private DungeonTerminalClickRuntime() {
     }
 
     public static void record(AbstractContainerScreen<?> screen, int mouseX, int mouseY, int button) {
         DungeonTerminalClickSettings settings = settings();
-        if (!settings.enabled() || screen == null) {
+        if (!settings.enabled() || screen == null || button < 0 || button > 1) {
+            if (!settings.enabled() || screen == null) clear();
             return;
         }
+        if (trailMenu != screen.getMenu()) clear();
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
         if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
+            clear();
             return;
         }
-        TRAILS.add(new Trail(mouseX, mouseY, button == 1, System.currentTimeMillis() + 1_200L));
+        trailMenu = screen.getMenu();
+        TRAILS.add(new Trail(mouseX, mouseY,
+                button == 1, System.currentTimeMillis() + 1_200L));
         if (TRAILS.size() > 40) {
             TRAILS.removeFirst();
         }
@@ -35,11 +42,13 @@ public final class DungeonTerminalClickRuntime {
     public static void render(AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
         DungeonTerminalClickSettings settings = settings();
         if (!settings.enabled() || screen == null || graphics == null) {
+            if (!settings.enabled() || screen == null) clear();
             return;
         }
         String title = screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE) {
-            TRAILS.clear();
+        if (DungeonPolicy.detectTerminal(title) == DungeonPolicy.Terminal.NONE
+                || trailMenu != screen.getMenu()) {
+            clear();
             return;
         }
         long now = System.currentTimeMillis();
@@ -70,5 +79,10 @@ public final class DungeonTerminalClickRuntime {
 
     private static DungeonTerminalClickSettings settings() {
         return DungeonTerminalClickSettings.from(RotClientClient.qolConfigPublic());
+    }
+
+    private static void clear() {
+        TRAILS.clear();
+        trailMenu = null;
     }
 }
