@@ -68,7 +68,7 @@ final class DungeonBladePolicyTest {
         assertEquals("Terms 5.0s", DungeonBladePolicy.termStartHudLine(100));
         assertEquals(2, DungeonBladePolicy.unclaimedChests("Unclaimed chests: 2").orElseThrow());
         assertEquals(3, DungeonBladePolicy.unclaimedChests(" Unclaimed chests: 3").orElseThrow());
-        assertEquals("Melody 50%", DungeonBladePolicy.melodyProgressParty(3).orElseThrow());
+        assertEquals("Melody 66%", DungeonBladePolicy.melodyProgressParty(3).orElseThrow());
         assertEquals("Terminal (3/7)", DungeonBladePolicy.sectionObjectiveHud("Terminal", 3, 7));
         assertEquals(2, DungeonBladePolicy.melodyClayRow(List.of(
                 new DungeonPolicy.TerminalItem(20, "Clay", "lime_terracotta", false, 1)))
@@ -125,7 +125,7 @@ final class DungeonBladePolicyTest {
         assertEquals("Bob", melody.username());
         assertEquals(50, melody.percent());
         assertEquals(2, DungeonBladePolicy.melodyQuarters(50));
-        assertEquals("Mage has melody! 2/4", DungeonBladePolicy.melodyTeammateHud("Mage", 50));
+        assertEquals("Mage has melody! 50%", DungeonBladePolicy.melodyTeammateHud("Mage", 50));
         assertTrue(DungeonBladePolicy.melodyPartyPercent("Party > Henri: hi").isEmpty());
         assertTrue(DungeonF7Policy.holdingRelicOrMenu("Corrupted Red Relic"));
         assertTrue(DungeonF7Policy.holdingRelicOrMenu("SkyBlock Menu"));

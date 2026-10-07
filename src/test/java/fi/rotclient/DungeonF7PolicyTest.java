@@ -92,9 +92,11 @@ final class DungeonF7PolicyTest {
     void melodySkipQueuesLowerRowsOnEdges() {
         DungeonPolicy.MelodyState ready = new DungeonPolicy.MelodyState(1, 0, 0);
         List<DungeonPolicy.TerminalClick> extra = DungeonPolicy.melodySkipClicks(ready, true, true, "Edges");
+        assertEquals(List.of(new DungeonPolicy.TerminalClick(34, 0)), extra);
         assertEquals(List.of(
                 new DungeonPolicy.TerminalClick(34, 0),
-                new DungeonPolicy.TerminalClick(43, 0)), extra);
+                new DungeonPolicy.TerminalClick(43, 0)),
+                DungeonPolicy.melodySkipClicks(ready, true, true, "Edges", 4));
         assertEquals(List.of(new DungeonPolicy.TerminalClick(34, 0)),
                 DungeonPolicy.melodySkipClicks(ready, true, true, "Edges", 3));
         assertTrue(DungeonPolicy.melodySkipClicks(ready, false, true, "Edges").isEmpty());
@@ -102,8 +104,7 @@ final class DungeonF7PolicyTest {
                 new DungeonPolicy.MelodyState(0, 0, 0), true, false, "Edges").isEmpty());
         assertEquals(List.of(
                 new DungeonPolicy.TerminalClick(25, 0),
-                new DungeonPolicy.TerminalClick(34, 0),
-                new DungeonPolicy.TerminalClick(43, 0)),
+                new DungeonPolicy.TerminalClick(34, 0)),
                 DungeonPolicy.melodySkipClicks(
                         new DungeonPolicy.MelodyState(0, 4, 4), true, false, "Edges"));
     }
@@ -133,7 +134,8 @@ final class DungeonF7PolicyTest {
         assertEquals("P3  T 3/7  D 1/7  L 0/7", DungeonF7Policy.p3HudLine(3, 1, 0));
         assertEquals(16, DungeonF7Policy.melodySlotForDigit(1));
         assertEquals(34, DungeonF7Policy.melodySlotForDigit(3));
-        assertEquals(43, DungeonF7Policy.melodySlotForDigit(4));
+        assertEquals(-1, DungeonF7Policy.melodySlotForDigit(4));
+        assertEquals(43, DungeonF7Policy.melodySlotForDigit(4, 4));
         assertEquals(-1, DungeonF7Policy.melodySlotForDigit(4, 3));
         assertTrue(DungeonF7Policy.protectTerminal(1_000L, 1_200L, 400));
         assertFalse(DungeonF7Policy.protectTerminal(1_000L, 1_500L, 400));

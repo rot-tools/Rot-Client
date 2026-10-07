@@ -88,6 +88,7 @@ final class MarketWatchAuctionHouseService {
                 fetchPage(0);
 
         if (!usableFirstPage(firstPage)) {
+            roundFailed = true;
             return false;
         }
 
@@ -166,7 +167,7 @@ final class MarketWatchAuctionHouseService {
                             .timeout(Duration.ofSeconds(15))
                             .header(
                                     "User-Agent",
-                                    "RotClient/2.0.1+mc26.2")
+                                    "RotClient-MarketData")
                             .GET()
                             .build();
 
@@ -188,6 +189,12 @@ final class MarketWatchAuctionHouseService {
 
             if (parsed == null
                     || !parsed.isJsonObject()) {
+                roundFailed = true;
+                return null;
+            }
+
+            JsonElement success = parsed.getAsJsonObject().get("success");
+            if (success == null || !success.getAsBoolean()) {
                 roundFailed = true;
                 return null;
             }

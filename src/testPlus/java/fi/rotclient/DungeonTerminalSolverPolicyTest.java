@@ -23,21 +23,21 @@ final class DungeonTerminalSolverPolicyTest {
         assertEquals(List.of(10), DungeonPolicy.solveTerminal(
                 DungeonPolicy.Terminal.STARTS_WITH, "What starts with: 'A'?", starts));
         List<DungeonPolicy.TerminalItem> numbers = List.of(
-                new DungeonPolicy.TerminalItem(10, "2", "blue_stained_glass", false),
-                new DungeonPolicy.TerminalItem(12, "1", "blue_stained_glass", false),
-                new DungeonPolicy.TerminalItem(13, "3", "blue_stained_glass", true));
+                new DungeonPolicy.TerminalItem(10, "2", "red_stained_glass", false, 2),
+                new DungeonPolicy.TerminalItem(12, "1", "red_stained_glass", false, 1),
+                new DungeonPolicy.TerminalItem(13, "3", "lime_stained_glass", true, 3));
         assertEquals(List.of(12, 10), DungeonPolicy.solveTerminal(DungeonPolicy.Terminal.NUMBERS, "", numbers));
         List<DungeonPolicy.TerminalItem> ten = List.of(
-                new DungeonPolicy.TerminalItem(10, "10", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(11, "1", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(12, "5", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(13, "2", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(14, "8", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(19, "3", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(20, "9", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(21, "4", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(22, "6", "red_stained_glass_pane", false),
-                new DungeonPolicy.TerminalItem(23, "7", "red_stained_glass_pane", false));
+                new DungeonPolicy.TerminalItem(10, "10", "red_stained_glass_pane", false, 10),
+                new DungeonPolicy.TerminalItem(11, "1", "red_stained_glass_pane", false, 1),
+                new DungeonPolicy.TerminalItem(12, "5", "red_stained_glass_pane", false, 5),
+                new DungeonPolicy.TerminalItem(13, "2", "red_stained_glass_pane", false, 2),
+                new DungeonPolicy.TerminalItem(14, "8", "red_stained_glass_pane", false, 8),
+                new DungeonPolicy.TerminalItem(19, "3", "red_stained_glass_pane", false, 3),
+                new DungeonPolicy.TerminalItem(20, "9", "red_stained_glass_pane", false, 9),
+                new DungeonPolicy.TerminalItem(21, "4", "red_stained_glass_pane", false, 4),
+                new DungeonPolicy.TerminalItem(22, "6", "red_stained_glass_pane", false, 6),
+                new DungeonPolicy.TerminalItem(23, "7", "red_stained_glass_pane", false, 7));
         assertEquals(List.of(11, 13, 19, 21, 12, 22, 23, 14, 20, 10),
                 DungeonPolicy.solveTerminal(DungeonPolicy.Terminal.NUMBERS, "", ten));
         List<DungeonPolicy.TerminalItem> melody = List.of(
@@ -84,7 +84,7 @@ final class DungeonTerminalSolverPolicyTest {
                 new DungeonPolicy.TerminalItem(10, "Lime Dye", "lime_dye", false),
                 new DungeonPolicy.TerminalItem(11, "Cactus Green", "cactus_green", false),
                 new DungeonPolicy.TerminalItem(12, "Poppy", "poppy", false));
-        assertEquals(List.of(10, 11), DungeonPolicy.solveTerminal(
+        assertEquals(List.of(11), DungeonPolicy.solveTerminal(
                 DungeonPolicy.Terminal.SELECT_ALL, "Select all the green items!", greenItems));
         assertEquals(List.of(12), DungeonPolicy.solveTerminal(
                 DungeonPolicy.Terminal.SELECT_ALL, "Select all the red items!", greenItems));
