@@ -10,7 +10,14 @@ import org.junit.jupiter.api.Test;
 final class LiteDungeonPolicyClassLoadingTest {
     @Test
     void liteClassesStillLoadWithoutPlusDungeonPolicies() throws Exception {
-        Path jar = Path.of("build/libs/RotClient-2.0.1+mc26.3.jar").toAbsolutePath();
+        java.util.Properties properties = new java.util.Properties();
+        try (var reader = java.nio.file.Files.newBufferedReader(Path.of("gradle.properties"))) {
+            properties.load(reader);
+        }
+        Path jar = Path.of("build/libs/RotClient-" + properties.getProperty("mod_version") + ".jar")
+                .toAbsolutePath();
+        org.junit.jupiter.api.Assertions.assertTrue(java.nio.file.Files.isRegularFile(jar),
+                "Current playable JAR missing: " + jar);
         try (URLClassLoader loader = new URLClassLoader(new URL[] {jar.toUri().toURL()}, getClass().getClassLoader()) {
             @Override
             protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
