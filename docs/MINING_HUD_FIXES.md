@@ -1,5 +1,10 @@
 # Mining and Pet HUD repairs — 2026-10-01
 
+This is the historical first mining checkpoint. Subsequent 26.3-only
+[mining observation repairs](MINING_STATE_FIXES_2026-10-08.md) supersede the
+timer/SkyMall/helper lifecycle details below. Earlier test counts and version
+ports describe that checkpoint, not the current maintenance target.
+
 These changes are compile-tested and unit-tested. They still require a Minecraft/Hypixel playtest in each supported version and edition. They do not establish Modrinth approval.
 
 ## Shared repairs (Lite and Plus)

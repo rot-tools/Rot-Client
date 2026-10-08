@@ -120,6 +120,12 @@ public final class MiningLeftoverPolicy {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern SKY_MALL = Pattern.compile(
             "Sky\\s*Mall:?\\s*(?<perk>.+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SKY_MALL_EFFECT = Pattern.compile(
+            "(?i)^(?:Gain\\s+)?[+-]?[0-9]+(?:\\.[0-9]+)?(?:%|x)?\\s*[^a-zA-Z0-9\\s]{0,2}\\s*"
+                    + "(?:Mining Speed|Mining Fortune|Powder|more Powder while mining|Pickaxe Ability cooldowns?(?: reduction)?|"
+                    + "chance to find Golden and Diamond Goblins|Titanium drops)\\.?$");
+    private static final Pattern SKY_MALL_CURRENT = Pattern.compile(
+            "(?i)^(?:Current|Active|Today's|Today’s) (?:perk|buff|bonus):\\s*(.*)$");
     private static final Pattern COLD = Pattern.compile(
             "Cold:\\s*-?(?<cold>\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FETCHUR = Pattern.compile(
@@ -282,14 +288,15 @@ public final class MiningLeftoverPolicy {
         for (int i = 0; i < tabLines.size(); i++) {
             String line = CommissionDisplayPolicy.normalizeLine(tabLines.get(i));
             if (line.matches("(?i)^Sky\\s*Mall:?$")) {
-                if (i + 1 < tabLines.size()) {
-                    String perk = CommissionDisplayPolicy.normalizeLine(tabLines.get(i + 1));
-                    if (!perk.isEmpty() && !perk.endsWith(":")) return Optional.of(new SkyMall(perk));
-                }
+                Optional<SkyMall> next = readSkyMallEffect(tabLines, i + 1);
+                if (next.isPresent()) return next;
                 continue;
             }
             Matcher matcher = SKY_MALL.matcher(line);
-            if (matcher.matches()) return Optional.of(new SkyMall(matcher.group("perk").trim()));
+            if (matcher.matches()) {
+                Optional<SkyMall> parsed = skyMallEffect(matcher.group("perk"));
+                if (parsed.isPresent()) return parsed;
+            }
         }
         return Optional.empty();
     }
@@ -298,7 +305,18 @@ public final class MiningLeftoverPolicy {
         String line = CommissionDisplayPolicy.normalizeLine(message);
         if (!line.startsWith("New buff: ")) return Optional.empty();
         String perk = line.substring("New buff: ".length()).trim();
-        return perk.isEmpty() ? Optional.empty() : Optional.of(new SkyMall(perk));
+        return skyMallEffect(perk);
+    }
+
+    public static boolean skyMallInvalidatedByChat(String message) {
+        String line = CommissionDisplayPolicy.normalizeLine(message);
+        return line.equals("New day! Your Sky Mall buff changed!")
+                || line.equals("Reset your Heart of the Mountain! Your Perks and Abilities have been reset.");
+    }
+
+    public static boolean skyMallLoreDisabled(List<String> lore) {
+        return lore != null && lore.stream().map(CommissionDisplayPolicy::normalizeLine)
+                .anyMatch(line -> line.equalsIgnoreCase("DISABLED"));
     }
 
     /** Only the current selection in Sky Mall lore is authority, never the list of possible buffs. */
@@ -306,13 +324,32 @@ public final class MiningLeftoverPolicy {
         if (lore == null) return Optional.empty();
         for (int i = 0; i < lore.size(); i++) {
             String line = CommissionDisplayPolicy.normalizeLine(lore.get(i));
-            Matcher marker = Pattern.compile("(?i)^(?:Current|Active|Today's|Today.s) (?:perk|buff|bonus):\\s*(.*)$").matcher(line);
+            if (line.equalsIgnoreCase("Your Current Effect") || line.equalsIgnoreCase("Your Current Effect:"))
+                return readSkyMallEffect(lore, i + 1);
+            Matcher marker = SKY_MALL_CURRENT.matcher(line);
             if (!marker.matches()) continue;
-            String perk = marker.group(1).trim();
-            if (perk.isEmpty() && i + 1 < lore.size()) perk = CommissionDisplayPolicy.normalizeLine(lore.get(i + 1));
-            if (!perk.isEmpty() && !perk.endsWith(":")) return Optional.of(new SkyMall(perk));
+            return marker.group(1).isBlank() ? readSkyMallEffect(lore, i + 1) : skyMallEffect(marker.group(1));
         }
         return Optional.empty();
+    }
+
+    private static Optional<SkyMall> readSkyMallEffect(List<String> lines, int start) {
+        StringBuilder wrapped = new StringBuilder();
+        for (int i = start; i < Math.min(lines.size(), start + 4); i++) {
+            String line = CommissionDisplayPolicy.normalizeLine(lines.get(i));
+            if (line.isEmpty() || CommissionDisplayPolicy.isWidgetHeader(line)) break;
+            if (!wrapped.isEmpty()) wrapped.append(' ');
+            wrapped.append(line);
+            Optional<SkyMall> parsed = skyMallEffect(wrapped.toString());
+            if (parsed.isPresent()) return parsed;
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<SkyMall> skyMallEffect(String text) {
+        String perk = CommissionDisplayPolicy.normalizeLine(text).replaceFirst("^■\\s*", "");
+        return perk.length() <= 160 && SKY_MALL_EFFECT.matcher(perk).matches()
+                ? Optional.of(new SkyMall(perk)) : Optional.empty();
     }
 
     public static boolean matchesActiveCommission(String nametag, List<CommissionDisplayPolicy.Commission> commissions) {

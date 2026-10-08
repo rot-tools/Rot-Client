@@ -87,7 +87,7 @@ final class RotClientIdentityTest {
         String properties = Files.readString(
                 Path.of("gradle.properties"),
                 StandardCharsets.UTF_8);
-        assertTrue(properties.contains("mod_version=2.0.3+mc26.3"));
+        assertTrue(properties.contains("mod_version=2.0.4+mc26.3"));
         assertTrue(properties.contains("maven_group=fi.rotclient"));
 
         String settings = Files.readString(
