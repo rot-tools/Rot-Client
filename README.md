@@ -55,8 +55,8 @@ MiningTracker JAR.
 
 | Minecraft | Rot Client Lite | Rot Client+ | Status |
 | --- | --- | --- | --- |
-| 26.1.2 | [`2.1.0+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-mining-hud) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-mining-hud) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.2 | [`2.0.1+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.3 | [`2.0.2+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Upstream compatibility/terminal/Slayer/Pet repair candidate. New behavior awaits runtime validation; earlier UI fixes were owner-tested. |
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
