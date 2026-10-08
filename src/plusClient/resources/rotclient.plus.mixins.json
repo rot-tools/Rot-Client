@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_25",
   "plugin": "fi.rotclient.mixin.RotClientMixinPlugin",
   "client": [
+    "MarketTradeSignAccess",
+    "KeyboardHandlerMarketTradeMixin",
     "BlockStateSecretHitboxMixin",
     "CameraClipMixin",
     "CameraFreecamMixin",

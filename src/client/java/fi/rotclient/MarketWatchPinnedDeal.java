@@ -15,9 +15,20 @@ record MarketWatchPinnedDeal(
         double expectedProfitCoins,
         double roiPercent,
         long observedAtMillis,
-        long pinnedAtMillis) {
+        long pinnedAtMillis,
+        String tier,
+        String reforge) {
+
+    MarketWatchPinnedDeal(String id, MarketWatchOpportunity.Market market, String itemId, String itemName,
+            String category, String sellerUuid, double buyPricePerUnit, double sellPricePerUnit, long quantity,
+            double expectedProfitCoins, double roiPercent, long observedAtMillis, long pinnedAtMillis) {
+        this(id, market, itemId, itemName, category, sellerUuid, buyPricePerUnit, sellPricePerUnit, quantity,
+                expectedProfitCoins, roiPercent, observedAtMillis, pinnedAtMillis, "", "?");
+    }
 
     MarketWatchPinnedDeal {
+        tier = tier == null ? "" : tier;
+        reforge = reforge == null ? "?" : reforge;
 
         id =
                 id == null
@@ -105,7 +116,12 @@ record MarketWatchPinnedDeal(
                 opportunity.expectedProfitCoins(),
                 opportunity.roiPercent(),
                 opportunity.observedAtMillis(),
-                now);
+                now,
+                opportunity.tier(),
+                MarketWatchDataService.currentAuctions().snapshot().auctions().stream()
+                        .filter(auction -> auction.uuid().equals(opportunity.auctionUuid()))
+                        .map(auction -> auction.variant().known() ? auction.variant().reforge() : "?")
+                        .findFirst().orElse("?"));
     }
 
     /*

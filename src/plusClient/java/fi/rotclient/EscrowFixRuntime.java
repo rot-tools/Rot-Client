@@ -13,7 +13,7 @@ public final class EscrowFixRuntime {
     }
 
     public static void onChat(Component message) {
-        if (message == null || !enabled()) {
+        if (message == null || !enabled() || MarketTradeRuntime.enabled()) {
             return;
         }
         String command = EscrowFixPolicy.commandForMessage(message.getString());

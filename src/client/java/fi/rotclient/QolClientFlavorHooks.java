@@ -19,6 +19,8 @@ import java.util.List;
  * every default is a no-op and shared client code never names Plus classes.
  */
 public interface QolClientFlavorHooks {
+    default String marketWorkspaceLabel() { return ""; }
+    default void openMarketWorkspace(Screen parent) {}
     QolClientFlavorHooks NONE = new QolClientFlavorHooks() {};
 
     default void enforceCameraPerspective() {

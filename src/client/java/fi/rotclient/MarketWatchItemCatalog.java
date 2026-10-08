@@ -8,6 +8,16 @@ import java.util.Locale;
 import java.util.Map;
 
 final class MarketWatchItemCatalog {
+    static String itemIdFor(String name, String tier) {
+        String id = "";
+        for (var auction : MarketWatchDataService.currentAuctions().snapshot().auctions()) {
+            if (!auction.itemName().equalsIgnoreCase(name) || !auction.tier().equalsIgnoreCase(tier)) continue;
+            if (!auction.variant().known()) continue;
+            if (!id.isBlank() && !id.equals(auction.variant().itemId())) return "";
+            id = auction.variant().itemId();
+        }
+        return id;
+    }
     record AuctionSuggestion(
             String itemName,
             String tier,
