@@ -1494,6 +1494,7 @@ final class QolOverlayHud {
         if (dungeonCarryEditorVisible(qol)) labels.add("Dungeon Carry Display");
         if (dungeonWatcherEditorVisible(qol)) labels.add("Blood Timers");
         if (FishingSuiteRuntime.hudVisible(qol)) labels.add("Fishing HUD");
+        if (PickobulusRuntime.hudVisible(qol)) labels.add("Pickobulus HUD");
         if (MiningLeftoverRuntime.hudVisible(qol)) labels.add("Mining HUD");
         if (QolClientFlavorSupport.hooks().dianaHudVisible(qol)) labels.add("Diana HUD");
         if (ForagingRuntime.hudVisible(qol)) labels.add("Foraging HUD");

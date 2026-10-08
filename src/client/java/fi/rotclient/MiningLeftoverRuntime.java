@@ -31,7 +31,9 @@ public final class MiningLeftoverRuntime {
     private static MiningLeftoverPolicy.TreasureDistance treasure;
     private static MiningLeftoverPolicy.MiningEvent event = MiningLeftoverPolicy.MiningEvent.NONE;
     private static MiningLeftoverPolicy.SkyMall skyMall;
-    private static long skyMallSeenAt;
+    private static final SkyMallObservationPolicy.State SKY_MALL_OBSERVATIONS = new SkyMallObservationPolicy.State();
+    private static Object skyMallWorld;
+    private static String skyMallProfile;
     private static MiningLeftoverPolicy.Cold cold;
     private static Map<MiningLeftoverPolicy.CorpseType, Boolean> corpses = Map.of();
     private static final Set<Integer> seenWorms = new HashSet<>();
@@ -56,7 +58,9 @@ public final class MiningLeftoverRuntime {
         treasure = null;
         event = MiningLeftoverPolicy.MiningEvent.NONE;
         skyMall = null;
-        skyMallSeenAt = 0;
+        SKY_MALL_OBSERVATIONS.clear();
+        skyMallWorld = null;
+        skyMallProfile = null;
         cold = null;
         corpses = Map.of();
         seenWorms.clear();
@@ -88,6 +92,7 @@ public final class MiningLeftoverRuntime {
             return List.of();
         }
         QolSkyblockExtras extras = qol.extras();
+        skyMall = SKY_MALL_OBSERVATIONS.current(System.currentTimeMillis());
         List<String> lines = new ArrayList<>(MiningLeftoverPolicy.hudLines(
                 extras.miningGlaciteEnabled && extras.miningGlacitePityHud ? pity : null,
                 extras.miningHelpersEnabled && extras.miningHelpersAbilityHud ? ability : null,
@@ -103,9 +108,19 @@ public final class MiningLeftoverRuntime {
         return List.copyOf(lines);
     }
 
-    private static void observeSkyMall(MiningLeftoverPolicy.SkyMall observed) {
-        skyMall = observed;
-        skyMallSeenAt = System.currentTimeMillis();
+    private static boolean wantsSkyMall(QolSkyblockExtras extras) {
+        return extras.miningHotmEnabled && (extras.miningHotmSkyMall || extras.miningHotmScreenHint);
+    }
+
+    private static void ensureSkyMallScope(Minecraft client) {
+        Object world = client == null ? null : client.level;
+        String profile = RotClientClient.currentProfileId();
+        if (world != skyMallWorld || !java.util.Objects.equals(profile, skyMallProfile)) {
+            SKY_MALL_OBSERVATIONS.clear();
+            skyMall = null;
+            skyMallWorld = world;
+            skyMallProfile = profile;
+        }
     }
 
     public static void renderScreenHint(Screen screen, net.minecraft.client.gui.GuiGraphicsExtractor graphics) {
@@ -113,6 +128,7 @@ public final class MiningLeftoverRuntime {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         if (client == null || graphics == null || screen == null || !extras.miningHotmEnabled
                 || !extras.miningHotmScreenHint || !MiningLeftoverPolicy.isHotmScreen(screen.getTitle().getString())) return;
+        skyMall = SKY_MALL_OBSERVATIONS.current(System.currentTimeMillis());
         String hint = skyMall == null ? "Sky Mall: current perk not observed yet" : "Sky Mall: " + skyMall.perk();
         graphics.text(client.font, hint, 8, screen.height - 20, 0xFFFFCC55, true);
     }
@@ -139,9 +155,17 @@ public final class MiningLeftoverRuntime {
         if (titleTicks > 0) {
             titleTicks--;
         }
-        if (client == null || client.player == null) {
+        if (client == null || client.player == null || client.level == null) {
+            SKY_MALL_OBSERVATIONS.clear();
+            skyMall = null;
+            skyMallWorld = null;
+            skyMallProfile = null;
             return;
         }
+        ensureSkyMallScope(client);
+        boolean readSkyMall = wantsSkyMall(extras);
+        if (!readSkyMall) SKY_MALL_OBSERVATIONS.invalidate();
+        skyMall = SKY_MALL_OBSERVATIONS.current(System.currentTimeMillis());
         PickobulusRuntime.tick(client);
         MiningAssistRuntime.tick(client);
         SkyBlockUtilityRuntime.tick(client);
@@ -162,9 +186,9 @@ public final class MiningLeftoverRuntime {
         if (extras.miningHelpersEnabled && extras.miningHelpersAbilityHud) {
             ability = MiningLeftoverPolicy.parseAbility(tab).orElse(null);
         }
-        if (extras.miningHotmEnabled && extras.miningHotmSkyMall) {
-            MiningLeftoverPolicy.parseSkyMall(tab).ifPresent(MiningLeftoverRuntime::observeSkyMall);
-            if (System.currentTimeMillis() - skyMallSeenAt > 1_200_000L) skyMall = null;
+        if (readSkyMall) {
+            MiningLeftoverPolicy.parseSkyMall(tab).ifPresent(observed ->
+                    SKY_MALL_OBSERVATIONS.observeTab(observed, System.currentTimeMillis()));
         }
         // Only the Cold overlay reads this, and parsing means rebuilding the whole scoreboard.
         cold = extras.miningGlaciteEnabled && extras.miningGlaciteColdOverlay
@@ -177,14 +201,22 @@ public final class MiningLeftoverRuntime {
         }
         Screen screen = client.gui == null ? null : client.gui.screen();
         String title = screen == null || screen.getTitle() == null ? "" : screen.getTitle().getString();
-        if (extras.miningHotmEnabled && MiningLeftoverPolicy.isHotmScreen(title)
+        if (readSkyMall && MiningLeftoverPolicy.isHotmScreen(title)
                 && screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container) {
-            for (var slot : container.getMenu().slots) {
-                if (CommissionDisplayPolicy.normalizeLine(slot.getItem().getHoverName().getString()).equalsIgnoreCase("Sky Mall"))
-                    MiningLeftoverPolicy.parseSkyMallLore(InventoryChromeRuntime.loreLines(slot.getItem()))
-                            .ifPresent(MiningLeftoverRuntime::observeSkyMall);
+            int limit = container.getMenu() instanceof net.minecraft.world.inventory.ChestMenu chest
+                    ? chest.getContainer().getContainerSize() : 0;
+            for (int slot = 0; slot < Math.min(limit, container.getMenu().slots.size()); slot++) {
+                var item = container.getMenu().slots.get(slot).getItem();
+                if (!CommissionDisplayPolicy.normalizeLine(item.getHoverName().getString()).equalsIgnoreCase("Sky Mall")) continue;
+                List<String> lore = InventoryChromeRuntime.loreLines(item);
+                if (MiningLeftoverPolicy.skyMallLoreDisabled(lore)) SKY_MALL_OBSERVATIONS.invalidate();
+                else MiningLeftoverPolicy.parseSkyMallLore(lore).ifPresent(observed ->
+                        SKY_MALL_OBSERVATIONS.observeGui(container.getMenu(), observed, System.currentTimeMillis()));
             }
+        } else if (!MiningLeftoverPolicy.isHotmScreen(title)) {
+            SKY_MALL_OBSERVATIONS.observeGui(null, null, System.currentTimeMillis());
         }
+        skyMall = SKY_MALL_OBSERVATIONS.current(System.currentTimeMillis());
         boolean hotmNow = extras.miningHotmEnabled
                 && extras.miningHotmScreenHint
                 && MiningLeftoverPolicy.isHotmScreen(title);
@@ -249,8 +281,13 @@ public final class MiningLeftoverRuntime {
         QolSkyblockExtras extras = RotClientClient.qolConfigPublic().extras();
         if (!overlay) PickobulusRuntime.onChat(message);
         String text = message.getString();
-        if (!overlay && extras.miningHotmEnabled && SkyBlockAreaDetector.detect() == SkyBlockArea.DWARVEN_MINES)
-            MiningLeftoverPolicy.parseSkyMallChat(text).ifPresent(MiningLeftoverRuntime::observeSkyMall);
+        if (!overlay && wantsSkyMall(extras) && SkyBlockAreaDetector.isInSkyblock()) {
+            ensureSkyMallScope(Minecraft.getInstance());
+            if (MiningLeftoverPolicy.skyMallInvalidatedByChat(text)) SKY_MALL_OBSERVATIONS.invalidate();
+            MiningLeftoverPolicy.parseSkyMallChat(text).ifPresent(observed ->
+                    SKY_MALL_OBSERVATIONS.observeChat(observed, System.currentTimeMillis()));
+            skyMall = SKY_MALL_OBSERVATIONS.current(System.currentTimeMillis());
+        }
         if (!overlay) {
             SkyBlockUtilityRuntime.onChat(message);
         }

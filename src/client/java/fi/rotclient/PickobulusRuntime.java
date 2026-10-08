@@ -9,24 +9,32 @@ import java.util.List;
 /** Cooldown HUD and projection of existing accepted break callbacks; never credits a ledger. */
 public final class PickobulusRuntime {
     private static PickobulusPolicy.Timer timer = new PickobulusPolicy.Timer();
-    private static long shotAt = -1;
-    private static int acceptedBlocks, acceptedTargetBlocks;
-    private static String popup = "";
-    private static long popupUntil;
+    private static final PickobulusPolicy.ShotProjection shot = new PickobulusPolicy.ShotProjection();
+    private static final PickobulusPolicy.Popup popup = new PickobulusPolicy.Popup();
+    private static final PickobulusPolicy.Context context = new PickobulusPolicy.Context();
+    private static String shotSelectionLabel = "";
     static void clear() {
-        timer = new PickobulusPolicy.Timer(); shotAt = -1; acceptedBlocks = acceptedTargetBlocks = 0;
-        popup = ""; popupUntil = 0;
+        clearState();
+        context.clear();
+    }
+    private static void clearState() {
+        timer = new PickobulusPolicy.Timer();
+        shot.reset(); popup.clear(); shotSelectionLabel = "";
     }
     static boolean hudVisible(QolUtilityConfig qol) {
-        return qol.extras().pickobulusEnabled && qol.extras().pickobulusTimerHud;
+        // HUD editor hit testing is configuration-only and must also work without a live world.
+        return qol != null && qol.extras().pickobulusEnabled && qol.extras().pickobulusTimerHud;
     }
     static List<String> hudLines() {
         var config = RotClientClient.qolConfigPublic();
+        long now = System.currentTimeMillis();
+        if (!context(Minecraft.getInstance(), config.extras(), now)) return List.of();
         List<String> lines = new ArrayList<>();
-        lines.add(timer.label(System.currentTimeMillis()));
-        if (config.extras().pickobulusConfirmedCounts && shotAt >= 0) {
-            lines.add("Tracker accepted: " + acceptedBlocks + " blocks");
-            lines.add("Selected target: " + acceptedTargetBlocks + " blocks");
+        lines.add(timer.label(now));
+        if (config.extras().pickobulusConfirmedCounts && shot.observedUse()) {
+            lines.add("Last use accepted: " + shot.accepted() + " blocks");
+            lines.add("Target at use (" + shotSelectionLabel + "): " + shot.selected() + " blocks"
+                    + (shot.selectionChanged() ? " (partial — tracker changed)" : ""));
         }
         lines.addAll(QolClientFlavorSupport.hooks().pickobulusPreviewHudLines());
         return List.copyOf(lines);
@@ -35,49 +43,62 @@ public final class PickobulusRuntime {
         if (component == null) return;
         String text = component.getString();
         long now = System.currentTimeMillis();
+        Minecraft client = Minecraft.getInstance();
+        var config = RotClientClient.qolConfigPublic().extras();
+        if (!context(client, config, now)) return;
         if (PickobulusPolicy.used(text)) {
-            shotAt = now; acceptedBlocks = acceptedTargetBlocks = 0;
-            var config = RotClientClient.qolConfigPublic().extras();
+            var selection = RotClientClient.selectedSelection();
+            if (!shot.start(now, selection.id())) return;
+            shotSelectionLabel = selection.displayName();
+            popup.clear();
             double cooldown = config.pickobulusCooldownSeconds;
             boolean observed = false;
-            Minecraft client = Minecraft.getInstance();
             if (config.pickobulusAutoCooldown && client.player != null) {
                 var lore = InventoryChromeRuntime.loreLines(client.player.getMainHandItem());
-                boolean pickobulus = lore.stream().anyMatch(line -> CommissionDisplayPolicy.normalizeLine(line).contains("Pickobulus"));
-                if (pickobulus) for (String line : lore) {
-                    var seconds = PickobulusPolicy.seconds(line);
-                    if (seconds.isPresent()) { cooldown = seconds.getAsDouble(); observed = true; }
-                }
+                var seconds = PickobulusPolicy.loreCooldown(lore);
+                if (seconds.isPresent()) { cooldown = seconds.getAsDouble(); observed = true; }
             }
             // Lore is the base cooldown, potentially modified by SkyMall/perks. Await tab/server correction.
-            timer.start(now, cooldown, false);
+            String baseline = PickobulusPolicy.tabStatus(CommissionDisplayRuntime.tabLines(client)).orElse("");
+            if (!timer.startUse(now, cooldown, baseline)) timer.reset();
             DiagnosticRecorder.record("PICKOBULUS_COOLDOWN", "seconds=" + cooldown + " lore=" + observed);
         } else if (PickobulusPolicy.ready(text)) timer.confirmReady(now);
     }
     static void tick(Minecraft client) {
-        if (client == null || client.player == null || client.level == null) return;
         var config = RotClientClient.qolConfigPublic().extras();
-        if (!config.pickobulusEnabled) { popup = ""; return; }
         long now = System.currentTimeMillis();
-        MiningLeftoverPolicy.parseAbility(CommissionDisplayRuntime.tabLines(client)).ifPresent(ability -> {
-            if (!ability.name().equalsIgnoreCase("Pickobulus")) return;
-            String status = ability.status().trim();
-            if (status.equalsIgnoreCase("READY") || status.equalsIgnoreCase("AVAILABLE")) timer.confirmReady(now);
-            else PickobulusPolicy.seconds("Cooldown: " + status).ifPresent(seconds -> timer.start(now, seconds, true));
-        });
+        if (!context(client, config, now)) return;
+        shot.observeSelection(RotClientClient.selectedSelection().id(), now);
+        PickobulusPolicy.tabStatus(CommissionDisplayRuntime.tabLines(client)).ifPresent(status ->
+                timer.observeTabStatus(status, now));
+        if (!config.pickobulusReadyPopup) popup.clear();
         if (timer.takeReadyNotification(now)) {
             if (config.pickobulusReadyPopup) {
-                popup = timer.authoritative() ? "Ability ready" : "Ability ready (estimated)";
-                popupUntil = now + 2_500;
+                popup.show(timer.authoritative() ? "Ability ready" : "Ability ready (estimated)", now);
             }
             if (config.pickobulusReadySound) client.player.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 0.5F, 1.4F);
         }
     }
-    static String popup() { return System.currentTimeMillis() < popupUntil ? popup : ""; }
+    static String popup() {
+        long now = System.currentTimeMillis();
+        var config = RotClientClient.qolConfigPublic().extras();
+        if (!context(Minecraft.getInstance(), config, now) || !config.pickobulusReadyPopup) {
+            popup.clear();
+            return "";
+        }
+        return popup.text(now);
+    }
     static void acceptedBreak(int count, boolean selectedTarget) {
-        long age = System.currentTimeMillis() - shotAt;
-        if (shotAt < 0 || age < 0 || age > 5_000 || count <= 0) return;
-        acceptedBlocks += count;
-        if (selectedTarget) acceptedTargetBlocks += count;
+        long now = System.currentTimeMillis();
+        if (!context(Minecraft.getInstance(), RotClientClient.qolConfigPublic().extras(), now)) return;
+        shot.acceptedBreak(now, count, selectedTarget, RotClientClient.selectedSelection().id());
+    }
+    private static boolean context(Minecraft client, QolSkyblockExtras config, long now) {
+        var observed = context.observe(client == null ? null : client.level,
+                client == null ? null : client.getConnection(), RotClientClient.currentProfileId(),
+                config != null && config.pickobulusEnabled, client != null && client.player != null,
+                client != null && client.level != null && SkyBlockAreaDetector.isInSkyblock(), now);
+        if (observed.reset()) clearState();
+        return observed.active();
     }
 }

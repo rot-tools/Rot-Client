@@ -8,6 +8,21 @@ import org.junit.jupiter.api.Test;
 
 final class QolOverlayHudEditorTest {
     @Test
+    void pickobulusHudCanBeEditedWithoutRuntimeInitialization() {
+        TrackerConfig tracker = new TrackerConfig();
+        tracker.qolUtilities.extras().pickobulusEnabled = true;
+        tracker.qolUtilities.setPose("pickobulus", 500, 700);
+        QolOverlayHud overlay = new QolOverlayHud(tracker);
+        overlay.setEditorOpen(true);
+
+        assertTrue(overlay.editorElementLabels().contains("Pickobulus HUD"));
+        assertTrue(overlay.beginDrag(505, 705));
+        assertEquals("Pickobulus HUD", overlay.selectedElementLabel());
+        tracker.qolUtilities.extras().pickobulusEnabled = false;
+        assertFalse(overlay.editorElementLabels().contains("Pickobulus HUD"));
+    }
+
+    @Test
     void visibleOverlayCanBeSelectedCenteredAndResetIndividually() {
         TrackerConfig tracker = new TrackerConfig();
         tracker.qolUtilities.playerDisplayEnabled = true;

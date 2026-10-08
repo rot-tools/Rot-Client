@@ -12,64 +12,89 @@ import java.util.List;
 
 /** Plus-only estimated aiming footprint. It never updates mining accounting. */
 final class PickobulusPreviewRuntime {
-    private static List<BlockPos> candidates = List.of();
-    private static int targetCount;
-    private static long refreshed;
-    static void clear() { candidates = List.of(); targetCount = 0; refreshed = 0; }
-    private static boolean enabled() {
+    private static final PickobulusPreviewPolicy.Cache<BlockPos> cache = new PickobulusPreviewPolicy.Cache<>();
+    private record MaterialCandidate(TrackedMaterial material, boolean target) {}
+    static void clear() { cache.clear(); }
+
+    private static PickobulusPreviewPolicy.Context context(Minecraft client) {
         var config = RotClientClient.qolConfigPublic();
-        return config.extras().pickobulusEnabled && PlusOpaqueSettings.bool(config, "pickobulusPreview", false);
-    }
-    static void tick(Minecraft client) {
-        if (!enabled() || client == null || client.level == null || client.player == null
-                || SkyBlockAreaDetector.detect() == SkyBlockArea.UNKNOWN_SKYBLOCK_AREA) { clear(); return; }
+        if (client == null || client.level == null || client.player == null || client.getConnection() == null
+                || !config.extras().pickobulusEnabled || !PlusOpaqueSettings.bool(config, "pickobulusPreview", false)
+                || !SkyBlockAreaDetector.isInSkyblock()) return null;
+        var location = SkyBlockAreaDetector.detectLocation();
+        if (location.isUnknown()) return null;
         var held = client.player.getMainHandItem();
-        if (InventoryChromeRuntime.loreLines(held).stream().noneMatch(line -> line.contains("Pickobulus"))) { clear(); return; }
+        var lore = InventoryChromeRuntime.loreLines(held).stream().limit(128).toList();
+        if (!PickobulusPolicy.hasPickobulusAbility(lore)) return null;
+        var settings = new PickobulusPreviewPolicy.Settings(
+                PlusOpaqueSettings.integer(config, "pickobulusPreviewRadius", 3),
+                PlusOpaqueSettings.integer(config, "pickobulusPreviewRange", 32),
+                PlusOpaqueSettings.bool(config, "pickobulusPreviewSphere", false),
+                PlusOpaqueSettings.bool(config, "pickobulusPreviewThroughWalls", false));
+        String tool = SkyBlockItemIdentity.skyBlockId(held) + ":" + SkyBlockItemData.uuid(held);
+        return new PickobulusPreviewPolicy.Context(client.level, client.player, config, location,
+                RotClientClient.currentProfileId(), RotClientClient.selectedSelection().id(), tool, lore, settings);
+    }
+
+    static void tick(Minecraft client) {
         long now = System.currentTimeMillis();
-        if (now - refreshed < 250) return;
-        refreshed = now;
-        var config = RotClientClient.qolConfigPublic();
-        int radius = Math.max(1, Math.min(5, PlusOpaqueSettings.integer(config, "pickobulusPreviewRadius", 3)));
-        int range = Math.max(4, Math.min(64, PlusOpaqueSettings.integer(config, "pickobulusPreviewRange", 32)));
-        boolean sphere = PlusOpaqueSettings.bool(config, "pickobulusPreviewSphere", false);
+        var context = context(client);
+        if (!cache.sync(context, now)) return;
+        var settings = context.settings();
         var eye = client.player.getEyePosition();
-        var hit = client.level.clip(new ClipContext(eye, eye.add(client.player.getLookAngle().scale(range)),
+        var hit = client.level.clip(new ClipContext(eye, eye.add(client.player.getLookAngle().scale(settings.range())),
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, client.player));
-        if (hit.getType() != HitResult.Type.BLOCK) { candidates = List.of(); targetCount = 0; return; }
+        // Retire the old footprint immediately on aim changes, without scanning every mouse movement.
+        cache.aim(hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos().immutable() : null);
+        if (!cache.beginScan(context, now)) return;
         var center = hit.getBlockPos();
+        var selection = RotClientClient.selectedSelection();
+        List<String> selectedMaterials = selection.isMaterial()
+                ? selection.materialTarget().materials().stream().map(TrackedMaterial::id).toList() : List.of();
+        List<MaterialCandidate> materials = new ArrayList<>();
+        for (var material : TrackedMaterial.values()) {
+            boolean target = PickobulusPreviewPolicy.materialTarget(selection.isMaterial(), selectedMaterials, material.id());
+            if (PickobulusPreviewPolicy.candidateAllowed(material.id(), context.location()))
+                materials.add(new MaterialCandidate(material, target));
+        }
         List<BlockPos> blocks = new ArrayList<>();
-        int selected = 0;
+        int selected = 0, radius = settings.radius();
         for (int dx = -radius; dx <= radius; dx++) for (int dy = -radius; dy <= radius; dy++) for (int dz = -radius; dz <= radius; dz++) {
-            if (!PickobulusPreviewPolicy.inside(dx, dy, dz, radius, sphere)) continue;
+            if (!PickobulusPreviewPolicy.inside(dx, dy, dz, radius, settings.sphere())) continue;
             BlockPos pos = center.offset(dx, dy, dz);
             if (!client.level.hasChunkAt(pos)) continue;
             var state = client.level.getBlockState(pos);
             boolean candidate = false, target = false;
-            for (var material : TrackedMaterial.values()) {
-                if (material.isTrackedBlock(state)) {
+            for (var material : materials) {
+                if (material.material().isTrackedBlock(state)) {
                     candidate = true;
-                    target |= RotClientClient.tracksMaterial(material);
+                    target |= material.target();
                 }
             }
             var gemstone = GemstoneBlockClassifier.fromBlockState(state);
-            if (gemstone != null) { candidate = true; target |= RotClientClient.selectedSelection().tracksGemstone(gemstone); }
-            // Gemstone TARGET routing stays with the existing gemstone tracker; preview makes no claim.
+            if (gemstone != null && PickobulusPreviewPolicy.candidateAllowed(gemstone.id(), context.location())) {
+                candidate = true;
+                target |= selection.tracksGemstone(gemstone);
+            }
+            // One position is one estimated candidate, even when multiple block classifiers overlap.
             if (candidate) { blocks.add(pos.immutable()); if (target) selected++; }
         }
-        candidates = List.copyOf(blocks); targetCount = selected;
+        cache.publish(context, blocks, selected, now);
     }
     static List<String> hudLines() {
-        if (!enabled()) return List.of();
-        return List.of("Estimated candidates: " + candidates.size(), "Target candidates: " + targetCount);
+        var snapshot = cache.snapshot(context(Minecraft.getInstance()), System.currentTimeMillis()).orElse(null);
+        if (snapshot == null) return List.of();
+        return List.of("Estimated candidates: " + snapshot.candidates().size(), "Target candidates: " + snapshot.targetCount());
     }
     static void renderGizmos() {
-        if (!enabled()) return;
-        var config = RotClientClient.qolConfigPublic();
-        int color = config.extras().pickobulusColor;
-        for (BlockPos pos : candidates) {
+        var context = context(Minecraft.getInstance());
+        var snapshot = cache.snapshot(context, System.currentTimeMillis()).orElse(null);
+        if (snapshot == null) return;
+        int color = RotClientClient.qolConfigPublic().extras().pickobulusColor;
+        for (BlockPos pos : snapshot.candidates()) {
             var box = Gizmos.cuboid(new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1),
                     GizmoStyle.stroke(color, 1.5F));
-            if (PlusOpaqueSettings.bool(config, "pickobulusPreviewThroughWalls", false)) box.setAlwaysOnTop();
+            if (context.settings().throughWalls()) box.setAlwaysOnTop();
         }
     }
 }

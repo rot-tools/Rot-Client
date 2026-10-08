@@ -1,10 +1,10 @@
 # Rot Client Lite Modrinth release gate
 
-Status (2026-09-23): **not ready to publish**. Edition separation, the
+Status (2026-10-08): **not ready to publish**. Edition separation, the
 feature-by-feature server-rule audit, Minecraft runtime testing, and
 code/asset provenance review remain open.
 
-Upload only `RotClient-2.0.1+mc26.2.jar` to the Lite project. Rot Client+ has
+Upload only `RotClient-2.0.4+mc26.3.jar` to the Lite project. Rot Client+ has
 different functionality and must remain a separate project and artifact.
 
 ## Edition boundary
@@ -42,7 +42,7 @@ it does not prove multiplayer-server approval or runtime correctness.
    sponge boxes, Slayer Highlights, and other world overlays. Some may need
    Plus-only placement or removal; a depth-tested box is not automatically an
    allowed HUD. Review the compiled behavior as well as its settings.
-3. Run separate Minecraft 26.2 smoke tests for Lite and Plus, including old
+3. Run separate Minecraft 26.3 smoke tests for Lite and Plus, including old
    profile migration, dashboard/HUD navigation, absence of Lite dungeon cards
    and preservation of the full Plus dungeon runtime,
    reconnect, and restart. Automated tests are not runtime evidence.
@@ -62,7 +62,7 @@ it does not prove multiplayer-server approval or runtime correctness.
 Run the shared and Plus tests, `check`, `clean build`, and `git diff --check`
 with Java 25. Verify the SHA-256 values of the exact uploaded files.
 
-Launch Minecraft 26.2 with only Lite enabled and test startup, `/rot`, dashboard
+Launch Minecraft 26.3 with only Lite enabled and test startup, `/rot`, dashboard
 navigation, profile migration and switching, HUD editing, Market Watch,
 storage, Slayer, fishing, foraging, mining, reconnect,
 and a full restart. Inspect the log for mixin, rendering, networking, and
