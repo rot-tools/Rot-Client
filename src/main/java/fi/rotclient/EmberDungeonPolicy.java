@@ -764,17 +764,26 @@ public final class EmberDungeonPolicy {
         if (lines == null) {
             return map;
         }
-        Pattern named = Pattern.compile("(?i)\\b(archer|berserk|mage|healer|tank)\\b.*?([A-Za-z0-9_]{3,16})");
-        Pattern namedFirst = Pattern.compile("(?i)([A-Za-z0-9_]{3,16}).*?\\b(archer|berserk|mage|healer|tank)\\b");
+        // Tab grammar adapted from odtheking/Odin DungeonUtils.kt (833e0533), BSD-3-Clause.
+        // Copyright (c) 2025, odtheking. Full notice: docs/third-party/Odin-LICENSE.txt.
+        // Rot changes: accept + ranks, bound usernames, and retain only recognized class/death states.
+        Pattern tab = Pattern.compile("^\\[(\\d+)] (?:\\[[A-Za-z+]+] )*([A-Za-z0-9_]{3,16}) .*?\\((Archer|Berserk|Mage|Healer|Tank|DEAD|EMPTY)(?: [A-Za-z0-9]+)*\\)$", Pattern.CASE_INSENSITIVE);
+        Pattern classFirst = Pattern.compile("^(?:\\[)?(Archer|Berserk|Mage|Healer|Tank)(?:])?\\s+([A-Za-z0-9_]{3,16})$", Pattern.CASE_INSENSITIVE);
+        Pattern nameFirst = Pattern.compile("^([A-Za-z0-9_]{3,16})\\s+(Archer|Berserk|Mage|Healer|Tank)$", Pattern.CASE_INSENSITIVE);
         for (String raw : lines) {
             String text = DungeonPolicy.normalize(raw);
-            Matcher matcher = named.matcher(text);
-            if (matcher.find()) {
+            Matcher matcher = tab.matcher(text);
+            if (matcher.matches()) {
+                map.put(matcher.group(2), DungeonPolicy.dungeonClass(matcher.group(3)));
+                continue;
+            }
+            matcher = classFirst.matcher(text);
+            if (matcher.matches()) {
                 map.put(matcher.group(2), DungeonPolicy.dungeonClass(matcher.group(1)));
                 continue;
             }
-            matcher = namedFirst.matcher(text);
-            if (matcher.find()) {
+            matcher = nameFirst.matcher(text);
+            if (matcher.matches()) {
                 map.put(matcher.group(1), DungeonPolicy.dungeonClass(matcher.group(2)));
             }
         }

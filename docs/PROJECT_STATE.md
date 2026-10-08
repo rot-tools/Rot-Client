@@ -7,17 +7,19 @@ This document is the maintainer-facing snapshot of the current engineering state
 ### 2026-10-08 active maintenance checkpoint
 
 Only **Minecraft 26.3 Lite and Plus** receive further maintenance unless the owner requests a backport.
-Current candidate: `2.0.5+mc26.3`, targeting `port/26.3`. The
-[market trading candidate](MARKET_TRADING_2026-10-08.md) adds passive rarity/reforge filters and
-NBT upgrade grouping to both editions, with a separate Plus-only trading workspace. Live-Purse,
-per-trade and recorded-total budgets apply to opt-in AH BIN purchases and Bazaar buy orders/sell offers.
-A durable journal records purchase/listing intents and observed sales. Manipulation checks are
-conservative heuristics, not a guarantee of true value or profit. New trading is experimental and
-requires controlled Minecraft testing. It is off by default with zero purchase budgets.
+Current candidate: `2.0.6+mc26.3`, targeting `port/26.3`.
+[Dashboard and map changes](DASHBOARD_DUNGEON_2026-10-08.md) consolidate display navigation,
+add module settings search and clarify Current Session values, source filters and tracker selection.
+Plus map coordinates, calibration and teammate evidence are corrected. Canonical quantities and
+History schemas are unchanged. The full dungeon module audit and conditional boss timing evidence
+remain open; this is a bounded correction, not full dungeon completion.
 
-Java 25 `build`, 2,513 shared + 275 Plus tests (no failures/errors/skips), `verifyLegitJar`,
-`verifyDungeonJarBoundary` and diff checks pass. Public Lite publication remains gated by the existing
-release audit. Canonical mining quantities/History and historical version artifacts are preserved.
+Java 25 `build`, 2,519 shared + 279 Plus tests (no failures/errors/skips), `verifyLegitJar`,
+`verifyDungeonJarBoundary` and diff checks pass. New gameplay validation is pending. Public Lite
+publication remains gated by the existing release audit. Historical version artifacts are preserved.
+The preceding `2.0.5` [market trading candidate](MARKET_TRADING_2026-10-08.md) remains present;
+trading stays experimental, off by default with zero budgets, and requires controlled transactions.
+
 The preceding `2.0.4` [mining fixes](MINING_STATE_FIXES_2026-10-08.md) remain present.
 
 The preceding `2.0.3` [module follow-up](UPSTREAM_FOLLOWUP_2026-10-08.md)

@@ -427,3 +427,16 @@ legacy watch compatibility, live-Purse caps, manipulation-risk rejection, purcha
 exact menu/price/sign grammar, persisted uncertain outcomes, and Bazaar bid/ask direction.
 This is not evidence that a real auction or Bazaar transaction succeeded. Follow
 [the controlled trading checklist](MARKET_TRADING_2026-10-08.md#controlled-runtime-checklist).
+
+### 26.3 dashboard and map candidate (2026-10-08)
+
+`2.0.6+mc26.3`: 2,519 shared + 279 Plus tests; both client compilations, dual-JAR build,
+`verifyLegitJar`, `verifyDungeonJarBoundary` and diff checks pass. Search tests cover aliases/options,
+section context and original catalog IDs. Map regressions cover signed coordinates, dead rosters,
+incomplete marker identity, map buffer length, entrance runs crossing rows, ranked/levelled tab players and narrative rejection.
+
+Runtime checklist: both editions, old profiles/display links, local setting search and clear/Esc,
+scrollbar/inline drawer hit areas, slider/enum/text editing; Current Session all/source filters,
+active time and value labels, target switch/pause/restart, confirmed Start New and saved record opening.
+Plus: dungeon party heads across death/revival, Entrance/F1/F3/F7 map calibration and stale-map reset.
+Full puzzle/terminal/F7/ESP/secret/requeue matrix and conditional Minister boss timing remain pending.

@@ -2907,7 +2907,8 @@ public final class DungeonRuntime {
                     board, hashedTileIdentity, extras.dungeonMapRevealHidden());
             mapPreview = new DungeonPuzzlePolicy.MapPreview(
                     0, 0, new int[0], -1, -1, lastMapBoard.summary());
-        } else if (needPreview) {
+        } else {
+            lastMapBoard = emptyMapBoard();
             mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
         }
     }
@@ -2942,7 +2943,7 @@ public final class DungeonRuntime {
             return null;
         }
         MapItemSavedData data = client.level.getMapData(mapId);
-        if (data == null || data.colors == null) {
+        if (data == null || !DungeonMapObservationPolicy.buffer(data.colors)) {
             return null;
         }
         if (!DungeonMapPolicy.calibrate(data.colors, 128).ok()) {
@@ -3400,23 +3401,21 @@ public final class DungeonRuntime {
                 EmberDungeonPolicy.teammateClasses(rosterLines);
         List<DungeonMapPolicy.MapDecorationHint> hints = new ArrayList<>();
         for (var decoration : data.getDecorations()) {
-            int x = decoration.x();
-            int z = decoration.y();
-            if (x < 0) {
-                x += 128;
-            }
-            if (z < 0) {
-                z += 128;
-            }
+            if (decoration.type() == null || !(decoration.type().value() == MapDecorationTypes.PLAYER.value()
+                    || decoration.type().value() == MapDecorationTypes.FRAME.value())) continue;
+            int x = DungeonMapObservationPolicy.pixel(decoration.x());
+            int z = DungeonMapObservationPolicy.pixel(decoration.y());
             float yaw = decoration.rot() * 360.0F / 16.0F;
             String name = decoration.name().map(Component::getString).orElse("");
             boolean selfMarker = decoration.type() != null
                     && decoration.type().value() == MapDecorationTypes.FRAME.value();
             hints.add(new DungeonMapPolicy.MapDecorationHint(x, z, yaw, selfMarker, name));
         }
+        List<String> living = DungeonMapObservationPolicy.livingRoster(rosterLines, classes.keySet(), selfName);
+        hints = new ArrayList<>(DungeonMapObservationPolicy.knownMarkers(hints, living));
         return DungeonMapPolicy.assignTeammateIcons(
                 hints,
-                new ArrayList<>(classes.keySet()),
+                DungeonMapObservationPolicy.unambiguousOrder(hints, living),
                 selfName,
                 classes,
                 extras.dungeonHudClassIcons,
