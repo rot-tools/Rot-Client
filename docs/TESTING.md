@@ -440,3 +440,11 @@ scrollbar/inline drawer hit areas, slider/enum/text editing; Current Session all
 active time and value labels, target switch/pause/restart, confirmed Start New and saved record opening.
 Plus: dungeon party heads across death/revival, Entrance/F1/F3/F7 map calibration and stale-map reset.
 Full puzzle/terminal/F7/ESP/secret/requeue matrix and conditional Minister boss timing remain pending.
+
+### 26.3 F7 timer observation candidate (2026-10-08)
+
+2.0.7: 2,519 shared + 283 Plus tests; dual build/compilation and both JAR boundary checks pass.
+Four new Plus regressions cover concurrent countdowns, nominal tick units, duplicate/expired delivery,
+exact chat, forward phase clearing and invalid clock bounds. Live dungeon state remains Plus-only.
+Test Storm intro/PY/death, Goldor/Core opening, timer settings and leave/rejoin in F7/M7.
+Nominal wall-clock estimates and current conditional boss changes require runtime evidence.

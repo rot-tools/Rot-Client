@@ -87,10 +87,10 @@ public final class DungeonAssistPolicy {
     public static final int SIMON_X = 110;
     public static final int SIMON_Y = 121;
     public static final int SIMON_Z = 91;
-    public static final long STORM_PAD_MILLIS = 20_000L;
-    public static final long STORM_LIGHTNING_MILLIS = 5_050L;
-    public static final long STORM_PY_MILLIS = 5_050L;
-    public static final long GOLDOR_MILLIS = 60_000L;
+    public static final long STORM_PAD_MILLIS = 20L * 50L;
+    public static final long STORM_LIGHTNING_MILLIS = 520L * 50L;
+    public static final long STORM_PY_MILLIS = 55L * 50L;
+    public static final long GOLDOR_MILLIS = 60L * 50L;
     public static final long CORE_MILLIS = 5_000L;
     public static final long NECRON_MILLIS = 8_000L;
     public static final long SKYBLOCK_EPOCH_SECONDS = 1_560_275_700L;
@@ -434,11 +434,8 @@ public final class DungeonAssistPolicy {
         if (text.equals("[BOSS] Storm: Pathetic Maxor, just like expected.")) {
             return F7Timer.STORM_PAD;
         }
-        if (text.equals("[BOSS] Storm: I should have known that I stood no chance.")) {
-            return F7Timer.STORM_LIGHTNING;
-        }
-        if (text.startsWith("[BOSS] Storm: ENERGY HEED MY CALL")
-                || text.startsWith("[BOSS] Storm: THUNDER LET ME BE YOUR CATALYST")) {
+        if (text.equals("[BOSS] Storm: ENERGY HEED MY CALL!")
+                || text.equals("[BOSS] Storm: THUNDER LET ME BE YOUR CATALYST!")) {
             return F7Timer.STORM_PY;
         }
         if (text.equals("[BOSS] Goldor: Who dares trespass into my domain?")) {
@@ -473,7 +470,7 @@ public final class DungeonAssistPolicy {
             case STORM_START -> "Storm";
             case STORM_PAD -> "Pad";
             case STORM_LIGHTNING -> "Lightning";
-            case STORM_PY -> "P3";
+            case STORM_PY -> "Storm PY";
             case GOLDOR -> "Goldor";
             case CORE -> "Core";
             case NECRON -> "Necron";

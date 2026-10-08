@@ -7,16 +7,16 @@ This document is the maintainer-facing snapshot of the current engineering state
 ### 2026-10-08 active maintenance checkpoint
 
 Only **Minecraft 26.3 Lite and Plus** receive further maintenance unless the owner requests a backport.
-Current candidate: `2.0.6+mc26.3`, targeting `port/26.3`.
-[Dashboard and map changes](DASHBOARD_DUNGEON_2026-10-08.md) consolidate display navigation,
-add module settings search and clarify Current Session values, source filters and tracker selection.
-Plus map coordinates, calibration and teammate evidence are corrected. Canonical quantities and
-History schemas are unchanged. The full dungeon module audit and conditional boss timing evidence
-remain open; this is a bounded correction, not full dungeon completion.
+Current candidate: `2.0.7+mc26.3`, targeting `port/26.3`.
+[F7 timer corrections](DUNGEON_TIMERS_2026-10-08.md) replace the single Plus countdown with
+independent nominal timers, correct tick-unit durations and phase triggers, reject duplicate/stale
+messages, and reset on context loss. Displayed times remain estimates; current conditional boss
+speed-ups and wider dungeon gameplay still require validation. No gameplay action is added.
 
-Java 25 `build`, 2,519 shared + 279 Plus tests (no failures/errors/skips), `verifyLegitJar`,
-`verifyDungeonJarBoundary` and diff checks pass. New gameplay validation is pending. Public Lite
-publication remains gated by the existing release audit. Historical version artifacts are preserved.
+Java 25 `build`, 2,519 shared + 283 Plus tests (no failures/errors/skips), `verifyLegitJar`,
+`verifyDungeonJarBoundary` and diff checks pass. Existing
+[dashboard/map changes](DASHBOARD_DUNGEON_2026-10-08.md), canonical quantities and History
+schemas are retained. Public Lite publication remains gated by the existing release audit.
 The preceding `2.0.5` [market trading candidate](MARKET_TRADING_2026-10-08.md) remains present;
 trading stays experimental, off by default with zero budgets, and requires controlled transactions.
 
