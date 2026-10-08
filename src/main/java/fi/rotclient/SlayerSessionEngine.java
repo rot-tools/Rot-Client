@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 /**
  * One process-local Slayer truth used by all live Slayer projections.
@@ -82,6 +83,7 @@ public final class SlayerSessionEngine {
 
     private final Map<Integer, ActiveBoss> active = new LinkedHashMap<>();
     private final Set<Integer> retiredOwnedBossIds = new HashSet<>();
+    private final Set<Integer> cocoonSuspendedIds = new LinkedHashSet<>();
     private final Map<String, Integer> drops = new LinkedHashMap<>();
     private final List<Carry> carries = new ArrayList<>();
     private QuestState questState = QuestState.IDLE;
@@ -146,7 +148,7 @@ public final class SlayerSessionEngine {
         if (descriptor == null) {
             return SpawnResult.ignored(descriptor);
         }
-        if (retiredOwnedBossIds.contains(entityId)) {
+        if (retiredOwnedBossIds.contains(entityId) || cocoonSuspendedIds.contains(entityId)) {
             return SpawnResult.ignored(descriptor);
         }
         ActiveBoss existing = active.get(entityId);
@@ -172,6 +174,9 @@ public final class SlayerSessionEngine {
     }
 
     public synchronized DeathResult onEntityDeath(int entityId, long nowMillis) {
+        if (cocoonSuspendedIds.contains(entityId)) {
+            return DeathResult.ignored();
+        }
         if (retiredOwnedBossIds.remove(entityId)) {
             return DeathResult.ignored();
         }
@@ -195,6 +200,27 @@ public final class SlayerSessionEngine {
         }
         String completedCarryPlayer = recordDeath(removed, nowMillis);
         return new DeathResult(true, removed.owned(), descriptor, duration, completedCarryPlayer);
+    }
+
+    /**
+     * An exact server cocoon observation suspends a still-active owned boss.
+     * This never reverses credited deaths, carries, drops, or published history.
+     */
+    public synchronized boolean suspendOwnedBossForCocoon(int entityId) {
+        ActiveBoss boss = active.get(entityId);
+        if (boss == null || !boss.owned() || boss.descriptor().role() != SlayerPolicy.EntityRole.BOSS) {
+            return false;
+        }
+        active.remove(entityId);
+        cocoonSuspendedIds.add(entityId);
+        while (cocoonSuspendedIds.size() > 128) {
+            cocoonSuspendedIds.remove(cocoonSuspendedIds.iterator().next());
+        }
+        return true;
+    }
+
+    public synchronized boolean isCocoonSuspended(int entityId) {
+        return cocoonSuspendedIds.contains(entityId);
     }
 
     public synchronized void observeQuestVisible(boolean visible, long nowMillis) {
@@ -287,6 +313,7 @@ public final class SlayerSessionEngine {
     public synchronized void resetWorld() {
         active.clear();
         retiredOwnedBossIds.clear();
+        cocoonSuspendedIds.clear();
         questState = QuestState.IDLE;
     }
 

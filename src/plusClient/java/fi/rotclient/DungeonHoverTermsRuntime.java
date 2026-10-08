@@ -32,7 +32,7 @@ final class DungeonHoverTermsRuntime {
             return;
         }
         var click = DungeonAthenPortPolicy.hoverClick(
-                DungeonPolicy.solveTerminalClicks(terminal, title, DungeonRuntime.terminalSnapshot(screen)),
+                DungeonRuntime.remainingTerminalClicks(terminal, title, DungeonRuntime.terminalSnapshot(screen)),
                 hovered.index,
                 terminal);
         if (click.isEmpty()) {

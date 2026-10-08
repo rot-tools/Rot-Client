@@ -468,6 +468,16 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     }
 
     @Override
+    public void dungeonTerminalSlotUpdate(int containerId, int stateId, int slot, ItemStack item) {
+        DungeonRuntime.onTerminalSlotUpdate(containerId, stateId, slot, item);
+    }
+
+    @Override
+    public void dungeonTerminalContentUpdate(int containerId, int stateId, java.util.List<ItemStack> items) {
+        DungeonRuntime.onTerminalContentUpdate(containerId, stateId, items);
+    }
+
+    @Override
     public void experimentScreenClosed() {
         ExperimentSolverRuntime.onScreenClosed();
     }

@@ -1,6 +1,8 @@
 package fi.rotclient;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Locale;
 
 /** Static public landmarks, not an entity or hidden-block scanner. See docs/MINING_HUD_FIXES.md. */
 final class DwarvenWaypointPolicy {
@@ -28,5 +30,30 @@ final class DwarvenWaypointPolicy {
             new Landmark("Divan's Gateway", 0, 127, 87),
             new Landmark("Lava Springs", 57, 196, -15),
             new Landmark("The Mist", 0, 75, 82));
+
+    /** Original selection over Rot's existing public coordinates; no upstream implementation copied.
+     * Behavior comparison: Skyblocker CommissionLabels, f5cc8799 (see follow-up audit).
+     * Generic mining tasks have no unique destination and deliberately receive no guessed label. */
+    static List<Landmark> commissionDestinations(List<CommissionDisplayPolicy.Commission> commissions) {
+        if (commissions == null || commissions.isEmpty()) return List.of();
+        List<Landmark> destinations = new ArrayList<>();
+        for (Landmark landmark : LANDMARKS) {
+            String location = normalize(landmark.name());
+            for (CommissionDisplayPolicy.Commission commission : commissions) {
+                if (commission == null || commission.done() || commission.progressPercent() >= 100) continue;
+                String task = normalize(commission.name());
+                if (task.equals(location) || task.startsWith(location + " ")
+                        || landmark.name().equals("Goblin Burrows") && task.equals("goblin slayer")) {
+                    destinations.add(landmark);
+                    break;
+                }
+            }
+        }
+        return List.copyOf(destinations);
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.replace('’', '\'').trim().toLowerCase(Locale.ROOT);
+    }
     private DwarvenWaypointPolicy() {}
 }

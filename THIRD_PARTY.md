@@ -105,6 +105,12 @@ SkyHanni (LGPL-2.1), Skyblocker (LGPL-3.0), Devonian (GPL-3.0), and SkyCofl
 (AGPL-3.0) were reviewed for observable behavior and current data contracts;
 their implementation was not copied. See [shared audit](docs/UPSTREAM_SHARED_AUDIT.md).
 
+The 26.3 [follow-up](docs/UPSTREAM_FOLLOWUP_2026-10-08.md) additionally adapts
+Odin's per-terminal Rubix goal and clicked-slot state, and Athen's exact local
+cocoon/restart contract at `0869043ae54428e7761383a7f60f44d97cf206ac`.
+Their BSD notices remain bundled. Pet menu authority and commission navigation
+use original Rot integration over observed UI data and existing public anchors.
+
 ## Minecraft and Fabric distribution
 
 Minecraft is Mojang / Microsoft. Fabric Loader and Fabric API are separate

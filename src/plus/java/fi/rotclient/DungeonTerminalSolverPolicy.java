@@ -219,10 +219,17 @@ public final class DungeonTerminalSolverPolicy {
     }
 
     private static List<TerminalClick> solveRubixClicks(List<TerminalItem> items) {
+        return solveRubixWithGoal(items, rubixGoal(items, false, false), false);
+    }
+
+    /** The stateful Minecraft bridge waits for all nine panes before locking. */
+    static int rubixGoal(List<TerminalItem> items, boolean leftOnly, boolean requireComplete) {
         int[] costs = new int[5];
         List<TerminalItem> panes = new ArrayList<>();
+        Set<Integer> seen = new java.util.HashSet<>();
+        if (items == null) return -1;
         for (TerminalItem item : items) {
-            if (!RUBIX_SLOTS.contains(item.index())) {
+            if (item == null || !RUBIX_SLOTS.contains(item.index()) || !seen.add(item.index())) {
                 continue;
             }
             int idx = rubixIndex(item);
@@ -230,11 +237,12 @@ public final class DungeonTerminalSolverPolicy {
                 panes.add(item);
             }
         }
+        if (panes.isEmpty() || (requireComplete && panes.size() != RUBIX_SLOTS.size())) return -1;
         for (int target = 0; target < 5; target++) {
             for (TerminalItem pane : panes) {
                 int idx = rubixIndex(pane);
-                int dist = Math.abs(target - idx);
-                costs[target] += dist > 2 ? 5 - dist : dist;
+                int forward = Math.floorMod(target - idx, 5);
+                costs[target] += leftOnly || forward <= 2 ? forward : 5 - forward;
             }
         }
         int origin = 0;
@@ -245,19 +253,26 @@ public final class DungeonTerminalSolverPolicy {
                 origin = i;
             }
         }
+        return origin;
+    }
+
+    /**
+     * Circular distance and direction adapted from Odin RubixHandler,
+     * Copyright (c) 2025, odtheking (BSD-3-Clause), revision 833e0533.
+     * Complete notice: docs/third-party/Odin-LICENSE.txt.
+     */
+    static List<TerminalClick> solveRubixWithGoal(List<TerminalItem> items, int goal, boolean leftOnly) {
+        if (items == null || goal < 0 || goal > 4) return List.of();
         List<TerminalClick> hits = new ArrayList<>();
-        for (TerminalItem pane : panes) {
+        Set<Integer> seen = new java.util.HashSet<>();
+        for (TerminalItem pane : items) {
+            if (pane == null || !RUBIX_SLOTS.contains(pane.index()) || !seen.add(pane.index())) continue;
             int current = rubixIndex(pane);
-            if (current < 0 || current == origin) {
+            if (current < 0 || current == goal) {
                 continue;
             }
-            int diff = origin - current;
-            if (diff > 2) {
-                diff -= 5;
-            }
-            if (diff < -2) {
-                diff += 5;
-            }
+            int diff = Math.floorMod(goal - current, 5);
+            if (!leftOnly && diff > 2) diff -= 5;
             hits.add(new TerminalClick(pane.index(), diff > 0 ? 0 : 1));
         }
         return List.copyOf(hits);

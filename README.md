@@ -48,8 +48,8 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.2+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
-| `RotClientPlus-2.0.2+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
+| `RotClient-2.0.3+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.3+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Minecraft version availability
 
@@ -57,7 +57,11 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.2+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Upstream compatibility/terminal/Slayer/Pet repair candidate. New behavior awaits runtime validation; earlier UI fixes were owner-tested. |
+| 26.3 | [`2.0.3+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-followup) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-followup) | Terminal, Pet, cocoon and commission navigation follow-up. New behavior awaits runtime validation; earlier UI fixes were owner-tested. |
+
+Active maintenance targets **26.3 Lite and Plus only**. Older version downloads
+remain available; fixes are no longer backported unless requested. See the
+[module follow-up](docs/UPSTREAM_FOLLOWUP_2026-10-08.md) for changes and tests.
 
 Install a JAR only into the matching Minecraft version with its matching Fabric
 API. These are playtest artifacts; none is approved for public Modrinth or
@@ -65,7 +69,7 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh)
+Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-followup)
 holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 tracks `development` and is replaced after green pushes there.
 

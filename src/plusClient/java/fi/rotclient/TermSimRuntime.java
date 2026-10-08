@@ -140,6 +140,7 @@ public final class TermSimRuntime {
             practiceStarted = System.currentTimeMillis();
             return;
         }
+        var before = DungeonRuntime.terminalSnapshot(screen);
         TermSimPolicy.ClickResult result = TermSimPolicy.click(layout, slot, button);
         if (!result.accepted()) {
             return;
@@ -147,6 +148,7 @@ public final class TermSimRuntime {
         TermSimScreen.playClick();
         layout = result.layout();
         screen.apply(layout);
+        DungeonRuntime.onSimulatorTerminalAccepted(screen, slot, before);
         if (result.complete()) {
             recordPb(layout.kind());
             openHub();

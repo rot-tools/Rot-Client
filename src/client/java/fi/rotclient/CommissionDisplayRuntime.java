@@ -54,7 +54,8 @@ final class CommissionDisplayRuntime {
         QolUtilityConfig qol = RotClientClient.qolConfigPublic();
         if (client == null || client.level == null || client.player == null
                 || !(qol.commissionDisplayEnabled || qol.extras().miningHelpersEnabled
-                && qol.extras().miningHelpersCommissionMobs)) {
+                && (qol.extras().miningHelpersCommissionMobs
+                    || qol.extras().miningHelpersCommissionWaypoints))) {
             commissions = List.of();
             parsedLines = null;
             return;

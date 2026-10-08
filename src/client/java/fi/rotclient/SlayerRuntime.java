@@ -64,6 +64,8 @@ public final class SlayerRuntime {
     private static final SlayerProgressPolicy.ThresholdState PROGRESS_THRESHOLD =
             new SlayerProgressPolicy.ThresholdState();
     private static final SlayerSpawnPolicy.State LOCAL_SPAWNS = new SlayerSpawnPolicy.State();
+    private static final SlayerCocoonRecoveryPolicy.State COCOON_RECOVERY =
+            new SlayerCocoonRecoveryPolicy.State();
     private static final Map<Integer, RecentSlayerSpawn> RECENT_SLAYER_SPAWNS = new LinkedHashMap<>();
     private static final Map<Integer, SlayerPolicy.EntityDescriptor> LOCAL_SPAWN_OWNERS = new LinkedHashMap<>();
 
@@ -312,7 +314,10 @@ public final class SlayerRuntime {
             alertCocoon(Minecraft.getInstance(), settings);
         }
         String line = message.getString();
-        LOCAL_SPAWNS.observe(line, now);
+        observeCocoonLifecycle(line, now);
+        if (LOCAL_SPAWNS.observe(line, now)) {
+            COCOON_RECOVERY.clearPending();
+        }
         if (SlayerMinibossAlertPolicy.shouldAnnounce(
                 settings.slayerMinibossAlertEnabled,
                 SlayerMinibossAlertPolicy.isSpawnChat(line),
@@ -335,6 +340,12 @@ public final class SlayerRuntime {
             resetProgress();
             LOCAL_SPAWNS.reset();
             LOCAL_SPAWN_OWNERS.clear();
+            if (questSignal != SlayerPolicy.QuestSignal.STARTED) {
+                COCOON_RECOVERY.reset();
+            } else if (!SlayerPolicy.normalize(line).equals("SLAYER QUEST STARTED!")
+                    || !COCOON_RECOVERY.pending(now)) {
+                COCOON_RECOVERY.clearPending();
+            }
         }
         if (questSignal == SlayerPolicy.QuestSignal.COMPLETED) {
             if (settings.slayerTimeMessagesEnabled
@@ -373,6 +384,36 @@ public final class SlayerRuntime {
         if (settings.slayerCarryEnabled) {
             observeTrade(line, settings);
         }
+    }
+
+    private static void observeCocoonLifecycle(String line, long now) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+        if (SlayerPolicy.isCocooned(line)) {
+            String local = client.player.getGameProfile().name();
+            List<SlayerSessionEngine.ActiveBoss> owned = ENGINE.viewSnapshot().activeBosses().stream()
+                    .filter(SlayerSessionEngine.ActiveBoss::owned)
+                    .filter(boss -> boss.descriptor().role() == SlayerPolicy.EntityRole.BOSS)
+                    .filter(boss -> boss.descriptor().owner().equalsIgnoreCase(local)).toList();
+            if (owned.size() == 1) {
+                SlayerSessionEngine.ActiveBoss source = owned.getFirst();
+                if (COCOON_RECOVERY.observeCocoon(line, source.entityId(), source.descriptor(), local, now)) {
+                    if (!ENGINE.suspendOwnedBossForCocoon(source.entityId())) {
+                        COCOON_RECOVERY.reset();
+                    } else {
+                        LOCAL_SPAWN_OWNERS.remove(source.entityId());
+                        RECENT_SLAYER_SPAWNS.remove(source.entityId());
+                        ownedNametagLines = List.of();
+                        lastAttunement = null;
+                        VENGEANCE.reset();
+                        QolClientFlavorSupport.hooks().slayerAutomationReset();
+                    }
+                }
+            }
+        }
+        COCOON_RECOVERY.observeRestart(line, now);
     }
 
     /**
@@ -515,6 +556,8 @@ public final class SlayerRuntime {
 
     private static void resolveLocalSpawn(Minecraft client) {
         long now = System.currentTimeMillis();
+        COCOON_RECOVERY.resolveRestart(latestQuest, now).ifPresent(restart ->
+                LOCAL_SPAWNS.observeVerifiedTransition(restart.announcement(), restart.announcedAtMillis()));
         RECENT_SLAYER_SPAWNS.entrySet().removeIf(entry ->
                 now < entry.getValue().addedAtMillis()
                         || now - entry.getValue().addedAtMillis() > 2_000L);
@@ -525,7 +568,7 @@ public final class SlayerRuntime {
         List<SlayerSpawnPolicy.Candidate> candidates = new ArrayList<>();
         for (Map.Entry<Integer, RecentSlayerSpawn> entry : RECENT_SLAYER_SPAWNS.entrySet()) {
             Entity entity = client.level.getEntity(entry.getKey());
-            if (entity == null) {
+            if (entity == null || ENGINE.isCocoonSuspended(entity.getId())) {
                 continue;
             }
             candidates.add(new SlayerSpawnPolicy.Candidate(
@@ -1551,6 +1594,9 @@ public final class SlayerRuntime {
         }
         long now = System.currentTimeMillis();
         for (Entity entity : hosts.values()) {
+            if (ENGINE.isCocoonSuspended(entity.getId())) {
+                continue;
+            }
             List<String> lines = linesByEntity.getOrDefault(entity.getId(), List.of());
             if (lines.isEmpty()) {
                 String self = name(entity);
@@ -1640,7 +1686,8 @@ public final class SlayerRuntime {
     }
 
     private static SlayerPolicy.EntityDescriptor descriptor(ClientLevel level, Entity entity) {
-        if (!(entity instanceof LivingEntity) || entity instanceof ArmorStand) {
+        if (!(entity instanceof LivingEntity) || entity instanceof ArmorStand
+                || ENGINE.isCocoonSuspended(entity.getId())) {
             return null;
         }
         List<String> lines = new ArrayList<>();
@@ -2199,6 +2246,7 @@ public final class SlayerRuntime {
 
     private static void resetAdditionalMechanics() {
         LOCAL_SPAWNS.reset();
+        COCOON_RECOVERY.reset();
         RECENT_SLAYER_SPAWNS.clear();
         LOCAL_SPAWN_OWNERS.clear();
         VENGEANCE.reset();

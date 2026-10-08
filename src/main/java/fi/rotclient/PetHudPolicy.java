@@ -1,8 +1,11 @@
 package fi.rotclient;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +38,8 @@ public final class PetHudPolicy {
             "(?i)\\bXP\\s*\\(([0-9.]+)%\\)$");
     private static final Pattern COSMETIC_LEVEL = Pattern.compile(
             "^\\[[0-9,.kKmMbB]+[✦⚔]\\]\\s*");
+    private static final Pattern EQUIPPED_LORE = Pattern.compile(
+            "(?i)^(?:[►▶▸➤•]\\s*)?(?:click to despawn(?: this pet)?[!.]?|(?:this pet is )?spawned[!.]?|(?:currently )?equipped[!.]?)(?:\\s*[✦✧✓✔])?$");
 
     private static final Pattern PET_EXPERIENCE =
             Pattern.compile(
@@ -372,6 +377,95 @@ public final class PetHudPolicy {
                 && identityName(first.name()).equalsIgnoreCase(identityName(second.name()));
     }
 
+    /** A GUI item UUID can confirm a click even when two pets share the same display name. */
+    public static Optional<UUID> petUuid(String petInfo) {
+        if (petInfo == null || petInfo.isBlank() || petInfo.length() > 65_536) return Optional.empty();
+        try {
+            JsonElement parsed = JsonParser.parseString(petInfo);
+            if (!parsed.isJsonObject()) return Optional.empty();
+            JsonElement value = parsed.getAsJsonObject().get("uuid");
+            if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString())
+                return Optional.empty();
+            String uuid = value.getAsString();
+            if (uuid.matches("(?i)[0-9a-f]{32}")) {
+                uuid = uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-"
+                        + uuid.substring(12, 16) + "-" + uuid.substring(16, 20) + "-" + uuid.substring(20);
+            }
+            if (!uuid.matches("(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"))
+                return Optional.empty();
+            return Optional.of(UUID.fromString(uuid));
+        } catch (RuntimeException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    public static boolean sameExactPetUuid(String firstInfo, String secondInfo) {
+        Optional<UUID> first = petUuid(firstInfo), second = petUuid(secondInfo);
+        return first.isPresent() && first.equals(second);
+    }
+
+    public static boolean isPetMenuItem(String skyBlockId, String petInfo, String hoverName) {
+        Optional<Snapshot> title = parse(hoverName, List.of());
+        if (title.isEmpty() || title.get().level() < 0) return false;
+        if ("PET".equalsIgnoreCase(skyBlockId)) return true;
+        if (skyBlockId != null && !skyBlockId.isBlank()) return false;
+        if (petInfo == null || petInfo.isBlank() || petInfo.length() > 65_536) return false;
+        try {
+            JsonElement parsed = JsonParser.parseString(petInfo);
+            if (!parsed.isJsonObject()) return false;
+            JsonElement type = parsed.getAsJsonObject().get("type"), tier = parsed.getAsJsonObject().get("tier");
+            return type != null && tier != null && type.isJsonPrimitive() && tier.isJsonPrimitive()
+                    && type.getAsJsonPrimitive().isString() && tier.getAsJsonPrimitive().isString()
+                    && type.getAsString().matches("[A-Z][A-Z0-9_]*") && !tier.getAsString().isBlank();
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    /** The global Pets-menu summary stays meaningful when the selected pet is on another page. */
+    public static Optional<Snapshot> parseMenuSummary(List<String> lore) {
+        String name = selectedMenuName(lore);
+        if (name == null || meansNoPet(name)) return Optional.empty();
+        Optional<Snapshot> parsed = parse(name, lore);
+        if (parsed.isEmpty()) return parsed;
+        Snapshot pet = parsed.get();
+        int level = pet.level() >= 0 ? pet.level() : pet.nextLevel() > 0 ? pet.nextLevel() - 1 : -1;
+        return Optional.of(new Snapshot(level, pet.name(), pet.heldItem(), pet.experience(),
+                pet.petColor(), pet.heldItemColor(), pet.progressPercent(), pet.nextLevel(), pet.maxLevel()));
+    }
+
+    public static boolean menuReportsNoPet(List<String> lore) {
+        String name = selectedMenuName(lore);
+        return name != null && meansNoPet(name);
+    }
+
+    private static String selectedMenuName(List<String> lore) {
+        if (lore == null) return null;
+        for (String raw : lore) {
+            String line = CommissionDisplayPolicy.normalizeLine(raw);
+            if (line.regionMatches(true, 0, "Selected pet:", 0, "Selected pet:".length())) {
+                String name = line.substring("Selected pet:".length()).trim();
+                return name.isEmpty() ? null : name;
+            }
+        }
+        return null;
+    }
+
+    public static boolean sameMenuSummaryPet(Snapshot previous, Snapshot summary) {
+        return samePetIdentity(previous, summary)
+                && (previous.petColor() == PET_FALLBACK_COLOR || summary.petColor() == PET_FALLBACK_COLOR
+                || previous.petColor() == summary.petColor());
+    }
+
+    public static Snapshot mergeMenuSummary(Snapshot previous, Snapshot summary) {
+        if (summary == null) return previous;
+        if (!sameMenuSummaryPet(previous, summary)) return summary;
+        Snapshot merged = mergeTabSnapshot(previous, summary);
+        return new Snapshot(merged.level(), merged.name(), merged.heldItem(), merged.experience(),
+                summary.petColor() == PET_FALLBACK_COLOR ? merged.petColor() : summary.petColor(),
+                merged.heldItemColor(), merged.progressPercent(), merged.nextLevel(), merged.maxLevel());
+    }
+
     static double parseExperience(
             String petInfo) {
 
@@ -533,9 +627,7 @@ public final class PetHudPolicy {
 
         for (String raw : loreLines) {
             String text =
-                    MenuKeybindPolicy
-                            .stripGuiText(
-                                    raw)
+                    CommissionDisplayPolicy.normalizeLine(raw)
                             .trim();
 
             if (text.isEmpty()) {
@@ -702,22 +794,11 @@ public final class PetHudPolicy {
 
         for (String raw : loreLines) {
             String text =
-                    MenuKeybindPolicy
-                            .stripGuiText(
-                                    raw)
+                    CommissionDisplayPolicy.normalizeLine(raw)
                             .toLowerCase(
                                     Locale.ROOT);
 
-            if (text.contains(
-                    "despawn")
-                    || text.contains(
-                    "this pet is spawned")
-                    || text.equals(
-                    "spawned")
-                    || text.contains(
-                    "currently equipped")
-                    || text.equals(
-                    "equipped")) {
+            if (EQUIPPED_LORE.matcher(text.trim()).matches()) {
 
                 return true;
             }

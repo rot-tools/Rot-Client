@@ -130,7 +130,7 @@ public final class DungeonPlusInputRuntime {
         }
         Minecraft client = Minecraft.getInstance();
         boolean sneaking = client != null && client.player != null && client.player.isShiftKeyDown();
-        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
+        List<DungeonPolicy.TerminalClick> live = DungeonRuntime.liveTerminalClicks(
                 terminal, DungeonRuntime.titleOf(screen), DungeonRuntime.snapshot(screen));
         if (live.isEmpty()) {
             return false;
@@ -157,7 +157,7 @@ public final class DungeonPlusInputRuntime {
         if (terminal == DungeonPolicy.Terminal.NONE || terminal == DungeonPolicy.Terminal.MELODY) {
             return false;
         }
-        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
+        List<DungeonPolicy.TerminalClick> live = DungeonRuntime.liveTerminalClicks(
                 terminal, DungeonRuntime.titleOf(screen), DungeonRuntime.snapshot(screen));
         if (live.isEmpty()) {
             return false;

@@ -394,4 +394,86 @@ final class PetHudPolicyTest {
         assertFalse(PetHudPolicy.parseTabText(
                 "Pet: [Lvl 2,147,483,647] Bee\nXP: 10%").orElseThrow().hasProgress());
     }
+
+    @Test
+    void globalPetSummaryPreservesSelectedPetAcrossOtherPages() {
+        var summary = PetHudPolicy.parseMenuSummary(List.of(
+                "Pet Score: 150", "Selected pet: Rabbit ✦", "Progress to Level 71: 42.5%",
+                "42.5k/100k", "Click to view!")).orElseThrow();
+        assertEquals("Rabbit", summary.name());
+        assertEquals(70, summary.level());
+        assertEquals(42.5D, summary.progressPercent(), 0.001D);
+        assertEquals(-1.0D, summary.experience()); // Rounded per-level XP is not total XP.
+        var cached = new PetHudPolicy.Snapshot(70, "Rabbit", "Textbook", 1234,
+                ItemRarityPolicy.DEFAULT_EPIC, ItemRarityPolicy.DEFAULT_RARE, 20, 71, false);
+        var merged = PetHudPolicy.mergeMenuSummary(cached, summary);
+        assertEquals("Textbook", merged.heldItem());
+        assertEquals(42.5D, merged.progressPercent(), 0.001D);
+        assertEquals(ItemRarityPolicy.DEFAULT_EPIC, merged.petColor());
+    }
+
+    @Test
+    void absentPetOnFilteredPageIsNotAnExplicitDespawn() {
+        assertTrue(PetHudPolicy.parseMenuSummary(List.of("Pet Score: 150", "Click to view!")).isEmpty());
+        assertFalse(PetHudPolicy.menuReportsNoPet(List.of("Pet Score: 150", "Click to view!")));
+        assertFalse(PetHudPolicy.menuReportsNoPet(List.of("Selected pet:")));
+        assertFalse(PetHudPolicy.menuReportsNoPet(null));
+        assertTrue(PetHudPolicy.menuReportsNoPet(List.of("§7Selected pet: §cNone")));
+        assertTrue(PetHudPolicy.parseMenuSummary(List.of("Selected pet: None")).isEmpty());
+    }
+
+    @Test
+    void maxLevelSummaryDoesNotInventAPetSpecificMaximum() {
+        var summary = PetHudPolicy.parseMenuSummary(List.of("Selected pet: Golden Dragon", "MAX LEVEL")).orElseThrow();
+        assertTrue(summary.maxLevel());
+        assertEquals(-1, summary.level());
+        assertFalse(summary.hasProgress());
+    }
+
+    @Test
+    void authoritativeRarityChangeCannotReuseAnotherPetsHeldItemOrXp() {
+        var old = new PetHudPolicy.Snapshot(70, "Rabbit", "Textbook", 1234,
+                ItemRarityPolicy.DEFAULT_EPIC, ItemRarityPolicy.DEFAULT_RARE, 20, 71, false);
+        var summary = PetHudPolicy.withRuntimeDetails(
+                PetHudPolicy.parseMenuSummary(List.of("Selected pet: Rabbit", "Progress to Level 71: 42.5%")).orElseThrow(),
+                "{\"tier\":\"LEGENDARY\"}", 0, 0, List.of());
+        assertFalse(PetHudPolicy.sameMenuSummaryPet(old, summary));
+        var merged = PetHudPolicy.mergeMenuSummary(old, summary);
+        assertEquals("", merged.heldItem());
+        assertEquals(-1.0D, merged.experience());
+        assertEquals(ItemRarityPolicy.DEFAULT_LEGENDARY, merged.petColor());
+    }
+
+    @Test
+    void exactPetUuidConfirmsTheSelectedIndividualRatherThanJustTheName() {
+        String compact = "{\"uuid\":\"0123456789abcdef0123456789abcdef\"}";
+        String dashed = "{\"uuid\":\"01234567-89ab-cdef-0123-456789abcdef\"}";
+        String other = "{\"uuid\":\"11234567-89ab-cdef-0123-456789abcdef\"}";
+        assertTrue(PetHudPolicy.sameExactPetUuid(compact, dashed));
+        assertFalse(PetHudPolicy.sameExactPetUuid(compact, other));
+        assertFalse(PetHudPolicy.sameExactPetUuid("{}", "{}"));
+        assertFalse(PetHudPolicy.sameExactPetUuid(compact, null));
+        assertTrue(PetHudPolicy.petUuid("{\"uuid\":true}").isEmpty());
+        assertTrue(PetHudPolicy.petUuid("{\"uuid\":\"1-1-1-1-1\"}").isEmpty());
+        assertTrue(PetHudPolicy.petUuid("bad json").isEmpty());
+        assertTrue(PetHudPolicy.petUuid("{\"nested\":{\"uuid\":\"0123456789abcdef0123456789abcdef\"}}").isEmpty());
+    }
+
+    @Test
+    void negativeOrInstructionalLoreDoesNotMeanEquipped() {
+        assertFalse(PetHudPolicy.loreMeansEquipped(List.of("Not currently equipped")));
+        assertFalse(PetHudPolicy.loreMeansEquipped(List.of("Click to summon, then click again to despawn")));
+        assertTrue(PetHudPolicy.loreMeansEquipped(List.of("This pet is spawned!")));
+        assertTrue(PetHudPolicy.loreMeansEquipped(List.of("\u00a0§e▸ Click to despawn! §9✦\u200b")));
+    }
+
+    @Test
+    void namedHeadsAndOtherItemsCannotMasqueradeAsMenuPets() {
+        assertFalse(PetHudPolicy.isPetMenuItem("", "", "[Lvl 70] Rabbit"));
+        assertFalse(PetHudPolicy.isPetMenuItem("CUSTOM_HEAD", "{\"type\":\"RABBIT\",\"tier\":\"EPIC\"}", "[Lvl 70] Rabbit"));
+        assertTrue(PetHudPolicy.isPetMenuItem("PET", "", "[Lvl 70] Rabbit ✦"));
+        assertTrue(PetHudPolicy.isPetMenuItem("", "{\"type\":\"RABBIT\",\"tier\":\"EPIC\"}", "[Lvl 70] Rabbit"));
+        assertFalse(PetHudPolicy.isPetMenuItem("PET", "", "Pets"));
+        assertFalse(PetHudPolicy.isPetMenuItem("", "{\"type\":true,\"tier\":\"EPIC\"}", "[Lvl 70] Rabbit"));
+    }
 }

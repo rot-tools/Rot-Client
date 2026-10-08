@@ -173,6 +173,7 @@ final class DungeonPlusRuntime {
         List<DungeonPolicy.TerminalClick> live =
                 liveTerminalClicks(terminal, title, items);
         if (live.isEmpty()) {
+            if (!terminalSolutionMayComplete(terminal, items)) return;
             maybePlayTerminalComplete(client, extras);
             clearPredictedClicks();
             termQueue.clear();
@@ -646,6 +647,7 @@ final class DungeonPlusRuntime {
                 click.button(), extras.dungeonTerminalsClone);
         int packetButton = packet.button();
         ContainerInput input = packet.cloneInput() ? ContainerInput.CLONE : ContainerInput.PICKUP;
+        noteTerminalClickSent(screen, click.slot(), items);
         client.gameMode.handleContainerInput(
                 screen.getMenu().containerId, click.slot(), packetButton, input, client.player);
         armTerminalCooldown(extras);
