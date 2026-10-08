@@ -33,6 +33,20 @@ final class DungeonF7TimerObservationPolicyTest {
         state = DungeonF7TimerObservationPolicy.observe(state, "The Core entrance is opening!", 4500);
         assertTrue(state.deadlines().isEmpty());
     }
+    @Test void nominalCyclesKeepTheirOriginalAnchorUntilThePhaseEnds() {
+        var state = DungeonF7TimerObservationPolicy.observe(null, START, 1000);
+        assertEquals(3000L, DungeonF7TimerObservationPolicy.displayedDeadline(state,
+                DungeonAssistPolicy.F7Timer.STORM_PAD, 2600));
+        assertEquals(2000L, state.deadlines().get(DungeonAssistPolicy.F7Timer.STORM_PAD));
+        state = DungeonF7TimerObservationPolicy.observe(state, "[BOSS] Goldor: Who dares trespass into my domain?", 3000);
+        assertEquals(9000L, DungeonF7TimerObservationPolicy.displayedDeadline(state,
+                DungeonAssistPolicy.F7Timer.GOLDOR, 6500));
+        assertEquals(0L, DungeonF7TimerObservationPolicy.displayedDeadline(state,
+                DungeonAssistPolicy.F7Timer.STORM_PAD, 6500));
+        state = DungeonF7TimerObservationPolicy.observe(state, "The Core entrance is opening!", 7000);
+        assertEquals(0L, DungeonF7TimerObservationPolicy.displayedDeadline(state,
+                DungeonAssistPolicy.F7Timer.GOLDOR, 7500));
+    }
     @Test void invalidClockAndUnrelatedDialogueLeaveStateUnchanged() {
         var state = DungeonF7TimerObservationPolicy.empty();
         assertEquals(state, DungeonF7TimerObservationPolicy.observe(state, START, -1));

@@ -13,7 +13,7 @@ independent nominal timers, correct tick-unit durations and phase triggers, reje
 messages, and reset on context loss. Displayed times remain estimates; current conditional boss
 speed-ups and wider dungeon gameplay still require validation. No gameplay action is added.
 
-Java 25 `build`, 2,519 shared + 283 Plus tests (no failures/errors/skips), `verifyLegitJar`,
+Java 25 `build`, 2,519 shared + 284 Plus tests (no failures/errors/skips), `verifyLegitJar`,
 `verifyDungeonJarBoundary` and diff checks pass. Existing
 [dashboard/map changes](DASHBOARD_DUNGEON_2026-10-08.md), canonical quantities and History
 schemas are retained. Public Lite publication remains gated by the existing release audit.

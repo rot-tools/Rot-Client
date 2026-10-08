@@ -1083,8 +1083,8 @@ public final class DungeonRuntime {
         }
         if (extras.dungeonHudF7Timers && extras.dungeonF7Enabled && extras.dungeonF7Timers) {
             for (var timer : DungeonAssistPolicy.F7Timer.values()) {
-                Long deadline = f7Timers.deadlines().get(timer);
-                if (deadline != null && DungeonF7Policy.timerAllowed(timer,
+                long deadline = DungeonF7TimerObservationPolicy.displayedDeadline(f7Timers, timer, now);
+                if (deadline > 0L && DungeonF7Policy.timerAllowed(timer,
                         extras.dungeonF7TimerPad, extras.dungeonF7TimerLightning,
                         extras.dungeonF7TimerLightning, extras.dungeonF7TimerGoldor,
                         extras.dungeonF7TimerNecron, extras.dungeonF7TimerMaxor, extras.dungeonF7TimerStorm)) {

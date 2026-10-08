@@ -46,5 +46,14 @@ final class DungeonF7TimerObservationPolicy {
         // Retain expired entries until phase change so duplicate chat cannot rearm them.
         return new State(next, deadlines);
     }
+    static long displayedDeadline(State state, DungeonAssistPolicy.F7Timer timer, long now) {
+        Long anchor = state.deadlines().get(timer);
+        if (anchor == null || now < 0 || now > Long.MAX_VALUE - 60_000L) return 0L;
+        boolean cycle = (timer == DungeonAssistPolicy.F7Timer.STORM_PAD && state.phase() == Phase.STORM)
+                || (timer == DungeonAssistPolicy.F7Timer.GOLDOR && state.phase() == Phase.GOLDOR);
+        if (!cycle || now < anchor) return anchor;
+        long period = DungeonAssistPolicy.f7TimerMillis(timer);
+        return now + period - (now - anchor) % period;
+    }
     private DungeonF7TimerObservationPolicy() {}
 }

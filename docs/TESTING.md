@@ -443,8 +443,8 @@ Full puzzle/terminal/F7/ESP/secret/requeue matrix and conditional Minister boss 
 
 ### 26.3 F7 timer observation candidate (2026-10-08)
 
-2.0.7: 2,519 shared + 283 Plus tests; dual build/compilation and both JAR boundary checks pass.
-Four new Plus regressions cover concurrent countdowns, nominal tick units, duplicate/expired delivery,
+2.0.7: 2,519 shared + 284 Plus tests; dual build/compilation and both JAR boundary checks pass.
+Five new Plus regressions cover concurrent countdowns, nominal tick units, duplicate/expired delivery,
 exact chat, forward phase clearing and invalid clock bounds. Live dungeon state remains Plus-only.
 Test Storm intro/PY/death, Goldor/Core opening, timer settings and leave/rejoin in F7/M7.
 Nominal wall-clock estimates and current conditional boss changes require runtime evidence.
