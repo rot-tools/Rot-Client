@@ -438,7 +438,7 @@ final class MarketWatchOpportunityEngine {
                                     .Market.AUCTION_HOUSE,
                             "AH:"
                                     + candidate.uuid(),
-                            "",
+                            candidate.variant().itemId(),
                             candidate.itemName(),
                             candidate.category(),
                             candidate.tier(),
@@ -828,14 +828,7 @@ final class MarketWatchOpportunityEngine {
             return "";
         }
 
-        return normalizeComparable(
-                auction.itemName())
-                + '\u0000'
-                + normalizeComparable(
-                auction.tier())
-                + '\u0000'
-                + normalizeComparable(
-                auction.category());
+        return MarketWatchVariantPolicy.comparableKey(auction);
     }
 
     private static String normalizeComparable(

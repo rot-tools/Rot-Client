@@ -8,12 +8,12 @@ final class MarketWatchAuctionWatch {
 
     /*
      * Canonical SkyBlock item ID when known.
-     * itemName remains available as a temporary/display fallback until
-     * Market Watch item-byte normalization is implemented.
+     * itemName preserves the legacy passive fallback when item_bytes is unavailable.
      */
     String itemId = "";
     String itemName = "";
     String tier = "";
+    String reforge = "";
 
     boolean enabled = true;
     boolean binOnly = true;
@@ -34,6 +34,7 @@ final class MarketWatchAuctionWatch {
         copy.itemId = itemId;
         copy.itemName = itemName;
         copy.tier = tier;
+        copy.reforge = reforge;
 
         copy.enabled = enabled;
         copy.binOnly = binOnly;
@@ -60,6 +61,7 @@ final class MarketWatchAuctionWatch {
         itemId = upper(itemId);
         itemName = clean(itemName);
         tier = upper(tier);
+        reforge = MarketWatchVariantPolicy.reforgeFilter(reforge);
 
         maxPriceCoins = Math.max(0L, maxPriceCoins);
         minDiscountPercent =

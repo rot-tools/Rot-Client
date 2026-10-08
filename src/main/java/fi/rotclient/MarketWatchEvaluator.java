@@ -38,7 +38,7 @@ final class MarketWatchEvaluator {
              * Until that normalization layer exists, AH matching uses the
              * exact visible item name.
              */
-            if (watch.itemName.isBlank()) {
+            if ((watch.itemName.isBlank() && watch.itemId.isBlank())) {
                 continue;
             }
 
@@ -228,14 +228,7 @@ final class MarketWatchEvaluator {
             return false;
         }
 
-        if (!watch.itemName.equalsIgnoreCase(
-                auction.itemName())) {
-            return false;
-        }
-
-        return watch.tier.isBlank()
-                || watch.tier.equalsIgnoreCase(
-                        auction.tier());
+        return MarketWatchVariantPolicy.matches(watch, auction);
     }
 
     private static long currentAuctionPrice(

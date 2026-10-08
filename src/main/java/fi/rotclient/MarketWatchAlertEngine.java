@@ -189,7 +189,7 @@ final class MarketWatchAlertEngine {
                     sourceWatch.copy();
 
             if (!watch.enabled
-                    || watch.itemName.isBlank()
+                    || (watch.itemName.isBlank() && watch.itemId.isBlank())
                     || watch.minDiscountPercent <= 0.0D) {
 
                 continue;
@@ -201,8 +201,7 @@ final class MarketWatchAlertEngine {
                 continue;
             }
 
-            List<MarketWatchAuction> matching =
-                    new ArrayList<>();
+            List<MarketWatchAuction> allMatching = new ArrayList<>();
 
             for (MarketWatchAuction auction
                     : snapshot.auctions()) {
@@ -220,11 +219,14 @@ final class MarketWatchAlertEngine {
                                 auction);
 
                 if (price > 0L) {
-                    matching.add(
-                            auction);
+                    allMatching.add(auction);
                 }
             }
 
+            var variants = new java.util.LinkedHashMap<String, List<MarketWatchAuction>>();
+            for (var auction : allMatching) variants.computeIfAbsent(
+                    MarketWatchVariantPolicy.comparableKey(auction), ignored -> new ArrayList<>()).add(auction);
+            for (List<MarketWatchAuction> matching : variants.values()) {
             /*
              * One total listing has no external market reference.
              * Two total listings are allowed, but receive the strongest
@@ -319,6 +321,7 @@ final class MarketWatchAlertEngine {
                                 analysis.actualDiscountPercent()));
             }
         }
+        }
 
         return List.copyOf(
                 result);
@@ -348,15 +351,7 @@ final class MarketWatchAlertEngine {
             return false;
         }
 
-        if (!watch.itemName.equalsIgnoreCase(
-                auction.itemName())) {
-
-            return false;
-        }
-
-        return watch.tier.isBlank()
-                || watch.tier.equalsIgnoreCase(
-                        auction.tier());
+        return MarketWatchVariantPolicy.matches(watch, auction);
     }
 
 

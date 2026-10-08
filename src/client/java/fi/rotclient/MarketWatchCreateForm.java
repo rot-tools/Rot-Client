@@ -52,6 +52,8 @@ private MarketWatchItemCatalog.AuctionSuggestion
     private MarketWatchBazaarWatch editingBazaarWatch;
     private String editingOriginalSearch = "";
 
+    private String auctionTier = "", auctionReforge = "";
+    private boolean variantEdited;
     private boolean auctionBinOnly = true;
     private String auctionMaxPrice = "";
     private String auctionCooldown = "60";
@@ -94,6 +96,7 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
         auctionBinOnly = true;
         auctionMaxPrice = "";
+        auctionTier = auctionReforge = ""; variantEdited = false;
         auctionCooldown = "60";
 
         bodyScroll.reset();
@@ -138,8 +141,8 @@ private MarketWatchItemCatalog.AuctionSuggestion
 
         openAuction();
 
-        editingAuctionWatch =
-                watch.copy();
+        editingAuctionWatch = watch.copy();
+        auctionTier = watch.tier; auctionReforge = watch.reforge; variantEdited = true;
 
         search =
                 !watch.itemName.isBlank()
@@ -1583,6 +1586,10 @@ private MarketWatchItemCatalog.AuctionSuggestion
                 layout.rightX(),
                 toggleY);
 
+        RotClientUiDraw.drawPremiumButton(graphics, font, mouseX, mouseY,
+                layout.rightX() + 64, toggleY + 12, Math.max(80, layout.rightWidth() - 64),
+                "Rarity / Reforge", false, true);
+
         RotClientUiDraw.drawToggle(
                 graphics,
                 layout.rightX(),
@@ -2169,10 +2176,15 @@ private MarketWatchItemCatalog.AuctionSuggestion
             return true;
         }
 
-        int toggleY =
-                postQuickSettingsY(
-                        layout);
-
+        int toggleY = postQuickSettingsY(layout);
+        if (RotClientUiDraw.inside(mouseX, mouseY, layout.rightX() + 64, toggleY + 12,
+                Math.max(80, layout.rightWidth() - 64), RotClientUiDraw.BUTTON_HEIGHT)) {
+            var client = net.minecraft.client.Minecraft.getInstance();
+            String tier = variantEdited ? auctionTier : selectedAuction == null ? "" : selectedAuction.tier();
+            client.gui.setScreen(new MarketWatchVariantScreen(client.gui.screen(), tier, auctionReforge,
+                    (rarity, reforge) -> { auctionTier = rarity; auctionReforge = reforge; variantEdited = true; }));
+            return true;
+        }
         if (RotClientUiDraw.inside(
                 mouseX,
                 mouseY,
@@ -2884,6 +2896,9 @@ private MarketWatchItemCatalog.AuctionSuggestion
             updated.cooldownSeconds =
                     cooldown;
 
+            if (selectedAuction != null) updated.itemId = MarketWatchItemCatalog.itemIdFor(selectedAuction.itemName(), selectedAuction.tier());
+            if (variantEdited) updated.tier = auctionTier;
+            updated.reforge = auctionReforge;
             updated.normalize();
 
             if (!MarketWatchRuntime.updateAuctionWatch(
@@ -2915,8 +2930,10 @@ private MarketWatchItemCatalog.AuctionSuggestion
             return;
         }
 
-        created.maxPriceCoins =
-                maxPrice;
+        created.itemId = MarketWatchItemCatalog.itemIdFor(selectedAuction.itemName(), selectedAuction.tier());
+        if (variantEdited) created.tier = auctionTier;
+        created.reforge = auctionReforge;
+        created.maxPriceCoins = maxPrice;
 
         created.minDiscountPercent =
                 dealPercent;

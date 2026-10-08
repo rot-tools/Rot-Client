@@ -417,3 +417,13 @@ New source-category changes must be tested in diagnostic/shadow mode first.
 Current Session remains the only durable generic ledger, and existing target
 accounting and read-only HUD/Analytics projections remain the regression
 baseline until runtime evidence approves a new ingress path.
+
+
+### 26.3 market candidate (2026-10-08)
+
+`2.0.5+mc26.3`: 2,513 shared + 275 Plus tests, both client compilations, dual-JAR build
+and both edition verifiers pass locally. Coverage includes bounded API NBT/upgrade identity,
+legacy watch compatibility, live-Purse caps, manipulation-risk rejection, purchase identity,
+exact menu/price/sign grammar, persisted uncertain outcomes, and Bazaar bid/ask direction.
+This is not evidence that a real auction or Bazaar transaction succeeded. Follow
+[the controlled trading checklist](MARKET_TRADING_2026-10-08.md#controlled-runtime-checklist).

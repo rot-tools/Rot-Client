@@ -7,6 +7,15 @@ Rot Client is a client-side mod. Core tracking, configuration, Current Session s
 Rot Client requests public Bazaar data from Hypixel's Bazaar API to support
 material price estimates. The request does not require a Hypixel API key.
 
+Market Watch uses public Auction House/Bazaar snapshots and public item/seller-name resources.
+Rot Client+ trading keeps its budgets, intents, prices, item/auction identifiers, account UUID,
+server address and profile identity locally in `rotclient-market-trades.json`. No journal is
+uploaded. While recorded owned AH listings remain pending and that context is connected,
+Plus may request the public `https://api.hypixel.net/v2/skyblock/auctions_ended` endpoint at
+most once per minute to observe sale outcomes. The request does not include player identifiers
+or an API key. Trading itself uses normal in-game commands/container input only when explicitly
+armed; it is off by default. Lite contains no trading controller or journal.
+
 When the user enables Price Tooltips, Rot Client also requests public Hypixel
 Bazaar and item-resource data plus a public lowest-BIN price snapshot at
 `https://moulberry.codes/lowestbin.json`. Price Tooltip quote requests are not

@@ -647,6 +647,11 @@ final class MarketWatchDashboard {
                         == Workspace.OPPORTUNITIES,
                 true);
 
+        String extra = QolClientFlavorSupport.hooks().marketWorkspaceLabel();
+        int extraX = opportunityX + OPPORTUNITY_TAB_WIDTH + PRIMARY_TAB_GAP;
+        if (!extra.isBlank() && extraX + 130 <= right) RotClientUiDraw.drawPremiumButton(
+                graphics, font, mouseX, mouseY, extraX, top, 130, extra, false, true);
+
         int dividerY =
                 top
                         + RotClientUiDraw.BUTTON_HEIGHT
@@ -773,6 +778,14 @@ final class MarketWatchDashboard {
                     left
                             + PRIMARY_TAB_WIDTH
                             + PRIMARY_TAB_GAP;
+            int extraX = opportunityX + OPPORTUNITY_TAB_WIDTH + PRIMARY_TAB_GAP;
+            if (!QolClientFlavorSupport.hooks().marketWorkspaceLabel().isBlank() && extraX + 130 <= right
+                    && RotClientUiDraw.inside(mx, my, extraX, top, 130, RotClientUiDraw.BUTTON_HEIGHT)) {
+                var client = net.minecraft.client.Minecraft.getInstance();
+                QolClientFlavorSupport.hooks().openMarketWorkspace(client.gui.screen());
+                return true;
+            }
+
 
             if (RotClientUiDraw.inside(
                     mx,

@@ -25,6 +25,13 @@ final class RotClientPlusCommands {
 
     static void contribute(LiteralArgumentBuilder<FabricClientCommandSource> root,
                            String legacyAlias) {
+        root.then(literal("markettrading")
+                .executes(context -> {
+                    var c = Minecraft.getInstance(); c.execute(() -> c.gui.setScreen(new MarketTradeSetupScreen(c.gui.screen()))); return 1;
+                })
+                .then(literal("stop").executes(context -> {
+                    MarketTradeRuntime.stop("Stopped by command"); context.getSource().sendFeedback(Component.literal("Market trading stopped.")); return 1;
+                })));
         root.then(literal("termsim")
                 .executes(context -> openTermSim(context.getSource(), legacyAlias, -1))
                 .then(argument("ping", IntegerArgumentType.integer(0, 500))
@@ -55,7 +62,7 @@ final class RotClientPlusCommands {
     static void help(FabricClientCommandSource source) {
         source.sendFeedback(Component.literal(
                 "Rot Client+ commands: /rot autoclicker add|remove left|right, "
-                        + "/rot autoclicker list, /rot superboom add|remove|list, /rot termsim [ping]"));
+                        + "/rot autoclicker list, /rot superboom add|remove|list, /rot termsim [ping], /rot markettrading [stop]"));
     }
 
     private static int openTermSim(FabricClientCommandSource source,

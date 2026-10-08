@@ -11,7 +11,14 @@ record MarketWatchAuction(
         long highestBidAmount,
         boolean bin,
         String itemBytes,
-        String auctioneerUuid) {
+        String auctioneerUuid,
+        MarketWatchItemVariant variant) {
+
+    MarketWatchAuction(String uuid, String itemName, String category, String tier, long startMillis,
+            long endMillis, long startingBid, long highestBidAmount, boolean bin, String itemBytes, String auctioneerUuid) {
+        this(uuid, itemName, category, tier, startMillis, endMillis, startingBid, highestBidAmount, bin,
+                itemBytes, auctioneerUuid, MarketWatchItemVariant.decode(itemBytes));
+    }
 
     MarketWatchAuction(
             String uuid,
@@ -40,6 +47,7 @@ record MarketWatchAuction(
     }
 
     MarketWatchAuction {
+        variant = variant == null ? MarketWatchItemVariant.UNKNOWN : variant;
         uuid =
                 normalize(
                         uuid);

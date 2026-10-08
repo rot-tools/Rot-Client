@@ -242,6 +242,9 @@ tasks.register('verifyLegitJar') {
 			}
 		}
 		def forbiddenText = [
+                'rotclient-market-trades.json',
+                'MarketTradeRuntime',
+                'MarketTradeSignAccess',
 				'qol.pickobulus.preview',
 				'qol.mining_helpers.puzzler',
 				'solveRedGreen',

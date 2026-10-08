@@ -17,6 +17,8 @@ import net.minecraft.world.item.ItemStack;
  * {@link QolClientFlavorSupport}.
  */
 public final class RotClientPlusHooks implements QolClientFlavorHooks {
+    @Override public String marketWorkspaceLabel() { return "TRADING SETUP"; }
+    @Override public void openMarketWorkspace(Screen parent) { Minecraft.getInstance().gui.setScreen(new MarketTradeSetupScreen(parent)); }
     @Override
     public void fishingRadarClear() { FishingHotspotRadarRuntime.clear(); }
 
@@ -60,6 +62,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void tickEnd(Minecraft client) {
+        ClientBoundaryGuard.run("MARKET_TRADING", () -> MarketTradeRuntime.tick(client));
         ClientBoundaryGuard.run("WARDROBE_AUTO_EQUIP", () -> WardrobeAutoEquipRuntime.tick(client));
         ClientBoundaryGuard.run("LOADOUT_PET_AUTO_EQUIP", () -> RotClientPetAutoEquipRuntime.tick(client));
         ClientBoundaryGuard.run("LOADOUT_EQUIPMENT_AUTO_EQUIP", () -> RotClientEquipmentAutoEquipRuntime.tick(client));
@@ -87,6 +90,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onChat(Component message) {
+        MarketTradeRuntime.onChat(message);
         PuzzlerRuntime.onChat(message);
         AutoGfsRuntime.onChat(message);
         AutoConversationRuntime.onChat(message);
@@ -105,6 +109,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onWorldChanged() {
+        if (MarketTradeRuntime.enabled()) MarketTradeRuntime.stop("World changed; trading stopped");
         PuzzlerRuntime.clear();
         PickobulusPreviewRuntime.clear();
         AutoDojoRuntime.onWorldChanged();
@@ -773,6 +778,9 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void renderExtraOverlays(
             GuiGraphicsExtractor graphics, Font font, QolUtilityConfig qol, boolean editorOpen) {
+        if (MarketTradeRuntime.enabled() && !editorOpen) RotClientUiDraw.text(graphics, font,
+                font.plainSubstrByWidth(MarketTradeRuntime.status(), Minecraft.getInstance().getWindow().getGuiScaledWidth() - 24),
+                12, 12, RotClientTheme.TEXT, true);
     }
 
     @Override
