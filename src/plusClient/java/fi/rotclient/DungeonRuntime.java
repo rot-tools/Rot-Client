@@ -72,8 +72,7 @@ public final class DungeonRuntime {
     static long spiritCdUntil;
     static long phoenixCdUntil;
     static long terracottaUntil;
-    static DungeonAssistPolicy.F7Timer f7Timer = DungeonAssistPolicy.F7Timer.NONE;
-    static long f7TimerUntil;
+    static DungeonF7TimerObservationPolicy.State f7Timers = DungeonF7TimerObservationPolicy.empty();
     static int terminalCooldown;
     static int simonCooldown;
     static int puzzleScanTicks;
@@ -319,9 +318,8 @@ public final class DungeonRuntime {
         if (terracottaUntil > 0L && now >= terracottaUntil) {
             terracottaUntil = 0L;
         }
-        if (f7TimerUntil > 0L && now >= f7TimerUntil) {
-            f7TimerUntil = 0L;
-            f7Timer = DungeonAssistPolicy.F7Timer.NONE;
+        if (!SkyBlockDungeonDetector.confidentlyInDungeon()) {
+            f7Timers = DungeonF7TimerObservationPolicy.empty();
         }
         QolClientFlavorSupport.hooks().dungeonRequeueTick(client);
         if (terminalCooldown > 0) {
@@ -739,21 +737,9 @@ public final class DungeonRuntime {
                 persistKuudraPbs(previous, kuudra, extras);
             }
         }
-        if (extras.dungeonF7Enabled && extras.dungeonF7Timers) {
-            DungeonAssistPolicy.F7Timer timer = DungeonAssistPolicy.f7TimerFromChat(raw);
-            if (timer != DungeonAssistPolicy.F7Timer.NONE
-                    && DungeonF7Policy.timerAllowed(
-                    timer,
-                    extras.dungeonF7TimerPad,
-                    extras.dungeonF7TimerLightning,
-                    extras.dungeonF7TimerLightning,
-                    extras.dungeonF7TimerGoldor,
-                    extras.dungeonF7TimerNecron,
-                    extras.dungeonF7TimerMaxor,
-                    extras.dungeonF7TimerStorm)) {
-                f7Timer = timer;
-                f7TimerUntil = now + DungeonAssistPolicy.f7TimerMillis(timer);
-            }
+        if (SkyBlockDungeonDetector.confidentlyInDungeon()
+                && DungeonAssistPolicy.isFloor7(sidebar.floor())) {
+            f7Timers = DungeonF7TimerObservationPolicy.observe(f7Timers, raw, now);
         }
         if (DungeonAssistPolicy.f7Title(raw) != DungeonAssistPolicy.F7Title.NONE) {
             DungeonAssistPolicy.F7Title kind = DungeonAssistPolicy.f7Title(raw);
@@ -867,8 +853,7 @@ public final class DungeonRuntime {
         spiritCdUntil = 0L;
         phoenixCdUntil = 0L;
         terracottaUntil = 0L;
-        f7Timer = DungeonAssistPolicy.F7Timer.NONE;
-        f7TimerUntil = 0L;
+        f7Timers = DungeonF7TimerObservationPolicy.empty();
         QolClientFlavorSupport.hooks().dungeonRequeueReset();
         terminalCooldown = 0;
         simonCooldown = 0;
@@ -1096,8 +1081,16 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (extras.dungeonHudF7Timers && extras.dungeonF7Enabled) {
-            addTimer(lines, DungeonAssistPolicy.f7TimerLabel(f7Timer), f7TimerUntil, now);
+        if (extras.dungeonHudF7Timers && extras.dungeonF7Enabled && extras.dungeonF7Timers) {
+            for (var timer : DungeonAssistPolicy.F7Timer.values()) {
+                long deadline = DungeonF7TimerObservationPolicy.displayedDeadline(f7Timers, timer, now);
+                if (deadline > 0L && DungeonF7Policy.timerAllowed(timer,
+                        extras.dungeonF7TimerPad, extras.dungeonF7TimerLightning,
+                        extras.dungeonF7TimerLightning, extras.dungeonF7TimerGoldor,
+                        extras.dungeonF7TimerNecron, extras.dungeonF7TimerMaxor, extras.dungeonF7TimerStorm)) {
+                    addTimer(lines, DungeonAssistPolicy.f7TimerLabel(timer) + " ~", deadline, now);
+                }
+            }
         }
         if (extras.dungeonF7Enabled && extras.dungeonF7MaxorStun && maxorStunTicks > 0) {
             addTimer(lines, "Maxor stun", now + maxorStunTicks * 50L, now);
