@@ -28,6 +28,13 @@ final class DungeonMapObservationPolicyTest {
                 List.of(anonymous), List.of("Alive", "Other")));
         assertEquals(List.of("Alive"), DungeonMapObservationPolicy.unambiguousOrder(
                 List.of(anonymous), List.of("Alive")));
+        var named = new DungeonMapPolicy.MapDecorationHint(40, 50, 0, false, "Alive");
+        assertEquals(List.of("Other"), DungeonMapObservationPolicy.unambiguousOrder(
+                List.of(anonymous, named), List.of("Alive", "Other")));
+        var icons = DungeonMapPolicy.assignTeammateIcons(List.of(anonymous, named),
+                DungeonMapObservationPolicy.unambiguousOrder(List.of(anonymous, named), List.of("Alive", "Other")),
+                "Self", java.util.Map.of(), false, true);
+        assertEquals(List.of("Other", "Alive"), icons.stream().map(DungeonMapPolicy.PlayerIcon::name).toList());
     }
     @Test void aPartialOrOversizedMapCannotReuseTheOldBoard() {
         assertTrue(DungeonMapObservationPolicy.buffer(new byte[16384]));

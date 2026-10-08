@@ -29,7 +29,7 @@ final class DungeonMapObservationPolicy {
         var remaining = living.stream().filter(n -> hints.stream().noneMatch(h ->
                 !h.name().isBlank() && DungeonMapPolicy.samePlayerName(n, h.name()))).toList();
         long unnamed = hints.stream().filter(h -> !h.selfMarker() && h.name().isBlank()).count();
-        return unnamed == remaining.size() ? living : List.of();
+        return unnamed == remaining.size() ? remaining : List.of();
     }
     static boolean buffer(byte[] colors) { return colors != null && colors.length == 128 * 128; }
     private DungeonMapObservationPolicy() {}
