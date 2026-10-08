@@ -197,6 +197,7 @@ public final class DungeonRuntime {
     static int lastTerminalSlot = 22;
     static String lastTermTitle = "";
     static AbstractContainerMenu terminalMenu;
+    private static final DungeonTerminalSessionPolicy terminalSession = new DungeonTerminalSessionPolicy();
     static long terminalOpenedAt;
     static final List<Integer> terminalPredictedSlots = new ArrayList<>();
     static long terminalPredictedAt;
@@ -970,6 +971,7 @@ public final class DungeonRuntime {
         lastTerminalSlot = 22;
         lastTermTitle = "";
         terminalMenu = null;
+        terminalSession.reset();
         terminalOpenedAt = 0L;
         clearPredictedClicks();
         closeChestArmed = false;
@@ -1740,6 +1742,7 @@ public final class DungeonRuntime {
             packetButton = 0;
             input = ContainerInput.PICKUP;
         }
+        noteTerminalClickSent(screen, click.slot(), terminalItems);
         client.gameMode.handleContainerInput(
                 screen.getMenu().containerId,
                 click.slot(),
@@ -1766,6 +1769,71 @@ public final class DungeonRuntime {
             terminalCooldown = Math.max(1, extras.dungeonTerminalsDelay);
             terminalClickUntil = 0L;
         }
+    }
+
+    static void noteTerminalClickSent(AbstractContainerScreen<?> screen, int slot,
+                                      List<DungeonPolicy.TerminalItem> items) {
+        if (screen == null || screen instanceof TermSimScreen) return;
+        terminalSession.clickSent(screen.getMenu(), titleOf(screen), slot,
+                screen.getMenu().getStateId(), items, System.currentTimeMillis());
+    }
+
+    /** Observes only the applied server packet, never local click prediction. */
+    public static void onTerminalSlotUpdate(int containerId, int stateId, int slot, ItemStack item) {
+        AbstractContainerScreen<?> screen = currentServerTerminal(containerId);
+        if (screen == null || !(screen.getMenu() instanceof ChestMenu chest)
+                || slot < 0 || slot >= Math.min(54, chest.getContainer().getContainerSize())) return;
+        observeTerminalOpen(Minecraft.getInstance(), extras());
+        if (terminalSession.serverSlot(screen.getMenu(), titleOf(screen), stateId,
+                observedTerminalItem(slot, item))) {
+            terminalPredictedSlots.remove(Integer.valueOf(slot));
+        }
+    }
+
+    /** A full server refresh uses the same fresh-state guard as a single slot. */
+    public static void onTerminalContentUpdate(int containerId, int stateId, List<ItemStack> items) {
+        AbstractContainerScreen<?> screen = currentServerTerminal(containerId);
+        if (screen == null || items == null || !(screen.getMenu() instanceof ChestMenu chest)) return;
+        observeTerminalOpen(Minecraft.getInstance(), extras());
+        int limit = Math.min(54, Math.min(items.size(), chest.getContainer().getContainerSize()));
+        for (int slot = 0; slot < limit; slot++) {
+            if (terminalSession.serverSlot(screen.getMenu(), titleOf(screen), stateId,
+                    observedTerminalItem(slot, items.get(slot)))) {
+                terminalPredictedSlots.remove(Integer.valueOf(slot));
+            }
+        }
+    }
+
+    /** Local practice has explicit accepted-click evidence and no server receipt. */
+    static void onSimulatorTerminalAccepted(TermSimScreen screen, int slot,
+                                            List<DungeonPolicy.TerminalItem> before) {
+        Minecraft client = Minecraft.getInstance();
+        if (screen == null || client == null || client.gui.screen() != screen) return;
+        observeTerminalOpen(client, extras());
+        terminalSession.simulatorAccepted(screen.getMenu(), titleOf(screen), slot, before);
+    }
+
+    private static AbstractContainerScreen<?> currentServerTerminal(int containerId) {
+        Minecraft client = Minecraft.getInstance();
+        boolean enabled = plusDungeonFeature(extras().dungeonTerminalsEnabled);
+        terminalSession.enabled(enabled);
+        if (client == null || client.player == null || containerId < 0
+                || !enabled
+                || !(client.gui.screen() instanceof AbstractContainerScreen<?> screen)
+                || screen instanceof TermSimScreen || !(screen.getMenu() instanceof ChestMenu)
+                || screen.getMenu().containerId != containerId
+                || client.player.containerMenu != screen.getMenu()) return null;
+        String title = titleOf(screen);
+        return DungeonTerminalSolverPolicy.supportsTitle(DungeonPolicy.detectTerminal(title), title)
+                ? screen : null;
+    }
+
+    private static DungeonPolicy.TerminalItem observedTerminalItem(int slot, ItemStack item) {
+        ItemStack stack = item == null ? ItemStack.EMPTY : item;
+        String name = stack.isEmpty() ? "" : stack.getHoverName().getString();
+        var key = stack.isEmpty() ? null : BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return new DungeonPolicy.TerminalItem(slot, name, key == null ? "" : key.getPath(),
+                !stack.isEmpty() && stack.hasFoil(), stack.isEmpty() ? 0 : stack.getCount());
     }
 
     static void playTerminalClickSound(Minecraft client, QolSkyblockExtras extras) {
@@ -3158,14 +3226,18 @@ public final class DungeonRuntime {
         }
         Minecraft client = Minecraft.getInstance();
         QolSkyblockExtras extras = extras();
+        if (client == null || client.gui.screen() != screen) return;
+        observeTerminalOpen(client, extras);
         DungeonPolicy.Terminal terminal = DungeonPolicy.detectTerminal(titleOf(screen));
         if (terminal == DungeonPolicy.Terminal.NONE) {
             return;
         }
-        List<DungeonPolicy.TerminalClick> live = DungeonPolicy.solveTerminalClicks(
-                terminal, titleOf(screen), snapshot(screen));
+        List<DungeonPolicy.TerminalItem> items = snapshot(screen);
+        List<DungeonPolicy.TerminalClick> live = liveTerminalClicks(terminal, titleOf(screen), items);
         boolean solved = DungeonF7Policy.slotInSolution(live, slot);
         if (solved) {
+            // Queued manual actions are not sent yet; the flush owns their receipt.
+            if (!extras.dungeonTerminalsQueue) noteTerminalClickSent(screen, slot, items);
             rememberPredictedClick(terminal, slot);
             playTerminalClickSound(client, extras);
             List<DungeonPolicy.TerminalClick> remaining = pinglessRemaining(terminal, live);
@@ -3969,6 +4041,15 @@ public final class DungeonRuntime {
     }
 
     static void observeTerminalOpen(Minecraft client, QolSkyblockExtras extras) {
+        boolean enabled = plusDungeonFeature(extras.dungeonTerminalsEnabled);
+        terminalSession.enabled(enabled);
+        if (!enabled) {
+            termQueue.clear();
+            melodySkipQueue.clear();
+            termQueueUpdatedAt = 0L;
+            clearPredictedClicks();
+            return;
+        }
         if (!(client.gui.screen() instanceof AbstractContainerScreen<?> screen)) {
             // Pingless terminals keep the same chest open. A 1-frame empty screen
             // must not re-arm first-click delay between Auto Terms clicks.
@@ -3983,6 +4064,7 @@ public final class DungeonRuntime {
                 || !DungeonTerminalSolverPolicy.supportsTitle(DungeonPolicy.detectTerminal(title), title)) {
             lastTermTitle = "";
             terminalMenu = null;
+            terminalSession.reset();
             terminalOpenedAt = 0L;
             termQueue.clear();
             melodySkipQueue.clear();
@@ -4001,6 +4083,14 @@ public final class DungeonRuntime {
             termQueueUpdatedAt = 0L;
             clearPredictedClicks();
         }
+        terminalSession.bind(screen.getMenu(), title);
+    }
+
+    static boolean terminalSolutionMayComplete(DungeonPolicy.Terminal terminal,
+                                               List<DungeonPolicy.TerminalItem> items) {
+        if (terminal == DungeonPolicy.Terminal.STARTS_WITH && terminalSession.hasPendingStarts()) return false;
+        return terminal != DungeonPolicy.Terminal.RUBIX
+                || DungeonTerminalSolverPolicy.rubixGoal(items, extras().athen().termRubixLeftOnly, true) >= 0;
     }
 
     static boolean isCloseKey(int glfwKey) {
@@ -4179,11 +4269,10 @@ public final class DungeonRuntime {
 
     static List<DungeonPolicy.TerminalClick> liveTerminalClicks(
             DungeonPolicy.Terminal terminal, String title, List<DungeonPolicy.TerminalItem> items) {
-        List<DungeonPolicy.TerminalClick> clicks = DungeonPolicy.solveTerminalClicks(terminal, title, items);
-        if (terminal == DungeonPolicy.Terminal.RUBIX && extras().athen().termRubixLeftOnly) {
-            return clicks.stream().map(click -> new DungeonPolicy.TerminalClick(click.slot(), 0)).toList();
-        }
-        return clicks;
+        Minecraft client = Minecraft.getInstance();
+        if (client != null) observeTerminalOpen(client, extras());
+        return terminalSession.solve(terminal, title, items, extras().athen().termRubixLeftOnly,
+                System.currentTimeMillis(), extras().athen().termResyncTimeout);
     }
 
     static List<DungeonPolicy.TerminalClick> pinglessRemaining(

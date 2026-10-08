@@ -226,6 +226,8 @@ public final class  InventoryChromeRuntime {
 
         if (stack == null
                 || stack.isEmpty()
+                || !PetHudPolicy.isPetMenuItem(SkyBlockItemData.marketId(stack),
+                        SkyBlockItemData.petInfo(stack), stack.getHoverName().getString())
                 || InventoryOverlayPolicy
                 .isPlaceholder(
                         stack.getHoverName()
@@ -615,27 +617,59 @@ public final class  InventoryChromeRuntime {
         if (InventoryOverlayPolicy.isEquipmentSetsMenu(title)) {
             snapshotEquipmentSets(slots);
         }
-        if (MenuKeybindPolicy.parsePetsTitle(title) != null
-                && !petSelectionPending()
-                && !InventoryOverlayPolicy.shouldKeepExistingCache(
-                        hasEquippedPet() || !equippedPet.isEmpty() || petHud != null,
-                        containerLooksUnpopulated(slots))) {
-            ItemStack pet = findEquippedPet(slots);
-            if (pet.isEmpty()) {
-                equippedPet = ItemStack.EMPTY;
-                petHud = null;
-                petKnownEmpty = true;
-                petCachedFromGui = false;
-            } else {
-                equippedPet = pet.copy();
-                petHud =
-                        petSnapshot(
-                                pet);
-                petKnownEmpty = false;
-                petCachedFromGui = true;
-            }
-        }
+        if (MenuKeybindPolicy.parsePetsTitle(title) != null) snapshotPetsMenu(slots);
         persistObserved();
+    }
+
+    private static void snapshotPetsMenu(List<Slot> slots) {
+        ItemStack pet = findEquippedPet(slots);
+        if (petSelectionPending()) {
+            // Same-name pets cannot confirm a click. Wait for the selected item's exact UUID.
+            if (pet.isEmpty() || !PetHudPolicy.sameExactPetUuid(
+                    SkyBlockItemData.petInfo(equippedPet), SkyBlockItemData.petInfo(pet))) return;
+            petSelectionPendingUntilMs = 0L;
+        }
+        if (!pet.isEmpty()) {
+            noteEquippedPet(pet);
+            return;
+        }
+        // Another page or a search may contain no active item; that is not a despawn.
+        // The global summary is the only page-independent absence assertion in this GUI.
+        ItemStack summaryStack = stackIn(slots, 4);
+        List<String> summaryLore = loreLines(summaryStack);
+        if (PetHudPolicy.menuReportsNoPet(summaryLore)) {
+            equippedPet = ItemStack.EMPTY;
+            petHud = null;
+            petKnownEmpty = true;
+            petCachedFromGui = false;
+            petGuiAuthoritativeUntilMs = System.currentTimeMillis() + PET_GUI_AUTHORITY_MS;
+            return;
+        }
+        Optional<PetHudPolicy.Snapshot> summary = PetHudPolicy.parseMenuSummary(summaryLore);
+        if (summary.isEmpty()) return;
+        PetHudPolicy.Snapshot observation = summary.get();
+        int nameColor = 0;
+        ItemLore styledLore = summaryStack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY);
+        for (Component line : styledLore.styledLines()) {
+            int found = componentColorForText(line, observation.name());
+            if (found != 0) { nameColor = found; break; }
+        }
+        observation = PetHudPolicy.withRuntimeDetails(observation, SkyBlockItemData.petInfo(summaryStack),
+                nameColor, 0, summaryLore);
+        boolean differentUuid = PetHudPolicy.petUuid(SkyBlockItemData.petInfo(equippedPet)).isPresent()
+                && PetHudPolicy.petUuid(SkyBlockItemData.petInfo(summaryStack)).isPresent()
+                && !PetHudPolicy.sameExactPetUuid(SkyBlockItemData.petInfo(equippedPet),
+                SkyBlockItemData.petInfo(summaryStack));
+        if (differentUuid || !PetHudPolicy.sameMenuSummaryPet(petHud, observation)) {
+            equippedPet = new ItemStack(Items.PLAYER_HEAD);
+            petCachedFromGui = false;
+            petHud = observation;
+        } else {
+            petHud = PetHudPolicy.mergeMenuSummary(petHud, observation);
+        }
+        if (equippedPet.isEmpty()) equippedPet = new ItemStack(Items.PLAYER_HEAD);
+        petKnownEmpty = false;
+        petGuiAuthoritativeUntilMs = System.currentTimeMillis() + PET_GUI_AUTHORITY_MS;
     }
 
     private static void snapshotEquipment(List<Slot> slots) {
@@ -937,13 +971,14 @@ public final class  InventoryChromeRuntime {
     }
 
     private static ItemStack findEquippedPet(List<Slot> slots) {
-        int end = Math.min(54, slots.size());
-        for (int i = 0; i < end; i++) {
-            ItemStack stack = slots.get(i).getItem();
+        for (int index : MenuKeybindPolicy.PET_SLOTS) {
+            ItemStack stack = stackIn(slots, index);
             if (stack.isEmpty()) {
                 continue;
             }
-            if (PetHudPolicy.loreMeansEquipped(loreLines(stack))) {
+            if (PetHudPolicy.isPetMenuItem(SkyBlockItemData.marketId(stack),
+                    SkyBlockItemData.petInfo(stack), stack.getHoverName().getString())
+                    && PetHudPolicy.loreMeansEquipped(loreLines(stack))) {
                 return stack;
             }
         }

@@ -212,6 +212,7 @@ final class QolSkyblockExtras {
     boolean miningHelpersCommissionGui = true;
     boolean miningHelpersCommissionMobs;
     boolean miningHelpersDwarvenWaypoints;
+    boolean miningHelpersCommissionWaypoints;
     boolean miningHelpersNotifyPortal = true;
     boolean miningHelpersNotifyScrap = true;
     boolean miningHelpersNotifyGoblin = true;
@@ -1370,6 +1371,7 @@ final class QolSkyblockExtras {
             case "qol.mining_helpers.ability_hud" -> miningHelpersAbilityHud;
             case "qol.mining_helpers.commission_gui" -> miningHelpersCommissionGui;
             case "qol.mining_helpers.dwarven_waypoints" -> miningHelpersDwarvenWaypoints;
+            case "qol.mining_helpers.commission_waypoints" -> miningHelpersCommissionWaypoints;
             case "qol.mining_helpers.commission_mobs" -> miningHelpersCommissionMobs;
             case "qol.mining_helpers.notify_portal" -> miningHelpersNotifyPortal;
             case "qol.mining_helpers.notify_scrap" -> miningHelpersNotifyScrap;
@@ -2005,6 +2007,7 @@ final class QolSkyblockExtras {
             case "qol.mining_helpers.ability_hud" -> miningHelpersAbilityHud = value;
             case "qol.mining_helpers.commission_gui" -> miningHelpersCommissionGui = value;
             case "qol.mining_helpers.dwarven_waypoints" -> miningHelpersDwarvenWaypoints = value;
+            case "qol.mining_helpers.commission_waypoints" -> miningHelpersCommissionWaypoints = value;
             case "qol.mining_helpers.commission_mobs" -> miningHelpersCommissionMobs = value;
             case "qol.mining_helpers.notify_portal" -> miningHelpersNotifyPortal = value;
             case "qol.mining_helpers.notify_scrap" -> miningHelpersNotifyScrap = value;
@@ -3379,6 +3382,7 @@ final class QolSkyblockExtras {
                 miningHelpersAbilityHud = d.miningHelpersAbilityHud;
                 miningHelpersCommissionGui = d.miningHelpersCommissionGui;
                 miningHelpersDwarvenWaypoints = d.miningHelpersDwarvenWaypoints;
+                miningHelpersCommissionWaypoints = d.miningHelpersCommissionWaypoints;
                 miningHelpersCommissionMobs = d.miningHelpersCommissionMobs;
                 miningHelpersNotifyPortal = d.miningHelpersNotifyPortal;
                 miningHelpersNotifyScrap = d.miningHelpersNotifyScrap;

@@ -116,6 +116,9 @@ abstract class ClientPacketListenerMixin {
         if (!onClientThread()) return;
         fi.rotclient.RotClientClient.onInventoryPacket("slot-packet");
         QolClientFlavorSupport.hooks().experimentSlotUpdate(packet.getSlot(), packet.getItem());
+        fi.rotclient.ClientBoundaryGuard.run("TERMINAL_SLOT_PACKET", () ->
+                QolClientFlavorSupport.hooks().dungeonTerminalSlotUpdate(
+                        packet.getContainerId(), packet.getStateId(), packet.getSlot(), packet.getItem()));
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 
@@ -126,6 +129,9 @@ abstract class ClientPacketListenerMixin {
                 fi.rotclient.StorageOverlayRuntime.onContainerContent(packet.containerId(), packet.items().size()));
         fi.rotclient.RotClientClient.onInventoryPacket("content-packet");
         QolClientFlavorSupport.hooks().experimentContainerRefresh();
+        fi.rotclient.ClientBoundaryGuard.run("TERMINAL_CONTENT_PACKET", () ->
+                QolClientFlavorSupport.hooks().dungeonTerminalContentUpdate(
+                        packet.containerId(), packet.stateId(), packet.items()));
         fi.rotclient.QolClientFlavorSupport.hooks().onContainerSlotUpdate();
     }
 

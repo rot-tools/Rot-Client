@@ -287,6 +287,13 @@ public interface QolClientFlavorHooks {
     default void experimentContainerRefresh() {
     }
 
+    /** Observational packet bridge. Lite has no terminal action implementation. */
+    default void dungeonTerminalSlotUpdate(int containerId, int stateId, int slot, ItemStack item) {
+    }
+
+    default void dungeonTerminalContentUpdate(int containerId, int stateId, List<ItemStack> items) {
+    }
+
     default void experimentScreenClosed() {
     }
 

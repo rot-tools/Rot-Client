@@ -38,7 +38,7 @@ overflow-safe parsing while retaining the last valid quote. See
 ## Gameplay changes and implementation
 
 The [0.27.2 Minister Update](https://hypixel.net/threads/hypixel-skyblock-0-27-2-the-minister-update-greenhouse-qol-and-more.6159904/),
-published 2026-10-07, confirms Melody's three rows and Numbers' ten entries.
+rechecked on 2026-10-08, confirms Melody's three rows and Numbers' ten entries.
 Rot's default simulator now uses these sizes. Actual observed terminal
 snapshots retain support for legacy four-row/fourteen-number servers.
 Plus terminal corrections include exact color identity, unfinished-number

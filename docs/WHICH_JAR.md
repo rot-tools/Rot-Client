@@ -1,15 +1,18 @@
 # Which JAR?
 
 This repository builds **two** Fabric mods from the same source. They share
-package `fi.rotclient`, author Rot Tools, icon, version `2.0.1+mc26.2`, and
+package `fi.rotclient`, author Rot Tools, icon, version `2.0.3+mc26.3`, and
 the `/rot` command. They must not be **enabled** at the same time (each
 `breaks` the other). You can keep both files in a Prism `mods/` folder and
 enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Lite | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **83** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **135** parents (current full client) |
+| Lite | Rot Client | `rotclient` | `RotClient-2.0.3+mc26.3.jar` | **83** HUD / QoL parents |
+| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.3+mc26.3.jar` | **135** parents (current full client) |
+
+Current maintenance targets Minecraft 26.3 only, for both editions. Historical
+26.1.2/26.2 downloads remain available and receive no automatic backports.
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 `SHA256SUMS.txt` when you download from GitHub.

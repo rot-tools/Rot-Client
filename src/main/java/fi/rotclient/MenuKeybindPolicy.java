@@ -32,7 +32,9 @@ public final class MenuKeybindPolicy {
     private static final Pattern WARDROBE_TITLE =
             Pattern.compile("\\((\\d)/(\\d)\\) (Armor|Equipment) Sets");
     private static final Pattern PETS_TITLE =
-            Pattern.compile("(?:\\((\\d)/(\\d)\\)\\s*)?Pets");
+            Pattern.compile("(?:\\(([0-9]+)/([0-9]+)\\)\\s*)?Pets"
+                    + "(?:\\s*:\\s*\"[^\"]*\")?(?:\\s*\\(([0-9]+)/([0-9]+)\\))?",
+                    Pattern.CASE_INSENSITIVE);
     private static final Pattern LOADOUT_TITLE =
             Pattern.compile("\\((\\d)/(\\d)\\) Loadout");
     private static final Pattern EQUIPPED_SLOT_NAME =
@@ -77,12 +79,22 @@ public final class MenuKeybindPolicy {
             return null;
         }
         Matcher matcher = PETS_TITLE.matcher(text);
-        if (!matcher.find()) {
+        if (!matcher.matches()) {
             return null;
         }
-        int current = matcher.group(1) == null ? 1 : Integer.parseInt(matcher.group(1));
-        int total = matcher.group(2) == null ? 1 : Integer.parseInt(matcher.group(2));
-        return new PageTitle(current, total);
+        try {
+            int current = matcher.group(1) != null ? Integer.parseInt(matcher.group(1))
+                    : matcher.group(3) != null ? Integer.parseInt(matcher.group(3)) : 1;
+            int total = matcher.group(2) != null ? Integer.parseInt(matcher.group(2))
+                    : matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 1;
+            if (current < 1 || total < current) return null;
+            if (matcher.group(1) != null && matcher.group(3) != null
+                    && (current != Integer.parseInt(matcher.group(3))
+                    || total != Integer.parseInt(matcher.group(4)))) return null;
+            return new PageTitle(current, total);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     public static PageTitle parseLoadoutTitle(String title) {

@@ -1,5 +1,8 @@
 # Existing module refresh — 2026-10-08
 
+This records the first refresh checkpoint. The subsequent 26.3-only
+[module follow-up](UPSTREAM_FOLLOWUP_2026-10-08.md) updates several gaps below.
+
 Rot Client 26.3 `2.0.2` updates existing features using the current source and
 release comparisons below. This is a focused compatibility update. It does
 not embed ten complete clients or establish feature-for-feature parity with

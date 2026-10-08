@@ -9,6 +9,20 @@ import org.junit.jupiter.api.Test;
 
 final class MenuKeybindPolicyTest {
     @Test
+    void petsPagesAndSearchTitlesMatchPrecisely() {
+        assertEquals(new MenuKeybindPolicy.PageTitle(12, 20), MenuKeybindPolicy.parsePetsTitle("(12/20) Pets"));
+        assertEquals(new MenuKeybindPolicy.PageTitle(2, 12), MenuKeybindPolicy.parsePetsTitle("Pets (2/12)"));
+        assertEquals(new MenuKeybindPolicy.PageTitle(2, 12), MenuKeybindPolicy.parsePetsTitle("Pets: \"rabbit\" (2/12)"));
+        assertEquals(new MenuKeybindPolicy.PageTitle(1, 1), MenuKeybindPolicy.parsePetsTitle("Pets: \"rabbit\""));
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("Other Pets Menu") == null);
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("Petsitter") == null);
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("(0/2) Pets") == null);
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("Pets (3/2)") == null);
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("(1/2) Pets (2/2)") == null);
+        assertTrue(MenuKeybindPolicy.parsePetsTitle("(999999999999999999999/2) Pets") == null);
+    }
+
+    @Test
     void wardrobeTitlesMatchHypixelArmorAndEquipmentSets() {
         assertEquals(1, MenuKeybindPolicy.parseWardrobeTitle("(1/2) Armor Sets").current());
         assertEquals(2, MenuKeybindPolicy.parseWardrobeTitle("(1/2) Armor Sets").total());

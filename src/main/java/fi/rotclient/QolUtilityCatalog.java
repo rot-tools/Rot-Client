@@ -1089,6 +1089,7 @@ public final class QolUtilityCatalog {
                 setting("qol.mining_helpers.ability_hud", "Ability HUD", "Show Pickobulus / mining ability status from tab.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.commission_gui", "Completed Highlight", "Mark COMPLETED books in the Commissions GUI.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.dwarven_waypoints", "Dwarven Area Waypoints", "Static public Dwarven Mines landmark names and distance labels.", SettingType.TOGGLE),
+                setting("qol.mining_helpers.commission_waypoints", "Commission Destinations", "Show public Dwarven landmark labels for incomplete location-specific commissions. Does not locate ores or navigate automatically.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.commission_mobs", "Commission Mobs", "Box tab-matching commission mobs in Dwarven Mines and Hollows.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.notify_portal", "Mineshaft Portal", "Title when a Glacite Mineshaft portal is found.", SettingType.TOGGLE),
                 setting("qol.mining_helpers.notify_scrap", "Suspicious Scrap", "Title when Suspicious Scrap drops.", SettingType.TOGGLE),

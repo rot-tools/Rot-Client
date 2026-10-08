@@ -42,15 +42,21 @@ public final class SlayerSpawnPolicy {
 
         public boolean observe(String line, long nowMillis) {
             Optional<Announcement> parsed = announcement(line);
-            if (parsed.isEmpty() || nowMillis < 0L) {
+            return parsed.isPresent() && observeVerifiedTransition(parsed.get(), nowMillis);
+        }
+
+        /** Only a separately verified local lifecycle may supply an internal announcement. */
+        public boolean observeVerifiedTransition(Announcement announcement, long nowMillis) {
+            if (announcement == null || announcement.type() == null || nowMillis < 0L
+                    || announcement.tier() < 1 || announcement.tier() > maxTier(announcement.type())) {
                 return false;
             }
-            if (parsed.get().equals(lastAnnouncement)
+            if (announcement.equals(lastAnnouncement)
                     && nowMillis >= lastAnnouncementAtMillis
                     && nowMillis - lastAnnouncementAtMillis <= RESOLUTION_WINDOW_MILLIS) {
                 return false;
             }
-            pending = parsed.get();
+            pending = announcement;
             announcedAtMillis = nowMillis;
             lastAnnouncement = pending;
             lastAnnouncementAtMillis = nowMillis;
@@ -134,12 +140,15 @@ public final class SlayerSpawnPolicy {
             if (type.aliases().stream().noneMatch(alias -> alias.equals(matcher.group(1)))) {
                 continue;
             }
-            int max = switch (type) {
-                case REVENANT, TARANTULA, VAMPIRE -> 5;
-                default -> 4;
-            };
-            return tier <= max ? Optional.of(new Announcement(type, tier)) : Optional.empty();
+            return tier <= maxTier(type) ? Optional.of(new Announcement(type, tier)) : Optional.empty();
         }
         return Optional.empty();
+    }
+
+    private static int maxTier(SlayerPolicy.SlayerType type) {
+        return switch (type) {
+            case REVENANT, TARANTULA, VAMPIRE -> 5;
+            default -> 4;
+        };
     }
 }
