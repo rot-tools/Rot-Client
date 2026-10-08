@@ -123,6 +123,11 @@ the 26.3 mouse/color-picker/view-model fix remains unaffected.
 
 Further slices remain, rather than being silently claimed implemented:
 
+The 26.3 follow-up implements the first item below with fresh-state guards;
+see [terminal follow-up](UPSTREAM_TERMINAL_FOLLOWUP_2026-10-08.md) for the
+implementation, tests and remaining server-confirmation limits. This audit's
+original remaining list is retained as the earlier checkpoint.
+
 - Odin's locked Rubix goal and packet-update-based acknowledgement for native
   glint Starts With items. Rot retains its existing timed prediction/resync,
   which needs delayed-packet/native-glint playtesting before replacing it.

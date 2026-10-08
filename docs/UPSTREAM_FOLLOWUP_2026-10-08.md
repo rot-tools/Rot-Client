@@ -81,3 +81,16 @@ In Plus also test fixed Rubix goals with Queue/Clone/left-only settings,
 intrinsic-glint Starts With items, delayed/duplicate slot updates, menu closes
 and reopen, and local TermSim. Test exact cocoon/restart and a final normal
 kill, duplicate messages, foreign simultaneous spawns, relog and drops/history.
+
+## Automated checkpoint
+
+Java 25 client compilation and the full 26.3 Gradle build pass with **2,481
+shared + 236 Plus tests**, zero failures/errors/skips. `verifyLegitJar` and
+`verifyDungeonJarBoundary` pass. There are 34 new regression cases. Independent
+review caught and repaired stale terminal acknowledgements across disabling
+and re-enabling the module.
+
+Local Windows testing needed a native-encoding Gradle launcher setting for the
+non-ASCII cache path. Java source compilation is explicitly UTF-8. CI's initial
+run caught an old expected-version assertion, updated for 2.0.3. Neither issue
+was bypassed by skipping tests. Minecraft runtime validation remains pending.

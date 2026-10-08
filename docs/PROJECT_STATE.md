@@ -4,6 +4,20 @@ This document is the maintainer-facing snapshot of the current engineering state
 
 ## Current status
 
+### 2026-10-08 active maintenance checkpoint
+
+Only **Minecraft 26.3 Lite and Plus** receive further maintenance unless the
+owner requests a backport. Current candidate: `2.0.3+mc26.3`, targeting
+`port/26.3`. The [module follow-up](UPSTREAM_FOLLOWUP_2026-10-08.md) adds locked
+terminal sessions/server acknowledgements, Pets-page authority and UUID-aware
+menu confirmation, bounded cocoon recovery without death rollback, and public
+commission destinations. Java 25 builds, 2,481 shared + 236 Plus tests and both
+edition verifiers pass. New gameplay is Ready for Runtime Test. Canonical
+mining quantities/History and the previous older-version artifacts are preserved.
+
+The older checkpoints below describe their historical versions; they are not
+the current maintenance target or a claim of complete upstream parity.
+
 ### Current checkpoint
 
 | Item | Current value |
