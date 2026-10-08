@@ -14,7 +14,7 @@ Plus map coordinates, calibration and teammate evidence are corrected. Canonical
 History schemas are unchanged. The full dungeon module audit and conditional boss timing evidence
 remain open; this is a bounded correction, not full dungeon completion.
 
-Java 25 `build`, 2,517 shared + 279 Plus tests (no failures/errors/skips), `verifyLegitJar`,
+Java 25 `build`, 2,519 shared + 279 Plus tests (no failures/errors/skips), `verifyLegitJar`,
 `verifyDungeonJarBoundary` and diff checks pass. New gameplay validation is pending. Public Lite
 publication remains gated by the existing release audit. Historical version artifacts are preserved.
 The preceding `2.0.5` [market trading candidate](MARKET_TRADING_2026-10-08.md) remains present;

@@ -23,13 +23,15 @@ This change does not mutate accounting, deduplication, Current Session quantitie
 
 Signed decoration coordinates are centred half-pixels: pixel = floor((packet coordinate + 128) / 2). Non-player decoration types are ignored. Dead teammates are removed from the observed roster, named foreign/dead markers are rejected and incomplete anonymous-marker packets do not get guessed identities. Calibration failure clears the stale board and preview. Map buffers must be complete, and entrance colour runs cannot wrap between rows.
 
-Behavior references, independently integrated:
+Roster parsing additionally recognizes bounded authoritative tab rows before narrow legacy class/name rows. Rank tags and numeric class levels cannot become usernames, and party chat cannot add teammates. The tab grammar is adapted from Odin with BSD attribution in EmberDungeonPolicy.
+
+Behavior references:
 
 - [Odin map sources](https://github.com/odtheking/Odin/tree/833e0533ef9c47529b790612627a65618ebd5a58/src/main/kotlin/com/odtheking/odin/features/impl/dungeon/map), BSD-3-Clause.
 - [Skyblocker dungeon sources](https://github.com/SkyblockerMod/Skyblocker/tree/f5cc8799c6d9c0c0a75bcba525bc1487245c31b0/src/main/java/de/hysky/skyblocker/skyblock/dungeon), LGPL-3.0; behavioral comparison only.
 - [Hypixel 0.27.2 Minister notes](https://hypixel.net/threads/hypixel-skyblock-0-27-2-the-minister-update-greenhouse-qol-and-more.6159904/): faster conditional boss transitions and dialogue, Melody three rows, Numbers ten, changed key pickup and secret drop timing. Existing terminal row limits remain present. No replacement boss delays were invented from the patch description.
 
-No upstream implementation was copied in this slice. Older BSD/CC0 adaptation notices remain included. Shared pure dungeon policies still follow the existing JAR exclusion rules; live dungeon logic and the new observation policy are Plus-only.
+The tab-row grammar is adapted from [Odin DungeonUtils.kt](https://github.com/odtheking/Odin/blob/833e0533ef9c47529b790612627a65618ebd5a58/src/main/kotlin/com/odtheking/odin/utils/skyblock/dungeon/DungeonUtils.kt), Copyright (c) 2025, odtheking, BSD-3-Clause. Rot adds bounded usernames, plus-rank support and explicit observed state validation. All other new integration in this slice is original. Older BSD/CC0 adaptation notices remain included. Shared pure dungeon policies still follow the existing JAR exclusion rules; live dungeon logic and the new observation policy are Plus-only.
 
 ## Remaining dungeon work
 

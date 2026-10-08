@@ -143,3 +143,11 @@ original remaining list is retained as the earlier checkpoint.
 Source comparison does not by itself establish Hypixel permission or Modrinth
 eligibility. These automation/solver fixes are Plus-only, and Lite must continue
 to pass its physical JAR exclusion verifier.
+
+## Roster follow-up in the 2.0.6 dashboard/map candidate
+
+Odin DungeonUtils.kt tab grammar at 833e0533 is adapted into EmberDungeonPolicy
+with copyright/BSD attribution and the packaged full notice. Rot accepts plus-rank prefixes,
+bounds usernames and validates observed class/DEAD/EMPTY states. Legacy class/name rows remain
+supported through narrow full-line patterns. Skyblocker DungeonPlayerManager was compared
+for ordered rosters and ghost state; its LGPL implementation was not copied.

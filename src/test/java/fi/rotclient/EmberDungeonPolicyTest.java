@@ -11,6 +11,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class EmberDungeonPolicyTest {
     @Test
+    void liveTabRanksLevelsAndGhostsCannotBecomePlayerNames() {
+        var roster = EmberDungeonPolicy.teammateClasses(List.of(
+                "[300] [MVP+] Alice ♲ (Mage L)",
+                "[150] [VIP] Bob (Archer 100)",
+                "[200] Ghost (DEAD)",
+                "[100] Ready (EMPTY)"));
+        assertEquals(List.of("Alice", "Bob", "Ghost", "Ready"), List.copyOf(roster.keySet()));
+        assertEquals(DungeonPolicy.DungeonClass.MAGE, roster.get("Alice"));
+        assertEquals(DungeonPolicy.DungeonClass.ARCHER, roster.get("Bob"));
+        assertEquals(DungeonPolicy.DungeonClass.UNKNOWN, roster.get("Ghost"));
+        assertFalse(roster.containsKey("MVP"));
+        assertFalse(roster.containsKey("100"));
+    }
+
+    @Test
+    void partyChatAndClassNarrativesCannotPopulateTheDungeonRoster() {
+        assertTrue(EmberDungeonPolicy.teammateClasses(List.of(
+                "Party > Alice: Mage Bob", "Mage level 100", "Bob likes Mage", "[BOSS] Mage: Bob")).isEmpty());
+    }
+
+    @Test
     void lividWoolMapsToColorNames() {
         assertEquals("Hockey Livid", EmberDungeonPolicy.lividFromWool("minecraft:red_wool").orElseThrow());
         assertEquals("Vendetta Livid", EmberDungeonPolicy.lividFromWool("white_wool").orElseThrow());

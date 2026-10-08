@@ -430,10 +430,10 @@ This is not evidence that a real auction or Bazaar transaction succeeded. Follow
 
 ### 26.3 dashboard and map candidate (2026-10-08)
 
-`2.0.6+mc26.3`: 2,517 shared + 279 Plus tests; both client compilations, dual-JAR build,
+`2.0.6+mc26.3`: 2,519 shared + 279 Plus tests; both client compilations, dual-JAR build,
 `verifyLegitJar`, `verifyDungeonJarBoundary` and diff checks pass. Search tests cover aliases/options,
 section context and original catalog IDs. Map regressions cover signed coordinates, dead rosters,
-incomplete marker identity, map buffer length and entrance runs crossing rows.
+incomplete marker identity, map buffer length, entrance runs crossing rows, ranked/levelled tab players and narrative rejection.
 
 Runtime checklist: both editions, old profiles/display links, local setting search and clear/Esc,
 scrollbar/inline drawer hit areas, slider/enum/text editing; Current Session all/source filters,
