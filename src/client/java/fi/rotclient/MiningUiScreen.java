@@ -30,7 +30,6 @@ final class MiningUiScreen extends Screen {
             RotClientDashboardLayout.HOME_BUTTON_Y_OFFSET;
     private static final int SIDEBAR_BOTTOM_INSET = 8;
     private static final long BACK_EDGE_PULSE_MS = 200L;
-    private static final int ANALYTICS_MAX_RESOURCE_ROWS = 8;
     private static final int HISTORY_MAX_VISIBLE_ROWS = 7;
     private static final int HISTORY_ROW_HEIGHT = 36;
 
@@ -83,6 +82,9 @@ final class MiningUiScreen extends Screen {
     private int trackerDropdownScroll;
     private int trackerDropdownHighlight;
     private final RotClientScrollState analyticsScroll = new RotClientScrollState();
+    private int analyticsSourceFilter;
+    private int analyticsFilterY = Integer.MIN_VALUE;
+    private static final String[] ANALYTICS_SOURCE_LABELS = {"All", "Target", "Other mining", "Mobs", "Chests", "Currency"};
     private final RotClientScrollState sidebarScroll = new RotClientScrollState();
     private final RotClientScrollState profilesScroll = new RotClientScrollState();
     private final RotClientExpandState sidebarExpand = new RotClientExpandState();
@@ -488,8 +490,8 @@ final class MiningUiScreen extends Screen {
             case NONE -> "Overview";
             case MINING_TRACKER -> "Mining Tracker";
             case POWDER_CHEST_TRACKER -> "Powder Chest Tracker";
-            case SESSION_ANALYTICS -> "Session Analytics";
-            case SESSION_HISTORY -> "Session History";
+            case SESSION_ANALYTICS -> "Current Session";
+            case SESSION_HISTORY -> "Saved Sessions";
             case QOL_SETTINGS -> qolDashboard.activePage().title();
         };
     }
@@ -660,12 +662,12 @@ final class MiningUiScreen extends Screen {
                                     marketWatchSelected,
                                     false,
                                     false);
-                            for (QolUtilityCatalog.Group group : QolUtilityCatalog.sidebarPages()) {
+                            for (QolUtilityCatalog.Group group : QolDashboardNavigationPolicy.pages()) {
                                 drawModuleEntry(graphics, mouseX, mouseY,
                                         itemX, mapY.applyAsInt(layout.qolPageY(group)),
                                         MODULE_WIDTH, NAV_ITEM_HEIGHT,
-                                        group.title(),
-                                        group.sidebarSubtitle(),
+                                        QolDashboardNavigationPolicy.title(group),
+                                        QolDashboardNavigationPolicy.subtitle(group),
                                         qolSelected && qolDashboard.activePage() == group,
                                         false, false);
                             }
@@ -8325,11 +8327,11 @@ int selectorY = masterY + 10;
                     y + 34,
                     active ? RotClientTheme.SUCCESS : RotClientTheme.HUD_ACCENT);
             RotClientUiDraw.pageTitle(
-                    graphics, font, "Session Analytics", contentLeft + 14, y + 9);
+                    graphics, font, "Current Session", contentLeft + 14, y + 9);
             RotClientUiDraw.helpText(
                     graphics,
                     font,
-                    "Persistent Current Session · local only",
+                    "Current Session totals · saved locally across restarts",
                     contentLeft + 14,
                     y + 25);
             RotClientUiDraw.drawStatusPill(
@@ -8354,17 +8356,17 @@ int selectorY = masterY + 10;
                 y, RotClientUiDraw.METRIC_CARD_HEIGHT, clipTop, clipBottom)) {
             RotClientUiDraw.drawMetricCard(
                     graphics, font, contentLeft, y, chipWidth,
-                    "Session Time", sessionTime, RotClientTheme.TEXT);
+                    "Active Time", sessionTime, RotClientTheme.TEXT);
             RotClientUiDraw.drawMetricCard(
                     graphics, font, contentLeft + chipWidth + chipGap, y, chipWidth,
-                    "Session Value", sessionValue,
+                    "Est. Item Value", sessionValue,
                     model.resolvedValueAvailable()
                             ? RotClientTheme.TEXT
                             : RotClientTheme.TEXT_DIM);
             RotClientUiDraw.drawMetricCard(
                     graphics, font,
                     contentLeft + (chipWidth + chipGap) * 2, y, chipWidth,
-                    "Coins / Hour", coinsPerHour, RotClientTheme.TEXT);
+                    "Value / Active Hour", coinsPerHour, RotClientTheme.TEXT);
             int parityColor = model.mismatchCount() > 0
                     ? RotClientTheme.WARNING
                     : RotClientTheme.SUCCESS;
@@ -8380,7 +8382,7 @@ int selectorY = masterY + 10;
                 y, RotClientUiDraw.METRIC_CARD_HEIGHT, clipTop, clipBottom)) {
             RotClientUiDraw.drawMetricCard(
                     graphics, font, contentLeft, y, chipWidth,
-                    "Target", model.selectedTargetDisplayName(), RotClientTheme.TEXT);
+                    "Selected Tracker", model.selectedTargetDisplayName(), RotClientTheme.TEXT);
             RotClientUiDraw.drawMetricCard(
                     graphics, font, contentLeft + chipWidth + chipGap, y, chipWidth,
                     "Tracker", model.trackerEnabled() ? "On" : "Off",
@@ -8422,6 +8424,26 @@ int selectorY = masterY + 10;
             }
             y += 48;
         }
+
+        // Explain scope without changing the canonical ledger or valuation.
+        if (analyticsScroll.intersects(y, 106, clipTop, clipBottom)) {
+            RotClientUiDraw.drawElevatedCard(graphics, contentLeft, y, availableWidth, 106);
+            String[] hints = {
+                    "HOW TO READ THIS SESSION",
+                    "Active Time excludes pauses. Estimated value is not sales profit.",
+                    "Price basis: " + model.priceBasisLabel(),
+                    "Select future mining targets in Mining > Tracker. Earlier loot stays here.",
+                    "Pause stops collection; Resume continues the same session.",
+                    "Start New saves this session first. Browse it under Saved Sessions."
+            };
+            for (int i = 0; i < hints.length; i++) {
+                RotClientUiDraw.helpText(graphics, font,
+                        RotClientUiDraw.ellipsizeAndHover(font, hints[i], availableWidth - 24,
+                                contentLeft + 12, y + 10 + i * 15, 14),
+                        contentLeft + 12, y + 10 + i * 15);
+            }
+        }
+        y += 114;
 
         // Two-column Entries / Values
         int colGap = 10;
@@ -8469,49 +8491,34 @@ int selectorY = masterY + 10;
         }
         y += summaryHeight + 10;
 
-        // Resource breakdown — Analytics keeps precise source separation.
-        // HUD may roll non-target item sources into OTHERS; Analytics does not.
-        int resourceWidth = (availableWidth - SETTING_COLUMN_GAP * 3) / 4;
-        int resourceTop = y;
-        int resourceHeight = measureResourceCardHeight(model.targetQuantities());
-        resourceHeight = Math.max(resourceHeight,
-                measureResourceCardHeight(model.otherMinedQuantities()));
-        resourceHeight = Math.max(resourceHeight,
-                measureResourceCardHeight(model.chestLootQuantities()));
-        resourceHeight = Math.max(resourceHeight,
-                measureResourceCardHeight(model.currencyQuantities()));
-        if (analyticsScroll.intersects(resourceTop, resourceHeight, clipTop, clipBottom)) {
-            drawResourceCard(graphics, contentLeft, resourceTop, resourceWidth,
-                    "Target Mined", model.targetQuantities());
-            drawResourceCard(graphics,
-                    contentLeft + resourceWidth + SETTING_COLUMN_GAP,
-                    resourceTop, resourceWidth,
-                    "Other Mined", model.otherMinedQuantities());
-            drawResourceCard(graphics,
-                    contentLeft + (resourceWidth + SETTING_COLUMN_GAP) * 2,
-                    resourceTop, resourceWidth,
-                    "Chest / Rewards", model.chestLootQuantities());
-            drawResourceCard(graphics,
-                    contentLeft + (resourceWidth + SETTING_COLUMN_GAP) * 3,
-                    resourceTop, resourceWidth,
-                    "Currency", model.currencyQuantities());
+        // Source filters affect only the item lists. Top metrics cover the whole session.
+        analyticsFilterY = y;
+        int filterWidth = (availableWidth - 5 * BUTTON_GAP) / 6;
+        if (analyticsScroll.intersects(y, BUTTON_HEIGHT, clipTop, clipBottom)) {
+            for (int i = 0; i < ANALYTICS_SOURCE_LABELS.length; i++) {
+                RotClientUiDraw.drawButton(graphics, font, mouseX, mouseY,
+                        contentLeft + i * (filterWidth + BUTTON_GAP), y, filterWidth,
+                        (analyticsSourceFilter == i ? "• " : "") + ANALYTICS_SOURCE_LABELS[i],
+                        true, true);
+            }
         }
-        y = resourceTop + resourceHeight + 8;
-
-        // Mob loot lives on Current Session (engine snapshot has no MOB category).
-        java.util.Map<String, MiningSessionAnalyticsViewModel.ResourceQuantity>
-                mobQuantities = currentSessionMobLootQuantities();
-        int mobHeight = measureResourceCardHeight(mobQuantities);
-        if (analyticsScroll.intersects(y, mobHeight, clipTop, clipBottom)) {
-            drawResourceCard(
-                    graphics,
-                    contentLeft,
-                    y,
-                    resourceWidth,
-                    mobLootCardTitle(),
-                    mobQuantities);
+        y += BUTTON_HEIGHT + 8;
+        RotClientUiDraw.helpText(graphics, font,
+                "Filter changes the list only. Totals above cover the whole session.", contentLeft + 10, y);
+        y += 22;
+        var sourceLists = java.util.List.of(model.targetQuantities(), model.otherMinedQuantities(),
+                currentSessionMobLootQuantities(), model.chestLootQuantities(), model.currencyQuantities());
+        String[] sourceTitles = {"Target mining loot", "Other mining loot", mobLootCardTitle(),
+                "Chest rewards", "Currency (not item value)"};
+        for (int i = 0; i < sourceLists.size(); i++) {
+            if (analyticsSourceFilter != 0 && analyticsSourceFilter != i + 1) continue;
+            var quantities = sourceLists.get(i);
+            int height = measureResourceCardHeight(quantities);
+            if (analyticsScroll.intersects(y, height, clipTop, clipBottom)) {
+                drawResourceCard(graphics, contentLeft, y, availableWidth, sourceTitles[i], quantities);
+            }
+            y += height + 8;
         }
-        y += mobHeight + 8;
         analyticsScroll.setBounds(
                 RotClientScrollState.measureContentHeight(measuredStart, y),
                 clipBottom - clipTop);
@@ -8603,9 +8610,8 @@ int selectorY = masterY + 10;
                     quantities) {
         int rows = quantities == null || quantities.isEmpty()
                 ? 1
-                : Math.min(ANALYTICS_MAX_RESOURCE_ROWS, quantities.size());
-        int omitted = quantities == null ? 0
-                : Math.max(0, quantities.size() - ANALYTICS_MAX_RESOURCE_ROWS);
+                : quantities.size();
+        int omitted = 0;
         // Header + column labels + rows (+ optional omitted line).
         return 40 + rows * 16 + (omitted > 0 ? 14 : 0);
     }
@@ -8679,10 +8685,6 @@ int selectorY = masterY + 10;
                 sessionItems = indexCurrentSessionItems();
         for (MiningSessionAnalyticsViewModel.ResourceQuantity quantity
                 : quantities.values()) {
-            if (shown >= ANALYTICS_MAX_RESOURCE_ROWS) {
-                omitted++;
-                continue;
-            }
             String fullName = quantity.displayName();
             String label = fullName;
             int qtyWidth = font.width(Long.toString(quantity.quantity())) + 8;
@@ -8797,10 +8799,6 @@ int selectorY = masterY + 10;
         int omitted = 0;
         for (MiningSessionAnalyticsViewModel.ResourceQuantity quantity
                 : quantities.values()) {
-            if (shown >= ANALYTICS_MAX_RESOURCE_ROWS) {
-                omitted++;
-                continue;
-            }
             String label = quantity.displayName();
             if (font.width(label) > width - 28) {
                 label = quantity.resourceId();
@@ -8899,9 +8897,9 @@ int selectorY = masterY + 10;
         roundedFill(graphics, contentLeft, y,
                 contentRight, y + 34, RotClientTheme.SELECTED_ROW);
         graphics.fill(contentLeft, y + 4, contentLeft + 3, y + 30, RotClientTheme.HUD_ACCENT);
-        RotClientUiDraw.text(graphics, font, "SESSION HISTORY",
+        RotClientUiDraw.text(graphics, font, "SAVED SESSIONS",
                 contentLeft + 10, y + 5, RotClientTheme.TEXT, true);
-        RotClientUiDraw.text(graphics, font, "Local saved sessions",
+        RotClientUiDraw.text(graphics, font, "Local snapshots · OPEN to view · COPY to export",
                 contentLeft + 10, y + 18, RotClientTheme.TEXT_DIM, false);
         drawRight(graphics,
                 presentation.available()
@@ -10828,6 +10826,18 @@ if (trackerDropdownOpen) {
         MiningSessionAnalyticsPresentation presentation =
                 RotClientClient.sessionAnalyticsPresentation();
         int availableWidth = contentRight - contentLeft;
+        int filterWidth = (availableWidth - 5 * BUTTON_GAP) / 6;
+        if (logicalMouseY >= panelY + MASTER_Y && logicalMouseY < panelY + actionRowY() - 10) {
+            for (int i = 0; i < ANALYTICS_SOURCE_LABELS.length; i++) {
+                if (inside(logicalMouseX, logicalMouseY,
+                        contentLeft + i * (filterWidth + BUTTON_GAP), analyticsFilterY,
+                        filterWidth, BUTTON_HEIGHT)) {
+                    analyticsSourceFilter = i;
+                    awaitingNewSessionConfirm = false;
+                    return true;
+                }
+            }
+        }
         int buttonY = panelY + actionRowY();
         int buttonWidth = (availableWidth - BUTTON_GAP * 4) / 5;
         int gap = buttonWidth + BUTTON_GAP;

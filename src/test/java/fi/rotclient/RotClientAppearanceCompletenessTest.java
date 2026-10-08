@@ -182,9 +182,9 @@ final class RotClientAppearanceCompletenessTest {
                 StandardCharsets.UTF_8);
         assertTrue(source.contains("enableScissor"));
         assertTrue(source.contains("disableScissor"));
-        assertTrue(source.contains("Session Time"));
-        assertTrue(source.contains("Session Value"));
-        assertTrue(source.contains("Coins / Hour"));
+        assertTrue(source.contains("Active Time"));
+        assertTrue(source.contains("Est. Item Value"));
+        assertTrue(source.contains("Value / Active Hour"));
         assertTrue(source.contains("formatAnalyticsSessionTime"));
     }
 

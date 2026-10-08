@@ -982,19 +982,19 @@ public final class QolUtilityCatalog {
 
         modules.add(module(
                 "qol.mining_session",
-                "Mining Session",
-                "Live Current Session analytics. Open the page for the full readout; it does not fit in a settings drawer.",
+                "Current Session",
+                "Persistent loot totals and estimated value for the current session. Open the page for the full readout; it does not fit in a settings drawer.",
                 Group.MINING,
                 "Session",
                 false,
                 false,
                 true,
                 List.of("session", "analytics", "current session"),
-                setting("qol.mining_session.open_page", "Open Analytics", "Open live Current Session analytics.", SettingType.ACTION, "page")));
+                setting("qol.mining_session.open_page", "Open Current Session", "Read current totals, choose a source filter and manage pause/resume.", SettingType.ACTION, "page")));
 
         modules.add(module(
                 "qol.mining_history",
-                "Mining History",
+                "Saved Sessions",
                 "Saved local session history. Open the page for the table; it does not fit in a settings drawer.",
                 Group.MINING,
                 "Session",
@@ -1002,7 +1002,7 @@ public final class QolUtilityCatalog {
                 false,
                 true,
                 List.of("history", "saved sessions"),
-                setting("qol.mining_history.open_page", "Open History", "Open saved local session history.", SettingType.ACTION, "page")));
+                setting("qol.mining_history.open_page", "Open Saved Sessions", "Browse saved sessions and click OPEN for an archived readout.", SettingType.ACTION, "page")));
 
         modules.add(module(
                 "qol.commission_display",

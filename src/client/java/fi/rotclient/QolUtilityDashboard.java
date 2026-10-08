@@ -24,6 +24,13 @@ final class QolUtilityDashboard {
     private QolUtilityCatalog.Group activePage = QolUtilityCatalog.Group.COMBAT;
     private QolUtilityUiMath.PageFilter pageFilter = QolUtilityUiMath.PageFilter.ALL;
     private String openModuleId = "";
+    private String drawerQuery = "";
+    private boolean drawerSearchFocused;
+    private QolUtilityCatalog.ModuleDef searchCacheModule;
+    private DrawerKind searchCacheKind;
+    private String searchCacheQuery = "";
+    private List<QolUtilityCatalog.SettingDef> searchCacheRows = List.of();
+    private static final int SETTINGS_SEARCH_HEIGHT = 30;
     private String pendingColorSettingId = "";
     private String openEnumSettingId = "";
     private String enumQuery = "";
@@ -86,6 +93,7 @@ final class QolUtilityDashboard {
         if (page == null) {
             return;
         }
+        page = QolDashboardNavigationPolicy.page(page);
         boolean changed = activePage != page;
         boolean closedLanding = appearanceLanding || hudLayoutLanding;
         appearanceLanding = false;
@@ -106,7 +114,7 @@ final class QolUtilityDashboard {
         }
         QolWorkspaceView view = QolWorkspaceView.fromTab(tab);
         if (!view.groupId().isBlank()) {
-            activePage = QolUtilityCatalog.Group.fromId(view.groupId());
+            activePage = QolDashboardNavigationPolicy.page(QolUtilityCatalog.Group.fromId(view.groupId()));
         }
         if (view.appearanceLanding()) {
             openAppearanceLanding();
@@ -141,6 +149,7 @@ final class QolUtilityDashboard {
     }
 
     void closeDrawer() {
+        resetDrawerSearch();
         openModuleId = "";
         drawerKind = DrawerKind.MODULE;
         pendingModuleResetConfirm = false;
@@ -171,11 +180,12 @@ final class QolUtilityDashboard {
         }
         appearanceLanding = false;
         hudLayoutLanding = false;
-        if (activePage != module.group()) {
-            activePage = module.group();
+        if (activePage != QolDashboardNavigationPolicy.page(module.group())) {
+            activePage = QolDashboardNavigationPolicy.page(module.group());
             listScroll.reset();
         }
         openModuleId = module.id();
+        resetDrawerSearch();
         drawerKind = DrawerKind.MODULE;
         pendingModuleResetConfirm = false;
         pendingHudStyleResetConfirm = false;
@@ -204,11 +214,12 @@ final class QolUtilityDashboard {
         boolean keepHudLayout = hudLayoutLanding;
         appearanceLanding = false;
         hudLayoutLanding = keepHudLayout;
-        if (!keepHudLayout && activePage != module.group()) {
-            activePage = module.group();
+        if (!keepHudLayout && activePage != QolDashboardNavigationPolicy.page(module.group())) {
+            activePage = QolDashboardNavigationPolicy.page(module.group());
             listScroll.reset();
         }
         openModuleId = module.id();
+        resetDrawerSearch();
         drawerKind = DrawerKind.HUD;
         pendingModuleResetConfirm = false;
         pendingHudStyleResetConfirm = false;
@@ -231,7 +242,7 @@ final class QolUtilityDashboard {
         }
         appearanceLanding = true;
         hudLayoutLanding = false;
-        activePage = QolUtilityCatalog.Group.HUD_DISPLAY;
+        activePage = QolDashboardNavigationPolicy.page(QolUtilityCatalog.Group.HUD_DISPLAY);
         closeDrawer();
         listScroll.reset();
         persistWorkspaceView();
@@ -240,7 +251,7 @@ final class QolUtilityDashboard {
     void openHudLayoutLanding() {
         hudLayoutLanding = true;
         appearanceLanding = false;
-        activePage = QolUtilityCatalog.Group.HUD_DISPLAY;
+        activePage = QolDashboardNavigationPolicy.page(QolUtilityCatalog.Group.HUD_DISPLAY);
         closeDrawer();
         listScroll.reset();
         persistWorkspaceView();
@@ -313,6 +324,14 @@ final class QolUtilityDashboard {
 
     private java.util.List<QolUtilityCatalog.SettingDef> currentDrawerSettings(
             QolUtilityCatalog.ModuleDef module) {
+        if (module == searchCacheModule && drawerKind == searchCacheKind && drawerQuery.equals(searchCacheQuery)) return searchCacheRows;
+        var source = unfilteredDrawerSettings(module);
+        searchCacheModule = module; searchCacheKind = drawerKind; searchCacheQuery = drawerQuery;
+        searchCacheRows = QolDrawerSearchPolicy.filter(source,drawerQuery);
+        return searchCacheRows;
+    }
+
+    private java.util.List<QolUtilityCatalog.SettingDef> unfilteredDrawerSettings(QolUtilityCatalog.ModuleDef module) {
         if (hudDrawerOpen()) {
             java.util.ArrayList<QolUtilityCatalog.SettingDef> rows = new java.util.ArrayList<>();
             if (!HudDrawerPolicy.uniqueStyleFocus(module).isBlank()) {
@@ -322,6 +341,14 @@ final class QolUtilityDashboard {
             return rows;
         }
         return HudDrawerPolicy.moduleCatalogSettings(module);
+    }
+    private void resetDrawerSearch() {
+        drawerQuery = ""; drawerSearchFocused = false; searchCacheModule = null;
+    }
+    private void setDrawerQuery(String query) {
+        drawerQuery = query; drawerScroll.reset();
+        openEnumSettingId = ""; enumQuery = ""; enumSearchFocused = false;
+        listeningTextSettingId = listeningKeybindSettingId = draggingNumberSettingId = "";
     }
 
     private boolean hudDrawerShowsEnableRow(QolUtilityCatalog.ModuleDef module) {
@@ -504,6 +531,10 @@ final class QolUtilityDashboard {
             return;
         }
         openModule(module.id());
+        if (!entryId.equals(module.id())) {
+            module.settings().stream().filter(setting -> setting.id().equals(entryId)).findFirst()
+                    .ifPresent(setting -> setDrawerQuery(setting.label()));
+        }
     }
 
     private QolUtilityConfig qol() {
@@ -667,7 +698,7 @@ final class QolUtilityDashboard {
             return;
         }
         List<QolUtilityCatalog.ModuleDef> pageModules =
-                QolUtilityCatalog.modulesOnGroupPage(activePage);
+                QolDashboardNavigationPolicy.modules(activePage);
         List<QolUtilityCatalog.ModuleDef> modules = QolUtilityUiMath.filterPageModules(
                 pageModules,
                 pageFilter,
@@ -964,12 +995,12 @@ final class QolUtilityDashboard {
         RotClientUiDraw.pageTitle(
                 graphics,
                 font,
-                activePage.title(),
+                QolDashboardNavigationPolicy.title(activePage),
                 x + 14,
                 y + 8);
 
         List<QolUtilityCatalog.ModuleDef> pageModules =
-                QolUtilityCatalog.modulesOnGroupPage(
+                QolDashboardNavigationPolicy.modules(
                         activePage);
 
         int enabledCount =
@@ -1013,7 +1044,7 @@ final class QolUtilityDashboard {
         }
 
         String desc =
-                activePage.pageDescription();
+                QolDashboardNavigationPolicy.description(activePage);
 
         int descMax =
                 Math.max(
@@ -1250,6 +1281,7 @@ final class QolUtilityDashboard {
     }
 
     private void completeModuleAccordionClose() {
+        resetDrawerSearch();
         openModuleId = "";
         drawerKind = DrawerKind.MODULE;
         pendingModuleResetConfirm = false;
@@ -1441,7 +1473,7 @@ final class QolUtilityDashboard {
          */
         return Math.max(
                 48,
-                bodyHeight + 16);
+                bodyHeight + 16 + SETTINGS_SEARCH_HEIGHT);
     }
     private int moduleAccordionVisibleHeight(
             QolUtilityCatalog.ModuleDef module) {
@@ -1452,7 +1484,7 @@ final class QolUtilityDashboard {
         double eased = RotClientEase.smoothstep(moduleAccordionProgress);
 
         return (int) Math.round(
-                moduleAccordionTargetHeight(module) * eased);
+                Math.min(400, moduleAccordionTargetHeight(module)) * eased);
     }
 
     private static int moduleAccordionRowY(
@@ -2156,10 +2188,18 @@ final class QolUtilityDashboard {
 
         }
 
+        int searchY = inline ? y + 8 : y + 52;
+        RotClientUiDraw.roundedFill(graphics,x + 12,searchY,x + width - 12,searchY + 24,
+                drawerSearchFocused ? RotClientTheme.FIELD : RotClientTheme.BUTTON);
+        String queryText = drawerQuery.isBlank() ? "Find settings…" : drawerQuery;
+        if (drawerSearchFocused && System.currentTimeMillis() / 500 % 2 == 0) queryText += "|";
+        RotClientUiDraw.text(graphics,font,RotClientUiDraw.ellipsize(font,queryText,Math.max(20,width - 72)),
+                x + 20,searchY + 8,drawerQuery.isBlank() ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,false);
+        if (!drawerQuery.isBlank()) RotClientUiDraw.text(graphics,font,"×",x + width - 31,searchY + 8,RotClientTheme.TEXT,true);
         int bodyTop =
                 inline
-                        ? y + 8
-                        : y + 52;
+                        ? y + 8 + SETTINGS_SEARCH_HEIGHT
+                        : y + 52 + SETTINGS_SEARCH_HEIGHT;
 
         int bodyBottom =
                 inline
@@ -2220,6 +2260,11 @@ final class QolUtilityDashboard {
             rowY += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 4;
         }
 
+        if (!drawerQuery.isBlank() && currentDrawerSettings(module).isEmpty()) {
+            RotClientUiDraw.helpText(graphics, font, "No matching settings. Clear the search to see all.",
+                    x + 14, rowY + 8);
+            rowY += 28;
+        }
         String drawerSectionId = "";
         for (QolUtilityCatalog.SettingDef setting : currentDrawerSettings(module)) {
             if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
@@ -2391,6 +2436,7 @@ final class QolUtilityDashboard {
     }
 
     private double drawerSectionAmount(String sectionId) {
+        if (!drawerQuery.isBlank()) return 1;
         if (sectionId == null || sectionId.isBlank()) {
             return 1.0D;
         }
@@ -3569,10 +3615,18 @@ final class QolUtilityDashboard {
 
     boolean capturingText() {
         return (listeningTextSettingId != null && !listeningTextSettingId.isBlank())
-                || enumSearchFocused;
+                || enumSearchFocused || drawerSearchFocused;
     }
 
     boolean captureKey(int glfwKey) {
+        if (drawerSearchFocused) {
+            if (glfwKey == InputConstants.KEY_ESCAPE) {
+                if (!drawerQuery.isBlank()) setDrawerQuery(""); else drawerSearchFocused = false;
+            } else if (glfwKey == InputConstants.KEY_RETURN || glfwKey == InputConstants.KEY_NUMPADENTER) drawerSearchFocused = false;
+            else if (glfwKey == InputConstants.KEY_BACKSPACE && !drawerQuery.isEmpty())
+                setDrawerQuery(drawerQuery.substring(0,drawerQuery.offsetByCodePoints(drawerQuery.length(),-1)));
+            return true;
+        }
         if (enumSearchFocused
                 && openEnumSettingId != null
                 && !openEnumSettingId.isBlank()) {
@@ -3622,6 +3676,10 @@ final class QolUtilityDashboard {
     }
 
     boolean captureChar(int codePoint, boolean allowedChatCharacter) {
+        if (drawerSearchFocused) {
+            if (allowedChatCharacter && codePoint >= 32 && drawerQuery.length() < 64) setDrawerQuery(drawerQuery + Character.toString(codePoint));
+            return true;
+        }
         if (enumSearchFocused
                 && openEnumSettingId != null
                 && !openEnumSettingId.isBlank()) {
@@ -3729,7 +3787,7 @@ final class QolUtilityDashboard {
                         drawerX
                                 + drawerW
                                 - RotClientUiDraw.SCROLLBAR_HIT_WIDTH,
-                        drawerY + 52,
+                        drawerY + 52 + SETTINGS_SEARCH_HEIGHT,
                         drawerY
                                 + drawerH
                                 - 10)) {
@@ -3881,7 +3939,7 @@ final class QolUtilityDashboard {
 
         java.util.List<QolUtilityCatalog.ModuleDef> modules =
                 QolUtilityUiMath.filterPageModules(
-                        QolUtilityCatalog.modulesOnGroupPage(
+                        QolDashboardNavigationPolicy.modules(
                                 activePage),
                         pageFilter,
                         this::isEnabled);
@@ -4109,7 +4167,16 @@ final class QolUtilityDashboard {
         if (module == null) {
             return true;
         }
-        int bodyTop = drawerY + 52;
+        int searchY = drawerY + 52;
+        if (RotClientUiDraw.inside(mx,my,drawerX + 12,searchY,drawerW - 24,24)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+                drawerSearchFocused = true;
+                setDrawerQuery(mx >= drawerX + drawerW - 42 ? "" : drawerQuery);
+            }
+            return true;
+        }
+        drawerSearchFocused = false;
+        int bodyTop = drawerY + 52 + SETTINGS_SEARCH_HEIGHT;
         int bodyBottom = drawerY + drawerH - 10;
         if (my < bodyTop || my >= bodyBottom) {
             return true;
@@ -4145,7 +4212,7 @@ final class QolUtilityDashboard {
             if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
                 if (RotClientUiDraw.inside(
                         mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_SECTION_HEIGHT)) {
-                    if (!collapsedDrawerSections.add(setting.id())) {
+                    if (drawerQuery.isBlank() && !collapsedDrawerSections.add(setting.id())) {
                         collapsedDrawerSections.remove(setting.id());
                     }
                     return true;

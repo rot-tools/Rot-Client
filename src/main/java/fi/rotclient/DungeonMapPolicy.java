@@ -973,6 +973,13 @@ public final class DungeonMapPolicy {
         int run = 0;
         int start = 0;
         for (int i = 0; i < colors.length; i++) {
+            // A horizontal room run must not continue onto the following map row.
+            if (i % width == 0 && run > 0) {
+                if (run == 16 || run == 18) {
+                    return calibrationFromEntrance(start, run, width, floor);
+                }
+                run = 0;
+            }
             if ((colors[i] & 0xFF) == (COLOR_ENTRANCE & 0xFF)) {
                 if (run == 0) {
                     start = i;

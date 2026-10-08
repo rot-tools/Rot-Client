@@ -159,7 +159,7 @@ final class RotClientSidebarNav {
         int qolClipHeight() {
             return RotClientEase.shownPixels(
                     childStackHeight(
-                            QolUtilityCatalog.sidebarPages().size() + 1),
+                            QolDashboardNavigationPolicy.pages().size() + 1),
                     qolOpen);
         }
 
@@ -171,9 +171,9 @@ final class RotClientSidebarNav {
             }
 
             List<QolUtilityCatalog.Group> pages =
-                    QolUtilityCatalog.sidebarPages();
+                    QolDashboardNavigationPolicy.pages();
 
-            int index = pages.indexOf(group);
+            int index = pages.indexOf(QolDashboardNavigationPolicy.page(group));
 
             if (index < 0
                     || index >= qolPageYs.length) {
@@ -514,7 +514,7 @@ final class RotClientSidebarNav {
                 + SECTION_GAP;
 
         List<QolUtilityCatalog.Group> pages =
-                QolUtilityCatalog.sidebarPages();
+                QolDashboardNavigationPolicy.pages();
 
         int marketWatchY = y;
 
@@ -747,7 +747,7 @@ final class RotClientSidebarNav {
             }
 
             for (QolUtilityCatalog.Group group
-                    : QolUtilityCatalog.sidebarPages()) {
+                    : QolDashboardNavigationPolicy.pages()) {
 
                 int pageY =
                         layout.qolPageY(group);

@@ -9,6 +9,16 @@ import org.junit.jupiter.api.Test;
 
 final class DungeonMapPolicyTest {
     @Test
+    void aRoomCannotWrapAcrossTwoMapRows() {
+        byte[] colors = new byte[128 * 128];
+        java.util.Arrays.fill(colors, 120, 136, DungeonMapPolicy.COLOR_ENTRANCE);
+        assertFalse(DungeonMapPolicy.calibrate(colors, 128).ok());
+        java.util.Arrays.fill(colors, (byte) 0);
+        java.util.Arrays.fill(colors, 112, 128, DungeonMapPolicy.COLOR_ENTRANCE);
+        assertTrue(DungeonMapPolicy.calibrate(colors, 128).ok());
+    }
+
+    @Test
     void entranceRunCalibratesRoomSize() {
         byte[] colors = new byte[128 * 128];
         int start = 22 + 22 * 128;
