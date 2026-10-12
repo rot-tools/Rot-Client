@@ -99,6 +99,15 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
         DungeonPlusRuntime.onChat(message);
     }
 
+    @Override public void dungeonPlayerTeleport(double x, double y, double z, float yaw,
+            boolean relativePosition, boolean relativeRotation) {
+        DungeonRuntime.onPlayerTeleport(x, y, z, yaw, relativePosition, relativeRotation);
+    }
+
+    @Override public void dungeonItemUse(net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+        DungeonRuntime.onTeleportItemUse(player, hand);
+    }
+
     @Override public void dungeonActionBar(Component message) { DungeonRuntime.onRoomActionBar(message); }
 
     @Override public void dungeonItemPickup(int itemEntityId, int collectorEntityId) {

@@ -35,6 +35,11 @@ public interface QolClientFlavorHooks {
     default void onChat(Component message) {
     }
 
+    default void dungeonPlayerTeleport(double x, double y, double z, float yaw,
+            boolean relativePosition, boolean relativeRotation) { }
+
+    default void dungeonItemUse(net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) { }
+
     default void dungeonActionBar(Component message) { }
 
     default void dungeonItemPickup(int itemEntityId, int collectorEntityId) { }

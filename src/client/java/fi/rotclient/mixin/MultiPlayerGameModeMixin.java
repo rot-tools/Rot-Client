@@ -66,6 +66,11 @@ abstract class MultiPlayerGameModeMixin {
         MiningAssistRuntime.stopMining();
     }
 
+    @Inject(method = "useItem", at = @At("HEAD"))
+    private void rotclient$teleportAbilityUse(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+        fi.rotclient.QolClientFlavorSupport.hooks().dungeonItemUse(player, hand);
+    }
+
     @Inject(method = "useItemOn", at = @At("RETURN"))
     private void rotclient$f7ClickSound(
             LocalPlayer player,

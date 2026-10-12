@@ -1085,6 +1085,30 @@ public final class DungeonMapPolicy {
                 }
             }
         }
+        String summary = rooms.size() + " rooms";
+        if (puzzles > 0) {
+            summary += " · " + puzzles + " puzzle";
+        }
+        if (blood > 0) {
+            summary += " · blood";
+        }
+        if (fairy > 0) {
+            summary += " · fairy";
+        }
+        if (!doors.isEmpty()) {
+            summary += " · " + doors.size() + " doors";
+        }
+        return withPlayers(new Board(cal, rooms, doors, List.of(), summary),
+                decorations, playerX, playerZ, yaw, classKey, name);
+    }
+
+    /** Refresh moving markers without decoding the unchanged Magical Map terrain. */
+    public static Board withPlayers(Board terrain, List<PlayerIcon> decorations,
+            Double playerX, Double playerZ, float yaw, String classKey, String name) {
+        if (terrain == null || !terrain.calibration().ok()) {
+            return new Board(Calibration.none(), List.of(), List.of(), List.of(), "");
+        }
+        Calibration cal = terrain.calibration();
         List<PlayerIcon> players = new ArrayList<>();
         if (decorations != null) {
             players.addAll(decorations);
@@ -1100,20 +1124,7 @@ public final class DungeonMapPolicy {
                     classKey == null ? "" : classKey,
                     name == null ? "" : name));
         }
-        String summary = rooms.size() + " rooms";
-        if (puzzles > 0) {
-            summary += " · " + puzzles + " puzzle";
-        }
-        if (blood > 0) {
-            summary += " · blood";
-        }
-        if (fairy > 0) {
-            summary += " · fairy";
-        }
-        if (!doors.isEmpty()) {
-            summary += " · " + doors.size() + " doors";
-        }
-        return new Board(cal, rooms, doors, players, summary);
+        return new Board(cal, terrain.rooms(), terrain.doors(), players, terrain.summary());
     }
 
     public static DungeonPuzzlePolicy.MapPreview render(

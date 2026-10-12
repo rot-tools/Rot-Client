@@ -132,3 +132,15 @@ packet differences and validation limits.
 Minecraft is Mojang / Microsoft. Fabric Loader and Fabric API are separate
 mods the user installs; they are not nested inside the Rot Client JAR.
 Mod Menu is compile-only and is not required at runtime.
+
+## 26.3 Simon, Teleport Maze and map-update adaptation (2026-10-12)
+
+DungeonSimonObservationPolicy adapts NoammAddons SimonSays.kt (CC0,
+4164abc38500e041a805e03ca0f01b46e37bd8a5) and Odin SimonSays.kt (BSD-3-Clause,
+b0058000511ef755dfc6379330a1d23404e08df2). DungeonTeleportMazeObservationPolicy
+adapts Noamm's TeleportMazeSolver.kt at the same revision, reusing existing
+Odin pad geometry. DungeonMapTerrainCache follows Odin's separation of map
+terrain updates and moving players, retaining Rot's existing parser. Inline
+provenance and full source/binary notices are retained. The bounded scan
+cursor and Rot runtime integration are original adaptations. See
+[the checkpoint](docs/DUNGEON_SCANS_2026-10-12.md).

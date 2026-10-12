@@ -216,7 +216,9 @@ final class DungeonPlusRuntime {
     }
 
     static void autoSimon(Minecraft client) {
-        if (simonCooldown > 0
+        if (!validSimonContext(client)
+                || simonObservation.phase() != DungeonSimonObservationPolicy.Phase.IDLE
+                || simonCooldown > 0
                 || client.gameMode == null
                 || client.player == null
                 || !(client.hitResult instanceof BlockHitResult hit)
@@ -227,7 +229,6 @@ final class DungeonPlusRuntime {
         if (!DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
-        simon = DungeonF7Policy.SimonState.idle();
         client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
         simonCooldown = 3;
     }
@@ -423,7 +424,7 @@ final class DungeonPlusRuntime {
                 });
             }
         }
-        int budget = reveal ? DungeonMapPolicy.GRID * DungeonMapPolicy.GRID : 8;
+        int budget = 2; // Player room first; failed probes also consume this per-tick limit.
         int newHashes = 0;
         for (int[] center : centers) {
             int cx = center[0];
@@ -435,8 +436,7 @@ final class DungeonPlusRuntime {
                     || dungeonWorldTicks < nextRoomHashTick.getOrDefault(key, 0)) {
                 continue;
             }
-            boolean playerRoom = cx == playerCx && cz == playerCz;
-            if (!playerRoom && newHashes >= budget) {
+            if (newHashes >= budget) {
                 continue;
             }
             BlockPos sample = new BlockPos(cx, 69, cz);
@@ -539,7 +539,9 @@ final class DungeonPlusRuntime {
 
     static void autoSimonNext(Minecraft client) {
         EmberDungeonPolicy.IntVec next = simon.nextButton();
-        if (simonCooldown > 0
+        if (!validSimonContext(client)
+                || simonObservation.phase() != DungeonSimonObservationPolicy.Phase.INPUT
+                || simonCooldown > 0
                 || client.gameMode == null
                 || client.player == null
                 || next == null
@@ -552,7 +554,7 @@ final class DungeonPlusRuntime {
             return;
         }
         client.gameMode.useItemOn(client.player, InteractionHand.MAIN_HAND, hit);
-        simon = DungeonF7Policy.consumeNext(simon);
+        // Matching server-observed button power advances the sequence after acknowledgment.
         simonCooldown = 3;
     }
 

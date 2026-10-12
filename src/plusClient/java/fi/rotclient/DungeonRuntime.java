@@ -38,6 +38,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
@@ -86,12 +88,15 @@ public final class DungeonRuntime {
     static String lastWeirdoNpc = "";
     static int lastBreakerCharges = -1;
     static final Map<String, String> blessings = new LinkedHashMap<>();
-    static final Map<String, String> tpLinks = new LinkedHashMap<>();
+    private static final DungeonTeleportMazeObservationPolicy teleportMaze = new DungeonTeleportMazeObservationPolicy();
+    private static final DungeonMapTerrainCache mapTerrain = new DungeonMapTerrainCache();
+    private static final DungeonBlockScanPolicy dioriteScan = new DungeonBlockScanPolicy();
+    private static final Map<Long, BlockPos> dioriteMarks = new LinkedHashMap<>();
+    private static int teleportAbilityUntilTick;
+    private static int dungeonRunGeneration;
     static final List<Mark> puzzleMarks = new ArrayList<>();
     static DungeonPuzzlePolicy.MapPreview mapPreview =
             new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
-    static DungeonPuzzlePolicy.WorldCell lastPad;
-    static Vec3 lastPlayerPos;
     static int lastScore = -1;
     static int lastSecretsFound = -1;
     static String lastDuplicateTitle = "";
@@ -190,7 +195,9 @@ public final class DungeonRuntime {
     static String lastCrystalHud = "";
     static long relicSpawnUntil;
     static long relicPickupAt;
-    static DungeonF7Policy.SimonState simon = DungeonF7Policy.SimonState.idle();
+    static DungeonSimonObservationPolicy.State simonObservation = DungeonSimonObservationPolicy.empty();
+    private static final Map<BlockPos, BlockState> serverSimonBlocks = new HashMap<>();
+    static DungeonF7Policy.SimonState simon = simonObservation.simon();
     static String lastDragonHud = "";
     static boolean melodyWasOpen;
     static int lastTerminalSlot = 22;
@@ -377,9 +384,9 @@ public final class DungeonRuntime {
         refreshChestProfitHud(client, extras);
         HateDoorsRuntime.scan(client, extras);
         scanDungeonMap(client, extras);
-        if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7Simon)) {
-            scanSimon(client);
-        }
+        scanDioriteMarks(client, extras);
+        hateDoorMarks = scanHateDoors(client, client.player, extras);
+        scanSimon(client);
         if (puzzleScanTicks++ % 8 == 0) {
             scanPuzzles(client, extras);
             if (extras.dungeonF7Enabled && plusDungeonFeature(extras.dungeonF7ArrowAlign)) {
@@ -390,7 +397,7 @@ public final class DungeonRuntime {
         DungeonPartyJoinRuntime.tick(client);
         DungeonCarryRuntime.tick(client);
         updateDragonHud(client, extras);
-        observeTeleport(client.player);
+        syncTeleportMaze(client);
         observeLeaps(client, extras);
         updateCrystalHud(client, extras, now);
         tickGoldorHelpers(client, extras, now);
@@ -923,7 +930,6 @@ public final class DungeonRuntime {
         dungeonWorldTicks = 0;
         DungeonEntitySnapshot.clear();
         hateDoorMarks = List.of();
-        hateDoorScanTick = -1L;
         blazeFirst = null;
         blazeSecond = null;
         blazeOrderTick = -1L;
@@ -947,7 +953,9 @@ public final class DungeonRuntime {
         i4LookStart = 0L;
         i4LookFrom = null;
         i4LookTarget = null;
-        simon = DungeonF7Policy.SimonState.idle();
+        simonObservation = DungeonSimonObservationPolicy.empty();
+        serverSimonBlocks.clear();
+        simon = simonObservation.simon();
         lastDragonHud = "";
         melodyWasOpen = false;
         lastTerminalSlot = 22;
@@ -993,11 +1001,14 @@ public final class DungeonRuntime {
         chestProfitHud = List.of();
         lastMapBoard = emptyMapBoard();
         blessings.clear();
-        tpLinks.clear();
+        teleportMaze.reset();
+        mapTerrain.clear();
+        dioriteScan.clear();
+        dioriteMarks.clear();
+        teleportAbilityUntilTick = 0;
+        dungeonRunGeneration++;
         puzzleMarks.clear();
         mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
-        lastPad = null;
-        lastPlayerPos = null;
     }
 
     static List<String> displayLines(boolean editorOpen) {
@@ -1976,11 +1987,15 @@ public final class DungeonRuntime {
 
 
     static boolean hashAndCacheRoom(Minecraft client, int cx, int cz, long key) {
+        var known = hashedTileRoom.get(DungeonMapPolicy.tileKey(
+                DungeonMapPolicy.tileFromWorld(cx), DungeonMapPolicy.tileFromWorld(cz)));
         List<String> column = new ArrayList<>();
-        for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
-            column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
+        if (known == null || !DungeonModernRoomPolicy.owns(known)) {
+            for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
+                column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
+            }
         }
-        var room = DungeonModernRoomPolicy.identify(column);
+        var room = known == null ? DungeonModernRoomPolicy.identify(column) : Optional.of(known);
         if (room.isEmpty()) room = DungeonRoomDataPolicy.roomForCore(DungeonRoomDataPolicy.hashColumn(column));
         if (room.isEmpty()) {
             // Partial chunks / new room variants must not permanently poison the run cache.
@@ -2077,21 +2092,27 @@ public final class DungeonRuntime {
                 long key = pack(
                         DungeonRoomDataPolicy.roomOrigin(cx),
                         DungeonRoomDataPolicy.roomOrigin(cz));
-                if (hashedRoomSecrets.containsKey(key) || !client.level.hasChunkAt(new BlockPos(cx, 69, cz))) {
+                if (hashedRoomSecrets.containsKey(key)
+                        || dungeonWorldTicks < nextRoomHashTick.getOrDefault(key, 0)
+                        || !client.level.hasChunkAt(new BlockPos(cx, 69, cz))) {
                     continue;
                 }
                 List<String> column = new ArrayList<>();
-                for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
-                    column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
+                if (!DungeonModernRoomPolicy.owns(room)) {
+                    for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
+                        column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
+                    }
                 }
                 Optional<DungeonRoomDataPolicy.Rotation> rotation = roomRotation(client, room, cx, cz, column, tiles);
                 if (rotation.isEmpty()) {
-                    continue;
+                    nextRoomHashTick.put(key, dungeonWorldTicks + 20);
+                    return; // One pending rotation attempt per scheduled tick, including failure.
                 }
+                nextRoomHashTick.remove(key);
                 hashedRoomTried.add(key);
                 hashedRoomSecrets.put(key, placeRoomSecrets(room, rotation.get()));
                 hashedRoomRotation.put(key, rotation.get());
-                break;
+                return;
             }
         }
     }
@@ -2190,46 +2211,18 @@ public final class DungeonRuntime {
 
 
 
-    private static final int HATE_DOOR_SCAN_TICKS = 5;
     private static List<HateDoorMark> hateDoorMarks = List.of();
-    private static long hateDoorScanTick = -1L;
+    private record HateDoorMark(BlockPos pos, int color) { }
 
-    private record HateDoorMark(BlockPos pos, int color) {
-    }
-
-    private static List<HateDoorMark> scanHateDoors(
-            Minecraft client, LocalPlayer player, QolSkyblockExtras extras) {
-        List<HateDoorMark> marks = new ArrayList<>();
+    private static List<HateDoorMark> scanHateDoors(Minecraft client, LocalPlayer player, QolSkyblockExtras extras) {
+        if (!extras.dungeonEspEnabled || !extras.dungeonEspHateDoors
+                || !SkyBlockDungeonDetector.confidentlyInDungeon()) return List.of();
         BlockPos origin = player.blockPosition();
-        for (int dx = -6; dx <= 6; dx++) {
-            for (int dy = -3; dy <= 6; dy++) {
-                for (int dz = -6; dz <= 6; dz++) {
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    String id = blockId(client, pos);
-                    if (!EmberDungeonPolicy.isHateDoorBlock(
-                            id,
-                            extras.dungeonEspHateWither,
-                            extras.dungeonEspHateBlood,
-                            extras.dungeonEspHateEntrance)) {
-                        continue;
-                    }
-                    int color;
-                    if (extras.dungeonEspHateBlood && id.contains("red")) {
-                        color = EmberDungeonPolicy.glassArgb(
-                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateBloodGlass));
-                    } else if (extras.dungeonEspHateEntrance && (id.contains("lime")
-                            || id.contains("green") || id.contains("oak"))) {
-                        color = EmberDungeonPolicy.glassArgb(
-                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateEntranceGlass));
-                    } else {
-                        color = EmberDungeonPolicy.glassArgb(
-                                EmberDungeonPolicy.glassTint(extras.dungeonEspHateWitherGlass));
-                    }
-                    marks.add(new HateDoorMark(pos, color));
-                }
-            }
-        }
-        return marks;
+        return HateDoorsPlusRuntime.observedDoors().stream()
+                .filter(mark -> Math.abs(mark.pos().getX() - origin.getX()) <= 6
+                        && Math.abs(mark.pos().getZ() - origin.getZ()) <= 6
+                        && mark.pos().getY() >= origin.getY() - 3 && mark.pos().getY() <= origin.getY() + 6)
+                .map(mark -> new HateDoorMark(mark.pos(), EmberDungeonPolicy.glassArgb(mark.tint()))).toList();
     }
 
     static void highlightEmberWorld(
@@ -2239,11 +2232,6 @@ public final class DungeonRuntime {
             Vec3 eye,
             AABB search) {
         if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspHateDoors) {
-            // 1,700 block lookups, each building a registry id string, used to run every frame.
-            if (DungeonPolicy.scanDue(dungeonWorldTicks, hateDoorScanTick, HATE_DOOR_SCAN_TICKS)) {
-                hateDoorMarks = scanHateDoors(client, player, extras);
-                hateDoorScanTick = dungeonWorldTicks;
-            }
             for (HateDoorMark mark : hateDoorMarks) {
                 box(blockBox(mark.pos()), mark.color(), extras, eye);
             }
@@ -2789,52 +2777,54 @@ public final class DungeonRuntime {
     }
 
     static void scanTpMaze(Minecraft client, BlockPos origin) {
+        syncTeleportMaze(client);
+        Set<DungeonPuzzlePolicy.WorldCell> visited = Set.copyOf(teleportMaze.visitedPads());
+        var recommended = teleportMaze.recommendedPad().orElse(null);
+        for (var pad : teleportMaze.pads()) {
+            if (visited.contains(pad)) continue;
+            puzzleMarks.add(new Mark(blockBox(pad.x(), pad.y(), pad.z()),
+                    pad.equals(recommended) ? 0xFF22C55E : 0x80A855F7));
+        }
+    }
+
+    private static void syncTeleportMaze(Minecraft client) {
+        var extras = extras();
+        if (client.player == null || client.level == null || !extras.dungeonPuzzlesEnabled
+                || !extras.dungeonPuzzlesTpMaze || !SkyBlockDungeonDetector.confidentlyInDungeon()
+                || sidebar.boss() || !hashedRoomIs(client, "Teleport Maze")) {
+            teleportMaze.reset();
+            return;
+        }
+        var rotation = currentHashedRotation(client).orElse(null);
+        if (rotation == null) { teleportMaze.reset(); return; }
         List<DungeonPuzzlePolicy.WorldCell> pads = new ArrayList<>();
-        DungeonPuzzlePolicy.WorldCell chest = null;
-        DungeonRoomDataPolicy.Rotation rotation = currentHashedRotation(client).orElse(null);
-        if (hashedRoomIs(client, "Teleport Maze") && rotation != null) {
-            for (DungeonPuzzleBoardPolicy.RelPos rel : DungeonPuzzleBoardPolicy.teleportMazePads()) {
-                DungeonRoomDataPolicy.IntVec world = DungeonPuzzleBoardPolicy.world(rel, rotation);
-                pads.add(new DungeonPuzzlePolicy.WorldCell(world.x(), world.y(), world.z()));
+        for (var relative : DungeonPuzzleBoardPolicy.teleportMazePads()) {
+            var world = DungeonPuzzleBoardPolicy.world(relative, rotation);
+            BlockPos pos = new BlockPos(world.x(), world.y(), world.z());
+            if (!client.level.hasChunkAt(pos) || !client.level.getChunkAt(pos).getBlockState(pos).is(Blocks.END_PORTAL_FRAME)) {
+                teleportMaze.reset();
+                return;
             }
-        } else {
-            for (int dx = -20; dx <= 20; dx++) {
-                for (int dy = -3; dy <= 3; dy++) {
-                    for (int dz = -20; dz <= 20; dz++) {
-                        BlockPos pos = origin.offset(dx, dy, dz);
-                        String id = blockId(client, pos);
-                        if (DungeonPuzzlePolicy.isPressurePad(id)) {
-                            pads.add(new DungeonPuzzlePolicy.WorldCell(pos.getX(), pos.getY(), pos.getZ()));
-                        }
-                        if (DungeonPuzzlePolicy.isChestBlock(id)) {
-                            chest = new DungeonPuzzlePolicy.WorldCell(pos.getX(), pos.getY(), pos.getZ());
-                        }
-                    }
-                }
-            }
+            pads.add(new DungeonPuzzlePolicy.WorldCell(world.x(), world.y(), world.z()));
         }
-        if (pads.size() < 2) {
-            return;
-        }
-        DungeonPuzzlePolicy.WorldCell start = new DungeonPuzzlePolicy.WorldCell(
-                origin.getX(), origin.getY(), origin.getZ());
-        List<DungeonPuzzlePolicy.WorldCell> path = DungeonPuzzlePolicy.teleportPath(pads, tpLinks, start, chest);
-        if (path.isEmpty()) {
-            int shown = 0;
-            for (DungeonPuzzlePolicy.WorldCell pad : pads) {
-                if (shown++ > 12) {
-                    break;
-                }
-                puzzleMarks.add(new Mark(blockBox(pad.x(), pad.y(), pad.z()), 0x80A855F7));
-            }
-            return;
-        }
-        int shown = 0;
-        for (DungeonPuzzlePolicy.WorldCell pad : path) {
-            if (shown++ > 8) {
-                break;
-            }
-            puzzleMarks.add(new Mark(blockBox(pad.x(), pad.y(), pad.z()), 0xFFA855F7));
+        teleportMaze.enterRoom(dungeonRunGeneration + ":" + sidebar.floor(), rotation.toString(), pads);
+    }
+
+    static void onPlayerTeleport(double x, double y, double z, float yaw, boolean relativePosition, boolean relativeRotation) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null || dungeonWorldTicks <= teleportAbilityUntilTick) return;
+        syncTeleportMaze(client);
+        Vec3 before = client.player.position();
+        teleportMaze.observeTeleport(new DungeonTeleportMazeObservationPolicy.PlayerPosition(before.x, before.y, before.z),
+                new DungeonTeleportMazeObservationPolicy.TeleportPacket(x, y, z, yaw, relativePosition, relativeRotation));
+    }
+
+    static void onTeleportItemUse(net.minecraft.world.entity.player.Player player, InteractionHand hand) {
+        if (player == null) return;
+        String id = SkyBlockItemIdentity.skyBlockId(player.getItemInHand(hand));
+        if (Set.of("ASPECT_OF_THE_END", "ASPECT_OF_THE_VOID", "ETHERWARP_CONDUIT",
+                "HYPERION", "ASTRAEA", "SCYLLA", "VALKYRIE").contains(id)) {
+            teleportAbilityUntilTick = dungeonWorldTicks + 20;
         }
     }
 
@@ -2864,7 +2854,10 @@ public final class DungeonRuntime {
         if (!needPreview) {
             mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
         }
-        if (!needPreview && !needBoard) {
+        if (!SkyBlockDungeonDetector.confidentlyInDungeon() || (!needPreview && !needBoard)) {
+            mapTerrain.clear();
+            lastMapBoard = emptyMapBoard();
+            mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
             return;
         }
         if (client.player == null) {
@@ -2875,6 +2868,7 @@ public final class DungeonRuntime {
         }
         MapItemSavedData data = findDungeonMapData(client);
         if (data == null) {
+            mapTerrain.clear();
             lastMapBoard = emptyMapBoard();
             if (needPreview) {
                 mapPreview = new DungeonPuzzlePolicy.MapPreview(0, 0, new int[0], -1, -1, "");
@@ -2890,16 +2884,12 @@ public final class DungeonRuntime {
                     ? (extras.dungeonHudHeadMarkers ? "head" : "")
                     : found.name().toLowerCase(Locale.ROOT);
         }
-        DungeonMapPolicy.Board board = DungeonMapPolicy.scan(
-                data.colors,
-                128,
-                icons,
+        DungeonMapPolicy.Board board = DungeonMapPolicy.withPlayers(
+                mapTerrain.terrain(data, data.colors, DungeonMapPolicy.floorNumber(sidebar.floor())), icons,
                 extras.dungeonHudMapPlayers ? client.player.getX() : null,
                 extras.dungeonHudMapPlayers ? client.player.getZ() : null,
                 extras.dungeonHudMapPlayers ? client.player.getYRot() : 0.0F,
-                classKey,
-                selfName == null ? "" : selfName,
-                DungeonMapPolicy.floorNumber(sidebar.floor()));
+                classKey, selfName == null ? "" : selfName);
         if (board.calibration().ok()) {
             if (extras.dungeonMapRevealHidden()) {
                 board = DungeonLeftoverPolicy.revealHiddenRooms(board);
@@ -2947,29 +2937,10 @@ public final class DungeonRuntime {
         if (data == null || !DungeonMapObservationPolicy.buffer(data.colors)) {
             return null;
         }
-        if (!DungeonMapPolicy.calibrate(data.colors, 128).ok()) {
+        if (!mapTerrain.isDungeonMap(data, data.colors, DungeonMapPolicy.floorNumber(sidebar.floor()))) {
             return null;
         }
         return data;
-    }
-
-    static void observeTeleport(LocalPlayer player) {
-        Vec3 now = player.position();
-        if (lastPlayerPos != null && now.distanceTo(lastPlayerPos) > 8.0D) {
-            DungeonPuzzlePolicy.WorldCell from = lastPad;
-            DungeonPuzzlePolicy.WorldCell to = new DungeonPuzzlePolicy.WorldCell(
-                    player.blockPosition().getX(), player.blockPosition().getY(),
-                    player.blockPosition().getZ());
-            if (from != null) {
-                tpLinks.put(DungeonPuzzlePolicy.cellKey(from), DungeonPuzzlePolicy.cellKey(to));
-            }
-            lastPad = to;
-        } else {
-            lastPad = new DungeonPuzzlePolicy.WorldCell(
-                    player.blockPosition().getX(), player.blockPosition().getY(),
-                    player.blockPosition().getZ());
-        }
-        lastPlayerPos = now;
     }
 
     static void highlightSimon(
@@ -2980,7 +2951,8 @@ public final class DungeonRuntime {
         }
         box(blockBox(start), extras.dungeonEspSimonColor, extras, eye);
         List<EmberDungeonPolicy.IntVec> remaining =
-                simon.remaining().isEmpty() ? simon.order() : simon.remaining();
+                simonObservation.phase() == DungeonSimonObservationPolicy.Phase.PLAYBACK
+                        && simonObservation.ordered() ? simon.order() : simon.remaining();
         for (int i = 0; i < remaining.size(); i++) {
             EmberDungeonPolicy.IntVec vec = remaining.get(i);
             box(blockBox(new BlockPos(vec.x(), vec.y(), vec.z())),
@@ -2994,25 +2966,30 @@ public final class DungeonRuntime {
         }
     }
 
-    static void markDiorite(
-            Minecraft client, LocalPlayer player, QolSkyblockExtras extras, Vec3 eye) {
-        BlockPos origin = player.blockPosition();
-        if (!DungeonPolicy.inF7PillarBox(origin.getX(), origin.getY(), origin.getZ())) {
+    static void scanDioriteMarks(Minecraft client, QolSkyblockExtras extras) {
+        BlockPos origin = client.player.blockPosition();
+        if (!extras.dungeonF7Enabled || extras.dungeonF7HideDiorite
+                || !SkyBlockDungeonDetector.confidentlyInDungeon() || !sidebar.boss()
+                || DungeonMapPolicy.floorNumber(sidebar.floor()) != 7
+                || !DungeonPolicy.inF7PillarBox(origin.getX(), origin.getY(), origin.getZ())) {
+            dioriteScan.clear();
+            dioriteMarks.clear();
             return;
         }
-        for (int dx = -6; dx <= 6; dx++) {
-            for (int dy = -4; dy <= 8; dy++) {
-                for (int dz = -6; dz <= 6; dz++) {
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    if (!DungeonPolicy.isF7Diorite(blockId(client, pos))) {
-                        continue;
-                    }
-                    box(new AABB(pos.getX(), pos.getY(), pos.getZ(),
-                                    pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1),
-                            0x66AAAAAA, extras, eye);
-                }
-            }
+        var slice = dioriteScan.next(new DungeonBlockScanPolicy.Region(
+                origin.getX() - 6, origin.getY() - 4, origin.getZ() - 6, 13, 13, 13));
+        if (slice.started()) dioriteMarks.entrySet().removeIf(entry -> !slice.region().contains(
+                entry.getValue().getX(), entry.getValue().getY(), entry.getValue().getZ()));
+        for (var cell : slice.cells()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (client.level.hasChunkAt(pos) && DungeonPolicy.isF7Diorite(blockId(client, pos))) {
+                dioriteMarks.put(pos.asLong(), pos);
+            } else dioriteMarks.remove(pos.asLong());
         }
+    }
+
+    static void markDiorite(Minecraft client, LocalPlayer player, QolSkyblockExtras extras, Vec3 eye) {
+        for (BlockPos pos : dioriteMarks.values()) box(blockBox(pos), 0x66AAAAAA, extras, eye);
     }
 
     static void box(AABB box, int color, QolSkyblockExtras extras, Vec3 eye) {
@@ -3136,24 +3113,46 @@ public final class DungeonRuntime {
         };
     }
 
-    static void scanSimon(Minecraft client) {
-        if (client.player == null || client.level == null) {
-            return;
-        }
-        List<EmberDungeonPolicy.IntVec> lit = new ArrayList<>();
-        for (EmberDungeonPolicy.IntVec lantern : DungeonF7Policy.simonLanterns()) {
-            if (DungeonF7Policy.isSimonSequenceLit(blockId(
-                    client, new BlockPos(lantern.x(), lantern.y(), lantern.z())))) {
-                EmberDungeonPolicy.IntVec button = DungeonF7Policy.simonButtonForLantern(
-                        lantern.x(), lantern.y(), lantern.z());
-                if (button != null) {
-                    lit.add(button);
-                }
-            }
-        }
-        simon = DungeonF7Policy.observeSimon(simon, lit);
+    static boolean validSimonContext(Minecraft client) {
+        QolSkyblockExtras extras = extras();
+        BlockPos start = new BlockPos(110, 121, 91);
+        return client != null && client.player != null && client.level != null
+                && extras.dungeonF7Enabled && extras.dungeonF7Simon
+                && SkyBlockDungeonDetector.confidentlyInDungeon() && sidebar.boss()
+                && DungeonMapPolicy.floorNumber(sidebar.floor()) == 7
+                && client.player.blockPosition().closerThan(start, 48)
+                && client.level.hasChunkAt(start);
     }
 
+    static void scanSimon(Minecraft client) {
+        BlockPos start = new BlockPos(110, 121, 91);
+        boolean valid = validSimonContext(client);
+        if (!valid) serverSimonBlocks.clear();
+        List<EmberDungeonPolicy.IntVec> lit = new ArrayList<>();
+        List<EmberDungeonPolicy.IntVec> present = new ArrayList<>();
+        List<EmberDungeonPolicy.IntVec> powered = new ArrayList<>();
+        boolean startPowered = false;
+        if (valid) {
+            for (var button : DungeonF7Policy.simonButtons()) {
+                BlockPos pos = new BlockPos(button.x(), button.y(), button.z());
+                BlockState state = serverSimonBlocks.getOrDefault(pos, client.level.getChunkAt(pos).getBlockState(pos));
+                if (state.is(Blocks.STONE_BUTTON)) {
+                    present.add(button);
+                    // A local use predicts POWERED in the chunk; only raw server updates acknowledge input.
+                    BlockState serverState = serverSimonBlocks.get(pos);
+                    if (serverState != null && serverState.is(Blocks.STONE_BUTTON)
+                            && serverState.getValue(ButtonBlock.POWERED)) powered.add(button);
+                }
+                BlockPos lamp = pos.east();
+                if (serverSimonBlocks.getOrDefault(lamp, client.level.getChunkAt(lamp).getBlockState(lamp))
+                        .is(Blocks.SEA_LANTERN)) lit.add(button);
+            }
+            BlockState state = serverSimonBlocks.get(start);
+            startPowered = state != null && state.is(Blocks.STONE_BUTTON) && state.getValue(ButtonBlock.POWERED);
+        }
+        simonObservation = DungeonSimonObservationPolicy.observe(simonObservation, lit, present, powered, startPowered, valid);
+        simon = simonObservation.simon();
+    }
 
     static void updateCrystalHud(Minecraft client, QolSkyblockExtras extras, long now) {
         lastCrystalHud = "";
@@ -3210,9 +3209,6 @@ public final class DungeonRuntime {
         }
         if (DungeonF7Policy.isSimonButton(pos.getX(), pos.getY(), pos.getZ())
                 || DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
-            if (DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ())) {
-                simon = DungeonF7Policy.SimonState.idle();
-            }
             playSimonSound(Minecraft.getInstance());
         }
         if (SkyBlockDungeonDetector.confidentlyInDungeon() && !sidebar.boss()) {
@@ -3338,7 +3334,8 @@ public final class DungeonRuntime {
     }
 
     static String blockId(Minecraft client, BlockPos pos) {
-        return blockId(client.level.getBlockState(pos));
+        return blockId(client.level.hasChunkAt(pos)
+                ? client.level.getChunkAt(pos).getBlockState(pos) : Blocks.AIR.defaultBlockState());
     }
 
     static String blockId(BlockState state) {
@@ -3350,7 +3347,9 @@ public final class DungeonRuntime {
     }
 
     static String fullBlockId(Minecraft client, BlockPos pos) {
-        BlockState state = client.level.getBlockState(pos);
+        // Room hashes/rotation markers must not include our client-side glass substitutions.
+        BlockState state = client.level.hasChunkAt(pos)
+                ? client.level.getChunkAt(pos).getBlockState(pos) : Blocks.AIR.defaultBlockState();
         var key = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         return key == null ? "minecraft:air" : key.toString();
     }
@@ -3541,6 +3540,16 @@ public final class DungeonRuntime {
     }
 
     static void onBlockUpdate(BlockPos pos, BlockState oldState, BlockState newState) {
+        if (pos != null && newState != null && (DungeonF7Policy.isSimonButton(pos.getX(), pos.getY(), pos.getZ())
+                || DungeonF7Policy.simonButtonForLantern(pos.getX(), pos.getY(), pos.getZ()) != null
+                || DungeonPolicy.isSimonStart(pos.getX(), pos.getY(), pos.getZ()))) {
+            Minecraft client = Minecraft.getInstance();
+            if (validSimonContext(client)) {
+                // Process every ordered update, including pulses arriving between ticks and section packet updates.
+                serverSimonBlocks.put(pos.immutable(), newState);
+                scanSimon(client);
+            }
+        }
         QolSkyblockExtras extras = extras();
         if (!extras.dungeonF7Enabled || !plusDungeonFeature(extras.dungeonF7SharpShooter) || pos == null) {
             return;
