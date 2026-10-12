@@ -24,6 +24,29 @@ final class QolDashboardSearchPolicyTest {
         var rows = List.of(row); assertEquals(rows,QolDrawerSearchPolicy.filter(rows,"DUNGEON hidden"));
         assertEquals(rows,QolDrawerSearchPolicy.filter(rows,"hud map")); assertEquals(2,row.enumOptions().size());
     }
+    @Test void sectionAliasesAndNormalizedWordsFindChildrenWithoutChangingTheirIds() {
+        var section = new QolUtilityCatalog.SettingDef("display-group", "Display", "", QolUtilityCatalog.SettingType.SECTION,
+                List.of(), List.of("first-person view"));
+        var setting = row("unchanged_action_id", "Reset offsets", QolUtilityCatalog.SettingType.ACTION);
+        var rows = List.of(section, setting);
+        assertEquals(rows, QolDrawerSearchPolicy.filter(rows, "ＦＩＲＳＴ person reset"));
+        assertEquals(rows, QolDrawerSearchPolicy.filter(rows, "display-group offsets"));
+        assertEquals("unchanged_action_id", QolDrawerSearchPolicy.filter(rows, "reset").get(1).id());
+    }
+    @Test void longGroupedListsKeepLastSettingsReachableBySearch() {
+        var rows = new ArrayList<QolUtilityCatalog.SettingDef>();
+        for (int group = 0; group < 8; group++) {
+            rows.add(row("group_" + group, "Group " + group, QolUtilityCatalog.SettingType.SECTION));
+            for (int index = 0; index < 10; index++) {
+                rows.add(row("setting_" + group + "_" + index, "Offset " + index, QolUtilityCatalog.SettingType.NUMBER));
+            }
+        }
+        var hits = QolDrawerSearchPolicy.filter(rows, "group 7 offset 9");
+        assertEquals(2, hits.size());
+        assertEquals("group_7", hits.get(0).id());
+        assertEquals("setting_7_9", hits.get(1).id());
+        assertEquals(88, rows.size());
+    }
     @Test void oldDisplayGroupLinksResolveToOnePageWithoutChangingCatalogIds() {
         for (var group : List.of(QolUtilityCatalog.Group.GUI,QolUtilityCatalog.Group.RENDER,
                 QolUtilityCatalog.Group.INTERFACE,QolUtilityCatalog.Group.HUD_DISPLAY))

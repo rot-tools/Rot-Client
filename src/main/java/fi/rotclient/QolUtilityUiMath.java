@@ -48,6 +48,8 @@ public final class QolUtilityUiMath {
     public static final int STATUS_BADGE_LEFT = 14;
     public static final int STATUS_BADGE_TOP = 6;
     public static final int DRAWER_SECTION_HEIGHT = 26;
+    public static final int SETTINGS_SEARCH_HEIGHT = 30;
+    public static final int DRAWER_GROUP_NAV_HEIGHT = 28;
     public static final int GRID_MIN_COLUMN_WIDTH = 320;
     public static final int NUMBER_CONTROL_WIDTH = 100;
     public static final int NUMBER_BUTTON_WIDTH = 22;
@@ -127,13 +129,40 @@ public final class QolUtilityUiMath {
             return DRAWER_MIN_WIDTH;
         }
         if (contentWidth < DRAWER_MIN_WIDTH + 220) {
-            return Math.max(DRAWER_MIN_WIDTH, contentWidth - 24);
+            return Math.max(1, contentWidth - 24);
         }
         return Math.min(DRAWER_WIDTH, Math.max(DRAWER_MIN_WIDTH, contentWidth / 2));
     }
 
     public static boolean drawerIsOverlay(int contentWidth) {
         return contentWidth < DRAWER_MIN_WIDTH + 220;
+    }
+
+    public static int drawerSearchY(int drawerY, boolean inline) {
+        return drawerY + (inline ? 8 : 52);
+    }
+
+    public static int drawerBodyTop(int drawerY, boolean inline, boolean grouped) {
+        return drawerSearchY(drawerY, inline) + SETTINGS_SEARCH_HEIGHT
+                + (grouped ? DRAWER_GROUP_NAV_HEIGHT : 0);
+    }
+
+    public static int drawerBodyBottom(int drawerY, int drawerHeight, boolean inline) {
+        return drawerY + Math.max(0, drawerHeight) - (inline ? 0 : 10);
+    }
+
+    public static int drawerGroupButtonWidth(int drawerWidth) {
+        return Math.min(88, Math.max(1, (drawerWidth - 24) / 2));
+    }
+
+    public static int drawerGroupButtonX(int drawerX, int drawerWidth, int index) {
+        return drawerX + drawerWidth - 12 - (2 - index) * drawerGroupButtonWidth(drawerWidth);
+    }
+
+    /** Leave room for the card and keep the settings' own scroll area usable on small windows. */
+    public static int inlineDrawerHeight(int naturalHeight, int pageViewportHeight) {
+        int available = Math.max(120, pageViewportHeight - CARD_HEIGHT - 16);
+        return Math.min(Math.max(0, naturalHeight), Math.min(400, available));
     }
 
     public static int listWidth(int contentWidth, boolean drawerOpen) {

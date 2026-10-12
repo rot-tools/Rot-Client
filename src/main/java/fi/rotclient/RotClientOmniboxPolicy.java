@@ -31,6 +31,15 @@ public final class RotClientOmniboxPolicy {
         return RotClientSettingsIndex.search(query, SUGGESTION_LIMIT);
     }
 
+    static String appendQuery(String current, String text, boolean replace) {
+        String base = replace || current == null ? "" : current;
+        String joined = base + (text == null ? "" : text);
+        StringBuilder allowed = new StringBuilder();
+        joined.codePoints().filter(cp -> cp >= 32 && cp != 127 && cp != 167)
+                .limit(QUERY_MAX_CODEPOINTS).forEach(allowed::appendCodePoint);
+        return allowed.toString();
+    }
+
     public static String addressLabel(
             RotClientWorkspaceRoute route,
             String query,

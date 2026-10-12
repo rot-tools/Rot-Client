@@ -47,18 +47,32 @@ final class MarketTradePolicy {
     }
     static boolean bazaarOrder(MarketTradeMenuPolicy.Item item, MarketTradeJournal.Position p, boolean sell, boolean filled) {
         if (item == null || !item.name().equals((sell ? "SELL " : "BUY ") + p.name)) return false;
-        boolean quantity = item.lore().stream().map(CommissionDisplayPolicy::normalizeLine)
-                .anyMatch(row -> row.equals("Order amount: " + String.format(java.util.Locale.ROOT, "%,d", p.quantity) + "x")
-                        || row.equals("Offer amount: " + String.format(java.util.Locale.ROOT, "%,d", p.quantity) + "x"));
+        boolean quantity = MarketTradeBazaarPolicy.amount(item.lore(), p.quantity);
         var price = MarketTradeMenuPolicy.coins(item.lore(), "Price per unit");
-        boolean full = item.lore().stream().map(CommissionDisplayPolicy::normalizeLine).anyMatch(row ->
-                row.matches("^Filled: [0-9,.k]+/[0-9,.k]+ \\(?100%\\)?!?$"));
+        var fills = item.lore().stream().map(CommissionDisplayPolicy::normalizeLine)
+                .filter(row -> row.startsWith("Filled:")).toList();
+        boolean full = !fills.isEmpty() && fills.stream().allMatch(row -> {
+            var matcher = Pattern.compile("^Filled: ([0-9,]+)/([0-9,]+) \\(?100%\\)?!?$").matcher(row);
+            try {
+                return matcher.matches() && Long.parseLong(matcher.group(1).replace(",", "")) == p.quantity
+                        && Long.parseLong(matcher.group(2).replace(",", "")) == p.quantity;
+            } catch (NumberFormatException malformed) { return false; }
+        });
         return quantity && price.isPresent() && MarketTradeMenuPolicy.equal(price.getAsDouble(), sell ? p.sellUnit : p.buyUnit)
                 && (!filled || full);
     }
     static boolean newOwnedItem(List<MarketTradeMenuPolicy.Item> inventory, MarketTradeJournal.Position p) {
-        return !p.itemUuid.isBlank() && inventory.stream().filter(item ->
+        return !p.itemUuid.isBlank() && inventory.stream().filter(item -> item.uuid().equals(p.itemUuid)).count() == 1
+                && inventory.stream().filter(item ->
                 MarketTradeMenuPolicy.variant(item, p.itemId, p.itemUuid, p.tier, p.reforge, (int) p.quantity)).count() == 1;
+    }
+    /** The receipt is saved before ownership can be credited; unrelated inventory changes never suffice. */
+    static boolean purchaseConfirmed(List<MarketTradeMenuPolicy.Item> inventory, MarketTradeJournal.Position p) {
+        if (p == null || !p.purchaseOnly || !p.buySent || !p.receiptObserved || p.manualReview || p.manuallyReviewed) return false;
+        if ("AH".equals(p.market)) return p.baselineClear && newOwnedItem(inventory, p);
+        if (!"BZ".equals(p.market) || !p.fillObserved || !p.claimSent || p.baselineQuantity < 0) return false;
+        long quantity = inventory.stream().filter(item -> p.itemId.equals(item.id())).mapToLong(MarketTradeMenuPolicy.Item::count).sum();
+        return quantity >= p.baselineQuantity && quantity - p.baselineQuantity == p.quantity;
     }
     private MarketTradePolicy() {}
 }

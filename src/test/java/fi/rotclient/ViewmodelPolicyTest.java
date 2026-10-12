@@ -6,6 +6,25 @@ import org.junit.jupiter.api.Test;
 
 class ViewmodelPolicyTest {
     @Test
+    void everyPoseAndSwingSliderUpdatesTheConfigurationReadByTheRenderer() {
+        QolUtilityConfig config = new QolUtilityConfig();
+        config.setModuleEnabled("qol.viewmodel", true);
+        assertEquals(true, config.extras().viewmodelEnabled);
+        for (String axis : java.util.List.of("x", "y", "z")) {
+            for (String family : java.util.List.of("offset", "scale", "rot", "swing")) {
+                String id = "qol.viewmodel." + family + "_" + axis;
+                double next = family.equals("rot") ? 90 : 0.5;
+                assertEquals(true, config.writeNumber(id, next), id);
+                assertEquals(next, config.readNumber(id), id);
+            }
+        }
+        assertEquals(0.5, config.extras().viewmodelOffsetX);
+        assertEquals(0.5, config.extras().viewmodelScaleY);
+        assertEquals(90.0, config.extras().viewmodelRotZ);
+        assertEquals(0.5, config.extras().viewmodelSwingX);
+    }
+
+    @Test
     void finiteValuesAreClampedToTheirRange() {
         assertEquals(2.0D, ViewmodelPolicy.clampOffset(9.0D));
         assertEquals(-2.0D, ViewmodelPolicy.clampOffset(-9.0D));

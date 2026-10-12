@@ -77,6 +77,10 @@ final class MiningUiScreen extends Screen {
     private String trackerSearch = "";
     private String settingsQuery = "";
     private boolean settingsSearchFocused;
+    private boolean settingsSearchSelectAll;
+    private String cachedOmniboxQuery;
+    private List<RotClientSettingsIndex.Entry> cachedOmniboxCatalog;
+    private List<RotClientSettingsIndex.Entry> cachedOmniboxResults = List.of();
     private String highlightSettingId = "";
     private long highlightUntilMillis;
     private int trackerDropdownScroll;
@@ -9118,6 +9122,17 @@ int selectorY = masterY + 10;
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        // The header owns input once clicked, regardless of the last focused
+        // child field in the page underneath it.
+        if (settingsSearchFocused && !trackerDropdownOpen) {
+            if (event.isAllowedChatCharacter()) {
+                settingsQuery = RotClientOmniboxPolicy.appendQuery(
+                        settingsQuery, event.codepointAsString(), settingsSearchSelectAll);
+                settingsSearchSelectAll = false;
+                omniboxHighlight = 0;
+            }
+            return true;
+        }
         if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.MARKET_WATCH
                 && marketWatchDashboard.captureChar(
@@ -9228,18 +9243,6 @@ int selectorY = masterY + 10;
                 && qolDashboard.captureChar(event.codepoint(), event.isAllowedChatCharacter())) {
             return true;
         }
-        if (settingsSearchFocused
-                && !trackerDropdownOpen) {
-            if (!event.isAllowedChatCharacter()) {
-                return true;
-            }
-            if (settingsQuery.codePointCount(0, settingsQuery.length()) >= 48) {
-                return true;
-            }
-            settingsQuery += event.codepointAsString();
-            omniboxHighlight = 0;
-            return true;
-        }
         if (!trackerDropdownOpen) {
             return super.charTyped(event);
         }
@@ -9264,6 +9267,97 @@ int selectorY = masterY + 10;
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+
+        if (controlDown(event) && key == InputConstants.KEY_L) {
+            if (qolDashboard.isDrawerOpen()) qolDashboard.closeDrawer();
+            closeTrackerDropdown();
+            settingsSearchFocused = true;
+            settingsSearchSelectAll = true;
+            return true;
+        }
+        /*
+         * Omnibox / settings search keyboard handling.
+         */
+        if (settingsSearchFocused
+                && !trackerDropdownOpen) {
+
+            if (key == InputConstants.KEY_ESCAPE) {
+                settingsSearchFocused = false;
+                settingsQuery = "";
+                return true;
+            }
+
+            if (controlDown(event) && key == InputConstants.KEY_A) {
+                settingsSearchSelectAll = true;
+                return true;
+            }
+            if (controlDown(event) && key == InputConstants.KEY_V) {
+                settingsQuery = RotClientOmniboxPolicy.appendQuery(settingsQuery,
+                        minecraft.keyboardHandler.getClipboard(), settingsSearchSelectAll);
+                settingsSearchSelectAll = false;
+                omniboxHighlight = 0;
+                return true;
+            }
+            if (key == InputConstants.KEY_BACKSPACE) {
+                if (settingsSearchSelectAll) {
+                    settingsQuery = "";
+                    settingsSearchSelectAll = false;
+                    return true;
+                }
+                if (!settingsQuery.isEmpty()) {
+                    int newLength =
+                            settingsQuery.offsetByCodePoints(
+                                    settingsQuery.length(),
+                                    -1);
+
+                    settingsQuery =
+                            settingsQuery.substring(
+                                    0,
+                                    newLength);
+                }
+
+                return true;
+            }
+
+            if (key == InputConstants.KEY_RETURN
+                    || key == InputConstants.KEY_NUMPADENTER) {
+
+                List<RotClientSettingsIndex.Entry> results =
+                        omniboxResults();
+
+                if (!results.isEmpty()) {
+                    int index =
+                            Math.max(
+                                    0,
+                                    Math.min(
+                                            omniboxHighlight,
+                                            results.size() - 1));
+
+                    activateSettingsEntry(
+                            results.get(index),
+                            controlDown(event));
+                }
+
+                return true;
+            }
+
+            if (key == InputConstants.KEY_DOWN) {
+                omniboxHighlight++;
+                return true;
+            }
+
+            if (key == InputConstants.KEY_UP) {
+                omniboxHighlight =
+                        Math.max(
+                                0,
+                                omniboxHighlight - 1);
+
+                return true;
+            }
+
+            return true;
+        }
+
 
         if (RotClientClient.workspace().activeRoute()
                 == RotClientWorkspaceRoute.MARKET_WATCH
@@ -9527,78 +9621,6 @@ int selectorY = masterY + 10;
                 return true;
             }
 
-            if (key == InputConstants.KEY_L) {
-                settingsSearchFocused = true;
-                return true;
-            }
-        }
-
-        /*
-         * Omnibox / settings search keyboard handling.
-         */
-        if (settingsSearchFocused
-                && !trackerDropdownOpen) {
-
-            if (key == InputConstants.KEY_ESCAPE) {
-                settingsSearchFocused = false;
-                settingsQuery = "";
-                return true;
-            }
-
-            if (key == InputConstants.KEY_BACKSPACE) {
-                if (!settingsQuery.isEmpty()) {
-                    int newLength =
-                            settingsQuery.offsetByCodePoints(
-                                    settingsQuery.length(),
-                                    -1);
-
-                    settingsQuery =
-                            settingsQuery.substring(
-                                    0,
-                                    newLength);
-                }
-
-                return true;
-            }
-
-            if (key == InputConstants.KEY_RETURN
-                    || key == InputConstants.KEY_NUMPADENTER) {
-
-                List<RotClientSettingsIndex.Entry> results =
-                        RotClientOmniboxPolicy.suggest(
-                                settingsQuery);
-
-                if (!results.isEmpty()) {
-                    int index =
-                            Math.max(
-                                    0,
-                                    Math.min(
-                                            omniboxHighlight,
-                                            results.size() - 1));
-
-                    activateSettingsEntry(
-                            results.get(index),
-                            controlDown(event));
-                }
-
-                return true;
-            }
-
-            if (key == InputConstants.KEY_DOWN) {
-                omniboxHighlight++;
-                return true;
-            }
-
-            if (key == InputConstants.KEY_UP) {
-                omniboxHighlight =
-                        Math.max(
-                                0,
-                                omniboxHighlight - 1);
-
-                return true;
-            }
-
-            return true;
         }
 
         /*
@@ -11865,12 +11887,15 @@ private void drawTrackerDropdown(
 
         int[] box = omniboxBounds(panelX, panelY);
         if (inside(logicalMouseX, logicalMouseY, box[0], box[1], box[2], box[3])) {
+            if (qolDashboard.isDrawerOpen()) qolDashboard.closeDrawer();
+            closeTrackerDropdown();
             settingsSearchFocused = true;
+            settingsSearchSelectAll = false;
             return true;
         }
         if (settingsSearchFocused && !settingsQuery.isBlank()) {
             List<RotClientSettingsIndex.Entry> results =
-                    RotClientOmniboxPolicy.suggest(settingsQuery);
+                    omniboxResults();
             int rowY = box[1] + box[3] + 4;
             for (int i = 0; i < results.size(); i++) {
                 if (inside(logicalMouseX, logicalMouseY, box[0], rowY, box[2], 16)) {
@@ -11880,10 +11905,10 @@ private void drawTrackerDropdown(
                 rowY += 18;
             }
         }
-        if (settingsSearchFocused
-                && !inside(logicalMouseX, logicalMouseY, box[0], box[1], box[2], 220)) {
-            settingsSearchFocused = false;
-        }
+        // Actual suggestion hits have returned above. A click anywhere else
+        // transfers focus to that page's control, including nearby drawer search.
+        settingsSearchFocused = false;
+        settingsSearchSelectAll = false;
         return false;
     }
 
@@ -12008,6 +12033,16 @@ private void drawTrackerDropdown(
         drawSettingsSearchField(graphics, mouseX, mouseY, box[0], box[1], box[2]);
     }
 
+    private List<RotClientSettingsIndex.Entry> omniboxResults() {
+        List<RotClientSettingsIndex.Entry> catalog = RotClientSettingsIndex.catalog();
+        if (!settingsQuery.equals(cachedOmniboxQuery) || catalog != cachedOmniboxCatalog) {
+            cachedOmniboxCatalog = catalog;
+            cachedOmniboxQuery = settingsQuery;
+            cachedOmniboxResults = RotClientOmniboxPolicy.suggest(settingsQuery);
+        }
+        return cachedOmniboxResults;
+    }
+
     private void drawOmniboxSuggestions(
             GuiGraphicsExtractor graphics,
             int panelX,
@@ -12017,8 +12052,9 @@ private void drawTrackerDropdown(
         if (!settingsSearchFocused || settingsQuery.isBlank()) {
             return;
         }
+        graphics.nextStratum();
         List<RotClientSettingsIndex.Entry> results =
-                RotClientOmniboxPolicy.suggest(settingsQuery);
+                omniboxResults();
         if (results.isEmpty()) {
             return;
         }

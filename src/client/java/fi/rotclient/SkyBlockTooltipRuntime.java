@@ -59,7 +59,7 @@ public final class SkyBlockTooltipRuntime {
             }
         }
         if (extras.priceTooltipsEnabled) {
-            String itemId = SkyBlockItemData.marketId(stack);
+            String itemId = SkyBlockItemData.quoteId(stack);
             PriceTooltipsPolicy.Quote quote = SkyBlockMarketQuoteService.current().quote(itemId);
             double npc = quote.npcCoins() > 0.0D ? quote.npcCoins() : PriceTooltipsPolicy.npcFromLore(lore);
             double motes = quote.motes() > 0.0D ? quote.motes() : PriceTooltipsPolicy.motesFromLore(lore);

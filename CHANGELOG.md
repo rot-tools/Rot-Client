@@ -7,6 +7,23 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### 26.3 dashboard/settings and buy-only market — 2.0.10
+
+* Both editions fix header search focus and Plus catalog refresh, leaked scissor
+  state/modal overlap, long settings scrolling/search/group controls, and HUD
+  scale drag persistence. Layout/search results are cached.
+* Restore the 26.3 Viewmodel equip and swing-translation hooks. Price tooltips
+  use pet type/rarity quote keys, including Special Phoenix, without changing
+  raw gameplay item IDs; verified Bait Sack icons use their own quote identity.
+* Plus purchases use explicit targets, protected Purse/session caps and durable
+  receipt plus exact ownership evidence. Four setup pages, optional Buy done
+  HUD, bounded scans, schema-compatible journal/manual review, and no automatic
+  selling. Gameplay/FPS and public Lite release remain pending.
+* See docs/DASHBOARD_PURCHASES_2026-10-12.md for source revisions, API checks,
+  automated coverage and manual checks.
+* 2,533 shared + 364 Plus tests, clean build and both edition verifiers pass;
+  controlled gameplay and measured FPS remain pending.
+
 ### 26.3 bounded scans and puzzle observation — 2.0.9
 
 * Plus Simon keeps full playback and advances from server-confirmed button

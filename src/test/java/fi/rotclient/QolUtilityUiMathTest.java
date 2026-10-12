@@ -52,6 +52,48 @@ final class QolUtilityUiMathTest {
     }
 
     @Test
+    void overlayDrawerFitsEvenWhenTheWindowIsNarrowerThanItsPreferredWidth() {
+        for (int width : List.of(180, 280, 360, 400)) {
+            assertTrue(QolUtilityUiMath.drawerWidth(width) > 0);
+            assertTrue(QolUtilityUiMath.drawerWidth(width) <= width);
+        }
+    }
+
+    @Test
+    void groupNavigationButtonsStayInsideTheNarrowSettingsPane() {
+        for (int width : List.of(156, 240, 320, 440)) {
+            int first = QolUtilityUiMath.drawerGroupButtonX(10, width, 0);
+            int second = QolUtilityUiMath.drawerGroupButtonX(10, width, 1);
+            int buttonWidth = QolUtilityUiMath.drawerGroupButtonWidth(width);
+            assertTrue(first >= 22);
+            assertTrue(second >= first + buttonWidth);
+            assertTrue(second + buttonWidth <= 10 + width - 12);
+        }
+    }
+
+    @Test
+    void searchAndGroupControlsShareTheSameBodyCoordinatesForRenderAndInput() {
+        int inlineY = 200;
+        assertEquals(208, QolUtilityUiMath.drawerSearchY(inlineY, true));
+        assertEquals(238, QolUtilityUiMath.drawerBodyTop(inlineY, true, false));
+        assertEquals(266, QolUtilityUiMath.drawerBodyTop(inlineY, true, true));
+        assertEquals(600, QolUtilityUiMath.drawerBodyBottom(inlineY, 400, true));
+        int overlayY = 100;
+        assertEquals(152, QolUtilityUiMath.drawerSearchY(overlayY, false));
+        assertEquals(210, QolUtilityUiMath.drawerBodyTop(overlayY, false, true));
+        assertEquals(490, QolUtilityUiMath.drawerBodyBottom(overlayY, 400, false));
+    }
+
+    @Test
+    void longModulesHaveABoundedSettingsViewportWhileShortModulesKeepTheirNaturalHeight() {
+        assertEquals(400, QolUtilityUiMath.inlineDrawerHeight(8_000, 650));
+        assertEquals(192, QolUtilityUiMath.inlineDrawerHeight(8_000, 320));
+        assertEquals(120, QolUtilityUiMath.inlineDrawerHeight(8_000, 200));
+        assertEquals(90, QolUtilityUiMath.inlineDrawerHeight(90, 650));
+        assertEquals(0, QolUtilityUiMath.inlineDrawerHeight(0, 650));
+    }
+
+    @Test
     void wideModuleListUsesTwoReadableColumns() {
         assertEquals(2, QolUtilityUiMath.gridColumns(870));
         assertEquals(428, QolUtilityUiMath.cardWidth(870));
