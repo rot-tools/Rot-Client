@@ -24,7 +24,7 @@ final class MarketTradeCandidatePolicyTest {
     @Test void onlyAnExplicitMatchingTargetCanAuthorizeTheSameVariant() {
         var a = auction(1,100000,"EPIC","fingerprint");
         var p = MarketTradeCandidatePolicy.propose(a,peers(),targets(),settings(),1000000,0,uuid(999),100,0);
-        assertNotNull(p); assertEquals(100000,p.buy()); assertEquals(201999,p.sell()); assertEquals(110000,p.reserved());
+        assertNotNull(p); assertEquals(100000,p.buy()); assertEquals(201999,p.sell()); assertEquals(100000,p.reserved());
         assertNull(MarketTradeCandidatePolicy.propose(a,peers(),List.of(),settings(),1000000,0,uuid(999),100,0));
     }
     @Test void mixedRarityOrUpgradesCannotInflateAReference() {

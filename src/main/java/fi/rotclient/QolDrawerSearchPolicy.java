@@ -12,20 +12,35 @@ public final class QolDrawerSearchPolicy {
         var result = new ArrayList<QolUtilityCatalog.SettingDef>();
         QolUtilityCatalog.SettingDef section = null;
         boolean emitted = false;
+        String sectionText = "";
         for (var setting : settings) {
-            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) { section = setting; emitted = false; continue; }
-            String text = normalize(setting.id() + " " + setting.label() + " " + setting.description()
-                    + " " + String.join(" ",setting.searchAliases()) + " " + String.join(" ",setting.enumOptions())
-                    + (section == null ? "" : " " + section.label() + " " + section.description()));
-            if (!Arrays.stream(terms).allMatch(text::contains)) continue;
+            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
+                section = setting;
+                sectionText = searchableText(setting);
+                emitted = false;
+                continue;
+            }
+            String text = searchableText(setting) + " " + sectionText;
+            if (!matchesAllTerms(text, terms)) continue;
             if (section != null && !emitted) { result.add(section); emitted = true; }
             result.add(setting);
         }
         return List.copyOf(result);
     }
+
+    private static String searchableText(QolUtilityCatalog.SettingDef setting) {
+        return normalize(setting.id() + " " + setting.label() + " " + setting.description()
+                + " " + String.join(" ", setting.searchAliases())
+                + " " + String.join(" ", setting.enumOptions()));
+    }
+
+    private static boolean matchesAllTerms(String text, String[] terms) {
+        for (String term : terms) if (!text.contains(term)) return false;
+        return true;
+    }
     private static String normalize(String text) {
         return java.text.Normalizer.normalize(text == null ? "" : text,java.text.Normalizer.Form.NFKC)
-                .toLowerCase(Locale.ROOT).replace('_',' ').replace('.',' ').trim();
+                .toLowerCase(Locale.ROOT).replace('_',' ').replace('.',' ').replace('-',' ').trim();
     }
     private QolDrawerSearchPolicy() {}
 }

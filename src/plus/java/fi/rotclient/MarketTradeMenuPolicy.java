@@ -37,8 +37,12 @@ final class MarketTradeMenuPolicy {
         Double value = null;
         for (String row : lore) for (String label : labels) {
             var pattern = Pattern.compile("(?i)^" + Pattern.quote(label) + ":\\s*([0-9,]+(?:\\.[0-9]+)?) coins[.!]?$" );
-            var m = pattern.matcher(CommissionDisplayPolicy.normalizeLine(row));
-            if (!m.matches()) continue;
+            String line = CommissionDisplayPolicy.normalizeLine(row);
+            var m = pattern.matcher(line);
+            if (!m.matches()) {
+                if (line.regionMatches(true, 0, label + ":", 0, label.length() + 1)) return OptionalDouble.empty();
+                continue;
+            }
             try {
                 double next = new BigDecimal(m.group(1).replace(",", "")).doubleValue();
                 if (!Double.isFinite(next) || next < 0 || value != null && Math.abs(value - next) > .00001)
@@ -47,6 +51,11 @@ final class MarketTradeMenuPolicy {
             } catch (RuntimeException malformed) { return OptionalDouble.empty(); }
         }
         return value == null ? OptionalDouble.empty() : OptionalDouble.of(value);
+    }
+    static boolean price(Menu menu, double expected, String... labels) {
+        var value = coins(menu.items().stream().filter(item -> item.slot() >= 0 && item.slot() < menu.size())
+                .flatMap(item -> item.lore().stream()).toList(), labels);
+        return value.isPresent() && equal(value.getAsDouble(), expected);
     }
     static boolean selected(Item item, String target) {
         return item != null && item.lore.stream().map(CommissionDisplayPolicy::normalizeLine)

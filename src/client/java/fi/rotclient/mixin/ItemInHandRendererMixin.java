@@ -11,11 +11,27 @@ import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /** Apply the viewmodel to each submitted hand after vanilla creates its pose. */
 @Mixin(FirstPersonHandsAndItemsRenderer.class)
 abstract class ItemInHandRendererMixin {
+    // 26.3 supplies equip progress to the submission method, rather than the
+    // old ItemInHandRenderer tick/render path. Zero keeps the hand fully raised.
+    @ModifyVariable(method = "submitArmWithItem", at = @At("HEAD"),
+            argsOnly = true, ordinal = 3)
+    private float rotclient$equipProgress(float progress) {
+        return ViewmodelRuntime.skipEquipAnimation() ? 0.0F : progress;
+    }
+
+    @Redirect(method = "swingArm", at = @At(value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
+    private void rotclient$swingTranslation(PoseStack pose, float x, float y, float z) {
+        ViewmodelRuntime.applySwingTranslate(pose, x, y, z);
+    }
+
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE",
             target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V",
             shift = At.Shift.AFTER, ordinal = 0))

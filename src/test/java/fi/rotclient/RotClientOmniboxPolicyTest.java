@@ -9,6 +9,15 @@ import org.junit.jupiter.api.Test;
 
 final class RotClientOmniboxPolicyTest {
     @Test
+    void pasteAndReplaceStayBoundedWithoutSplittingUnicode() {
+        assertEquals("Pet Display", RotClientOmniboxPolicy.appendQuery("old", "Pet Display", true));
+        assertEquals("Viewmodel", RotClientOmniboxPolicy.appendQuery("View", "model\n", false));
+        String query = RotClientOmniboxPolicy.appendQuery("a".repeat(47), "\uD83D\uDE80more", false);
+        assertEquals(48, query.codePointCount(0, query.length()));
+        assertTrue(query.endsWith("\uD83D\uDE80"));
+    }
+
+    @Test
     void addressShowsRotSchemeWhenIdle() {
         assertEquals(
                 "rot://mining-tracker",

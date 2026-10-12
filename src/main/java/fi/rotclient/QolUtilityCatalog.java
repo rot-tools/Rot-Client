@@ -1713,7 +1713,6 @@ public final class QolUtilityCatalog {
                 List.of("slayer", "miniboss", "alert", "spawn"),
                 setting("qol.slayer_miniboss_alert.message", "Send Message", "Send a local chat notification.", SettingType.TOGGLE),
                 setting("qol.slayer_miniboss_alert.title", "Show Title", "Show the alert above the hotbar.", SettingType.TOGGLE),
-                setting("qol.slayer_miniboss_alert.distance", "Maximum Distance", "Kept for saved configs. Alerts now follow your spawn chat, not nearby foreign minibosses.", SettingType.NUMBER),
                 setting("qol.slayer_miniboss_alert.text", "Alert Text", "Message for a regular Slayer miniboss.", SettingType.TEXT),
                 setting("qol.slayer_miniboss_alert.big_text", "Big Miniboss Text", "Message for the strongest miniboss tier.", SettingType.TEXT)));
 

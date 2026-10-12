@@ -797,9 +797,35 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void renderExtraOverlays(
             GuiGraphicsExtractor graphics, Font font, QolUtilityConfig qol, boolean editorOpen) {
-        if (MarketTradeRuntime.enabled() && !editorOpen) RotClientUiDraw.text(graphics, font,
-                font.plainSubstrByWidth(MarketTradeRuntime.status(), Minecraft.getInstance().getWindow().getGuiScaledWidth() - 24),
-                12, 12, RotClientTheme.TEXT, true);
+        if (editorOpen) return;
+        int width = Math.max(100, Math.min(320,
+                Minecraft.getInstance().getWindow().getGuiScaledWidth() - 24));
+        int y = 12;
+        if (MarketTradeRuntime.enabled() && MarketTradeRuntime.journal().settings().showPurchaseHud) {
+            RotClientUiDraw.drawElevatedCard(graphics, 12, y, width, 36);
+            RotClientUiDraw.text(graphics, font, "Market purchases", 20, y + 6,
+                    RotClientTheme.HUD_ACCENT, false);
+            RotClientUiDraw.text(graphics, font,
+                    RotClientUiDraw.ellipsize(font, MarketTradeRuntime.status(), width - 16),
+                    20, y + 21, RotClientTheme.TEXT, false);
+            y += 42;
+        }
+        var receipt = MarketTradeRuntime.purchaseNotice();
+        if (receipt.isPresent() && MarketTradeRuntime.journal().settings().showPurchaseHud) {
+            var purchase = receipt.get();
+            long age = System.currentTimeMillis() - purchase.confirmedAtMillis();
+            if (age >= 0 && age < 8_000) {
+                RotClientUiDraw.drawElevatedCard(graphics, 12, y, width, 48);
+                RotClientUiDraw.text(graphics, font, "Buy done", 20, y + 6,
+                        RotClientTheme.HUD_ACCENT, true);
+                String item = purchase.itemName() + " x" + purchase.quantity();
+                RotClientUiDraw.text(graphics, font, RotClientUiDraw.ellipsize(font, item, width - 16),
+                        20, y + 21, RotClientTheme.TEXT, false);
+                RotClientUiDraw.text(graphics, font, RotClientUiDraw.ellipsize(font,
+                        purchase.market() + " · Kept for manual sale", width - 16),
+                        20, y + 35, RotClientTheme.TEXT_MUTED, false);
+            }
+        }
     }
 
     @Override

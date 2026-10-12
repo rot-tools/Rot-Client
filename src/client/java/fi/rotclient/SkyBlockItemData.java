@@ -1,6 +1,8 @@
 package fi.rotclient;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -64,6 +66,26 @@ final class SkyBlockItemData {
             }
         }
         return "";
+    }
+
+    static String quoteId(ItemStack stack) {
+        String id = marketId(stack);
+        if (!"PET".equals(id) && !"COMMON_HOOK".equals(id)) return id;
+        String menuTitle = "";
+        if ("COMMON_HOOK".equals(id)) {
+            Minecraft client = Minecraft.getInstance();
+            if (client.player != null && client.gui.screen() instanceof AbstractContainerScreen<?> screen
+                    && SkyBlockMarketItemIdentityPolicy.isBaitSackTitle(screen.getTitle().getString())) {
+                for (var slot : screen.getMenu().slots) {
+                    if (slot.container != client.player.getInventory() && slot.getItem() == stack) {
+                        menuTitle = screen.getTitle().getString();
+                        break;
+                    }
+                }
+            }
+        }
+        return SkyBlockMarketItemIdentityPolicy.quoteId(id,
+                "PET".equals(id) ? petInfo(stack) : "", stack.getHoverName().getString(), menuTitle);
     }
 
     static CompoundTag extraAttributes(ItemStack stack) {

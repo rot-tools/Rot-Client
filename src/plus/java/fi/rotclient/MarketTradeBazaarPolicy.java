@@ -3,7 +3,7 @@ package fi.rotclient;
 import java.math.*;
 import java.util.List;
 
-/** Bazaar spread means buy-order -> sell-offer. It never authorizes an instant buy. */
+/** Estimates a spread for a buy order; a later sale remains manual. Never authorizes instant buy. */
 final class MarketTradeBazaarPolicy {
     record Proposal(String id, double buy, double sell, long quantity, long reserved) {}
     static Proposal propose(MarketWatchBazaarProduct p, MarketTradeSettings s, long purse, long spent, double previous) {
@@ -30,11 +30,14 @@ final class MarketTradeBazaarPolicy {
     }
     static boolean amount(List<String> lore, long quantity) {
         String expected = String.format(java.util.Locale.ROOT,"%,d",quantity);
-        return lore.stream().map(CommissionDisplayPolicy::normalizeLine)
-                .anyMatch(row -> row.equals("Order amount: " + expected + "x") || row.equals("Offer amount: " + expected + "x"));
+        var amounts = lore.stream().map(CommissionDisplayPolicy::normalizeLine)
+                .filter(row -> row.startsWith("Order amount:") || row.startsWith("Offer amount:")).toList();
+        return !amounts.isEmpty() && amounts.stream()
+                .allMatch(row -> row.equals("Order amount: " + expected + "x") || row.equals("Offer amount: " + expected + "x"));
     }
     static boolean owner(List<String> lore, String username) {
-        return lore.stream().map(CommissionDisplayPolicy::normalizeLine).anyMatch(row ->
+        var owners = lore.stream().map(CommissionDisplayPolicy::normalizeLine).filter(row -> row.startsWith("By:")).toList();
+        return !owners.isEmpty() && owners.stream().allMatch(row ->
                 row.matches("^By: (?:\\[[^]]+] )?" + java.util.regex.Pattern.quote(username) + "$"));
     }
     private MarketTradeBazaarPolicy() {}

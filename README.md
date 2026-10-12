@@ -33,7 +33,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.9+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
+> **`2.0.10+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -48,8 +48,8 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.9+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
-| `RotClientPlus-2.0.9+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
+| `RotClient-2.0.10+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.10+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Minecraft version availability
 
@@ -57,11 +57,11 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.9+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dungeon-scans) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dungeon-scans) | Prior fixes retained. Plus gains server-observed Simon/TP Maze logic, bounded door/diorite/room scans and cached map terrain with live player markers. Gameplay/FPS measurements and Party Finder backend remain pending. |
+| 26.3 | [`2.0.10+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dashboard-purchases) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dashboard-purchases) | Shared dashboard focus, clipping, long-list scroll, Viewmodel hooks and pet quote identity repaired. Plus has a clearer buy-only market workspace and bounded scans. Gameplay/FPS and Party Finder backend remain pending. |
 
 Active maintenance targets **26.3 Lite and Plus only**. Older version downloads
 remain available; fixes are no longer backported unless requested. See the
-[dungeon scan/puzzle repairs](docs/DUNGEON_SCANS_2026-10-12.md), [modern room/secret fixes and API audit](docs/DUNGEON_ROOMS_2026-10-12.md),
+[dashboard/settings and purchase checkpoint](docs/DASHBOARD_PURCHASES_2026-10-12.md), [dungeon scan/puzzle repairs](docs/DUNGEON_SCANS_2026-10-12.md), [modern room/secret fixes and API audit](docs/DUNGEON_ROOMS_2026-10-12.md),
 [F7 timer fixes](docs/DUNGEON_TIMERS_2026-10-08.md), [dashboard/map changes](docs/DASHBOARD_DUNGEON_2026-10-08.md), [market trading candidate](docs/MARKET_TRADING_2026-10-08.md), [mining state fixes](docs/MINING_STATE_FIXES_2026-10-08.md) and preceding
 [module follow-up](docs/UPSTREAM_FOLLOWUP_2026-10-08.md) for changes and tests.
 
@@ -71,7 +71,7 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dungeon-scans)
+Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dashboard-purchases)
 holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 tracks `development` and is replaced after green pushes there.
 
@@ -87,7 +87,7 @@ run if you need a specific commit.
 
 1. Install Fabric Loader and Fabric API for Minecraft 26.3.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy `RotClient-2.0.9+mc26.3.jar` and/or `RotClientPlus-2.0.9+mc26.3.jar`
+3. Copy `RotClient-2.0.10+mc26.3.jar` and/or `RotClientPlus-2.0.10+mc26.3.jar`
    from `build/libs/` into `mods/`. Enable only one.
 
 Rot Tools includes bounded migration for supported legacy MiningTracker
@@ -110,8 +110,8 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 
 ## Features
 
-**Rot Client** currently ships **83** HUD/QoL parents. **Rot Client+** ships
-**135**. Wired means a catalog entry, saved
+**Rot Client** currently ships **84** HUD/QoL parents. **Rot Client+** ships
+**136**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 [QoL Utilities](docs/QOL_UTILITIES.md).

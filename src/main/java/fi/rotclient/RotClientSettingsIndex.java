@@ -101,19 +101,34 @@ final class RotClientSettingsIndex {
         }
     }
 
-    private static final List<Entry> CATALOG = buildCatalog();
-    private static final Map<String, Entry> BY_ID = indexById(CATALOG);
+    private record CatalogSnapshot(List<QolUtilityCatalog.ModuleDef> modules,
+                                   List<Entry> entries, Map<String, Entry> byId) {}
+    private static volatile CatalogSnapshot snapshot;
+
+    private static CatalogSnapshot current() {
+        List<QolUtilityCatalog.ModuleDef> modules = QolUtilityCatalog.modules();
+        CatalogSnapshot cached = snapshot;
+        if (cached != null && cached.modules() == modules) return cached;
+        synchronized (RotClientSettingsIndex.class) {
+            cached = snapshot;
+            if (cached == null || cached.modules() != modules) {
+                List<Entry> entries = buildCatalog(modules);
+                snapshot = cached = new CatalogSnapshot(modules, entries, indexById(entries));
+            }
+            return cached;
+        }
+    }
 
     private RotClientSettingsIndex() {
     }
 
     /** Cached full catalog — never rebuilt per frame / per search. */
     static List<Entry> catalog() {
-        return CATALOG;
+        return current().entries();
     }
 
     static int catalogSize() {
-        return CATALOG.size();
+        return catalog().size();
     }
 
     /**
@@ -132,14 +147,14 @@ final class RotClientSettingsIndex {
             return List.of();
         }
         List<Entry> matches = new ArrayList<>();
-        for (Entry entry : CATALOG) {
+        for (Entry entry : catalog()) {
             if (entry.matches(needle)) {
                 matches.add(entry);
             }
         }
-        matches.sort(Comparator
-                .comparingInt((Entry e) -> e.rank(needle))
-                .thenComparingInt(e -> CATALOG.indexOf(e)));
+        // Stable sort retains catalog order among equal ranks without an
+        // O(catalog size) indexOf lookup in every comparator invocation.
+        matches.sort(Comparator.comparingInt((Entry e) -> e.rank(needle)));
         if (matches.size() > safeLimit) {
             return List.copyOf(matches.subList(0, safeLimit));
         }
@@ -150,11 +165,12 @@ final class RotClientSettingsIndex {
         if (id == null || id.isBlank()) {
             return null;
         }
-        Entry exact = BY_ID.get(id.trim());
+        Map<String, Entry> byId = current().byId();
+        Entry exact = byId.get(id.trim());
         if (exact != null) {
             return exact;
         }
-        return BY_ID.get(id.trim().toLowerCase(Locale.ROOT));
+        return byId.get(id.trim().toLowerCase(Locale.ROOT));
     }
 
     static boolean isHudVisibilityToggle(String id) {
@@ -168,7 +184,7 @@ final class RotClientSettingsIndex {
         return query.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 
-    private static List<Entry> buildCatalog() {
+    private static List<Entry> buildCatalog(List<QolUtilityCatalog.ModuleDef> modules) {
         List<Entry> entries = new ArrayList<>();
 
         addHud(entries, "showBlocks", "Blocks",
@@ -251,7 +267,7 @@ final class RotClientSettingsIndex {
                 List.of("move hud", "drag hud", "layout", "scale", "position",
                         "editor", "hud", "reset")));
 
-        for (QolUtilityCatalog.ModuleDef module : QolUtilityCatalog.modules()) {
+        for (QolUtilityCatalog.ModuleDef module : modules) {
             List<String> moduleAliases = new ArrayList<>(module.searchAliases());
             moduleAliases.add(module.name());
             entries.add(new Entry(

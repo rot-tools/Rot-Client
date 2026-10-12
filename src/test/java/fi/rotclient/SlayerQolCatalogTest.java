@@ -12,6 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SlayerQolCatalogTest {
     @Test
+    void retiredMinibossDistanceIsPreservedInConfigButNotOfferedAsAnActiveSlider() {
+        assertFalse(QolUtilityCatalog.findById("qol.slayer_miniboss_alert").settings().stream()
+                .anyMatch(setting -> setting.id().equals("qol.slayer_miniboss_alert.distance")));
+        QolUtilityConfig config = new QolUtilityConfig();
+        assertTrue(config.writeNumber("qol.slayer_miniboss_alert.distance", 15));
+        assertEquals(15.0, config.readNumber("qol.slayer_miniboss_alert.distance"));
+    }
+
+    @Test
     void slayerDropsExposesAnOptInLivePriceChatSetting() {
         QolUtilityCatalog.ModuleDef drops = QolUtilityCatalog.findById("qol.slayer_drops");
 

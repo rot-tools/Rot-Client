@@ -2,7 +2,7 @@ package fi.rotclient;
 
 /** All trade settings are Plus-owned. A zero budget cannot place a transaction. */
 final class MarketTradeSettings {
-    int schemaVersion = 1;
+    int schemaVersion = 2;
     long sessionBudgetCoins;
     long perTradeCoins;
     double pursePercent = 10;
@@ -21,10 +21,12 @@ final class MarketTradeSettings {
     long maxBazaarQuantity = 64;
     boolean auctionEnabled = true;
     boolean bazaarEnabled;
+    boolean showPurchaseHud = true;
     String rarity = "";
     String reforge = "";
     double bazaarTaxPercent = 1.25;
     java.util.Set<String> watchIds = new java.util.HashSet<>();
+    java.util.Set<String> pinIds = new java.util.HashSet<>();
     void normalize() {
         sessionBudgetCoins = clamp(sessionBudgetCoins, 0, 100_000_000_000L);
         perTradeCoins = clamp(perTradeCoins, 0, sessionBudgetCoins);
@@ -47,14 +49,19 @@ final class MarketTradeSettings {
         if (!MarketWatchVariantPolicy.TIERS.contains(rarity)) rarity = "";
         reforge = MarketWatchVariantPolicy.reforgeFilter(reforge);
         if (watchIds == null) watchIds = new java.util.HashSet<>();
+        if (pinIds == null) pinIds = new java.util.HashSet<>();
+        watchIds.removeIf(id -> id == null || id.isBlank());
+        pinIds.removeIf(id -> id == null || id.isBlank());
+        schemaVersion = 2;
     }
     long allowance(long purse, long reserved) {
-        normalize();
-        if (purse < 0 || reserved < 0 || reserved > sessionBudgetCoins) return 0;
-        long available = Math.max(0, purse - Math.min(purse, reserveCoins));
-        long percentCap = java.math.BigDecimal.valueOf(available).multiply(java.math.BigDecimal.valueOf(pursePercent))
+        long budget = clamp(sessionBudgetCoins, 0, 100_000_000_000L);
+        long perTrade = clamp(perTradeCoins, 0, budget);
+        if (purse < 0 || reserved < 0 || reserved > budget) return 0;
+        long available = purse - Math.min(purse, clamp(reserveCoins, 0, 100_000_000_000L));
+        long percentCap = java.math.BigDecimal.valueOf(available).multiply(java.math.BigDecimal.valueOf(finite(pursePercent, 0, 100)))
                 .divide(java.math.BigDecimal.valueOf(100), 0, java.math.RoundingMode.DOWN).longValueExact();
-        return Math.min(Math.min(available, percentCap), Math.min(perTradeCoins, sessionBudgetCoins - reserved));
+        return Math.min(Math.min(available, percentCap), Math.min(perTrade, budget - reserved));
     }
     private static long clamp(long n, long lo, long hi) { return Math.max(lo, Math.min(hi, n)); }
     private static double finite(double n, double lo, double hi) { return Double.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : lo; }

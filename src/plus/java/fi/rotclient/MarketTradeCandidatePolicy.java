@@ -5,26 +5,33 @@ import java.util.OptionalLong;
 
 /** Immutable transaction proposal; ordinary Market Watch alerts never imply permission to buy. */
 final class MarketTradeCandidatePolicy {
+    private static final java.util.regex.Pattern UUID = java.util.regex.Pattern.compile("[0-9a-f]{32}");
     record Target(String itemId, String name, String tier, String reforge, long maxPrice,
                   long minProfit, double minDiscount, double minRoi) {
         boolean matches(MarketWatchAuction a) {
-            var watch = new MarketWatchAuctionWatch();
-            watch.itemId = itemId; watch.itemName = name; watch.tier = tier; watch.reforge = reforge;
-            return MarketWatchVariantPolicy.matches(watch, a);
+            if (a == null || a.uuid().isBlank()) return false;
+            boolean item = !itemId.isBlank() && a.variant().known()
+                    ? itemId.equalsIgnoreCase(a.variant().itemId()) : !name.isBlank() && name.equalsIgnoreCase(a.itemName());
+            if (!item || !tier.isBlank() && !tier.equalsIgnoreCase(a.tier())) return false;
+            String modifier = MarketWatchVariantPolicy.reforgeFilter(reforge);
+            return modifier.isBlank() || a.variant().known()
+                    && (modifier.equals("none") ? a.variant().reforge().isBlank() : modifier.equals(a.variant().reforge()));
         }
     }
     record Proposal(MarketWatchAuction auction, long buy, long sell, long reserved, String reason) {}
-    static Proposal propose(MarketWatchAuction a, List<MarketWatchAuction> peers, List<Target> targets,
-                            MarketTradeSettings s, long purse, long spent, String owner, long now, long previous) {
+    static boolean identityEligible(MarketWatchAuction a, MarketTradeSettings s, String owner, long now) {
         if (a == null || !a.bin() || a.endMillis() <= now || !a.variant().known()
                 || a.variant().attributesKey().isBlank() || a.variant().itemUuid().isBlank()
                 || a.variant().quantity() != 1 || a.tier().isBlank()
                 || uuid(a.auctioneerUuid()).equals(uuid(owner)) || !validUuid(a.uuid())
-                || !validUuid(a.auctioneerUuid()) || !validUuid(a.variant().itemUuid())) return null;
-        if (!s.rarity.isBlank() && !s.rarity.equals(a.tier())) return null;
+                || !validUuid(a.auctioneerUuid()) || !validUuid(a.variant().itemUuid())) return false;
+        if (!s.rarity.isBlank() && !s.rarity.equals(a.tier())) return false;
         String modifier = s.reforge;
-        if (!modifier.isBlank() && !(modifier.equals("none") ? a.variant().reforge().isBlank()
-                : modifier.equals(a.variant().reforge()))) return null;
+        return modifier.isBlank() || (modifier.equals("none") ? a.variant().reforge().isBlank() : modifier.equals(a.variant().reforge()));
+    }
+    static Proposal propose(MarketWatchAuction a, List<MarketWatchAuction> peers, List<Target> targets,
+                            MarketTradeSettings s, long purse, long spent, String owner, long now, long previous) {
+        if (!identityEligible(a, s, owner, now)) return null;
         var allowed = targets.stream().filter(t -> t.matches(a)).toList();
         if (allowed.isEmpty()) return null;
         long buy = MarketTradeRiskPolicy.ceiling(a.startingBid());
@@ -32,10 +39,11 @@ final class MarketTradeCandidatePolicy {
         String key = MarketWatchVariantPolicy.comparableKey(a);
         var comparables = peers.stream().filter(p -> p.bin() && p.endMillis() > now
                 && !p.uuid().equals(a.uuid()) && p.variant().quantity() == 1
+                && validUuid(p.uuid()) && validUuid(p.auctioneerUuid()) && validUuid(p.variant().itemUuid())
                 && !uuid(p.auctioneerUuid()).equals(uuid(a.auctioneerUuid()))
                 && !uuid(p.auctioneerUuid()).equals(uuid(owner))
                 && key.equals(MarketWatchVariantPolicy.comparableKey(p)))
-                .map(p -> new MarketTradeRiskPolicy.Peer(MarketTradeRiskPolicy.ceiling(p.startingBid()), p.auctioneerUuid())).toList();
+                .map(p -> new MarketTradeRiskPolicy.Peer(MarketTradeRiskPolicy.ceiling(p.startingBid()), uuid(p.auctioneerUuid()))).toList();
         var risk = MarketTradeRiskPolicy.assess(comparables, s, previous);
         if (!risk.eligible()) return null;
         long sell = risk.reference() - Math.min(risk.reference(), s.undercutCoins);
@@ -45,8 +53,8 @@ final class MarketTradeCandidatePolicy {
         if (allowed.stream().noneMatch(t -> (t.maxPrice <= 0 || buy <= t.maxPrice)
                 && sell - buy - fees >= t.minProfit && (sell - buy - fees) / buy * 100 >= t.minRoi
                 && (sell - buy) / (double) sell * 100 >= t.minDiscount)) return null;
-        long reserve;
-        try { reserve = Math.addExact(buy, s.maxListingFeeCoins); } catch (ArithmeticException overflow) { return null; }
+        // Only purchase capital is committed; any later sale is entirely manual.
+        long reserve = buy;
         return reserve <= s.allowance(purse, spent) ? new Proposal(a, buy, sell, reserve, risk.reason()) : null;
     }
     static OptionalLong purse(List<String> lines) {
@@ -70,6 +78,6 @@ final class MarketTradeCandidatePolicy {
                 && now - observed <= limit && now - serverUpdated <= limit;
     }
     static String uuid(String raw) { return raw == null ? "" : raw.replace("-", "").toLowerCase(java.util.Locale.ROOT); }
-    static boolean validUuid(String raw) { return uuid(raw).matches("[0-9a-f]{32}"); }
+    static boolean validUuid(String raw) { return UUID.matcher(uuid(raw)).matches(); }
     private MarketTradeCandidatePolicy() {}
 }

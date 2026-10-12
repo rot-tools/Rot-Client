@@ -30,7 +30,11 @@ final class QolUtilityDashboard {
     private DrawerKind searchCacheKind;
     private String searchCacheQuery = "";
     private List<QolUtilityCatalog.SettingDef> searchCacheRows = List.of();
-    private static final int SETTINGS_SEARCH_HEIGHT = 30;
+    private int searchCacheSectionCount;
+    private QolUtilityCatalog.ModuleDef drawerSourceModule;
+    private DrawerKind drawerSourceKind;
+    private List<QolUtilityCatalog.SettingDef> drawerSourceRows = List.of();
+    private static final int SETTINGS_SEARCH_HEIGHT = QolUtilityUiMath.SETTINGS_SEARCH_HEIGHT;
     private String pendingColorSettingId = "";
     private String openEnumSettingId = "";
     private String enumQuery = "";
@@ -64,7 +68,20 @@ final class QolUtilityDashboard {
     private double moduleAccordionProgress;
     private long moduleAccordionLastNanos;
     private boolean moduleAccordionClosing;
-    private boolean moduleInlineBodyRendering;
+    private int modulePageViewportHeight = 536;
+    private boolean revealModuleAccordion;
+    private int drawerTrackTop;
+    private int drawerTrackBottom;
+    private QolUtilityCatalog.Group cachedPage;
+    private List<QolUtilityCatalog.ModuleDef> cachedPageModules = List.of();
+    private QolUtilityUiMath.PageFilter cachedPageFilter;
+    private List<QolUtilityCatalog.ModuleDef> cachedFilteredModules = List.of();
+    private QolUtilityUiMath.PageLayout cachedPageLayout;
+    private List<QolUtilityCatalog.ModuleDef> cachedLayoutModules;
+    private int cachedLayoutLeft;
+    private int cachedLayoutWidth;
+    private int cachedLayoutExtraHeight;
+    private String cachedLayoutExpandedId = "";
     private boolean pendingModuleResetConfirm;
     private boolean pendingHudStyleResetConfirm;
     private enum DrawerKind {
@@ -149,6 +166,7 @@ final class QolUtilityDashboard {
     }
 
     void closeDrawer() {
+        finishSliderDrag();
         resetDrawerSearch();
         openModuleId = "";
         drawerKind = DrawerKind.MODULE;
@@ -178,6 +196,7 @@ final class QolUtilityDashboard {
         if (module == null) {
             return;
         }
+        finishSliderDrag();
         appearanceLanding = false;
         hudLayoutLanding = false;
         if (activePage != QolDashboardNavigationPolicy.page(module.group())) {
@@ -199,6 +218,7 @@ final class QolUtilityDashboard {
         moduleAccordionProgress = 0.0D;
         moduleAccordionLastNanos = System.nanoTime();
         moduleAccordionClosing = false;
+        revealModuleAccordion = true;
         persistWorkspaceView();
     }
 
@@ -211,6 +231,7 @@ final class QolUtilityDashboard {
             openModule(module.id());
             return;
         }
+        finishSliderDrag();
         boolean keepHudLayout = hudLayoutLanding;
         appearanceLanding = false;
         hudLayoutLanding = keepHudLayout;
@@ -328,10 +349,23 @@ final class QolUtilityDashboard {
         var source = unfilteredDrawerSettings(module);
         searchCacheModule = module; searchCacheKind = drawerKind; searchCacheQuery = drawerQuery;
         searchCacheRows = QolDrawerSearchPolicy.filter(source,drawerQuery);
+        searchCacheSectionCount = 0;
+        for (QolUtilityCatalog.SettingDef setting : searchCacheRows) {
+            if (setting.type() == QolUtilityCatalog.SettingType.SECTION) searchCacheSectionCount++;
+        }
         return searchCacheRows;
     }
 
     private java.util.List<QolUtilityCatalog.SettingDef> unfilteredDrawerSettings(QolUtilityCatalog.ModuleDef module) {
+        if (module != drawerSourceModule || drawerKind != drawerSourceKind) {
+            drawerSourceModule = module;
+            drawerSourceKind = drawerKind;
+            drawerSourceRows = buildDrawerSettings(module);
+        }
+        return drawerSourceRows;
+    }
+
+    private List<QolUtilityCatalog.SettingDef> buildDrawerSettings(QolUtilityCatalog.ModuleDef module) {
         if (hudDrawerOpen()) {
             java.util.ArrayList<QolUtilityCatalog.SettingDef> rows = new java.util.ArrayList<>();
             if (!HudDrawerPolicy.uniqueStyleFocus(module).isBlank()) {
@@ -345,7 +379,60 @@ final class QolUtilityDashboard {
     private void resetDrawerSearch() {
         drawerQuery = ""; drawerSearchFocused = false; searchCacheModule = null;
     }
+
+    private List<QolUtilityCatalog.ModuleDef> pageModules() {
+        if (cachedPage != activePage) {
+            cachedPage = activePage;
+            cachedPageModules = QolDashboardNavigationPolicy.modules(activePage);
+            cachedPageFilter = null;
+        }
+        return cachedPageModules;
+    }
+
+    private List<QolUtilityCatalog.ModuleDef> filteredPageModules() {
+        List<QolUtilityCatalog.ModuleDef> source = pageModules();
+        // Enabled can change through the toolbar and keybinds while the dashboard is open.
+        if (pageFilter == QolUtilityUiMath.PageFilter.ENABLED) {
+            List<QolUtilityCatalog.ModuleDef> next = QolUtilityUiMath.filterPageModules(
+                    source, pageFilter, this::isEnabled);
+            if (cachedPageFilter != pageFilter || !next.equals(cachedFilteredModules)) {
+                cachedFilteredModules = next;
+            }
+        } else if (cachedPageFilter != pageFilter) {
+            cachedFilteredModules = pageFilter == QolUtilityUiMath.PageFilter.ALL
+                    ? source : QolUtilityUiMath.filterPageModules(source, pageFilter, this::isEnabled);
+        }
+        cachedPageFilter = pageFilter;
+        return cachedFilteredModules;
+    }
+
+    private QolUtilityUiMath.PageLayout modulePageLayout(
+            List<QolUtilityCatalog.ModuleDef> modules, int left, int width,
+            String expandedId, int extraHeight) {
+        if (cachedPageLayout == null || cachedLayoutModules != modules
+                || cachedLayoutLeft != left || cachedLayoutWidth != width
+                || cachedLayoutExtraHeight != extraHeight || !cachedLayoutExpandedId.equals(expandedId)) {
+            cachedPageLayout = QolUtilityUiMath.layoutPage(modules, left, width, expandedId, extraHeight);
+            cachedLayoutModules = modules;
+            cachedLayoutLeft = left;
+            cachedLayoutWidth = width;
+            cachedLayoutExtraHeight = extraHeight;
+            cachedLayoutExpandedId = expandedId;
+        }
+        return cachedPageLayout;
+    }
+
+    private int drawerSectionCount(QolUtilityCatalog.ModuleDef module) {
+        if (module == null) return 0;
+        currentDrawerSettings(module);
+        return searchCacheSectionCount;
+    }
+
+    private boolean drawerHasGroupControls(QolUtilityCatalog.ModuleDef module) {
+        return drawerSectionCount(module) > 1;
+    }
     private void setDrawerQuery(String query) {
+        finishSliderDrag();
         drawerQuery = query; drawerScroll.reset();
         openEnumSettingId = ""; enumQuery = ""; enumSearchFocused = false;
         listeningTextSettingId = listeningKeybindSettingId = draggingNumberSettingId = "";
@@ -486,7 +573,9 @@ final class QolUtilityDashboard {
             QolUtilityCatalog.ModuleDef module = QolUtilityCatalog.findById(openModuleId);
             HudStyleState style = hudStyle(module);
             style.scale = HudStylePolicy.clampScale((float) value);
-            putHudStyle(module, style);
+            String focus = hudStyleFocus(module);
+            if (!focus.isBlank()) qol().extras().putHudStyle(focus, style);
+            // Slider release saves once; dragging must not write the config file every pointer event.
         }
     }
 
@@ -648,6 +737,11 @@ final class QolUtilityDashboard {
 
         int listTop = pageContentListTop(contentTop);
         int listBottom = contentBottom;
+        if (mouseY < listTop || mouseY >= listBottom) {
+            listMouseX = Integer.MIN_VALUE;
+            listMouseY = Integer.MIN_VALUE;
+        }
+        modulePageViewportHeight = Math.max(0, listBottom - listTop);
         if (hudLayoutLanding) {
             drawHudLayoutLanding(
                     graphics,
@@ -659,12 +753,14 @@ final class QolUtilityDashboard {
                     listMouseX,
                     listMouseY);
             if (hudSideDrawer) {
+                graphics.nextStratum();
                 RotClientUiDraw.drawScrim(
                         graphics,
                         contentLeft,
                         contentTop,
                         contentWidth,
                         Math.max(1, contentBottom - contentTop));
+                graphics.nextStratum();
                 int drawerX = contentRight - drawerW;
                 drawDrawer(
                         graphics,
@@ -697,12 +793,7 @@ final class QolUtilityDashboard {
             }
             return;
         }
-        List<QolUtilityCatalog.ModuleDef> pageModules =
-                QolDashboardNavigationPolicy.modules(activePage);
-        List<QolUtilityCatalog.ModuleDef> modules = QolUtilityUiMath.filterPageModules(
-                pageModules,
-                pageFilter,
-                this::isEnabled);
+        List<QolUtilityCatalog.ModuleDef> modules = filteredPageModules();
         int gridWidth = Math.max(
                 1,
                 listW - RotClientUiDraw.SCROLLBAR_HIT_WIDTH - 4);
@@ -728,7 +819,7 @@ final class QolUtilityDashboard {
                         : accordionModule.id();
 
         QolUtilityUiMath.PageLayout layout =
-                QolUtilityUiMath.layoutPage(
+                modulePageLayout(
                         modules,
                         contentLeft,
                         gridWidth,
@@ -753,7 +844,7 @@ final class QolUtilityDashboard {
                     0;
 
             layout =
-                    QolUtilityUiMath.layoutPage(
+                    modulePageLayout(
                             modules,
                             contentLeft,
                             gridWidth,
@@ -766,6 +857,14 @@ final class QolUtilityDashboard {
         listScroll.setBounds(
                 listContentHeight,
                 Math.max(0, listBottom - listTop));
+        if (revealModuleAccordion && accordionModule != null && moduleAccordionProgress >= 1.0D) {
+            int visibleBottom = accordionRowY + QolUtilityUiMath.CARD_HEIGHT + accordionVisibleHeight;
+            int scroll = listScroll.scrollPixels();
+            if (accordionRowY < scroll || visibleBottom > scroll + modulePageViewportHeight) {
+                listScroll.setScrollPixels(accordionRowY);
+            }
+            revealModuleAccordion = false;
+        }
         listScroll.advanceSeconds(RotClientUiClock.seconds());
         int baseY = listTop - listScroll.scrollPixels();
         String hoverTip = null;
@@ -891,15 +990,7 @@ final class QolUtilityDashboard {
                                 inlineMouseY,
                                 false);
 
-                        /*
-                         * drawDrawer disables its own scissor.
-                         * Restore the main module-list clip afterwards.
-                         */
-                        graphics.enableScissor(
-                                contentLeft,
-                                listTop,
-                                listRight,
-                                listBottom);
+                        // drawDrawer pops its nested body clip, restoring this list's clip.
                     }
                 }
             }
@@ -939,12 +1030,14 @@ final class QolUtilityDashboard {
                     listScroll.isThumbDragging());
         }
         if (modal) {
+            graphics.nextStratum();
             RotClientUiDraw.drawScrim(
                     graphics,
                     contentLeft,
                     contentTop,
                     contentWidth,
                     Math.max(1, contentBottom - contentTop));
+            graphics.nextStratum();
         }
 
         if (hudSideDrawer) {
@@ -1000,8 +1093,7 @@ final class QolUtilityDashboard {
                 y + 8);
 
         List<QolUtilityCatalog.ModuleDef> pageModules =
-                QolDashboardNavigationPolicy.modules(
-                        activePage);
+                pageModules();
 
         int enabledCount =
                 0;
@@ -1256,6 +1348,7 @@ final class QolUtilityDashboard {
         moduleAccordionProgress = 0.0D;
         moduleAccordionLastNanos = 0L;
         moduleAccordionClosing = false;
+        revealModuleAccordion = false;
     }
 
     private void requestModuleAccordionClose() {
@@ -1263,6 +1356,9 @@ final class QolUtilityDashboard {
             closeDrawer();
             return;
         }
+
+        finishSliderDrag();
+        drawerSearchFocused = false;
 
         pendingModuleResetConfirm = false;
         openEnumSettingId = "";
@@ -1281,6 +1377,7 @@ final class QolUtilityDashboard {
     }
 
     private void completeModuleAccordionClose() {
+        finishSliderDrag();
         resetDrawerSearch();
         openModuleId = "";
         drawerKind = DrawerKind.MODULE;
@@ -1363,6 +1460,7 @@ final class QolUtilityDashboard {
 
         int bodyHeight =
                 0;
+        if (!drawerQuery.isBlank() && currentDrawerSettings(module).isEmpty()) bodyHeight += 28;
 
         if (module.wip()
                 || !module.runtimeReady()) {
@@ -1473,7 +1571,8 @@ final class QolUtilityDashboard {
          */
         return Math.max(
                 48,
-                bodyHeight + 16 + SETTINGS_SEARCH_HEIGHT);
+                bodyHeight + 16 + SETTINGS_SEARCH_HEIGHT
+                        + (drawerHasGroupControls(module) ? QolUtilityUiMath.DRAWER_GROUP_NAV_HEIGHT : 0));
     }
     private int moduleAccordionVisibleHeight(
             QolUtilityCatalog.ModuleDef module) {
@@ -1484,7 +1583,8 @@ final class QolUtilityDashboard {
         double eased = RotClientEase.smoothstep(moduleAccordionProgress);
 
         return (int) Math.round(
-                Math.min(400, moduleAccordionTargetHeight(module)) * eased);
+                QolUtilityUiMath.inlineDrawerHeight(
+                        moduleAccordionTargetHeight(module), modulePageViewportHeight) * eased);
     }
 
     private static int moduleAccordionRowY(
@@ -2025,6 +2125,9 @@ final class QolUtilityDashboard {
         boolean inline =
                 !overlay
                         && moduleAccordionOpen();
+        if (height <= 0) return;
+        graphics.enableScissor(x, y, x + width, y + height);
+        try {
 
         if (!inline) {
             tickDrawerExpand(
@@ -2188,7 +2291,7 @@ final class QolUtilityDashboard {
 
         }
 
-        int searchY = inline ? y + 8 : y + 52;
+        int searchY = QolUtilityUiMath.drawerSearchY(y, inline);
         RotClientUiDraw.roundedFill(graphics,x + 12,searchY,x + width - 12,searchY + 24,
                 drawerSearchFocused ? RotClientTheme.FIELD : RotClientTheme.BUTTON);
         String queryText = drawerQuery.isBlank() ? "Find settings…" : drawerQuery;
@@ -2196,19 +2299,23 @@ final class QolUtilityDashboard {
         RotClientUiDraw.text(graphics,font,RotClientUiDraw.ellipsize(font,queryText,Math.max(20,width - 72)),
                 x + 20,searchY + 8,drawerQuery.isBlank() ? RotClientTheme.TEXT_MUTED : RotClientTheme.TEXT,false);
         if (!drawerQuery.isBlank()) RotClientUiDraw.text(graphics,font,"×",x + width - 31,searchY + 8,RotClientTheme.TEXT,true);
-        int bodyTop =
-                inline
-                        ? y + 8 + SETTINGS_SEARCH_HEIGHT
-                        : y + 52 + SETTINGS_SEARCH_HEIGHT;
-
-        int bodyBottom =
-                inline
-                        ? y + height
-                        : y + height - 10;
+        boolean grouped = drawerHasGroupControls(module);
+        if (grouped) drawDrawerGroupControls(graphics, font, module, x, searchY + SETTINGS_SEARCH_HEIGHT,
+                width, mouseX, mouseY);
+        int bodyTop = QolUtilityUiMath.drawerBodyTop(y, inline, grouped);
+        int bodyBottom = Math.max(bodyTop, QolUtilityUiMath.drawerBodyBottom(y, height, inline));
+        drawerTrackTop = bodyTop;
+        drawerTrackBottom = bodyBottom;
         drawerScroll.setViewportHeight(Math.max(0, bodyBottom - bodyTop));
         drawerScroll.advanceSeconds(RotClientUiClock.seconds());
 
         int rowY = bodyTop - drawerScroll.scrollPixels();
+        int rowMouseX = mouseX;
+        int rowMouseY = mouseY;
+        if (!RotClientUiDraw.inside(mouseX, mouseY, x, bodyTop, width, bodyBottom - bodyTop)) {
+            rowMouseX = Integer.MIN_VALUE;
+            rowMouseY = Integer.MIN_VALUE;
+        }
         graphics.enableScissor(x, bodyTop, x + width, bodyBottom);
         RotClientUiMotion.pushFractionalScroll(graphics, drawerScroll);
         try {
@@ -2278,7 +2385,7 @@ final class QolUtilityDashboard {
                             rowY,
                             width - 24,
                             setting.label(),
-                            drawerExpand.amount(setting.id()),
+                            drawerSectionAmount(setting.id()),
                             mouseX,
                             mouseY);
                 }
@@ -2299,6 +2406,9 @@ final class QolUtilityDashboard {
             }
             if (rowY + shown >= bodyTop
                     && rowY <= bodyBottom) {
+                boolean partialRow = shown < rowHeight;
+                if (partialRow) graphics.enableScissor(x, rowY, x + width, rowY + shown);
+                try {
                 drawSettingRow(
                         graphics,
                         font,
@@ -2307,8 +2417,11 @@ final class QolUtilityDashboard {
                         width - 24,
                         module,
                         setting,
-                        mouseX,
-                        mouseY);
+                        rowMouseX,
+                        rowMouseY);
+                } finally {
+                    if (partialRow) graphics.disableScissor();
+                }
             }
             rowY += shown;
             if (runtimeAvailable(module)
@@ -2397,7 +2510,7 @@ final class QolUtilityDashboard {
         drawerContentHeight = Math.max(0, rowY + drawerScroll.scrollPixels() - bodyTop);
         drawerScroll.setBounds(
                 drawerContentHeight, Math.max(0, bodyBottom - bodyTop));
-        if (!inline && drawerScroll.canScroll()) {
+        if (drawerScroll.canScroll()) {
             int scrollbarX = x + width - RotClientUiDraw.SCROLLBAR_WIDTH - 2;
             boolean hovered = scrollbarHovered(
                     mouseX,
@@ -2415,13 +2528,49 @@ final class QolUtilityDashboard {
                     hovered,
                     drawerScroll.isThumbDragging());
         }
+        } finally {
+            graphics.disableScissor();
+        }
+    }
+
+    private void drawDrawerGroupControls(
+            GuiGraphicsExtractor graphics, Font font, QolUtilityCatalog.ModuleDef module,
+            int x, int y, int width, int mouseX, int mouseY) {
+        if (width >= 270) RotClientUiDraw.text(graphics, font, drawerSectionCount(module) + " groups",
+                x + 16, y + 7, RotClientTheme.TEXT_MUTED, false);
+        String[] labels = {"Collapse all", "Expand all"};
+        int buttonWidth = Math.max(1, QolUtilityUiMath.drawerGroupButtonWidth(width) - 6);
+        for (int i = 0; i < labels.length; i++) {
+            int buttonX = QolUtilityUiMath.drawerGroupButtonX(x, width, i);
+            boolean hover = drawerQuery.isBlank()
+                    && RotClientUiDraw.inside(mouseX, mouseY, buttonX, y + 2, buttonWidth, 21);
+            RotClientUiDraw.roundedFill(graphics, buttonX, y + 2, buttonX + buttonWidth, y + 23,
+                    hover ? RotClientTheme.BUTTON_HOVER : RotClientTheme.BUTTON, RotClientUiDraw.RADIUS_SM);
+            RotClientUiDraw.text(graphics, font,
+                    RotClientUiDraw.ellipsize(font, labels[i], Math.max(1, buttonWidth - 12)),
+                    buttonX + 6, y + 8,
+                    drawerQuery.isBlank() ? RotClientTheme.TEXT_DIM : RotClientTheme.TEXT_MUTED, false);
+        }
+    }
+
+    private void setAllDrawerSections(QolUtilityCatalog.ModuleDef module, boolean expanded) {
+        finishSliderDrag();
+        for (QolUtilityCatalog.SettingDef setting : currentDrawerSettings(module)) {
+            if (setting.type() != QolUtilityCatalog.SettingType.SECTION) continue;
+            if (expanded) collapsedDrawerSections.remove(setting.id());
+            else collapsedDrawerSections.add(setting.id());
+        }
+        openEnumSettingId = "";
+        enumSearchFocused = false;
+        listeningTextSettingId = listeningKeybindSettingId = "";
+        drawerScroll.reset();
     }
 
     private void tickDrawerExpand(QolUtilityCatalog.ModuleDef module) {
         java.util.ArrayList<String> known = new java.util.ArrayList<>();
         java.util.ArrayList<String> open = new java.util.ArrayList<>();
         if (module != null) {
-            for (QolUtilityCatalog.SettingDef setting : module.settings()) {
+            for (QolUtilityCatalog.SettingDef setting : unfilteredDrawerSettings(module)) {
                 if (setting.type() != QolUtilityCatalog.SettingType.SECTION) {
                     continue;
                 }
@@ -3641,7 +3790,10 @@ final class QolUtilityDashboard {
                         0, enumQuery.offsetByCodePoints(enumQuery.length(), -1));
                 return true;
             }
-            return glfwKey == InputConstants.KEY_BACKSPACE;
+            if (glfwKey == InputConstants.KEY_RETURN || glfwKey == InputConstants.KEY_NUMPADENTER) {
+                enumSearchFocused = false;
+            }
+            return true;
         }
         if (capturingText()) {
             if (glfwKey == InputConstants.KEY_ESCAPE || glfwKey == InputConstants.KEY_RETURN
@@ -3739,6 +3891,9 @@ final class QolUtilityDashboard {
 
             return true;
         }
+        drawerSearchFocused = false;
+        enumSearchFocused = false;
+        listeningTextSettingId = "";
 
         int mx =
                 (int) Math.round(
@@ -3787,7 +3942,8 @@ final class QolUtilityDashboard {
                         drawerX
                                 + drawerW
                                 - RotClientUiDraw.SCROLLBAR_HIT_WIDTH,
-                        drawerY + 52 + SETTINGS_SEARCH_HEIGHT,
+                        QolUtilityUiMath.drawerBodyTop(drawerY, false,
+                                drawerHasGroupControls(QolUtilityCatalog.findById(openModuleId))),
                         drawerY
                                 + drawerH
                                 - 10)) {
@@ -3802,7 +3958,8 @@ final class QolUtilityDashboard {
                         drawerX,
                         drawerY,
                         drawerW,
-                        drawerH);
+                        drawerH,
+                        false);
             }
 
             if (button
@@ -3812,6 +3969,8 @@ final class QolUtilityDashboard {
 
                 return true;
             }
+            // The HUD pane owns pointer input until it closes, including other mouse buttons.
+            return true;
         }
 
         int listTop =
@@ -3938,11 +4097,7 @@ final class QolUtilityDashboard {
                         - listScroll.scrollPixels();
 
         java.util.List<QolUtilityCatalog.ModuleDef> modules =
-                QolUtilityUiMath.filterPageModules(
-                        QolDashboardNavigationPolicy.modules(
-                                activePage),
-                        pageFilter,
-                        this::isEnabled);
+                filteredPageModules();
 
         QolUtilityCatalog.ModuleDef accordionModule =
                 moduleAccordionOpen()
@@ -3961,7 +4116,7 @@ final class QolUtilityDashboard {
                         : accordionModule.id();
 
         QolUtilityUiMath.PageLayout layout =
-                QolUtilityUiMath.layoutPage(
+                modulePageLayout(
                         modules,
                         contentLeft,
                         gridWidth,
@@ -3982,7 +4137,7 @@ final class QolUtilityDashboard {
                     0;
 
             layout =
-                    QolUtilityUiMath.layoutPage(
+                    modulePageLayout(
                             modules,
                             contentLeft,
                             gridWidth,
@@ -4046,31 +4201,14 @@ final class QolUtilityDashboard {
                         return true;
                     }
 
-                    moduleInlineBodyRendering =
-                            true;
-
-                    try {
-                        /*
-                         * Synthetic drawer geometry:
-                         *
-                         * handleDrawerClick normally starts its body 52 px
-                         * below drawerY. Inline rendering starts 8 px below
-                         * bodyY, therefore bodyY - 44 maps both coordinate
-                         * systems exactly.
-                         */
-                        return handleDrawerClick(
-                                button,
-                                mx,
-                                my,
-                                card.x(),
-                                bodyY - 44,
-                                card.width(),
-                                cardExtra + 54);
-
-                    } finally {
-                        moduleInlineBodyRendering =
-                                false;
-                    }
+                    int trackTop = QolUtilityUiMath.drawerBodyTop(bodyY, true,
+                            drawerHasGroupControls(accordionModule));
+                    int trackBottom = QolUtilityUiMath.drawerBodyBottom(bodyY, cardExtra, true);
+                    if (handleScrollbarPress(button, mx, my, drawerScroll,
+                            card.x() + card.width() - RotClientUiDraw.SCROLLBAR_HIT_WIDTH,
+                            trackTop, trackBottom)) return true;
+                    return handleDrawerClick(button, mx, my, card.x(), bodyY,
+                            card.width(), cardExtra, true);
                 }
             }
         }
@@ -4150,12 +4288,13 @@ final class QolUtilityDashboard {
             int drawerX,
             int drawerY,
             int drawerW,
-            int drawerH) {
+            int drawerH,
+            boolean inline) {
         if (button != InputConstants.MOUSE_BUTTON_LEFT
                 && button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return true;
         }
-        if (!moduleInlineBodyRendering && QolUtilityUiMath.hitClose(mx, my, drawerX, drawerY, drawerW)) {
+        if (!inline && QolUtilityUiMath.hitClose(mx, my, drawerX, drawerY, drawerW)) {
             if (drawerKind == DrawerKind.MODULE) {
                 requestModuleAccordionClose();
             } else {
@@ -4167,7 +4306,7 @@ final class QolUtilityDashboard {
         if (module == null) {
             return true;
         }
-        int searchY = drawerY + 52;
+        int searchY = QolUtilityUiMath.drawerSearchY(drawerY, inline);
         if (RotClientUiDraw.inside(mx,my,drawerX + 12,searchY,drawerW - 24,24)) {
             if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 drawerSearchFocused = true;
@@ -4176,8 +4315,24 @@ final class QolUtilityDashboard {
             return true;
         }
         drawerSearchFocused = false;
-        int bodyTop = drawerY + 52 + SETTINGS_SEARCH_HEIGHT;
-        int bodyBottom = drawerY + drawerH - 10;
+        boolean grouped = drawerHasGroupControls(module);
+        int groupY = searchY + SETTINGS_SEARCH_HEIGHT;
+        if (grouped && RotClientUiDraw.inside(mx, my, drawerX + 12, groupY, drawerW - 24,
+                QolUtilityUiMath.DRAWER_GROUP_NAV_HEIGHT)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && drawerQuery.isBlank()) {
+                for (int i = 0; i < 2; i++) {
+                    int buttonX = QolUtilityUiMath.drawerGroupButtonX(drawerX, drawerW, i);
+                    if (RotClientUiDraw.inside(mx, my, buttonX, groupY + 2,
+                            Math.max(1, QolUtilityUiMath.drawerGroupButtonWidth(drawerW) - 6), 21)) {
+                        setAllDrawerSections(module, i == 1);
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+        int bodyTop = QolUtilityUiMath.drawerBodyTop(drawerY, inline, grouped);
+        int bodyBottom = QolUtilityUiMath.drawerBodyBottom(drawerY, drawerH, inline);
         if (my < bodyTop || my >= bodyBottom) {
             return true;
         }
@@ -4194,7 +4349,7 @@ final class QolUtilityDashboard {
                 return true;
             }
             rowY += QolUtilityUiMath.DRAWER_ROW_HEIGHT + 8;
-        } else if (!moduleInlineBodyRendering && !hudDrawerOpen() && module.toggleable() && runtimeAvailable(module)) {
+        } else if (!inline && !hudDrawerOpen() && module.toggleable() && runtimeAvailable(module)) {
             if (RotClientUiDraw.inside(
                     mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_ROW_HEIGHT)) {
                 if (button == InputConstants.MOUSE_BUTTON_LEFT) {
@@ -4212,8 +4367,10 @@ final class QolUtilityDashboard {
             if (setting.type() == QolUtilityCatalog.SettingType.SECTION) {
                 if (RotClientUiDraw.inside(
                         mx, my, rowX, rowY, rowW, QolUtilityUiMath.DRAWER_SECTION_HEIGHT)) {
-                    if (drawerQuery.isBlank() && !collapsedDrawerSections.add(setting.id())) {
-                        collapsedDrawerSections.remove(setting.id());
+                    if (button == InputConstants.MOUSE_BUTTON_LEFT && drawerQuery.isBlank()) {
+                        if (!collapsedDrawerSections.add(setting.id())) collapsedDrawerSections.remove(setting.id());
+                        openEnumSettingId = "";
+                        enumSearchFocused = false;
                     }
                     return true;
                 }
@@ -5138,6 +5295,27 @@ final class QolUtilityDashboard {
             return true;
         }
 
+        if (moduleAccordionOpen()) {
+            QolUtilityCatalog.ModuleDef module = moduleAccordionModule();
+            int gridWidth = Math.max(1, contentWidth - RotClientUiDraw.SCROLLBAR_HIT_WIDTH - 4);
+            int extraHeight = moduleAccordionVisibleHeight(module);
+            QolUtilityUiMath.PageLayout layout = modulePageLayout(filteredPageModules(), contentLeft,
+                    gridWidth, openModuleId, extraHeight);
+            int listTop = pageContentListTop(contentTop);
+            for (QolUtilityUiMath.PlacedCard card : layout.cards()) {
+                if (card.module() == null || !openModuleId.equals(card.module().id())) continue;
+                int drawerY = listTop - listScroll.scrollPixels() + card.y() + QolUtilityUiMath.CARD_HEIGHT;
+                if (my >= listTop && my < contentBottom && RotClientUiDraw.inside(
+                        mx, my, card.x(), drawerY, card.width(), extraHeight)) {
+                    if (!moduleAccordionClosing && drawerScroll.canScroll()) {
+                        drawerScroll.scrollBySteps(verticalAmount, 40);
+                    }
+                    return true;
+                }
+                break;
+            }
+        }
+
         int listTop = pageScrollTrackTop(contentTop);
         if (RotClientUiDraw.inside(
                 mx, my, contentLeft, listTop, contentWidth, contentBottom - listTop)) {
@@ -5163,8 +5341,8 @@ final class QolUtilityDashboard {
         }
         if (drawerScroll.dragThumbTo(
                 my,
-                contentTop + 52,
-                contentBottom - 10,
+                drawerTrackTop,
+                drawerTrackBottom,
                 RotClientUiDraw.SCROLLBAR_MIN_THUMB_HEIGHT)) {
             return true;
         }
@@ -5177,15 +5355,17 @@ final class QolUtilityDashboard {
     }
 
     boolean mouseReleased() {
-        boolean sliderReleased = false;
-        if (draggingNumberSettingId != null && !draggingNumberSettingId.isBlank()) {
-            draggingNumberSettingId = "";
-            TrackerStore.save(config);
-            sliderReleased = true;
-        }
+        boolean sliderReleased = finishSliderDrag();
         boolean drawerReleased = drawerScroll.endThumbDrag();
         boolean listReleased = listScroll.endThumbDrag();
         return sliderReleased || drawerReleased || listReleased;
+    }
+
+    private boolean finishSliderDrag() {
+        if (draggingNumberSettingId == null || draggingNumberSettingId.isBlank()) return false;
+        draggingNumberSettingId = "";
+        TrackerStore.save(config);
+        return true;
     }
 
     private void beginSliderDrag(String settingId, int rowX, int rowWidth, int mouseX) {
@@ -5203,6 +5383,8 @@ final class QolUtilityDashboard {
         double next = spec.fromFraction(
                 QolUtilityUiMath.sliderFraction(
                         mouseX, draggingSliderRowX, draggingSliderRowWidth));
+        Double current = readDrawerNumber(draggingNumberSettingId);
+        if (current != null && Math.abs(current - next) < 1.0E-6D) return;
         writeDrawerNumber(draggingNumberSettingId, next);
     }
 
