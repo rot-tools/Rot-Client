@@ -3218,10 +3218,11 @@ public final class DungeonRuntime {
         if (SkyBlockDungeonDetector.confidentlyInDungeon() && !sidebar.boss()) {
             Minecraft client = Minecraft.getInstance();
             String block = client.level == null ? "" : fullBlockId(client, pos);
-            var kind = block.endsWith("chest") ? DungeonRoomDataPolicy.SecretKind.CHEST
-                    : block.contains("skull") || block.contains("head") ? DungeonRoomDataPolicy.SecretKind.ESSENCE
-                    : block.endsWith(":lever") ? DungeonRoomDataPolicy.SecretKind.LEVER : null;
-            if (kind != null) recordSecretObservation(client, kind, pos.getX(), pos.getY(), pos.getZ(), 0);
+            DungeonRoomDataPolicy.matchingSecret(secretWaypoints, collectedSecrets,
+                    pos.getX(), pos.getY(), pos.getZ(), 0)
+                    .filter(waypoint -> DungeonSecretObservationPolicy.interactionBlock(waypoint.kind(), block))
+                    .ifPresent(waypoint -> recordSecretObservation(client, waypoint.kind(),
+                            pos.getX(), pos.getY(), pos.getZ(), 0));
         }
         noteClickedSecret(pos);
     }

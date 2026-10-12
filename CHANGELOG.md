@@ -13,7 +13,7 @@ and the project uses semantic versioning where practical.
   rotations, typed pickup/bat observations and server room secret counts.
   Party-wide increments and entity disappearance no longer credit/hide the
   wrong secret. Three Weirdos uses the rotated NPC chest offset.
-* Java25 build, 2,519 shared + 300 Plus tests and both edition verifiers pass.
+* Java25 build, 2,519 shared + 301 Plus tests and both edition verifiers pass.
   Gameplay and Party Finder's stats backend/schema remain pending; this is a
   playtest checkpoint. The public Lite release gate remains open.
 * Latest Odin/OdinClient/Noamm/Athen/Nebulune/Devonian source changes and

@@ -47,7 +47,7 @@ room/secret/Weirdos logic plus Rot's event integration and validation guards.
 - Secret item waypoints hide on actual, typed, nearby pickup events, including
   another visible player's pickup. Bat waypoints use bat-death sound evidence.
   Entity disappearance and missing/unloaded blocks no longer imply collection.
-  Chest/essence/lever hiding uses a matching local block interaction, as upstream
+  Chest/essence/redstone-key/lever hiding uses a matching local block interaction, as upstream
   does: this is an observed click, not proof that the server awarded a secret.
 - Three Weirdos uses Noamm's complete speech patterns and rotated NPC +X chest
   offset at Y69. Party quotes and unrelated rooms cannot choose a chest. The
@@ -99,7 +99,7 @@ establish that service's availability or credentials for Rot.
 
 ## Validation and next checks
 
-Java 25 `build`, 2,519 shared + 300 Plus tests, `verifyLegitJar` and
+Java 25 `build`, 2,519 shared + 301 Plus tests, `verifyLegitJar` and
 `verifyDungeonJarBoundary` pass. New regressions cover the modern fold,
 transient blocks, incomplete columns, pinned data, collision rejection,
 all four rotations, multi-tile/L shapes, unloaded/ambiguous corners,

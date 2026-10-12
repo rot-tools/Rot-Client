@@ -42,6 +42,16 @@ public final class DungeonSecretObservationPolicy {
         return name != null && SECRET_ITEMS.contains(FORMATTING.matcher(name).replaceAll("").trim());
     }
 
+    public static boolean interactionBlock(DungeonRoomDataPolicy.SecretKind kind, String block) {
+        if (kind == null || block == null) return false;
+        return switch (kind) {
+            case CHEST -> block.equals("minecraft:chest") || block.equals("minecraft:trapped_chest");
+            case ESSENCE, REDSTONE -> block.contains("skull") || block.endsWith("_head");
+            case LEVER -> block.equals("minecraft:lever");
+            case ITEM, BAT -> false;
+        };
+    }
+
     public static Optional<DungeonRoomDataPolicy.PlacedWaypoint> nearest(
             List<DungeonRoomDataPolicy.PlacedWaypoint> waypoints, Set<String> collected,
             String roomName, DungeonRoomDataPolicy.SecretKind kind, double x, double y, double z, int radius) {

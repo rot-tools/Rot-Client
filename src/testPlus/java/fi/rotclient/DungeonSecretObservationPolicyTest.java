@@ -43,4 +43,13 @@ final class DungeonSecretObservationPolicyTest {
         assertFalse(DungeonSecretObservationPolicy.isSecretItem("Rotten Flesh"));
         assertFalse(DungeonSecretObservationPolicy.isSecretItem("Fake Spirit Leap"));
     }
+
+    @Test void clickedRedstoneKeyRetainsItsWaypointKindAndCannotBecomeEssence() {
+        assertTrue(DungeonSecretObservationPolicy.interactionBlock(SecretKind.REDSTONE,"minecraft:player_head"));
+        assertTrue(DungeonSecretObservationPolicy.interactionBlock(SecretKind.ESSENCE,"minecraft:player_wall_head"));
+        assertTrue(DungeonSecretObservationPolicy.interactionBlock(SecretKind.LEVER,"minecraft:lever"));
+        assertFalse(DungeonSecretObservationPolicy.interactionBlock(SecretKind.ITEM,"minecraft:chest"));
+        assertFalse(DungeonSecretObservationPolicy.interactionBlock(SecretKind.CHEST,"minecraft:ender_chest"));
+        assertFalse(DungeonSecretObservationPolicy.interactionBlock(SecretKind.REDSTONE,"minecraft:stone"));
+    }
 }
