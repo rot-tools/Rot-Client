@@ -7,6 +7,21 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### 26.3 bounded scans and puzzle observation — 2.0.9
+
+* Plus Simon keeps full playback and advances from server-confirmed button
+  power, with immediate packet observation and context-checked automation.
+  TP Maze uses verified rotated frames, server teleport/yaw evidence and
+  visited pads; distance jumps and fabricated fallback routes are removed.
+* Diorite/door/pillar work is capped at 384 positions per traversal per tick;
+  render-time scans are removed. Room probes are capped at two per tick plus
+  one scheduled pending-rotation attempt. True block states prevent the glass
+  display from altering puzzle hashes. Unchanged map terrain is cached while
+  player markers still refresh every tick.
+* 2,520 shared + 345 Plus tests, dual build and edition verifiers pass. Gameplay
+  and actual FPS gains need measurement; public Lite release remains gated.
+  See docs/DUNGEON_SCANS_2026-10-12.md for source pins and the test checklist.
+
 ### 26.3 room/secret checkpoint — 2.0.8
 
 * Plus adapts Noamm's pinned 140-room modern data/core hash, full-shape
@@ -22,8 +37,8 @@ and the project uses semantic versioning where practical.
 ### Dual editions
 
 * One `./gradlew build` produces **Rot Client**
-  (`RotClient-2.0.8+mc26.3.jar`, Fabric id `rotclient`, **83** catalog
-  parents) and **Rot Client+** (`RotClientPlus-2.0.8+mc26.3.jar`, id
+  (`RotClient-2.0.9+mc26.3.jar`, Fabric id `rotclient`, **83** catalog
+  parents) and **Rot Client+** (`RotClientPlus-2.0.9+mc26.3.jar`, id
   `rotclientplus`, **135** parents). Plus holds automation bytecode; the
   legit JAR does not. Playtest and versioned GitHub Releases upload both
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist

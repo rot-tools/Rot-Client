@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,14 +18,30 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class HateDoorsPlusRuntime {
     private static final Map<Long, EmberDungeonPolicy.GlassTint> DOORS = new ConcurrentHashMap<>();
+    private static final Map<Long, EmberDungeonPolicy.GlassTint> DOOR_MARKS = new ConcurrentHashMap<>();
     private static final Map<Long, EmberDungeonPolicy.GlassTint> DIORITE = new ConcurrentHashMap<>();
+    private static final Map<EmberDungeonPolicy.GlassTint, BlockState> GLASS = new ConcurrentHashMap<>();
+    private static final DungeonBlockScanPolicy doorScan = new DungeonBlockScanPolicy();
+    private static final DungeonBlockScanPolicy pillarScan = new DungeonBlockScanPolicy();
+    private static int pillarIndex;
+    private static final List<DungeonF7Policy.Pillar> PILLARS = DungeonF7Policy.dioritePillars();
+
+    record DoorMark(BlockPos pos, EmberDungeonPolicy.GlassTint tint) { }
+
+    static List<DoorMark> observedDoors() {
+        return DOOR_MARKS.entrySet().stream().map(entry -> new DoorMark(BlockPos.of(entry.getKey()), entry.getValue())).toList();
+    }
 
     private HateDoorsPlusRuntime() {
     }
 
     public static void clear() {
         DOORS.clear();
+        DOOR_MARKS.clear();
         DIORITE.clear();
+        doorScan.clear();
+        pillarScan.clear();
+        pillarIndex = 0;
     }
 
     public static void remember(BlockPos pos, EmberDungeonPolicy.GlassTint tint) {
@@ -37,6 +54,7 @@ public final class HateDoorsPlusRuntime {
     public static void forget(BlockPos pos) {
         if (pos != null) {
             DOORS.remove(pos.asLong());
+            DOOR_MARKS.remove(pos.asLong());
         }
     }
 
@@ -54,6 +72,12 @@ public final class HateDoorsPlusRuntime {
                 if (original.isAir() || original.is(Blocks.BARRIER)) {
                     DIORITE.remove(pos.asLong());
                 } else {
+                    String id = blockId(original);
+                    if (!DungeonPolicy.isF7Diorite(id)
+                            && !id.equals(EmberDungeonPolicy.glassBlockId(diorite))) {
+                        DIORITE.remove(pos.asLong());
+                        return null;
+                    }
                     BlockState glass = glassState(diorite);
                     if (glass != original) {
                         return glass;
@@ -72,38 +96,54 @@ public final class HateDoorsPlusRuntime {
         if (tint == null) {
             return null;
         }
-        BlockState glass = glassState(tint);
+        // Never keep replacing a door after its true server block or child setting changes.
+        var current = EmberDungeonPolicy.hateDoorTint(blockId(original),
+                extras.dungeonEspHateWither, extras.dungeonEspHateBlood, extras.dungeonEspHateEntrance,
+                extras.dungeonEspHateWitherGlass, extras.dungeonEspHateBloodGlass, extras.dungeonEspHateEntranceGlass);
+        if (current.isEmpty()) { forget(pos); return null; }
+        BlockState glass = glassState(current.get());
         return glass == original ? null : glass;
     }
 
     static void scan(Minecraft client, QolSkyblockExtras extras) {
         if (client == null || client.player == null || client.level == null || extras == null) {
+            clear();
+            return;
+        }
+        if (!SkyBlockDungeonDetector.confidentlyInDungeon()) {
+            clear();
             return;
         }
         if (!extras.dungeonEspEnabled || !extras.dungeonEspHateDoors) {
             DOORS.clear();
+            DOOR_MARKS.clear();
+            doorScan.clear();
         } else {
             BlockPos origin = client.player.blockPosition();
-            for (int dx = -8; dx <= 8; dx++) {
-                for (int dy = -4; dy <= 8; dy++) {
-                    for (int dz = -8; dz <= 8; dz++) {
-                        BlockPos pos = origin.offset(dx, dy, dz);
-                        BlockState state = client.level.getBlockState(pos);
-                        if (state.isAir() || state.is(Blocks.BARRIER)) {
-                            forget(pos);
-                            continue;
-                        }
-                        String id = blockId(state);
-                        EmberDungeonPolicy.hateDoorTint(
-                                id,
-                                extras.dungeonEspHateWither,
-                                extras.dungeonEspHateBlood,
-                                extras.dungeonEspHateEntrance,
-                                extras.dungeonEspHateWitherGlass,
-                                extras.dungeonEspHateBloodGlass,
-                                extras.dungeonEspHateEntranceGlass)
-                                .ifPresent(tint -> remember(pos, tint));
-                    }
+            var slice = doorScan.next(new DungeonBlockScanPolicy.Region(
+                    origin.getX() - 8, origin.getY() - 4, origin.getZ() - 8, 17, 13, 17));
+            if (slice.started()) DOORS.keySet().removeIf(key -> {
+                BlockPos pos = BlockPos.of(key);
+                return !slice.region().contains(pos.getX(), pos.getY(), pos.getZ());
+            });
+            if (slice.started()) DOOR_MARKS.keySet().removeIf(key -> {
+                BlockPos pos = BlockPos.of(key);
+                return !slice.region().contains(pos.getX(), pos.getY(), pos.getZ());
+            });
+            for (var cell : slice.cells()) {
+                BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+                if (!client.level.hasChunkAt(pos)) { forget(pos); continue; }
+                // Read the actual chunk state, not our own Level glass substitution.
+                BlockState state = client.level.getChunkAt(pos).getBlockState(pos);
+                String id = blockId(state);
+                var tint = EmberDungeonPolicy.hateDoorTint(id,
+                        extras.dungeonEspHateWither, extras.dungeonEspHateBlood, extras.dungeonEspHateEntrance,
+                        extras.dungeonEspHateWitherGlass, extras.dungeonEspHateBloodGlass, extras.dungeonEspHateEntranceGlass);
+                if (tint.isPresent()) remember(pos, tint.get()); else forget(pos);
+                if (EmberDungeonPolicy.isHateDoorBlock(id,
+                        extras.dungeonEspHateWither, extras.dungeonEspHateBlood, extras.dungeonEspHateEntrance)) {
+                    // Iron bars remain entrance ESP without turning them into glass.
+                    DOOR_MARKS.put(pos.asLong(), tint.orElse(EmberDungeonPolicy.glassTint(extras.dungeonEspHateEntranceGlass)));
                 }
             }
         }
@@ -111,43 +151,46 @@ public final class HateDoorsPlusRuntime {
     }
 
     private static void scanDiorite(Minecraft client, QolSkyblockExtras extras) {
-        if (!extras.dungeonF7Enabled || !extras.dungeonF7HideDiorite || client.player == null) {
+        if (!extras.dungeonF7Enabled || !extras.dungeonF7HideDiorite || client.player == null
+                || !DungeonRuntime.sidebar.boss() || DungeonMapPolicy.floorNumber(DungeonRuntime.sidebar.floor()) != 7) {
             DIORITE.clear();
+            pillarScan.clear();
+            pillarIndex = 0;
             return;
         }
         BlockPos origin = client.player.blockPosition();
         if (!DungeonPolicy.inF7PillarBox(origin.getX(), origin.getY(), origin.getZ())) {
             DIORITE.clear();
+            pillarScan.clear();
+            pillarIndex = 0;
             return;
         }
-        for (DungeonF7Policy.Pillar pillar : DungeonF7Policy.dioritePillars()) {
-            EmberDungeonPolicy.IntVec base = pillar.origin();
-            for (int dx = -3; dx <= 3; dx++) {
-                for (int dy = 0; dy <= 37; dy++) {
-                    for (int dz = -3; dz <= 3; dz++) {
-                        BlockPos pos = new BlockPos(base.x() + dx, base.y() + dy, base.z() + dz);
-                        if (origin.distSqr(pos) > 64 * 64) {
-                            continue;
-                        }
-                        BlockState state = client.level.getBlockState(pos);
-                        String id = blockId(state);
-                        if (DungeonPolicy.isF7Diorite(id)
-                                || id.contains(EmberDungeonPolicy.glassBlockId(pillar.tint()).replace("minecraft:", ""))) {
-                            DIORITE.put(pos.asLong(), pillar.tint());
-                        }
-                    }
-                }
+        var pillar = PILLARS.get(pillarIndex);
+        var base = pillar.origin();
+        var slice = pillarScan.next(new DungeonBlockScanPolicy.Region(base.x() - 3, base.y(), base.z() - 3, 7, 38, 7));
+        for (var cell : slice.cells()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (origin.distSqr(pos) > 64 * 64 || !client.level.hasChunkAt(pos)) {
+                DIORITE.remove(pos.asLong());
+                continue;
             }
+            String id = blockId(client.level.getChunkAt(pos).getBlockState(pos));
+            if (DungeonPolicy.isF7Diorite(id) || id.equals(EmberDungeonPolicy.glassBlockId(pillar.tint()))) {
+                DIORITE.put(pos.asLong(), pillar.tint());
+            } else DIORITE.remove(pos.asLong());
+        }
+        if (slice.complete()) {
+            pillarIndex = (pillarIndex + 1) % PILLARS.size();
+            pillarScan.clear();
         }
     }
 
     static BlockState glassState(EmberDungeonPolicy.GlassTint tint) {
-        Identifier location = Identifier.tryParse(EmberDungeonPolicy.glassBlockId(tint));
-        var block = location == null ? null : BuiltInRegistries.BLOCK.getValue(location);
-        if (block == null || block == Blocks.AIR) {
-            return Blocks.GLASS.defaultBlockState();
-        }
-        return block.defaultBlockState();
+        return GLASS.computeIfAbsent(tint, key -> {
+            Identifier location = Identifier.tryParse(EmberDungeonPolicy.glassBlockId(key));
+            var block = location == null ? null : BuiltInRegistries.BLOCK.getValue(location);
+            return block == null || block == Blocks.AIR ? Blocks.GLASS.defaultBlockState() : block.defaultBlockState();
+        });
     }
 
     private static String blockId(BlockState state) {

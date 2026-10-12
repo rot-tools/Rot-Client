@@ -70,6 +70,20 @@ abstract class ClientPacketListenerMixin {
                 QolClientFlavorSupport.hooks().dungeonActionBar(packet.content()));
     }
 
+    @Inject(method = "handleMovePlayer", at = @At("HEAD"))
+    private void rotclient$mazeTeleport(net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket packet, CallbackInfo ci) {
+        if (!onClientThread()) return;
+        var change = packet.change();
+        var position = change.position();
+        var flags = packet.relatives();
+        boolean relativePosition = flags.contains(net.minecraft.world.entity.Relative.X)
+                || flags.contains(net.minecraft.world.entity.Relative.Y) || flags.contains(net.minecraft.world.entity.Relative.Z);
+        boolean relativeRotation = flags.contains(net.minecraft.world.entity.Relative.Y_ROT)
+                || flags.contains(net.minecraft.world.entity.Relative.X_ROT);
+        fi.rotclient.ClientBoundaryGuard.run("DUNGEON_PLAYER_TELEPORT", () -> QolClientFlavorSupport.hooks()
+                .dungeonPlayerTeleport(position.x, position.y, position.z, change.yRot(), relativePosition, relativeRotation));
+    }
+
     @Inject(method = "setActionBarText", at = @At("HEAD"))
     private void rotclient$roomActionBar(ClientboundSetActionBarTextPacket packet, CallbackInfo ci) {
         if (!onClientThread()) return;

@@ -34,7 +34,8 @@ public final class DungeonPlusInputRuntime {
         EmberDungeonPolicy.IntVec next = DungeonRuntime.simon.nextButton();
         if (DungeonF7Policy.blockWrongSimon(
                 pos.getX(), pos.getY(), pos.getZ(),
-                extras.dungeonF7Simon && extras.dungeonF7SimonBlockWrong,
+                extras.dungeonF7Simon && extras.dungeonF7SimonBlockWrong
+                        && DungeonRuntime.validSimonContext(Minecraft.getInstance()),
                 sneaking,
                 next)) {
             return true;

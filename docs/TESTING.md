@@ -448,3 +448,12 @@ Five new Plus regressions cover concurrent countdowns, nominal tick units, dupli
 exact chat, forward phase clearing and invalid clock bounds. Live dungeon state remains Plus-only.
 Test Storm intro/PY/death, Goldor/Core opening, timer settings and leave/rejoin in F7/M7.
 Nominal wall-clock estimates and current conditional boss changes require runtime evidence.
+
+## 26.3 bounded dungeon scan / puzzle checkpoint — 2026-10-12
+
+2.0.9: 2,520 shared + 345 Plus tests, zero failures/errors/skips, client
+compilation, dual-JAR build and both edition verifiers pass. Simon phase/
+server-power, TP packet/visited/link, mutable map-cache and traversal fairness
+tests are included. New code remains Plus-only; existing Lite hooks are inert.
+Follow docs/DUNGEON_SCANS_2026-10-12.md for gameplay and frame-time comparison.
+This automated baseline does not measure FPS or prove all-floor gameplay.

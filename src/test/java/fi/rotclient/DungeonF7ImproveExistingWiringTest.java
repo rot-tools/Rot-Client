@@ -28,7 +28,7 @@ final class DungeonF7ImproveExistingWiringTest {
         assertTrue(runtime.contains("dungeonF7RelicBeacon"));
         assertTrue(runtime.contains("relicSpawnMillis"));
         assertTrue(runtime.contains("formatCountdown"));
-        assertTrue(runtime.contains("DungeonF7Policy.observeSimon"));
+        assertTrue(runtime.contains("DungeonSimonObservationPolicy.observe"));
         assertTrue(runtime.contains("if (!title.equals(lastTermTitle)"));
         assertTrue(runtime.contains("DungeonTerminalClickPolicy.sameSession("));
         assertTrue(runtime.contains("simonButtonForLantern"));

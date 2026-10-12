@@ -9,6 +9,25 @@ import org.junit.jupiter.api.Test;
 
 final class DungeonMapPolicyTest {
     @Test
+    void movingPlayersRefreshWithoutChangingTerrainOrKeepingOldMarkers() {
+        byte[] colors = new byte[128 * 128];
+        paintRoom(colors, 22, 22, 16, DungeonMapPolicy.COLOR_ENTRANCE);
+        var terrain = DungeonMapPolicy.scan(colors, 128, List.of(), null, null);
+        var first = DungeonMapPolicy.withPlayers(terrain,
+                List.of(new DungeonMapPolicy.PlayerIcon(12, 18, 45, false, "mage", "Other")),
+                -185D, -185D, 90, "archer", "Self");
+        var next = DungeonMapPolicy.withPlayers(terrain, List.of(), -153D, -185D, 180, "archer", "Self");
+        assertEquals(terrain.rooms(), next.rooms());
+        assertEquals(terrain.doors(), next.doors());
+        assertEquals(terrain.summary(), next.summary());
+        assertEquals(2, first.players().size());
+        assertEquals(1, next.players().size());
+        assertTrue(next.players().getFirst().mapX() > first.players().getLast().mapX());
+        assertEquals(180, next.players().getFirst().yaw());
+        assertTrue(terrain.players().isEmpty());
+    }
+
+    @Test
     void aRoomCannotWrapAcrossTwoMapRows() {
         byte[] colors = new byte[128 * 128];
         java.util.Arrays.fill(colors, 120, 136, DungeonMapPolicy.COLOR_ENTRANCE);
