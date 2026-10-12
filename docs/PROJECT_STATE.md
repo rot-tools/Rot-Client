@@ -338,7 +338,7 @@ Use this order for the next checkpoint:
    Spirit Leap 1-4; 128 Magical Map paper (layout, names, no lag); Entrance HUD
    Floor Entrance; Door Highlight world boxes with Depth Check off vs on;
    hashed-room secrets after leaving a room; Mimic/Prince/Bat and blood/Watcher
-   alerts; F7 P3 other playersâ€™ terminal chat plus Melody 3 / Numbers 10. Also
+   alerts; F7 P3 other players’ terminal chat plus Melody 3 / Numbers 10. Also
    click the red GitHub and Discord header icons on the dashboard. Do
    not mark DUNG-001 / DUNG-009 / UI-003 runtime Complete.
 3. Continue smaller maintainer-selected QoL/settings slices. Wardrobe Swapper
@@ -399,7 +399,7 @@ Add or extend a source only after it has a precise identity, credible provenance
 - Stall AH listing highlight crash contained (VAL-075): if/else ARGB mapping,
   no `StallMarketRuntime$1`, `ClientBoundaryGuard` around stall/menu highlights.
 
-## Mining/Pet repair candidate â€” 2026-10-01
+## Mining/Pet repair candidate — 2026-10-01
 
 Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](MINING_HUD_FIXES.md).
 
