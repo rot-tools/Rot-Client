@@ -405,6 +405,10 @@ tasks.register('verifyDungeonJarBoundary') {
 				throw new GradleException('Dungeon runtime or puzzle solver landed in the wrong edition')
 			}
 			for (String name : ['fi/rotclient/DungeonPuzzleBoardPolicy.class',
+					'fi/rotclient/DungeonModernRoomPolicy.class',
+					'fi/rotclient/DungeonSecretObservationPolicy.class',
+					'fi/rotclient/DungeonWeirdosObservationPolicy.class',
+					'rotclient/dungeons/rooms-modern.json',
 					'fi/rotclient/DungeonF7Policy.class',
 					'fi/rotclient/DungeonGoldorPolicy.class',
 					'fi/rotclient/DungeonAssistPolicy.class',

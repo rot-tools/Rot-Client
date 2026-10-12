@@ -35,6 +35,12 @@ public interface QolClientFlavorHooks {
     default void onChat(Component message) {
     }
 
+    default void dungeonActionBar(Component message) { }
+
+    default void dungeonItemPickup(int itemEntityId, int collectorEntityId) { }
+
+    default void dungeonBatDeath(double x, double y, double z) { }
+
     default void onScreenOpened(Screen screen) {
     }
 

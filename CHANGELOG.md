@@ -7,19 +7,31 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### 26.3 room/secret checkpoint — 2.0.8
+
+* Plus adapts Noamm's pinned 140-room modern data/core hash, full-shape
+  rotations, typed pickup/bat observations and server room secret counts.
+  Party-wide increments and entity disappearance no longer credit/hide the
+  wrong secret. Three Weirdos uses the rotated NPC chest offset.
+* Java25 build, 2,519 shared + 300 Plus tests and both edition verifiers pass.
+  Gameplay and Party Finder's stats backend/schema remain pending; this is a
+  playtest checkpoint. The public Lite release gate remains open.
+* Latest Odin/OdinClient/Noamm/Athen/Nebulune/Devonian source changes and
+  Hypixel public API compatibility are documented in the new dungeon audit.
+
 ### Dual editions
 
 * One `./gradlew build` produces **Rot Client**
-  (`RotClient-2.0.1+mc26.2.jar`, Fabric id `rotclient`, **108** catalog
-  parents) and **Rot Client+** (`RotClientPlus-2.0.1+mc26.2.jar`, id
-  `rotclientplus`, **133** parents). Plus holds automation bytecode; the
+  (`RotClient-2.0.8+mc26.3.jar`, Fabric id `rotclient`, **83** catalog
+  parents) and **Rot Client+** (`RotClientPlus-2.0.8+mc26.3.jar`, id
+  `rotclientplus`, **135** parents). Plus holds automation bytecode; the
   legit JAR does not. Playtest and versioned GitHub Releases upload both
   files plus `SHA256SUMS.txt`. Enable only one JAR. Plus settings persist
   in `rotclient-plus.json`.
 * Plus now registers builtin dark packs from the `rotclientplus` container and
   installs the Plus catalog/hooks from the Plus client entrypoint, so Fox,
   Ghosts, and other Plus cards stay visible after the Lite split.
-* Completed the Modrinth-oriented Lite boundary: wardrobe execution, Ghosts,
+* Separated the initial Modrinth-oriented Lite boundary: wardrobe execution, Ghosts,
   Escrow Fix, Slayer/Diana/mining/fishing/foraging/dungeon automation, Fox,
   their policies, runtimes, mixins, service providers, and assets now compile
   only from `plus` / `plusClient`. Lite HUD/catalog routes are removed, and

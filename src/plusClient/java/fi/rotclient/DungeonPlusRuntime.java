@@ -387,7 +387,8 @@ final class DungeonPlusRuntime {
 
     static void scanSecretWaypoints(Minecraft client, QolSkyblockExtras extras) {
         secretWaypoints.clear();
-        if (client.player == null || client.level == null || extras == null) {
+        if (client.player == null || client.level == null || extras == null
+                || !SkyBlockDungeonDetector.confidentlyInDungeon()) {
             return;
         }
         boolean mapHud = extras.dungeonHudEnabled && extras.dungeonHudMap;
@@ -430,7 +431,8 @@ final class DungeonPlusRuntime {
             long key = pack(
                     DungeonRoomDataPolicy.roomOrigin(cx),
                     DungeonRoomDataPolicy.roomOrigin(cz));
-            if (hashedRoomSecrets.containsKey(key) || hashedRoomTried.contains(key)) {
+            if (hashedRoomSecrets.containsKey(key) || hashedRoomTried.contains(key)
+                    || dungeonWorldTicks < nextRoomHashTick.getOrDefault(key, 0)) {
                 continue;
             }
             boolean playerRoom = cx == playerCx && cz == playerCz;
@@ -441,9 +443,8 @@ final class DungeonPlusRuntime {
             if (!client.level.hasChunkAt(sample)) {
                 continue;
             }
-            if (hashAndCacheRoom(client, cx, cz, key)) {
-                newHashes++;
-            }
+            newHashes++; // Unknown / incomplete cores also consume the scan budget.
+            hashAndCacheRoom(client, cx, cz, key);
         }
         placePendingSecrets(client);
         for (List<DungeonRoomDataPolicy.PlacedWaypoint> placed : hashedRoomSecrets.values()) {

@@ -1,15 +1,15 @@
 # Which JAR?
 
 This repository builds **two** Fabric mods from the same source. They share
-package `fi.rotclient`, author Rot Tools, icon, version `2.0.4+mc26.3`, and
+package `fi.rotclient`, author Rot Tools, icon, version `2.0.8+mc26.3`, and
 the `/rot` command. They must not be **enabled** at the same time (each
 `breaks` the other). You can keep both files in a Prism `mods/` folder and
 enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Lite | Rot Client | `rotclient` | `RotClient-2.0.4+mc26.3.jar` | **83** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.4+mc26.3.jar` | **135** parents (current full client) |
+| Lite | Rot Client | `rotclient` | `RotClient-2.0.8+mc26.3.jar` | **83** HUD / QoL parents |
+| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.8+mc26.3.jar` | **135** parents (current full client) |
 
 Current maintenance targets Minecraft 26.3 only, for both editions. Historical
 26.1.2/26.2 downloads remain available and receive no automatic backports.
@@ -49,7 +49,7 @@ pre-release with **both** JARs and `SHA256SUMS.txt`. Versioned GitHub
 Releases do the same.
 
 The current [26.3 mining state playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-mining-state)
-provides Lite and Plus `2.0.4+mc26.3` from `port/26.3`. The retained
+provides Lite and Plus `2.0.8+mc26.3` from `port/26.3`. The retained
 [26.1.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh)
 provides both `2.1.1+mc26.1.2` editions. Download each JAR for its actual
 Minecraft version; relabeling a 26.2 JAR does not make it compatible with 26.3.
