@@ -99,6 +99,16 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
         DungeonPlusRuntime.onChat(message);
     }
 
+    @Override public void dungeonActionBar(Component message) { DungeonRuntime.onRoomActionBar(message); }
+
+    @Override public void dungeonItemPickup(int itemEntityId, int collectorEntityId) {
+        DungeonRuntime.onSecretItemPickup(itemEntityId, collectorEntityId);
+    }
+
+    @Override public void dungeonBatDeath(double x, double y, double z) {
+        DungeonRuntime.onSecretBatDeath(x, y, z);
+    }
+
     @Override
     public void onScreenOpened(Screen screen) {
         WardrobeAutoEquipRuntime.onScreenOpened(screen);

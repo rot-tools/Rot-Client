@@ -111,6 +111,22 @@ cocoon/restart contract at `0869043ae54428e7761383a7f60f44d97cf206ac`.
 Their BSD notices remain bundled. Pet menu authority and commission navigation
 use original Rot integration over observed UI data and existing public anchors.
 
+## 2026-10-12 modern dungeon room adaptations
+
+Rot Client+ bundles NoammAddons' `rooms-modern.json` verbatim at data revision
+`3c7b32c471148899e68022cfd2afdfc843be91a1` (140 room records). The matching
+block-name core fold, four-corner / L-room rotation, typed secret coordinates,
+room action-bar count, pickup item names and Three Weirdos NPC/chest logic
+are adapted from NoammAddons source revision
+`4164abc38500e041a805e03ca0f01b46e37bd8a5`, CC0-1.0.
+
+`DungeonModernRoomPolicy`, `DungeonSecretObservationPolicy` and
+`DungeonWeirdosObservationPolicy` identify the source and Rot integration
+changes inline. The full `NoammAddons-LICENSE.txt` remains bundled. The new
+implementation and room data are Plus-only. See the
+[room and secret audit](docs/DUNGEON_ROOMS_2026-10-12.md) for source paths,
+packet differences and validation limits.
+
 ## Minecraft and Fabric distribution
 
 Minecraft is Mojang / Microsoft. Fabric Loader and Fabric API are separate

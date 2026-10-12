@@ -23,6 +23,8 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.player.Player;
@@ -64,6 +66,30 @@ abstract class ClientPacketListenerMixin {
     private void rotclient$systemChatPacket(ClientboundSystemChatPacket packet, CallbackInfo ci) {
         if (!onClientThread()) return;
         fi.rotclient.RotClientClient.onSystemMessagePacket(packet.content());
+        if (packet.overlay()) fi.rotclient.ClientBoundaryGuard.run("DUNGEON_ROOM_ACTION_BAR", () ->
+                QolClientFlavorSupport.hooks().dungeonActionBar(packet.content()));
+    }
+
+    @Inject(method = "setActionBarText", at = @At("HEAD"))
+    private void rotclient$roomActionBar(ClientboundSetActionBarTextPacket packet, CallbackInfo ci) {
+        if (!onClientThread()) return;
+        fi.rotclient.ClientBoundaryGuard.run("DUNGEON_ROOM_ACTION_BAR", () ->
+                QolClientFlavorSupport.hooks().dungeonActionBar(packet.text()));
+    }
+
+    @Inject(method = "handleTakeItemEntity", at = @At("HEAD"))
+    private void rotclient$secretItemPickup(ClientboundTakeItemEntityPacket packet, CallbackInfo ci) {
+        if (!onClientThread()) return;
+        fi.rotclient.ClientBoundaryGuard.run("DUNGEON_ITEM_PICKUP", () ->
+                QolClientFlavorSupport.hooks().dungeonItemPickup(packet.getItemId(), packet.getPlayerId()));
+    }
+
+    @Inject(method = "handleSoundEvent", at = @At("HEAD"))
+    private void rotclient$secretBatDeath(ClientboundSoundPacket packet, CallbackInfo ci) {
+        if (!onClientThread() || packet.getSound() == null
+                || !packet.getSound().is(SoundEvents.BAT_DEATH.location())) return;
+        fi.rotclient.ClientBoundaryGuard.run("DUNGEON_BAT_DEATH", () ->
+                QolClientFlavorSupport.hooks().dungeonBatDeath(packet.getX(), packet.getY(), packet.getZ()));
     }
 
     @Inject(method = "handleSystemChat", at = @At("HEAD"), cancellable = true)

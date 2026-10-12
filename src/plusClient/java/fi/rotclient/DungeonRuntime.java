@@ -139,13 +139,13 @@ public final class DungeonRuntime {
     static final Map<Long, DungeonRoomDataPolicy.Rotation> hashedRoomRotation =
             new LinkedHashMap<>();
     static final Set<Long> hashedRoomTried = new HashSet<>();
+    static final Map<Long, Integer> nextRoomHashTick = new HashMap<>();
     static final Map<String, DungeonMapPolicy.RoomIdentity> hashedTileIdentity =
             new LinkedHashMap<>();
     static final Map<String, DungeonRoomDataPolicy.RoomMeta> hashedTileRoom =
             new LinkedHashMap<>();
     static final Map<String, Integer> secretsFoundByRoom = new LinkedHashMap<>();
     static final Set<String> collectedSecrets = new HashSet<>();
-    static final Set<String> seenSecretEntities = new HashSet<>();
     static final List<ClickedSecret> clickedSecrets = new ArrayList<>();
     static final Set<Integer> seenKeyStands = new HashSet<>();
     static TempleDungeonPolicy.KeySkull droppedKey = TempleDungeonPolicy.KeySkull.NONE;
@@ -287,10 +287,7 @@ public final class DungeonRuntime {
             client.player.playSound(SoundEvents.NOTE_BLOCK_PLING.value(), 0.8F, 1.4F);
         }
         if (SkyBlockDungeonDetector.confidentlyInDungeon()) {
-            if (DungeonPolicy.secretCountIncreased(lastSecretsFound, sidebar.secretsFound())) {
-                int previous = Math.max(0, lastSecretsFound);
-                creditRoomSecrets(client, sidebar.secretsFound() - previous);
-            }
+            // Sidebar secrets are party-wide, not the secrets of the player's current room.
             lastSecretsFound = sidebar.secretsFound();
         } else {
             lastSecretsFound = -1;
@@ -792,17 +789,18 @@ public final class DungeonRuntime {
                 }
             }
         }
-        if (plusDungeonFeature(extras.dungeonPuzzlesEnabled) && extras.dungeonPuzzlesWeirdos) {
-            DungeonAssistPolicy.WeirdoKind kind = DungeonAssistPolicy.weirdoKind(raw);
-            if (kind == DungeonAssistPolicy.WeirdoKind.CORRECT) {
-                lastWeirdoNpc = DungeonAssistPolicy.weirdoNpcName(raw).orElse("truth");
+        if (plusDungeonFeature(extras.dungeonPuzzlesEnabled) && extras.dungeonPuzzlesWeirdos
+                && SkyBlockDungeonDetector.confidentlyInDungeon() && !sidebar.boss()
+                && hashedRoomIs(client, "Three Weirdos")) {
+            var speech = DungeonWeirdosObservationPolicy.speech(raw);
+            if (speech.isPresent() && speech.get().solution()) {
+                lastWeirdoNpc = speech.get().npc();
                 lastQuiz = "Weirdos: " + lastWeirdoNpc;
                 showTitle(client, extras.dungeonAnnounceEnabled && extras.dungeonAnnounceRooms,
                         "§aTruth: " + lastWeirdoNpc);
-            } else if (kind == DungeonAssistPolicy.WeirdoKind.WRONG
+            } else if (speech.isPresent() && !speech.get().solution()
                     && lastWeirdoNpc.isEmpty()) {
-                lastQuiz = "Weirdos lie: "
-                        + DungeonAssistPolicy.weirdoNpcName(raw).orElse("NPC");
+                lastQuiz = "Weirdos lie: " + speech.get().npc();
             }
         }
         if (DungeonAssistPolicy.isRoomAlert(raw)) {
@@ -913,11 +911,11 @@ public final class DungeonRuntime {
         hashedRoomSecrets.clear();
         hashedRoomRotation.clear();
         hashedRoomTried.clear();
+        nextRoomHashTick.clear();
         hashedTileIdentity.clear();
         hashedTileRoom.clear();
         secretsFoundByRoom.clear();
         collectedSecrets.clear();
-        seenSecretEntities.clear();
         mimicKilled = false;
         puzzleFailed = false;
         extraStatsSeen = false;
@@ -926,7 +924,6 @@ public final class DungeonRuntime {
         DungeonEntitySnapshot.clear();
         hateDoorMarks = List.of();
         hateDoorScanTick = -1L;
-        collectedSecretsObservedTick = -1L;
         blazeFirst = null;
         blazeSecond = null;
         blazeOrderTick = -1L;
@@ -1983,20 +1980,14 @@ public final class DungeonRuntime {
         for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
             column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
         }
-        int core = DungeonRoomDataPolicy.hashColumn(column);
-        var room = DungeonRoomDataPolicy.roomForCore(core);
-        int air = 0;
-        for (String id : column) {
-            if (id == null || id.isBlank() || id.endsWith(":air") || "minecraft:air".equals(id)) {
-                air++;
-            }
-        }
+        var room = DungeonModernRoomPolicy.identify(column);
+        if (room.isEmpty()) room = DungeonRoomDataPolicy.roomForCore(DungeonRoomDataPolicy.hashColumn(column));
         if (room.isEmpty()) {
-            if (air < 80) {
-                hashedRoomTried.add(key);
-            }
+            // Partial chunks / new room variants must not permanently poison the run cache.
+            nextRoomHashTick.put(key, dungeonWorldTicks + 40);
             return false;
         }
+        rememberHashedIdentity(cx, cz, room.get());
         if (secretsPlacedFor(room.get().name())) {
             rememberHashedIdentity(cx, cz, room.get());
             hashedRoomTried.add(key);
@@ -2017,20 +2008,14 @@ public final class DungeonRuntime {
                 }
             }
         }
-        int highest = DungeonRoomDataPolicy.highestBlock(column);
-        Optional<DungeonRoomDataPolicy.Rotation> rotation = DungeonRoomDataPolicy.resolveRotation(
-                room.get(),
-                cx,
-                cz,
-                highest,
-                tiles,
-                (x, y, z) -> fullBlockId(client, new BlockPos(x, y, z)));
+        Optional<DungeonRoomDataPolicy.Rotation> rotation = roomRotation(client, room.get(), cx, cz, column, tiles);
         if (rotation.isEmpty()) {
-            rememberHashedIdentity(cx, cz, room.get());
+            nextRoomHashTick.put(key, dungeonWorldTicks + 20);
             return false;
         }
         hashedRoomTried.add(key);
-        hashedRoomSecrets.put(key, DungeonRoomDataPolicy.placeSecrets(room.get(), rotation.get()));
+        nextRoomHashTick.remove(key);
+        hashedRoomSecrets.put(key, placeRoomSecrets(room.get(), rotation.get()));
         hashedRoomRotation.put(key, rotation.get());
         rememberHashedIdentity(cx, cz, room.get());
         return true;
@@ -2052,7 +2037,7 @@ public final class DungeonRuntime {
     }
 
     static void placePendingSecrets(Minecraft client) {
-        if (client == null || client.level == null || hashedTileRoom.isEmpty()) {
+        if (client == null || client.level == null || hashedTileRoom.isEmpty() || dungeonWorldTicks % 10 != 0) {
             return;
         }
         Map<String, List<DungeonRoomDataPolicy.MapTile>> byName = new LinkedHashMap<>();
@@ -2086,7 +2071,6 @@ public final class DungeonRuntime {
             if (room == null) {
                 continue;
             }
-            boolean placed = false;
             for (DungeonRoomDataPolicy.MapTile tile : tiles) {
                 int cx = DungeonMapPolicy.roomWorldCenter(tile.tileX());
                 int cz = DungeonMapPolicy.roomWorldCenter(tile.tileZ());
@@ -2100,23 +2084,40 @@ public final class DungeonRuntime {
                 for (int y = DungeonRoomDataPolicy.HASH_Y_TOP; y >= DungeonRoomDataPolicy.HASH_Y_BOTTOM; y--) {
                     column.add(fullBlockId(client, new BlockPos(cx, y, cz)));
                 }
-                int highest = DungeonRoomDataPolicy.highestBlock(column);
-                Optional<DungeonRoomDataPolicy.Rotation> rotation = DungeonRoomDataPolicy.resolveRotation(
-                        room,
-                        cx,
-                        cz,
-                        highest,
-                        tiles,
-                        (x, y, z) -> fullBlockId(client, new BlockPos(x, y, z)));
+                Optional<DungeonRoomDataPolicy.Rotation> rotation = roomRotation(client, room, cx, cz, column, tiles);
                 if (rotation.isEmpty()) {
                     continue;
                 }
                 hashedRoomTried.add(key);
-                hashedRoomSecrets.put(key, DungeonRoomDataPolicy.placeSecrets(room, rotation.get()));
+                hashedRoomSecrets.put(key, placeRoomSecrets(room, rotation.get()));
                 hashedRoomRotation.put(key, rotation.get());
                 break;
             }
         }
+    }
+
+    private static List<DungeonRoomDataPolicy.PlacedWaypoint> placeRoomSecrets(
+            DungeonRoomDataPolicy.RoomMeta room, DungeonRoomDataPolicy.Rotation rotation) {
+        return DungeonModernRoomPolicy.owns(room) ? DungeonModernRoomPolicy.placeSecrets(room, rotation)
+                : DungeonRoomDataPolicy.placeSecrets(room, rotation);
+    }
+
+    private static Optional<DungeonRoomDataPolicy.Rotation> roomRotation(Minecraft client,
+            DungeonRoomDataPolicy.RoomMeta room, int cx, int cz, List<String> column,
+            List<DungeonRoomDataPolicy.MapTile> tiles) {
+        DungeonRoomDataPolicy.BlockAt blocks = (x, y, z) -> client.level.hasChunkAt(new BlockPos(x, y, z))
+                ? fullBlockId(client, new BlockPos(x, y, z)) : "";
+        if (!DungeonModernRoomPolicy.owns(room)) {
+            return DungeonRoomDataPolicy.resolveRotation(room, cx, cz,
+                    DungeonRoomDataPolicy.highestBlock(column), tiles, blocks);
+        }
+        // Noamm's clay marker height is the top non-air/non-gold block, not the hash column's top.
+        var mainTile = tiles.stream().min(Comparator.comparingInt(DungeonRoomDataPolicy.MapTile::tileX)
+                .thenComparingInt(DungeonRoomDataPolicy.MapTile::tileZ));
+        if (mainTile.isEmpty()) return Optional.empty();
+        int highest = DungeonModernRoomPolicy.highestY(DungeonMapPolicy.roomWorldCenter(mainTile.get().tileX()),
+                DungeonMapPolicy.roomWorldCenter(mainTile.get().tileZ()), blocks);
+        return DungeonModernRoomPolicy.resolveRotation(room, tiles, highest, blocks);
     }
 
     static void rememberHashedIdentity(
@@ -2141,35 +2142,50 @@ public final class DungeonRuntime {
         }
     }
 
-    static void creditRoomSecrets(Minecraft client, int delta) {
-        if (delta <= 0 || client == null || client.player == null) {
-            return;
-        }
+    static void onRoomActionBar(Component message) {
+        Minecraft client = Minecraft.getInstance();
+        if (message == null || client == null || client.player == null
+                || !SkyBlockDungeonDetector.confidentlyInDungeon() || sidebar.boss()) return;
+        var count = DungeonSecretObservationPolicy.roomCount(message.getString());
+        if (count.isEmpty()) return;
         int tileX = DungeonMapPolicy.tileFromWorld((int) Math.floor(client.player.getX()));
         int tileZ = DungeonMapPolicy.tileFromWorld((int) Math.floor(client.player.getZ()));
-        DungeonMapPolicy.UniqueRoom unique = DungeonMapPolicy.roomAt(
-                DungeonMapPolicy.uniqueRooms(lastMapBoard, hashedTileIdentity), tileX, tileZ);
-        if (unique == null) {
-            return;
-        }
         DungeonMapPolicy.RoomIdentity identity = hashedTileIdentity.get(
                 DungeonMapPolicy.tileKey(tileX, tileZ));
-        if (identity == null || identity.name().isBlank()) {
-            for (DungeonMapPolicy.RoomTile tile : unique.tiles()) {
-                identity = hashedTileIdentity.get(DungeonMapPolicy.tileKey(tile.tileX(), tile.tileZ()));
-                if (identity != null && !identity.name().isBlank()) {
-                    break;
-                }
-            }
+        if (DungeonSecretObservationPolicy.belongsToRoom(count.get(), identity)) {
+            // Absolute server room count includes teammates; replaying the packet is idempotent.
+            secretsFoundByRoom.put(identity.name(), count.get().found());
         }
-        if (identity == null || identity.name().isBlank()) {
-            return;
-        }
-        int next = secretsFoundByRoom.getOrDefault(identity.name(), 0) + delta;
-        if (identity.secrets() > 0) {
-            next = Math.min(next, identity.secrets());
-        }
-        secretsFoundByRoom.put(identity.name(), next);
+    }
+
+    static void onSecretItemPickup(int itemEntityId, int collectorEntityId) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.level == null || client.player == null
+                || !SkyBlockDungeonDetector.confidentlyInDungeon() || sidebar.boss()) return;
+        Entity item = client.level.getEntity(itemEntityId);
+        Entity collector = client.level.getEntity(collectorEntityId);
+        if (!(item instanceof ItemEntity drop) || !(collector instanceof Player)
+                || !DungeonSecretObservationPolicy.isSecretItem(drop.getItem().getHoverName().getString())) return;
+        // Can be another player: the server pickup packet identifies the actual collected entity.
+        recordSecretObservation(client, DungeonRoomDataPolicy.SecretKind.ITEM, item.getX(), item.getY(), item.getZ(), 3);
+    }
+
+    static void onSecretBatDeath(double x, double y, double z) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null || !SkyBlockDungeonDetector.confidentlyInDungeon()
+                || sidebar.boss()) return;
+        recordSecretObservation(client, DungeonRoomDataPolicy.SecretKind.BAT, x, y, z, 5);
+    }
+
+    private static void recordSecretObservation(Minecraft client, DungeonRoomDataPolicy.SecretKind kind,
+            double x, double y, double z, int radius) {
+        int tileX = DungeonMapPolicy.tileFromWorld((int) Math.floor(x));
+        int tileZ = DungeonMapPolicy.tileFromWorld((int) Math.floor(z));
+        var identity = hashedTileIdentity.get(DungeonMapPolicy.tileKey(tileX, tileZ));
+        if (identity == null) return;
+        DungeonSecretObservationPolicy.nearest(secretWaypoints, collectedSecrets, identity.name(), kind, x, y, z, radius)
+                .ifPresent(waypoint -> collectedSecrets.add(
+                        DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z())));
     }
 
 
@@ -2233,7 +2249,6 @@ public final class DungeonRuntime {
             }
         }
         if (plusDungeonFeature(extras.dungeonEspEnabled) && extras.dungeonEspSecretWaypoints) {
-            observeCollectedSecrets(client, extras);
             List<DungeonRoomDataPolicy.MapTile> currentTiles = DungeonMapPolicy.currentRoomTiles(
                     (int) Math.floor(player.getX()),
                     (int) Math.floor(player.getZ()),
@@ -2824,31 +2839,24 @@ public final class DungeonRuntime {
     }
 
     static void scanWeirdoChest(Minecraft client, LocalPlayer player, BlockPos origin) {
-        AABB search = player.getBoundingBox().inflate(16.0D);
-        List<DungeonPuzzlePolicy.NamedPos> npcs = new ArrayList<>();
-        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, search)) {
-            String name = entityName(stand);
-            if (!name.isBlank()) {
-                npcs.add(new DungeonPuzzlePolicy.NamedPos(
-                        name, stand.blockPosition().getX(), stand.blockPosition().getY(),
-                        stand.blockPosition().getZ()));
+        if (!SkyBlockDungeonDetector.confidentlyInDungeon() || sidebar.boss()
+                || !hashedRoomIs(client, "Three Weirdos")) return;
+        int tileX = DungeonMapPolicy.tileFromWorld(player.blockPosition().getX());
+        int tileZ = DungeonMapPolicy.tileFromWorld(player.blockPosition().getZ());
+        var meta = hashedTileRoom.get(DungeonMapPolicy.tileKey(tileX,tileZ));
+        var rotation = hashedRoomRotation.get(pack(DungeonRoomDataPolicy.roomOrigin(player.blockPosition().getX()),
+                DungeonRoomDataPolicy.roomOrigin(player.blockPosition().getZ())));
+        if (meta == null || rotation == null) return;
+        for (ArmorStand stand : client.level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(16))) {
+            if (!DungeonPolicy.normalize(entityName(stand)).equals(lastWeirdoNpc)) continue;
+            var chest = DungeonWeirdosObservationPolicy.chest(stand.blockPosition().getX(), stand.blockPosition().getZ(), rotation);
+            BlockPos pos = new BlockPos(chest.x(),chest.y(),chest.z());
+            if (client.level.hasChunkAt(pos) && DungeonPuzzlePolicy.isChestBlock(blockId(client,pos))) {
+                puzzleMarks.add(new Mark(blockBox(chest.x(),chest.y(),chest.z()),0xFF22C55E));
             }
+            return;
         }
-        List<DungeonPuzzlePolicy.WorldCell> chests = new ArrayList<>();
-        for (int dx = -12; dx <= 12; dx++) {
-            for (int dy = -2; dy <= 3; dy++) {
-                for (int dz = -12; dz <= 12; dz++) {
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    if (DungeonPuzzlePolicy.isChestBlock(blockId(client, pos))) {
-                        chests.add(new DungeonPuzzlePolicy.WorldCell(pos.getX(), pos.getY(), pos.getZ()));
-                    }
-                }
-            }
-        }
-        DungeonPuzzlePolicy.weirdoChest(npcs, chests, lastWeirdoNpc).ifPresent(chest ->
-                puzzleMarks.add(new Mark(blockBox(chest.x(), chest.y(), chest.z()), 0xFF22C55E)));
     }
-
     static void scanDungeonMap(Minecraft client, QolSkyblockExtras extras) {
         boolean hideBoss = extras.dungeonHudMapHideBoss && sidebar.boss();
         boolean needPreview = extras.dungeonHudEnabled && extras.dungeonHudMap && !hideBoss;
@@ -3207,10 +3215,15 @@ public final class DungeonRuntime {
             }
             playSimonSound(Minecraft.getInstance());
         }
-        DungeonRoomDataPolicy.matchingSecret(
-                secretWaypoints, collectedSecrets, pos.getX(), pos.getY(), pos.getZ(), 0)
-                .ifPresent(waypoint -> collectedSecrets.add(
-                        DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z())));
+        if (SkyBlockDungeonDetector.confidentlyInDungeon() && !sidebar.boss()) {
+            Minecraft client = Minecraft.getInstance();
+            String block = client.level == null ? "" : fullBlockId(client, pos);
+            DungeonRoomDataPolicy.matchingSecret(secretWaypoints, collectedSecrets,
+                    pos.getX(), pos.getY(), pos.getZ(), 0)
+                    .filter(waypoint -> DungeonSecretObservationPolicy.interactionBlock(waypoint.kind(), block))
+                    .ifPresent(waypoint -> recordSecretObservation(client, waypoint.kind(),
+                            pos.getX(), pos.getY(), pos.getZ(), 0));
+        }
         noteClickedSecret(pos);
     }
 
@@ -4371,70 +4384,12 @@ public final class DungeonRuntime {
         blazeSecond = blazes.size() > 1 ? blazes.get(1).entity() : null;
     }
 
-    private static final int COLLECTED_SECRET_TICKS = 4;
-    private static long collectedSecretsObservedTick = -1L;
-
-    static void observeCollectedSecrets(Minecraft client, QolSkyblockExtras extras) {
-        if (!extras.dungeonEspHideCollected || client == null || client.level == null) {
-            return;
-        }
-        // Called from the render pass; a secret does not change faster than a few ticks.
-        if (!DungeonPolicy.scanDue(dungeonWorldTicks, collectedSecretsObservedTick, COLLECTED_SECRET_TICKS)) {
-            return;
-        }
-        collectedSecretsObservedTick = dungeonWorldTicks;
-        for (DungeonRoomDataPolicy.PlacedWaypoint waypoint : secretWaypoints) {
-            String key = DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z());
-            if (collectedSecrets.contains(key)) {
-                continue;
-            }
-            BlockPos pos = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
-            if (!client.level.hasChunkAt(pos)) {
-                continue;
-            }
-            if (!DungeonRoomDataPolicy.secretBlockStillPresent(waypoint.kind(), fullBlockId(client, pos))) {
-                collectedSecrets.add(key);
-                continue;
-            }
-            if (waypoint.kind() != DungeonRoomDataPolicy.SecretKind.ITEM
-                    && waypoint.kind() != DungeonRoomDataPolicy.SecretKind.BAT) {
-                continue;
-            }
-            AABB box = new AABB(pos).inflate(
-                    waypoint.kind() == DungeonRoomDataPolicy.SecretKind.BAT ? 5.0D : 2.5D);
-            boolean present = waypoint.kind() == DungeonRoomDataPolicy.SecretKind.BAT
-                    ? client.level.getEntitiesOfClass(LivingEntity.class, box).stream()
-                    .anyMatch(entity -> entity.getType() == EntityTypes.BAT)
-                    : !client.level.getEntitiesOfClass(ItemEntity.class, box).isEmpty();
-            if (present) {
-                seenSecretEntities.add(key);
-            } else if (seenSecretEntities.contains(key)) {
-                collectedSecrets.add(key);
-            }
-        }
-    }
-
     static boolean shouldHideCollectedSecret(
-            Minecraft client,
-            QolSkyblockExtras extras,
-            DungeonRoomDataPolicy.PlacedWaypoint waypoint) {
-        if (!extras.dungeonEspHideCollected || waypoint == null) {
-            return false;
-        }
-        String key = DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z());
-        if (collectedSecrets.contains(key)) {
-            return true;
-        }
-        if (client == null || client.level == null) {
-            return false;
-        }
-        BlockPos pos = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
-        if (!client.level.hasChunkAt(pos)) {
-            return false;
-        }
-        return !DungeonRoomDataPolicy.secretBlockStillPresent(waypoint.kind(), fullBlockId(client, pos));
+            Minecraft client, QolSkyblockExtras extras, DungeonRoomDataPolicy.PlacedWaypoint waypoint) {
+        // Missing entities / blocks can mean an unloaded chunk or an unseen secret, not collection.
+        return extras.dungeonEspHideCollected && waypoint != null && collectedSecrets.contains(
+                DungeonRoomDataPolicy.secretKey(waypoint.x(), waypoint.y(), waypoint.z()));
     }
-
     static String currentHashedRoomName(Minecraft client) {
         if (client == null || client.player == null) {
             return "";
