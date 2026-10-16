@@ -1,7 +1,11 @@
 Rot Client
 Copyright (c) 2026 Rot Tools
 
-This product is licensed under the MIT License. See LICENSE.
+Rot Client Lite and the original Rot Client source are licensed under the MIT License.
+Rot Client+ 2.0.11 and later combines that source with GPL-3.0-only AUTISM
+Client adaptations, and the combined Plus edition is distributed under GPL-3.0.
+See LICENSE_RotClientPlus and META-INF/licenses/autism-client in the Plus JAR.
+The Lite JAR contains no AUTISM Client implementation or GPL component.
 
 This distribution also includes independent works under their own terms.
 See THIRD_PARTY.md for the inventory and where each license text lives.

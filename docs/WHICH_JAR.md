@@ -1,21 +1,25 @@
 # Which JAR?
 
 This repository builds **two** Fabric mods from the same source. They share
-package `fi.rotclient`, author Rot Tools, icon, version `2.0.10+mc26.3`, and
+package `fi.rotclient`, author Rot Tools, icon, version `2.0.11+mc26.3`, and
 the `/rot` command. They must not be **enabled** at the same time (each
 `breaks` the other). You can keep both files in a Prism `mods/` folder and
 enable the one you want.
 
 | Edition | Display name | Fabric id | File | Catalog |
 | --- | --- | --- | --- | --- |
-| Lite | Rot Client | `rotclient` | `RotClient-2.0.10+mc26.3.jar` | **84** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.10+mc26.3.jar` | **136** parents (current full client) |
+| Lite | Rot Client | `rotclient` | `RotClient-2.0.11+mc26.3.jar` | **84** HUD / QoL parents |
+| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.11+mc26.3.jar` | **144** parents (current full client) |
 
 Current maintenance targets Minecraft 26.3 only, for both editions. Historical
 26.1.2/26.2 downloads remain available and receive no automatic backports.
 
 Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
 `SHA256SUMS.txt` when you download from GitHub.
+
+Original source/Lite remains **MIT**. The combined Plus distribution from
+2.0.11 is **GPL-3.0-only**; source/build scripts and notices are in the release
+Git tag. See [the port and license notes](AUTISM_PORT_2026-10-16.md).
 
 ## Rot Client (legit)
 
@@ -33,7 +37,7 @@ do not replace a Lite Minecraft runtime playtest.
 
 ## Rot Client+ (automation)
 
-This is the full 136-module client. Clickers, wardrobe automation, Ghosts,
+This is the full 144-module client. Clickers, wardrobe automation, Ghosts,
 Escrow Fix, Free Camera, Inventory Walk, auto terminals, Farm Keys, and the
 other cheat-tagged options stay **opt-in and off by default**. Do not use
 those features on Hypixel.
@@ -48,8 +52,8 @@ Each green push to `development` replaces the
 pre-release with **both** JARs and `SHA256SUMS.txt`. Versioned GitHub
 Releases do the same.
 
-The current [26.3 dashboard/purchase playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-dashboard-purchases)
-provides Lite and Plus `2.0.10+mc26.3` from `port/26.3`. The retained
+The current [26.3 AUTISM utility playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-utilities)
+provides Lite and Plus `2.0.11+mc26.3` from `port/26.3`. The retained
 [26.1.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh)
 provides both `2.1.1+mc26.1.2` editions. Download each JAR for its actual
 Minecraft version; relabeling a 26.2 JAR does not make it compatible with 26.3.

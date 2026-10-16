@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package fi.rotclient;
 
 import java.util.ArrayList;
@@ -823,6 +824,7 @@ public final class QolPlusCatalog {
                 dungeonClassSetting("qol.dungeon_terminals.s4_right_lever", "S4 Right Lever"),
                 dungeonClassSetting("qol.dungeon_terminals.s4_left_lever", "S4 Left Lever")));
 
+        modules.addAll(AutismModuleSettings.catalog());
         return List.copyOf(modules);
     }
 

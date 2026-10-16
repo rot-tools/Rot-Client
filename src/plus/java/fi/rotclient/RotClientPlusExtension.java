@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package fi.rotclient;
 
 import com.google.gson.JsonObject;
@@ -48,6 +49,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean isGameplayCheatModule(String moduleId) {
+        if (AutismModuleSettings.owns(moduleId)) return true;
         return "qol.secret_hitboxes".equals(moduleId)
                 || "qol.cheater_wardrobe".equals(moduleId)
                 || "qol.inventory_walk".equals(moduleId)
@@ -132,6 +134,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readModuleEnabled(QolUtilityConfig config, String moduleId) {
+        Boolean imported = AutismModuleSettings.module(config, moduleId);
+        if (imported != null) return imported;
         if ("qol.cheater_wardrobe".equals(moduleId)) {
             return CheaterWardrobeSettings.from(config).enabled();
         }
@@ -171,6 +175,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeModuleEnabled(
             QolUtilityConfig config, String moduleId, boolean enabled) {
+        if (AutismModuleSettings.module(config, moduleId, enabled)) return true;
         if ("qol.cheater_wardrobe".equals(moduleId)) {
             CheaterWardrobeSettings.enabled(config, enabled);
             return true;
@@ -221,6 +226,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Boolean readBoolean(QolUtilityConfig config, String settingId) {
+        Object imported = AutismModuleSettings.read(config, settingId);
+        if (imported instanceof Boolean value) return value;
         if (settingId != null && settingId.startsWith("qol.fishing_hotspots."))
             return FishingHotspotRadarSettings.readBoolean(config, settingId);
         if ("qol.fishing_creatures.auto_attack".equals(settingId))
@@ -282,6 +289,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeBoolean(
             QolUtilityConfig config, String settingId, boolean value) {
+        if (AutismModuleSettings.write(config, settingId, value)) return true;
         if (settingId != null && settingId.startsWith("qol.fishing_hotspots."))
             return FishingHotspotRadarSettings.writeBoolean(config, settingId, value);
         if ("qol.fishing_creatures.auto_attack".equals(settingId))
@@ -341,6 +349,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public Double readNumber(QolUtilityConfig config, String settingId) {
+        Object imported = AutismModuleSettings.read(config, settingId);
+        if (imported instanceof Double value) return value;
         if ("qol.fishing_creatures.auto_delay".equals(settingId))
             return FishingAutoAttackSettings.readNumber(config, settingId);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
@@ -379,6 +389,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeNumber(
             QolUtilityConfig config, String settingId, double value) {
+        if (AutismModuleSettings.write(config, settingId, value)) return true;
         if ("qol.fishing_creatures.auto_delay".equals(settingId))
             return FishingAutoAttackSettings.writeNumber(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
@@ -418,6 +429,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String readKeybind(QolUtilityConfig config, String settingId) {
+        Object imported = AutismModuleSettings.read(config, settingId);
+        if (imported instanceof String value && settingId.endsWith(".keybind")) return value;
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.readKeybind(config, settingId);
         if (settingId == null) {
@@ -437,30 +450,38 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public String readText(QolUtilityConfig config, String settingId) {
+        Object imported = AutismModuleSettings.read(config, settingId);
+        if (imported instanceof String value) return value;
         String superboom = SuperboomSettings.readText(config, settingId);
         return superboom != null ? superboom : TermSimSettings.readText(config, settingId);
     }
 
     @Override
     public boolean writeText(QolUtilityConfig config, String settingId, String value) {
+        if (AutismModuleSettings.write(config, settingId, value)) return true;
         return SuperboomSettings.writeText(config, settingId, value)
                 || TermSimSettings.writeText(config, settingId, value);
     }
 
     @Override
     public String readEnum(QolUtilityConfig config, String settingId) {
+        Object imported = AutismModuleSettings.read(config, settingId);
+        if (imported instanceof String value) return value;
         String superboom = SuperboomSettings.readEnum(config, settingId);
         return superboom != null ? superboom : WorldScannerSettings.readEnum(config, settingId);
     }
 
     @Override
     public boolean writeEnum(QolUtilityConfig config, String settingId, String value) {
+        if (AutismModuleSettings.write(config, settingId, value)) return true;
         return SuperboomSettings.writeEnum(config, settingId, value)
                 || WorldScannerSettings.writeEnum(config, settingId, value);
     }
 
     @Override
     public Integer readColor(QolUtilityConfig config, String settingId) {
+        if ((AutismModuleSettings.PLACE + ".color").equals(settingId))
+            return PlusOpaqueSettings.integer(config, "autismAirPlaceColor", 0xFFFF3B3B);
         if (settingId != null && settingId.startsWith("qol.dungeon_term_click.")) {
             return DungeonTerminalClickSettings.readColor(config, settingId);
         }
@@ -482,6 +503,10 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean writeColor(QolUtilityConfig config, String settingId, int value) {
+        if ((AutismModuleSettings.PLACE + ".color").equals(settingId)) {
+            PlusOpaqueSettings.write(config, "autismAirPlaceColor", value);
+            return true;
+        }
         if (settingId != null && settingId.startsWith("qol.dungeon_term_click.")) {
             return DungeonTerminalClickSettings.writeColor(config, settingId, value);
         }
@@ -506,6 +531,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
     @Override
     public boolean writeKeybind(
             QolUtilityConfig config, String settingId, String value) {
+        if (settingId != null && settingId.endsWith(".keybind")
+                && AutismModuleSettings.write(config, settingId, value == null ? "" : value.trim())) return true;
         if (settingId != null && settingId.startsWith("qol.dungeon_termsim."))
             return TermSimSettings.writeKeybind(config, settingId, value);
         if (settingId != null && settingId.startsWith("qol.auto_clicker."))
@@ -524,6 +551,7 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public boolean resetModule(QolUtilityConfig config, String moduleId) {
+        if (AutismModuleSettings.reset(config, moduleId)) return true;
         if ("qol.dungeon_f7".equals(moduleId)) {
             SuperboomSettings.reset(config);
             return false;
@@ -634,6 +662,8 @@ public final class RotClientPlusExtension implements QolFlavorExtension {
 
     @Override
     public QolNumberSettings.Spec numberSpec(String settingId) {
+        QolNumberSettings.Spec imported = AutismModuleSettings.spec(settingId);
+        if (imported != null) return imported;
         if ("qol.pickobulus.preview_radius".equals(settingId)) return new QolNumberSettings.Spec(1, 5, 1, true);
         if ("qol.pickobulus.preview_range".equals(settingId)) return new QolNumberSettings.Spec(4, 64, 1, true);
         if (settingId == null || settingId.isBlank()) {
