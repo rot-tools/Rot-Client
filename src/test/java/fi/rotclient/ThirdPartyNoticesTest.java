@@ -16,7 +16,8 @@ final class ThirdPartyNoticesTest {
         assertTrue(notice.contains("MIT License"));
         assertTrue(notice.contains("THIRD_PARTY.md"));
         assertTrue(inventory.contains("SIL Open Font License 1.1"));
-        assertTrue(inventory.contains("does **not** vendor other SkyBlock client source trees"));
+        assertTrue(inventory.contains("AUTISM Client 5.0 adaptations (Plus only, GPL-3.0-only)"));
+        assertTrue(inventory.contains("LICENSE_RotClientOriginal-MIT"));
         assertTrue(inventory.contains("legacy-item-models.json"));
         assertTrue(inventory.contains("their implementation was not copied"));
         assertTrue(inventory.contains("META-INF/licenses/"));

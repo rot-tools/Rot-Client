@@ -14,7 +14,7 @@
 		"sources": "https://github.com/rot-tools/Rot-Client",
 		"issues": "https://github.com/rot-tools/Rot-Client/issues"
 	},
-	"license": "MIT",
+	"license": "GPL-3.0-only",
 	"icon": "assets/rotclient/icon.png",
 	"environment": "client",
 	"entrypoints": {

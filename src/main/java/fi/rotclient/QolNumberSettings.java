@@ -30,6 +30,17 @@ public final class QolNumberSettings {
             return value;
         }
 
+        /** Keep fractional slider steps visible, e.g. 0.30 rather than 0. */
+        public int displayDecimals() {
+            double scaled = step;
+            int decimals = 0;
+            while (decimals < 4 && Math.abs(scaled - Math.rint(scaled)) > 1.0E-7) {
+                scaled *= 10;
+                decimals++;
+            }
+            return decimals;
+        }
+
         public double fraction(double value) {
             if (max <= min) {
                 return 0.0D;

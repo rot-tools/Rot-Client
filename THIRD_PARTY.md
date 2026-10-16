@@ -1,13 +1,34 @@
 # Third-party notices
 
-Rot Client first-party code, catalog copy, and Rot-authored assets are MIT.
-See [LICENSE](LICENSE). This file lists **bundled or generated** works that are
-not Rot Tools original copyright, plus how SkyBlock facts are sourced.
+Original Rot Client source and Lite remain MIT under [LICENSE](LICENSE).
+The combined Rot Client+ distribution from 2.0.11 is GPL-3.0-only because it
+includes adapted AUTISM Client implementation. Existing independent bundled
+works retain their own licenses. This inventory identifies the copied/adapted
+works and the projects used only for behavior research.
 
-Rot Client does **not** vendor other SkyBlock client source trees into this
-repository or the playable JAR. Quality-of-life modules are Rot-owned
-implementations (`fi.rotclient`). Feature overlap with community clients is
-behavior-level only.
+## AUTISM Client 5.0 adaptations (Plus only, GPL-3.0-only)
+
+Melonik and contributors authored the owner-provided AUTISM Client 5.0 source.
+SafeWalk, Parkour, Sneak, NoInteract, AutoTool (hotbar), AutoSign, FreeLook and
+AirPlace are adapted into `src/plus` and `src/plusClient`, under `Autism*`
+classes and the Plus catalog/provider/hooks. Those implementations and their
+GPL notices are absent from the Lite JAR. Adapted files carry SPDX and origin
+comments. Rot Tools changed the 26.3 APIs, settings, lifecycle/ownership guards
+and bounded work. A module name does not imply complete upstream parity.
+
+`licenses/plus/AUTISM-COPYING.txt` preserves the full GPLv3 text.
+`AUTISM-CREDITS.md` preserves upstream credits, including OpSec, Meteor, Wurst
+and ExploitPreventer; this does not assert that every credited work is used by
+the selected eight modules. `SOURCE.json` records source-file hashes and the
+reference JAR hash. The provided snapshot has no Git metadata, so no upstream
+commit is invented. See [the full feature inventory](docs/reports/AUTISM_CLIENT_INVENTORY.md).
+
+The Plus JAR includes `LICENSE_RotClientPlus` (GPLv3),
+`LICENSE_RotClientOriginal-MIT` and `META-INF/licenses/autism-client/`.
+Corresponding modified source, resources, Gradle build scripts and notices are
+available at each release's Git tag and GitHub source archives. Build both
+editions using `./gradlew clean build` with Java 25. Original MIT parts remain
+available under MIT; that does not make the combined Plus binary MIT.
 
 ## Bundled Map Art (project-owner supplied)
 

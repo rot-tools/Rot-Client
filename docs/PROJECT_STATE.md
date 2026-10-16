@@ -4,10 +4,23 @@ This document is the maintainer-facing snapshot of the current engineering state
 
 ## Current status
 
-### 2026-10-12 active maintenance checkpoint
+### 2026-10-16 AUTISM utility port checkpoint
+
+`2.0.11+mc26.3` adds SafeWalk, Parkour, Sneak, NoInteract, AutoTool (Hotbar),
+AutoSign, FreeLook and AirPlace to Plus only. The combined Plus distribution
+is GPL-3.0-only; original/Lite source stays MIT. Full notices/source hashes and
+packaged edition tests enforce that boundary. Shared text fields no longer
+inherit Name Hider's 24-character cap, and fractional slider readouts are visible.
+All new parents default off. AutoTool inventory swaps remain deferred; all eight
+need Minecraft runtime validation. The other 68 source modules and the separate
+40-command/98-action macro systems are not claimed as ported. See
+[the implementation/checklist](AUTISM_PORT_2026-10-16.md) and
+[the 76-module inventory](reports/AUTISM_CLIENT_INVENTORY.md).
+
+### Current 26.3 maintenance baseline
 
 Only **Minecraft 26.3 Lite and Plus** receive further maintenance unless the owner requests a backport.
-Current candidate: `2.0.10+mc26.3`, targeting `port/26.3`.
+Current candidate: `2.0.11+mc26.3`, targeting `port/26.3`.
 [Dashboard/settings and purchase checkpoint](DASHBOARD_PURCHASES_2026-10-12.md) fixes shared search focus, scissor/overlay geometry, long drawer scrolling, Viewmodel equip/swing hooks and tooltip quote identities. Plus automation is buy-only with explicit targets, receipt/ownership confirmation, bounded scans and manual sale. Gameplay and measured FPS remain pending.
 [Dungeon scan/puzzle repairs](DUNGEON_SCANS_2026-10-12.md) add server-observed Simon phase/input edges, verified-room TP Maze packet/yaw hints, content-cached map terrain with live markers, and bounded room/door/diorite scanning in Plus. FPS gains and gameplay are unmeasured.
 [Modern room/secret fixes](DUNGEON_ROOMS_2026-10-12.md) adapt Noamm's modern
@@ -22,7 +35,7 @@ independent nominal timers, correct tick-unit durations and phase triggers, reje
 messages, and reset on context loss. Displayed times remain estimates; current conditional boss
 speed-ups and wider dungeon gameplay still require validation. No gameplay action is added.
 
-Java 25 `build`, 2,533 shared + 364 Plus tests (no failures/errors/skips), `verifyLegitJar`,
+Java 25 `build`, 2,536 shared + 382 Plus tests (no failures/errors/skips), `verifyLegitJar`,
 `verifyDungeonJarBoundary` and diff checks pass. Existing
 [dashboard/map changes](DASHBOARD_DUNGEON_2026-10-08.md), canonical quantities and History
 schemas are retained. Public Lite publication remains gated by the existing release audit.
@@ -47,18 +60,18 @@ the current maintenance target or a claim of complete upstream parity.
 | Development branch | `development` |
 | Repository | [rot-tools/Rot-Client](https://github.com/rot-tools/Rot-Client) (public development) |
 | Runtime feature checkpoint | Canonical Current Session mining accounting + Resume/Bazaar crash correction (runtime-validated) |
-| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (84 HUD/QoL parents) and **Rot Client+** (136 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
+| Current QoL / session checkpoint | Dual editions from one repo: **Rot Client** (84 HUD/QoL parents) and **Rot Client+** (144 parents). The entire Dungeons catalog group is temporarily Plus-only. Plus packages the full dungeon runtime, puzzle solver, puzzle-board data, and Dungeons example profile; Lite has inert compatibility classes for shared callers. Trajectories, World Scanner, Mob Highlight, Auto Sprint, Experiment Solver, Diana, Terminal Click Trails, Terminal Simulator, and Fishing Hotspot radar/tracer are also Plus-only in the catalog. Etherwarp depth-off is Plus-only; Lite respects occlusion. Commission tab parser accepts `COMPLETED`, bare `N%`, and `Commission Progress` headers. Minecraft runtime validation remains pending. |
 | Minecraft | 26.3 on this port branch |
-| Mod | 2.0.10+mc26.3 |
+| Mod | 2.0.11+mc26.3 |
 | Other Minecraft targets | `release/26.1.2` retains Lite and Plus `2.1.1+mc26.1.2` candidates. The historical 26.2 Lite and Plus candidate is `2.0.2+mc26.2`. See `README.md` for the version matrix. |
 | Display name | Rot Client / Rot Client+ (by-line, accent red). Author/owner: Rot Tools |
 | Package | `fi.rotclient` |
-| Playable JARs | `RotClient-2.0.10+mc26.3.jar` (`rotclient`) and `RotClientPlus-2.0.10+mc26.3.jar` (`rotclientplus`) |
+| Playable JARs | `RotClient-2.0.11+mc26.3.jar` (`rotclient`) and `RotClientPlus-2.0.11+mc26.3.jar` (`rotclientplus`) |
 | Java | 25 |
 | Gradle wrapper | 9.6.0 |
 | Gradle toolchain | Java 25 (`toolchain { languageVersion = 25 }`) |
-| Automated baseline | Current 26.3 candidate: 2,533 shared + 364 Plus tests, no failures/errors/skips; client compilation, `build`, `check`, `verifyLegitJar` and `verifyDungeonJarBoundary` pass. Earlier startup/UI checks and owner-confirmed mouse fixes describe prior builds. New mining and market/trading paths require runtime validation. |
-| Current phase | Lite/Plus packaging separation is in progress; **Lite is not Modrinth-ready**. Dual catalog: Lite **84** parents / Plus **136**. The entire Dungeons catalog group, full `DungeonRuntime`, full `DungeonPuzzlePolicy`, puzzle-board data, Dungeons example profile, and four mixed F7/assist/leftover policy class families are Plus-only. Lite carries inert compatibility classes and no dungeon cards. Other dungeon policy classes still need code/bytecode review; the wider Lite catalog needs a multiplayer-rule review, separate Minecraft smoke tests, and code/asset/AI provenance sign-off. See `docs/MODRINTH_LITE_RELEASE.md`. |
+| Automated baseline | Current 26.3 candidate: 2,536 shared + 382 Plus tests, no failures/errors/skips; client compilation, `build`, `check`, `verifyLegitJar` and `verifyDungeonJarBoundary` pass. Earlier startup/UI checks and owner-confirmed mouse fixes describe prior builds. New mining and market/trading paths require runtime validation. |
+| Current phase | Lite/Plus packaging separation is in progress; **Lite is not Modrinth-ready**. Dual catalog: Lite **84** parents / Plus **144**. The entire Dungeons catalog group, full `DungeonRuntime`, full `DungeonPuzzlePolicy`, puzzle-board data, Dungeons example profile, and four mixed F7/assist/leftover policy class families are Plus-only. Lite carries inert compatibility classes and no dungeon cards. Other dungeon policy classes still need code/bytecode review; the wider Lite catalog needs a multiplayer-rule review, separate Minecraft smoke tests, and code/asset/AI provenance sign-off. See `docs/MODRINTH_LITE_RELEASE.md`. |
 | Latest edition split | Auto Clicker, Cheater Wardrobe, and Auto Superboom typed configuration are Plus-owned. Superboom enable/swap-back, delay ranges, custom slot and extra-block list resolve through Plus while legacy profile values survive as opaque `extensionFields`. Lite's verifier rejects the moved identifiers. The complete dungeon runtime and puzzle algorithms are Plus-owned for now; Lite's normal dungeon HUD/map functions are temporarily unavailable. Minecraft runtime retest pending. |
 | Latest runtime split | Auto Superboom settings, click-trigger state, cooldown and timed hotbar swap-back compile only in Plus. The full dungeon client runtime and puzzle algorithms also compile into Plus; Lite's matching classes contain compatibility defaults only. `DungeonF7Policy`, `DungeonGoldorPolicy`, `DungeonAssistPolicy`, and `DungeonLeftoverPolicy` are compiled from shared source but packaged only in Plus; Lite keeps saved-setting clamps and labels in `DungeonSettingsCompat`. Other dungeon policy classes remain for an explicit bytecode and old-profile audit. |
 | Network identity | Both editions use Fabric's normal client brand and registration behavior. The former shared hooks that rewrote the brand to `vanilla` and filtered Rot Client channels were removed for transparent server identification. |

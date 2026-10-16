@@ -7,6 +7,22 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### 26.3 AUTISM utility port — 2.0.11
+
+* Plus adds opt-in SafeWalk, Parkour, Sneak, NoInteract, AutoTool (hotbar only),
+  AutoSign, FreeLook and AirPlace, with saved settings and module binds.
+* Manual tool changes cancel pending switch/restore ownership; market sign
+  input and Free Camera take precedence. AirPlace attempts one standard
+  placement per four ticks and keeps NoInteract/dungeon input guards.
+* Original/Lite remains MIT. The combined Plus distribution is GPL-3.0-only,
+  with full GPL, original MIT, upstream credits and source hashes bundled.
+* Shared dashboard accepts long registry/macro text and shows fractional
+  slider steps. Name Hider keeps its short-name limit.
+* 2,536 shared + 382 Plus tests, clean build and both edition verifiers pass.
+  Eight module surfaces are adapted, AutoTool remains partial, and the other
+  68 source modules/command/macro systems are not claimed as ported.
+  Minecraft gameplay/FPS checks remain pending. See docs/AUTISM_PORT_2026-10-16.md.
+
 ### 26.3 dashboard/settings and buy-only market — 2.0.10
 
 * Both editions fix header search focus and Plus catalog refresh, leaked scissor

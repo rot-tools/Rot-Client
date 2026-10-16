@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package fi.rotclient;
 
 import net.minecraft.client.Minecraft;
@@ -62,6 +63,10 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void tickEnd(Minecraft client) {
+        ClientBoundaryGuard.run("AUTISM_MOVEMENT", () -> AutismMovementRuntime.tick(client));
+        ClientBoundaryGuard.run("AUTISM_AUTO_TOOL", () -> AutismToolRuntime.tick(client));
+        ClientBoundaryGuard.run("AUTISM_FREE_LOOK", () -> AutismFreeLookRuntime.tick(client));
+        ClientBoundaryGuard.run("AUTISM_AIR_PLACE", () -> AutismAirPlaceRuntime.tick(client));
         ClientBoundaryGuard.run("MARKET_TRADING", () -> MarketTradeRuntime.tick(client));
         ClientBoundaryGuard.run("WARDROBE_AUTO_EQUIP", () -> WardrobeAutoEquipRuntime.tick(client));
         ClientBoundaryGuard.run("LOADOUT_PET_AUTO_EQUIP", () -> RotClientPetAutoEquipRuntime.tick(client));
@@ -128,6 +133,10 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void onWorldChanged() {
+        AutismMovementRuntime.clear();
+        AutismToolRuntime.clear();
+        AutismFreeLookRuntime.clear(Minecraft.getInstance());
+        AutismAirPlaceRuntime.clear();
         if (MarketTradeRuntime.enabled()) MarketTradeRuntime.stop("World changed; trading stopped");
         PuzzlerRuntime.clear();
         PickobulusPreviewRuntime.clear();
@@ -157,6 +166,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void renderWorldGizmos() {
+        AutismAirPlaceRuntime.renderGizmos();
         GhostsRuntime.renderGizmos();
         MobHighlightRuntime.renderGizmos();
         PuzzlerRuntime.renderGizmos();
@@ -865,7 +875,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
 
     @Override
     public void enforceCameraPerspective() {
-        if (!RotClientClient.trackerConfig().cameraEnabled) {
+        if (!RotClientClient.trackerConfig().cameraEnabled || AutismFreeLookRuntime.active()) {
             return;
         }
         Minecraft client = Minecraft.getInstance();

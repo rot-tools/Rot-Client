@@ -18,7 +18,7 @@ final class QolPlusCatalogTest {
             QolFlavorSupport.install(new RotClientPlusExtension());
             assertTrue(RotClientProfilePresets.indexedIds().contains("dungeons"));
             assertNotNull(RotClientProfilePresets.findById("dungeons"));
-            assertEquals(136, QolUtilityCatalog.modules().size());
+            assertEquals(144, QolUtilityCatalog.modules().size());
         } finally {
             QolFlavorSupport.install(previous);
         }
@@ -27,7 +27,7 @@ final class QolPlusCatalogTest {
     @Test
     void plusCatalogIncludesMapArtOverride() {
         assertTrue(QolFlavorSupport.isPlus());
-        assertEquals(136, QolUtilityCatalog.modules().size());
+        assertEquals(144, QolUtilityCatalog.modules().size());
         assertNotNull(QolUtilityCatalog.findById("qol.eye_height_fix"));
         assertNotNull(QolUtilityCatalog.findById("qol.instant_sneak"));
         assertNotNull(QolUtilityCatalog.findById("qol.item_count_fix"));

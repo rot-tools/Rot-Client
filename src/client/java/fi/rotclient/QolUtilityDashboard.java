@@ -3721,7 +3721,9 @@ final class QolUtilityDashboard {
                         || HudDrawerPolicy.STYLE_SCALE.equals(setting.id())) {
                     yield String.format(Locale.ROOT, "%.2f", value);
                 }
-                yield String.format(Locale.ROOT, "%.0f", value);
+                QolNumberSettings.Spec spec = QolNumberSettings.spec(setting.id());
+                int decimals = spec == null ? 0 : spec.displayDecimals();
+                yield String.format(Locale.ROOT, "%." + decimals + "f", value);
             }
             case KEYBIND -> {
                 if (setting.id().equals(listeningKeybindSettingId)) {
@@ -3851,7 +3853,7 @@ final class QolUtilityDashboard {
             return true;
         }
         String current = qol().readText(listeningTextSettingId);
-        if (current.length() >= NameHiderPolicy.MAX_CUSTOM_LENGTH) {
+        if (!QolTextInputPolicy.accepts(listeningTextSettingId, current, codePoint)) {
             return true;
         }
         qol().writeText(listeningTextSettingId, current + Character.toString(codePoint));

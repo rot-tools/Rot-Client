@@ -3,6 +3,14 @@
 This document is the current public catalog for the QoL dashboard. It separates
 implementation state from runtime evidence.
 
+## AUTISM utility checkpoint (Plus only)
+
+Plus has 144 parents; Lite stays at 84. SafeWalk, Parkour, Sneak, NoInteract,
+AutoTool (Hotbar), AutoSign, FreeLook and AirPlace are new GPL adaptations.
+All default off and require gameplay tests. AutoTool inventory mode remains
+deferred. Search `autism` to find them. See [settings, license and manual
+checks](AUTISM_PORT_2026-10-16.md).
+
 ## Evidence model
 
 - **Wired** means the module is registered in `QolUtilityCatalog`, persists its

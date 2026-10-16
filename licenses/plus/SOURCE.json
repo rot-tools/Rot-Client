@@ -1,0 +1,34 @@
+{
+  "project": "AUTISM Client",
+  "version": "5.0",
+  "author": "Melonik and contributors",
+  "license": "GPL-3.0-only",
+  "snapshotDate": "2026-10-15",
+  "installedJarSha256": "209b1cef214dc2a7d888266544764a317a9bb7e7c6624a2b72d2e3465de0b8f0",
+  "files": {
+    "src/main/java/autismclient/modules/SafeWalkModule.java": "4a8eba0ee7fe36803b58bee67f9673fcdf6cb40220506f772e5a570ce2c10431",
+    "src/main/java/autismclient/modules/BuiltinModules.java": "c292c97e53a734e62cb83e2fc06205c8d0dba6fea297a17d6f44c150d29142b8",
+    "src/main/java/autismclient/util/RegistryListCodec.java": "a41cf0f8b88e7ec81f023b301373d92569cf8714b0009a78b7144e26a6e83d0a",
+    "src/main/java/autismclient/util/AutismAutoTool.java": "0e9d07c3f74c91ddd98d568c7fba76bfbb9f74554aa1254d45beae72876e4835",
+    "src/main/java/autismclient/modules/AutoSignModule.java": "19b7a7506d327c8b3664def1f911276dabb8f48cdc51fbed5d893c906a9ccc32",
+    "src/main/java/autismclient/modules/FreeLookModule.java": "b39d8973ed12b40741be25b25e0fa94501ab7a0a25d45586f442282498d5aebf",
+    "src/main/java/autismclient/modules/AirPlaceModule.java": "f2a7d8fc02e8aec56f936b341f976a51825f5ac267daa8669392c034b9a779bd",
+    "src/main/java/autismclient/mixin/AutismSignEditScreenMixin.java": "d1234b8f63c8fc5d4eb6f52eaea062bc25fe5c90b842db30865ebe43d69f7988",
+    "src/main/java/autismclient/mixin/AutismCameraMixin.java": "ef57efc4fc5f657232bb5bc1fa7a7be6697f616f35350038db440823c6f61620",
+    "src/main/java/autismclient/mixin/AutismMouseHandlerMixin.java": "7c36d71f973d19064fc1badea657cbfab34d802d9abff6aaa1d77d82f66f0f08",
+    "src/main/java/autismclient/mixin/accessor/AutismMinecraftAccessor.java": "2f0a02e8d6ea96d5402e00d443d132a2277e1b27f7f92f4df93eeba577b6df94"
+  },
+  "adaptationDate": "2026-10-16",
+  "provenance": "Owner-provided source snapshot without .git metadata. No upstream commit is asserted.",
+  "moduleSurfaces": [
+    "SafeWalk",
+    "Parkour",
+    "Sneak",
+    "NoInteract",
+    "AutoTool (Hotbar)",
+    "AutoSign",
+    "FreeLook",
+    "AirPlace"
+  ],
+  "changes": "26.3 APIs, Rot dashboard/config, bounded input/world work, lifecycle and inventory ownership guards. AutoTool main-inventory mode remains deferred."
+}

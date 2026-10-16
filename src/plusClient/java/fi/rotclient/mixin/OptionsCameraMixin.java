@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package fi.rotclient.mixin;
 
 import fi.rotclient.CameraPolicy;
+import fi.rotclient.AutismFreeLookRuntime;
 import fi.rotclient.PerspectiveMode;
 import fi.rotclient.RotClientClient;
 import net.minecraft.client.CameraType;
@@ -22,6 +24,7 @@ abstract class OptionsCameraMixin {
             argsOnly = true)
     private CameraType rotclient$skipFrontPerspectiveWhenCameraEnabled(
             CameraType requested) {
+        if (AutismFreeLookRuntime.active()) return requested;
         PerspectiveMode resolved = CameraPolicy.resolve(
                 RotClientClient.isCameraEnabled(),
                 toMode(requested));

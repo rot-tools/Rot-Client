@@ -110,6 +110,9 @@ processResources {
 }
 
 processPlusResources {
+    from('licenses/plus') {
+        into 'META-INF/licenses/autism-client'
+    }
 	inputs.property "version", project.version
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
@@ -118,7 +121,7 @@ processPlusResources {
 
 tasks.register('plusJar', Jar) {
 	group = 'rotclient'
-	description = 'Playable Rot Client+ Fabric jar (Minecraft 26.2 is unobfuscated).'
+	description = 'Playable Rot Client+ Fabric jar (Minecraft 26.3 is unobfuscated).'
 	dependsOn classes, clientClasses, compilePlusJava, compilePlusClientJava, processPlusResources, processPlusClientResources
 	archiveBaseName = 'RotClientPlus'
 	archiveVersion = project.version
@@ -134,8 +137,11 @@ tasks.register('plusJar', Jar) {
 	}
 	from sourceSets.plus.output
 	from sourceSets.plusClient.output
-	from("LICENSE") {
-		rename { "${it}_RotClientPlus" }
+	from('licenses/plus/AUTISM-COPYING.txt') {
+		rename { 'LICENSE_RotClientPlus' }
+	}
+	from('LICENSE') {
+		rename { 'LICENSE_RotClientOriginal-MIT' }
 	}
 	from("NOTICE")
 	from("THIRD_PARTY.md")
@@ -172,6 +178,7 @@ jar {
 
 assemble.dependsOn plusJar
 check.dependsOn plusJar
+testPlus.dependsOn jar, plusJar
 
 tasks.register('verifyLegitJar') {
 	group = 'verification'
