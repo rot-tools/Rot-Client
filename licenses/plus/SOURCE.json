@@ -18,17 +18,36 @@
     "src/main/java/autismclient/mixin/AutismMouseHandlerMixin.java": "7c36d71f973d19064fc1badea657cbfab34d802d9abff6aaa1d77d82f66f0f08",
     "src/main/java/autismclient/mixin/accessor/AutismMinecraftAccessor.java": "2f0a02e8d6ea96d5402e00d443d132a2277e1b27f7f92f4df93eeba577b6df94"
   },
-  "adaptationDate": "2026-10-16",
-  "provenance": "Owner-provided source snapshot without .git metadata. No upstream commit is asserted.",
+  "adaptationDate": "2026-10-17",
+  "provenance": "The original owner-provided snapshot is retained in the historical hashes. The official repository at the pinned commit was independently fetched and compared on 2026-10-17; reviewed files match after newline normalization.",
   "moduleSurfaces": [
     "SafeWalk",
     "Parkour",
     "Sneak",
     "NoInteract",
-    "AutoTool (Hotbar)",
+    "AutoTool",
     "AutoSign",
     "FreeLook",
-    "AirPlace"
+    "AirPlace",
+    "AirJump"
   ],
-  "changes": "26.3 APIs, Rot dashboard/config, bounded input/world work, lifecycle and inventory ownership guards. AutoTool main-inventory mode remains deferred."
+  "changes": "26.3 Rot adapters with lifecycle and inventory ownership guards. AutoTool now supports optional main-inventory scanning, one atomic SWAP per continuous mining session and optional upstream delay variation. AirJump has JumpFreely, DoubleJump and local-only GhostBlock support after vanilla/Lithium collision resolution. No world blocks are changed. Runtime validation remains pending.",
+  "upstreamRepository": "https://github.com/AutismDevelopment/Autism-Client",
+  "upstreamCommit": "cb6910b424f8b101b918c822ab66e865c58567cb",
+  "officialFiles": {
+    "src/main/java/autismclient/modules/SafeWalkModule.java": "23b077fae8c2de5a69a271b6cbfd079b7000d4b815d5bab8988a561d43750cb2",
+    "src/main/java/autismclient/modules/BuiltinModules.java": "df64d9285d8efea78d5418d11e09f72f5794e24c6b9ce8cf32754b9f6dc6b4d9",
+    "src/main/java/autismclient/util/RegistryListCodec.java": "ed0c2ee882386c71463f147290ea27b8d9f673c43781b667bed98761f1352300",
+    "src/main/java/autismclient/util/AutismAutoTool.java": "6179a2beb6310836aa3ee98a405147cc6fe38d6777b932afc2626d4ec22b73a3",
+    "src/main/java/autismclient/modules/AutoSignModule.java": "41cc0ac916f428f30381703901117a2a4c969575abe5c94d368a0d16e80a6023",
+    "src/main/java/autismclient/modules/FreeLookModule.java": "7d9305cd19c6df66aea69fe6fdb1192b30c233a9967c99d97672fdf5bd8c537a",
+    "src/main/java/autismclient/modules/AirPlaceModule.java": "ab43dd71cdfba2f38b8b5e1399fa818acc51c215eaca7c465e996da9e604850f",
+    "src/main/java/autismclient/mixin/AutismSignEditScreenMixin.java": "af0b228fd310f3e022df2ded680589469f8e1d03aea2167924acd88e462bdb16",
+    "src/main/java/autismclient/mixin/AutismCameraMixin.java": "358fd294c9e8374420c516406fc7e13f1b95f0f15caaaf434833cf6f74a478bf",
+    "src/main/java/autismclient/mixin/AutismMouseHandlerMixin.java": "874b9a6fc70abef45d0229fea58c86e0066fe76a3013267dfbf710c7574a66f4",
+    "src/main/java/autismclient/mixin/accessor/AutismMinecraftAccessor.java": "500375ca0f42a5b13101fa6aa1148bb8fa7134e43efb3c0f65457d32b1e0b6e0",
+    "src/main/java/autismclient/modules/AirJumpModule.java": "4e953a6cbac52728cd8cf0fac3a8ffeb80c24e26eba8378fba103f94bf6a2e98",
+    "src/main/java/autismclient/mixin/AutismLivingEntityMovementMixin.java": "dc8ca34f1a20384221d4dd606dccc0c164d4796f9fcccbb0a28b5083f658aa0c",
+    "src/main/java/autismclient/util/AutismInventoryHelper.java": "56d2d529ef05e0bf60c5f65b12bf65896a7c8fb05df5cbc7c21f2e3972614a42"
+  }
 }

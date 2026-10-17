@@ -5,11 +5,11 @@ implementation state from runtime evidence.
 
 ## AUTISM utility checkpoint (Plus only)
 
-Plus has 144 parents; Lite stays at 84. SafeWalk, Parkour, Sneak, NoInteract,
-AutoTool (Hotbar), AutoSign, FreeLook and AirPlace are new GPL adaptations.
-All default off and require gameplay tests. AutoTool inventory mode remains
-deferred. Search `autism` to find them. See [settings, license and manual
-checks](AUTISM_PORT_2026-10-16.md).
+Plus has 145 parents; Lite stays at 84. SafeWalk, Parkour, Sneak, NoInteract,
+AutoTool, AutoSign, FreeLook, AirPlace and AirJump are GPL adaptations.
+All default off and require gameplay tests. AutoTool now supports optional
+main-inventory swaps and varied delays. Search `autism` to find them. See
+[settings, license and manual checks](AUTISM_MOVEMENT_2026-10-17.md).
 
 ## Evidence model
 
@@ -21,11 +21,11 @@ checks](AUTISM_PORT_2026-10-16.md).
 - **Pending runtime** means the implementation exists but the complete
   interactive matrix has not yet been accepted.
 
-All **135** Rot Client+ catalog entries (and the **83** Lite subset) are wired
+All **145** Rot Client+ catalog entries (and the **84** Lite subset) are wired
 and automated-tested. The group-wide runtime matrix is still pending, so this
 table intentionally does not claim that every option is release-ready.
 
-Rot Client omits 52 Plus-only parents (Auto Sprint, Auto Clicker, wardrobe automation,
+Rot Client omits 61 Plus-only parents (Auto Sprint, Auto Clicker, wardrobe automation,
 Ghosts, Escrow Fix, Free Camera, Farm Keys, and the rest listed in
 [Which JAR](WHICH_JAR.md)). Mixed parents keep passive visual settings; Plus
 children and their executable implementations exist only in Plus source sets.

@@ -10,8 +10,9 @@ import static fi.rotclient.QolUtilityCatalog.*;
 final class AutismModuleSettings {
     static final String SAFE = "qol.autism_safe_walk", PARKOUR = "qol.autism_parkour",
             SNEAK = "qol.autism_sneak", INTERACT = "qol.autism_no_interact", TOOL = "qol.autism_auto_tool",
-            SIGN = "qol.autism_auto_sign", LOOK = "qol.autism_free_look", PLACE = "qol.autism_air_place";
-    static final List<String> MODULES = List.of(SAFE, PARKOUR, SNEAK, INTERACT, TOOL, SIGN, LOOK, PLACE);
+            SIGN = "qol.autism_auto_sign", LOOK = "qol.autism_free_look", PLACE = "qol.autism_air_place",
+            JUMP = "qol.autism_air_jump";
+    static final List<String> MODULES = List.of(SAFE, PARKOUR, SNEAK, INTERACT, TOOL, SIGN, LOOK, PLACE, JUMP);
     private record Field(String id, String label, String description, Object fallback,
                          QolNumberSettings.Spec range, List<String> options) {}
     private static final List<Field> FIELDS = fields();
@@ -31,12 +32,15 @@ final class AutismModuleSettings {
         }
         bool(f, INTERACT, "named", "Include Named Entities", false, "Apply entity filters to custom-named entities too.");
         bool(f, INTERACT, "babies", "Include Babies", false, "Apply entity filters to baby mobs too.");
-        number(f, TOOL, "delay", "Switch Delay", 12, 0, 1000, 1, "Delay before a hotbar tool change, in milliseconds.");
+        choice(f, JUMP, "mode", "Mode", "JumpFreely", List.of("JumpFreely", "DoubleJump", "GhostBlock"), "Repeated mid-air jumps, one extra jump, or local support while holding Jump (with a short release grace). Server correction is still possible.");
+        number(f, TOOL, "delay", "Switch Delay", 12, 0, 1000, 1, "Delay before a tool change, in milliseconds.");
+        bool(f, TOOL, "inventory", "Consider Inventory", false, "Also scan the 27 main-inventory slots. At most one number-key swap per mining session; the tool stays in the hotbar afterward.");
+        bool(f, TOOL, "random_delay", "Vary Delays", false, "Use the upstream bounded delay variation for switching and restoring. Off preserves existing fixed delays.");
         bool(f, TOOL, "ignore_durability", "Ignore Durability", true, "Otherwise skip tools with two or fewer uses remaining.");
         bool(f, TOOL, "silk", "Prefer Silk Touch", false, "Prefer a suitable Silk Touch tool, then fall back to the fastest tool.");
         bool(f, TOOL, "sneak", "Require Sneaking", false, "Switch tools only while you sneak.");
         bool(f, TOOL, "restore", "Switch Back", false, "Restore only if you have not manually changed the selected slot.");
-        number(f, TOOL, "restore_delay", "Restore Delay", 100, 0, 1000, 25, "Milliseconds after mining ends. This slice scans the hotbar only.");
+        number(f, TOOL, "restore_delay", "Restore Delay", 100, 0, 1000, 25, "Milliseconds after mining ends. Restores the selected slot only; inventory swaps are not reversed.");
         for (int line = 1; line <= 4; line++) text(f, SIGN, "line_" + line, "Line " + line, "Text trimmed to the sign's pixel width.");
         bool(f, SIGN, "edit_existing", "Also When Editing", false, "Replace non-empty signs too. Market automation sign entry always takes precedence.");
         bool(f, SIGN, "auto_done", "Auto Done", true, "Submit the filled sign on the next tick using the normal editor.");
@@ -97,7 +101,8 @@ final class AutismModuleSettings {
                 case PARKOUR -> "Parkour";
                 case SNEAK -> "Sneak";
                 case INTERACT -> "NoInteract";
-                case TOOL -> "AutoTool (Hotbar)";
+                case TOOL -> "AutoTool";
+                case JUMP -> "AirJump";
                 case SIGN -> "AutoSign";
                 case LOOK -> "FreeLook";
                 case PLACE -> "AirPlace";
@@ -108,7 +113,8 @@ final class AutismModuleSettings {
                 case PARKOUR -> "Jump at block edges while moving on foot.";
                 case SNEAK -> "Hold sneak locally or in outgoing input packets.";
                 case INTERACT -> "Filter mining, block use and entity use/attacks by registry ID.";
-                case TOOL -> "Choose the best hotbar mining tool; inventory swaps remain deferred.";
+                case TOOL -> "Choose the best mining tool from the hotbar or optionally the main inventory.";
+                case JUMP -> "Jump in mid-air or create local collision support while holding Jump.";
                 case SIGN -> "Fill the sign editor with four configured lines.";
                 case LOOK -> "Look around in third person without rotating the player.";
                 case PLACE -> "Hold Use with a block to place at the air target.";

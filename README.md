@@ -34,7 +34,7 @@
 Rot Client is an independent community project. It is **not** affiliated with,
 endorsed by, or approved by Hypixel.
 
-> **`2.0.11+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
+> **`2.0.12+mc26.3`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
 > Each build produces **two** JARs. See [Which JAR](docs/WHICH_JAR.md).
 > Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
 > **opt-in and off by default**. Do not use those features on Hypixel.
@@ -49,8 +49,8 @@ MiningTracker JAR.
 
 | File | What it is |
 | --- | --- |
-| `RotClient-2.0.11+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
-| `RotClientPlus-2.0.11+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
+| `RotClient-2.0.12+mc26.3.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.12+mc26.3.jar` | **Rot Client+** — same client plus opt-in automation. |
 
 ### Minecraft version availability
 
@@ -58,9 +58,9 @@ MiningTracker JAR.
 | --- | --- | --- | --- |
 | 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
 | 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
-| 26.3 | [`2.0.11+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-utilities) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-utilities) | Eight AUTISM utility ports in Plus (AutoTool hotbar-only), GPL notices and MIT Lite isolation. Shared long text/fractional slider readouts fixed. Gameplay/FPS and Party Finder backend remain pending. |
+| 26.3 | [`2.0.12+mc26.3` updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-movement) | [Same updated playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-movement) | Nine AUTISM module ports in Plus: AirJump modes and optional AutoTool inventory/delay support added. GPL notices and MIT Lite isolation retained. Gameplay/FPS and Party Finder backend remain pending. |
 
-Current changes: [AUTISM utilities, license boundary and test checklist](docs/AUTISM_PORT_2026-10-16.md).
+Current changes: [AirJump, AutoTool inventory and test checklist](docs/AUTISM_MOVEMENT_2026-10-17.md).
 
 Active maintenance targets **26.3 Lite and Plus only**. Older version downloads
 remain available; fixes are no longer backported unless requested. See the
@@ -74,7 +74,7 @@ CurseForge publication yet.
 
 ### Playtest JAR
 
-Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-utilities)
+Testers do not need to build. The [updated 26.3 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-autism-movement)
 holds both 26.3 JARs and `SHA256SUMS.txt`. The separate [26.2 playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
 tracks `development` and is replaced after green pushes there.
 
@@ -90,7 +90,7 @@ run if you need a specific commit.
 
 1. Install Fabric Loader and Fabric API for Minecraft 26.3.
 2. Build with the included wrapper: `.\gradlew.bat build`
-3. Copy `RotClient-2.0.11+mc26.3.jar` and/or `RotClientPlus-2.0.11+mc26.3.jar`
+3. Copy `RotClient-2.0.12+mc26.3.jar` and/or `RotClientPlus-2.0.12+mc26.3.jar`
    from `build/libs/` into `mods/`. Enable only one.
 
 Rot Tools includes bounded migration for supported legacy MiningTracker
@@ -114,7 +114,7 @@ Search the dashboard address bar to jump to a module. Most utilities stay off un
 ## Features
 
 **Rot Client** currently ships **84** HUD/QoL parents. **Rot Client+** ships
-**144**. Wired means a catalog entry, saved
+**145**. Wired means a catalog entry, saved
 settings, a runtime bridge, and automated contracts. Which file to download
 is in [Which JAR](docs/WHICH_JAR.md). The module table lives in
 [QoL Utilities](docs/QOL_UTILITIES.md).

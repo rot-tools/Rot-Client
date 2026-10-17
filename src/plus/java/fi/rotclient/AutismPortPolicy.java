@@ -92,6 +92,7 @@ public final class AutismPortPolicy {
             return true;
         }
         public void assigned(int selected) { assigned = selected; }
+        public void cancel() { cancelled = true; }
         public int restoreSlot(int selected) {
             observe(selected);
             return !cancelled && assigned >= 0 ? original : -1;
@@ -100,17 +101,40 @@ public final class AutismPortPolicy {
     }
 
     public static int bestTool(List<Tool> tools, int selected, boolean ignoreDurability, boolean preferSilk) {
-        int best = selectTool(tools, selected, ignoreDurability, preferSilk);
-        return best < 0 && preferSilk ? selectTool(tools, selected, ignoreDurability, false) : best;
+        return bestTool(tools, selected, ignoreDurability, preferSilk, false);
     }
-    private static int selectTool(List<Tool> tools, int selected, boolean ignoreDurability, boolean requireSilk) {
+    public static int bestTool(List<Tool> tools, int selected, boolean ignoreDurability, boolean preferSilk, boolean inventory) {
+        int best = selectTool(tools, selected, ignoreDurability, preferSilk, inventory ? 36 : 9);
+        return best < 0 && preferSilk ? selectTool(tools, selected, ignoreDurability, false, inventory ? 36 : 9) : best;
+    }
+    private static int distance(int slot, int selected) { return slot < 9 ? Math.abs(slot - selected) : 100 + slot; }
+    private static int selectTool(List<Tool> tools, int selected, boolean ignoreDurability, boolean requireSilk, int limit) {
         Tool best = null;
         for (Tool tool : tools) {
-            if (tool.slot < 0 || tool.slot > 8 || !Float.isFinite(tool.speed) || tool.speed <= 1
+            if (tool.slot < 0 || tool.slot >= limit || !Float.isFinite(tool.speed) || tool.speed <= 1
                     || !ignoreDurability && tool.damageable && tool.remaining <= 2 || requireSilk && !tool.silk) continue;
             if (best == null || tool.speed > best.speed || tool.speed == best.speed
-                    && Math.abs(tool.slot - selected) < Math.abs(best.slot - selected)) best = tool;
+                    && distance(tool.slot, selected) < distance(best.slot, selected)) best = tool;
         }
         return best == null ? -1 : best.slot;
+    }
+
+    /** Upstream delay distribution, sampled once per action, never for every tick. */
+    public static int toolDelay(int base, boolean randomize, java.util.random.RandomGenerator random) {
+        base = Math.clamp(base, 0, 1000);
+        if (base == 0 || !randomize) return base;
+        int spread = Math.clamp(Math.round(base * .55f), 15, 180);
+        int extra = random.nextInt(spread + 1);
+        if (random.nextInt(12) == 0) extra += 15 + random.nextInt(Math.max(16, spread / 2 + 1));
+        return Math.min(1000, base + extra);
+    }
+
+    /** One atomic inventory swap per continuous mining session. No retries after correction. */
+    public static final class ToolSwapBudget {
+        private boolean attempted, cancelled;
+        public boolean take() { if (attempted || cancelled) return false; attempted = true; return true; }
+        public void cancel() { cancelled = true; }
+        public boolean cancelled() { return cancelled; }
+        public void reset() { attempted = cancelled = false; }
     }
 }
