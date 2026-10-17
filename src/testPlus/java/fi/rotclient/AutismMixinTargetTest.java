@@ -40,4 +40,14 @@ class AutismMixinTargetTest {
         method("net/minecraft/client/Minecraft", "startUseItem", "()V");
         field("net/minecraft/client/Minecraft", "rightClickDelay", "I");
     }
+    @Test void airJumpAndAtomicSwapTargetsMatch26_3() throws Exception {
+        String living="net/minecraft/world/entity/LivingEntity";
+        method(living,"aiStep","()V");method(living,"jumpFromGround","()V");
+        field(living,"jumping","Z");field(living,"noJumpDelay","I");
+        method("net/minecraft/world/entity/Entity","collide","(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;");
+        method("net/minecraft/client/multiplayer/MultiPlayerGameMode","handleContainerInput",
+                "(IIILnet/minecraft/world/inventory/ContainerInput;Lnet/minecraft/world/entity/player/Player;)V");
+        method("net/minecraft/world/inventory/Slot","getContainerSlot","()I");
+        field("net/minecraft/world/inventory/Slot","index","I");
+    }
 }

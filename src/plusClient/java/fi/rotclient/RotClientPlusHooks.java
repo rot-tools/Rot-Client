@@ -134,6 +134,7 @@ public final class RotClientPlusHooks implements QolClientFlavorHooks {
     @Override
     public void onWorldChanged() {
         AutismMovementRuntime.clear();
+        AutismAirJumpRuntime.clear();
         AutismToolRuntime.clear();
         AutismFreeLookRuntime.clear(Minecraft.getInstance());
         AutismAirPlaceRuntime.clear();

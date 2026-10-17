@@ -1,7 +1,7 @@
 {
   "project": "AUTISM Client 5.0 source snapshot",
   "snapshotDate": "2026-10-15",
-  "reviewDate": "2026-10-16",
+  "reviewDate": "2026-10-17",
   "sourceJarSha256": "209b1cef214dc2a7d888266544764a317a9bb7e7c6624a2b72d2e3465de0b8f0",
   "uniqueBuiltinModules": 76,
   "registrationCalls": 77,
@@ -12,7 +12,7 @@
     "Player": 18,
     "Combat": 8
   },
-  "importedModuleSurfaces": 8,
+  "importedModuleSurfaces": 9,
   "modules": [
     {
       "sourceClass": "HideModule",
@@ -120,9 +120,9 @@
       "category": "Movement",
       "sourceFile": "src/main/java/autismclient/modules/AirJumpModule.java",
       "sourceLine": 9,
-      "rotModule": null,
-      "status": "Planned",
-      "note": "Not ported. Needs dependency, setting and runtime review."
+      "rotModule": "qol.autism_air_jump",
+      "status": "Implemented; runtime pending",
+      "note": "JumpFreely, DoubleJump, GhostBlock. Local player only; bounded release grace and lifecycle reset. Collision result adapter supports the inspected vanilla/Lithium movement path; gameplay pending."
     },
     {
       "sourceClass": "NoClipModule",
@@ -247,7 +247,7 @@
     },
     {
       "sourceClass": "AnchorAuraModule",
-      "id": "ID",
+      "id": "anchor-aura",
       "name": "AnchorAura",
       "category": "Combat",
       "sourceFile": "src/main/java/autismclient/modules/AnchorAuraModule.java",
@@ -258,7 +258,7 @@
     },
     {
       "sourceClass": "CrystalAuraModule",
-      "id": "ID",
+      "id": "crystal-aura",
       "name": "CrystalAura",
       "category": "Combat",
       "sourceFile": "src/main/java/autismclient/modules/CrystalAuraModule.java",
@@ -396,8 +396,8 @@
       "sourceFile": "src/main/java/autismclient/modules/BuiltinModules.java",
       "sourceLine": 923,
       "rotModule": "qol.autism_auto_tool",
-      "status": "Partial; runtime pending",
-      "note": "Hotbar only. Main-inventory swap and upstream delay randomization are pending."
+      "status": "Implemented; runtime pending",
+      "note": "Hotbar plus optional 27-slot inventory scan, durability/Silk Touch, optional varied delays. One atomic SWAP per continuous mining session, no automatic retry/rollback. Switch Back restores slot selection only."
     },
     {
       "sourceClass": "ScaffoldModule",
@@ -594,8 +594,8 @@
       "sourceFile": "src/main/java/autismclient/modules/BuiltinModules.java",
       "sourceLine": 1443,
       "rotModule": null,
-      "status": "Existing analogue; parity pending",
-      "note": "Rot already has Privacy/name helpers; AUTISM feature parity is not asserted."
+      "status": "Planned",
+      "note": "Coordinate replacement is not implemented by existing privacy/name helpers."
     },
     {
       "sourceClass": "XrayModule",
@@ -781,8 +781,8 @@
       "sourceFile": "src/main/java/autismclient/modules/BuiltinModules.java",
       "sourceLine": 4908,
       "rotModule": null,
-      "status": "Planned",
-      "note": "Not ported. Needs dependency, setting and runtime review."
+      "status": "Existing analogue; parity pending",
+      "note": "Rot HUD Elements Editor is an existing base. Upstream HUD feature parity is not asserted."
     },
     {
       "sourceClass": "AdminToolsModule",
@@ -814,8 +814,8 @@
       "sourceFile": "src/main/java/autismclient/modules/NameCensorModule.java",
       "sourceLine": 38,
       "rotModule": null,
-      "status": "Planned",
-      "note": "Not ported. Needs dependency, setting and runtime review."
+      "status": "Existing analogue; parity pending",
+      "note": "Rot Name Hider covers own-name presentation only. Upstream arbitrary-name/persistence parity is not asserted."
     },
     {
       "sourceClass": "TeamsModule",
@@ -1237,5 +1237,7 @@
     "compat.AutismEssentialCosmeticGuardMixin",
     "compat.AutismEssentialOverlayGuardMixin"
   ],
-  "scope": "Static source inventory. Not a claim of runtime parity, public-server compatibility, or a complete port."
+  "scope": "Static source inventory. Not a claim of runtime parity, public-server compatibility, or a complete port.",
+  "upstreamRepository": "https://github.com/AutismDevelopment/Autism-Client",
+  "upstreamCommit": "cb6910b424f8b101b918c822ab66e865c58567cb"
 }

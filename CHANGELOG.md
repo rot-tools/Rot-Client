@@ -7,6 +7,21 @@ and the project uses semantic versioning where practical.
 
 ## [Unreleased]
 
+### 26.3 AirJump and AutoTool inventory — 2.0.12
+
+* Plus adds AirJump's JumpFreely, DoubleJump and GhostBlock modes, with local
+  collision support after vanilla/Lithium resolution and lifecycle resets.
+* AutoTool adds optional main-inventory selection and upstream delay variation.
+  One normal number-key swap per continuous mining session, empty-cursor and
+  equip-controller guards, cancellation on manual input/observed correction.
+  Switch Back restores selection only; moved tools stay in the hotbar.
+* Pin official AUTISM source to cb6910b and retain GPL credits/notices in Plus.
+  Lite remains MIT with 84 parents; Plus has 145. No older Minecraft changes.
+* 2,536 shared + 394 Plus tests, clean build and both edition verifiers pass.
+  Nine adapted modules still need runtime tests; 13 existing bases need parity
+  review and 54 further modules are unported. Commands/macros remain separate.
+  See docs/AUTISM_MOVEMENT_2026-10-17.md. Lite public-release checks remain open.
+
 ### 26.3 AUTISM utility port — 2.0.11
 
 * Plus adds opt-in SafeWalk, Parkour, Sneak, NoInteract, AutoTool (hotbar only),

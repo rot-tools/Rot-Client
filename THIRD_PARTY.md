@@ -9,8 +9,8 @@ works and the projects used only for behavior research.
 ## AUTISM Client 5.0 adaptations (Plus only, GPL-3.0-only)
 
 Melonik and contributors authored the owner-provided AUTISM Client 5.0 source.
-SafeWalk, Parkour, Sneak, NoInteract, AutoTool (hotbar), AutoSign, FreeLook and
-AirPlace are adapted into `src/plus` and `src/plusClient`, under `Autism*`
+SafeWalk, Parkour, Sneak, NoInteract, AutoTool, AutoSign, FreeLook, AirPlace and
+AirJump are adapted into `src/plus` and `src/plusClient`, under `Autism*`
 classes and the Plus catalog/provider/hooks. Those implementations and their
 GPL notices are absent from the Lite JAR. Adapted files carry SPDX and origin
 comments. Rot Tools changed the 26.3 APIs, settings, lifecycle/ownership guards
@@ -19,9 +19,11 @@ and bounded work. A module name does not imply complete upstream parity.
 `licenses/plus/AUTISM-COPYING.txt` preserves the full GPLv3 text.
 `AUTISM-CREDITS.md` preserves upstream credits, including OpSec, Meteor, Wurst
 and ExploitPreventer; this does not assert that every credited work is used by
-the selected eight modules. `SOURCE.json` records source-file hashes and the
-reference JAR hash. The provided snapshot has no Git metadata, so no upstream
-commit is invented. See [the full feature inventory](docs/reports/AUTISM_CLIENT_INVENTORY.md).
+the selected nine modules. `SOURCE.json` preserves historical source-file and
+reference JAR hashes. On 2026-10-17 the official repository was fetched at
+`cb6910b424f8b101b918c822ab66e865c58567cb` and compared with the owner snapshot;
+reviewed official file hashes are recorded separately. See
+[the full feature inventory](docs/reports/AUTISM_CLIENT_INVENTORY.md).
 
 The Plus JAR includes `LICENSE_RotClientPlus` (GPLv3),
 `LICENSE_RotClientOriginal-MIT` and `META-INF/licenses/autism-client/`.

@@ -30,5 +30,5 @@ class AutismLicenseBoundaryTest {
             }
         }
     }
-    private static class ListHolder {static final String[] CLASSES={"AutismPortPolicy","AutismModuleSettings","AutismMovementRuntime","AutismToolRuntime","AutismInteractionRuntime","AutismFreeLookRuntime","AutismAirPlaceRuntime","AutismSignRuntime"};}
+    private static class ListHolder {static final String[] CLASSES={"AutismPortPolicy","AutismModuleSettings","AutismMovementRuntime","AutismToolRuntime","AutismInteractionRuntime","AutismFreeLookRuntime","AutismAirPlaceRuntime","AutismSignRuntime","AutismAirJumpPolicy","AutismAirJumpRuntime"};}
 }
