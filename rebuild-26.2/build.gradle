@@ -1,0 +1,115 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+group = 'fi.rotclient'
+version = mod_version
+
+sourceSets {
+    illegal {
+        compileClasspath += main.output + main.compileClasspath
+        runtimeClasspath += main.output + main.runtimeClasspath
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+}
+
+def editions = [
+    legal: [id: 'rotclientlegal', name: '26.2 Mod Client Legal', other: 'rotclientillegal'],
+    illegal: [id: 'rotclientillegal', name: '26.2 Mod Client Illegal', other: 'rotclientlegal']
+]
+
+def writeMetadata = tasks.register('writeEditionMetadata') {
+    inputs.property('editions', editions)
+    inputs.property('version', project.version.toString())
+    outputs.dir(layout.buildDirectory.dir('edition-metadata'))
+    doLast {
+        editions.each { key, edition ->
+            def metadata = [
+                schemaVersion: 1, id: edition.id, name: edition.name,
+                version: project.version.toString(), authors: ['Rot Tools'],
+                license: 'MIT', icon: 'assets/rotclient_rebuild/icon.png',
+                environment: 'client',
+                entrypoints: [client: ['fi.rotclient.rebuild.RebuildClient']],
+                depends: [minecraft: '~26.2', java: '>=25', fabricloader: '>=0.19.3',
+                          'fabric-api': '>=0.155.2+26.2'],
+                breaks: [rotclient: '*', rotclientplus: '*', (edition.other): '*']
+            ]
+            if (key == 'illegal') {
+                metadata.entrypoints['rot-rebuild-edition'] = ['fi.rotclient.rebuild.illegal.IllegalEdition']
+                metadata.mixins = ['rot-rebuild-illegal.mixins.json']
+            }
+            def target = layout.buildDirectory.file("edition-metadata/${key}/fabric.mod.json").get().asFile
+            target.parentFile.mkdirs()
+            target.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(metadata)) + '\n'
+        }
+    }
+}
+
+tasks.named('jar', Jar) {
+    archiveBaseName = 'RotClientLegal'
+    dependsOn writeMetadata
+    from layout.buildDirectory.dir('edition-metadata/legal')
+    from 'LICENSE'
+}
+
+def illegalJar = tasks.register('illegalJar', Jar) {
+    archiveBaseName = 'RotClientIllegal'
+    dependsOn writeMetadata
+    from layout.buildDirectory.dir('edition-metadata/illegal')
+    from sourceSets.main.output
+    from sourceSets.illegal.output
+    from 'LICENSE'
+}
+assemble.dependsOn illegalJar
+
+tasks.register('verifyEditions') {
+    dependsOn jar, illegalJar
+    doLast {
+        def legal = tasks.named('jar', Jar).get().archiveFile.get().asFile
+        def illegal = illegalJar.get().archiveFile.get().asFile
+        new java.util.zip.ZipFile(legal).withCloseable { publicJar ->
+            new java.util.zip.ZipFile(illegal).withCloseable { testJar ->
+                def parser = new groovy.json.JsonSlurper()
+                def metadata = { zip -> parser.parse(zip.getInputStream(zip.getEntry('fabric.mod.json'))) }
+                def legalMetadata = metadata(publicJar)
+                def illegalMetadata = metadata(testJar)
+                assert legalMetadata.id == 'rotclientlegal' && !legalMetadata.mixins
+                assert illegalMetadata.id == 'rotclientillegal' && illegalMetadata.mixins.size() == 1
+                assert legalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientillegal'] as Set
+                assert illegalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientlegal'] as Set
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/IllegalEdition.class') != null
+                assert testJar.getEntry('rot-rebuild-illegal.mixins.json') != null
+                [publicJar, testJar].each { zip ->
+                    assert zip.getEntry('fi/rotclient/rebuild/RebuildClient.class') != null
+                    assert zip.entries().findAll { it.name.endsWith('.class') }.every {
+                        it.name.startsWith('fi/rotclient/rebuild/')
+                    }
+                }
+                assert publicJar.entries().findAll { !it.directory }.every {
+                    it.name == 'fabric.mod.json' || it.name == 'LICENSE' || it.name == 'META-INF/MANIFEST.MF' ||
+                        it.name.startsWith('assets/rotclient_rebuild/') ||
+                        (it.name.startsWith('fi/rotclient/rebuild/') && !it.name.startsWith('fi/rotclient/rebuild/illegal/'))
+                }
+                publicJar.entries().findAll { it.name.endsWith('.class') }.each { item ->
+                    def same = testJar.getEntry(item.name)
+                    assert same && Arrays.equals(publicJar.getInputStream(item).bytes, testJar.getInputStream(same).bytes)
+                    assert !new String(publicJar.getInputStream(item).bytes, 'ISO-8859-1')
+                        .contains('fi/rotclient/rebuild/illegal/')
+                }
+            }
+        }
+    }
+}
+check.dependsOn verifyEditions

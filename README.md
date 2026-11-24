@@ -2,6 +2,8 @@
   <img src="src/main/resources/assets/rotclient/icon.png" alt="Rot Client" width="128" height="128">
 </p>
 
+> **Current 26.2 development** is the [Illegal and Legal rebuild](rebuild-26.2/README.md). Illegal is the primary test-server edition. Legal starts with the shared dashboard and HUD editor. The rebuild has a separate source tree and local playtest JARs. The rest of this README describes the existing Plus and Lite editions.
+
 <h1 align="center">Rot Client</h1>
 
 <p align="center">

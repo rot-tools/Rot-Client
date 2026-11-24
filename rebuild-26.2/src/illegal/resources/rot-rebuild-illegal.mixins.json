@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "fi.rotclient.rebuild.illegal.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AutoCommandsKeyboardMixin",
+    "AutoCommandsWarpMixin",
+    "LightmapRenderStateExtractorMixin",
+    "LocalPlayerAutoSprintMixin",
+    "SkyRendererExtractMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}
