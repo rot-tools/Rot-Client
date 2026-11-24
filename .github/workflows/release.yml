@@ -14,7 +14,8 @@ concurrency:
 
 jobs:
   build-and-attach:
-    if: github.event.release.draft == false
+    # Rebuild playtests carry four verified assets uploaded by the maintainer.
+    if: github.event.release.draft == false && !startsWith(github.event.release.tag_name, 'playtest-26.2-rebuild-')
     runs-on: ubuntu-latest
 
     steps:

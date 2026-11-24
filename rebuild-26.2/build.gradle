@@ -16,9 +16,12 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+test.useJUnitPlatform()
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
@@ -42,13 +45,14 @@ def writeMetadata = tasks.register('writeEditionMetadata') {
                 license: 'MIT', icon: 'assets/rotclient_rebuild/icon.png',
                 environment: 'client',
                 entrypoints: [client: ['fi.rotclient.rebuild.RebuildClient']],
+                mixins: ['rot-rebuild-ui.mixins.json'],
                 depends: [minecraft: '~26.2', java: '>=25', fabricloader: '>=0.19.3',
                           'fabric-api': '>=0.155.2+26.2'],
                 breaks: [rotclient: '*', rotclientplus: '*', (edition.other): '*']
             ]
             if (key == 'illegal') {
                 metadata.entrypoints['rot-rebuild-edition'] = ['fi.rotclient.rebuild.illegal.IllegalEdition']
-                metadata.mixins = ['rot-rebuild-illegal.mixins.json']
+                metadata.mixins += 'rot-rebuild-illegal.mixins.json'
             }
             def target = layout.buildDirectory.file("edition-metadata/${key}/fabric.mod.json").get().asFile
             target.parentFile.mkdirs()
@@ -85,12 +89,20 @@ tasks.register('verifyEditions') {
                 def metadata = { zip -> parser.parse(zip.getInputStream(zip.getEntry('fabric.mod.json'))) }
                 def legalMetadata = metadata(publicJar)
                 def illegalMetadata = metadata(testJar)
-                assert legalMetadata.id == 'rotclientlegal' && !legalMetadata.mixins
-                assert illegalMetadata.id == 'rotclientillegal' && illegalMetadata.mixins.size() == 1
+                assert legalMetadata.id == 'rotclientlegal' && legalMetadata.mixins == ['rot-rebuild-ui.mixins.json']
+                assert !legalMetadata.entrypoints.containsKey('rot-rebuild-edition')
+                assert illegalMetadata.id == 'rotclientillegal' &&
+                    illegalMetadata.mixins == ['rot-rebuild-ui.mixins.json', 'rot-rebuild-illegal.mixins.json']
                 assert legalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientillegal'] as Set
                 assert illegalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientlegal'] as Set
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/IllegalEdition.class') != null
                 assert testJar.getEntry('rot-rebuild-illegal.mixins.json') != null
+                def uiMixin = 'rot-rebuild-ui.mixins.json'
+                def entries = parser.parse(publicJar.getInputStream(publicJar.getEntry(uiMixin)))
+                assert entries.client == ['InventoryStatusEffectsMixin']
+                assert publicJar.getEntry('fi/rotclient/rebuild/mixin/InventoryStatusEffectsMixin.class') != null
+                assert Arrays.equals(publicJar.getInputStream(publicJar.getEntry(uiMixin)).bytes,
+                    testJar.getInputStream(testJar.getEntry(uiMixin)).bytes)
                 [publicJar, testJar].each { zip ->
                     assert zip.getEntry('fi/rotclient/rebuild/RebuildClient.class') != null
                     assert zip.entries().findAll { it.name.endsWith('.class') }.every {
@@ -99,6 +111,7 @@ tasks.register('verifyEditions') {
                 }
                 assert publicJar.entries().findAll { !it.directory }.every {
                     it.name == 'fabric.mod.json' || it.name == 'LICENSE' || it.name == 'META-INF/MANIFEST.MF' ||
+                        it.name == uiMixin ||
                         it.name.startsWith('assets/rotclient_rebuild/') ||
                         (it.name.startsWith('fi/rotclient/rebuild/') && !it.name.startsWith('fi/rotclient/rebuild/illegal/'))
                 }

@@ -1,5 +1,20 @@
 # Which JAR?
 
+## Current 26.2 playtest
+
+The [rebuild playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.5) has four downloads. Enable one at a time.
+
+| Edition | Download | Scope |
+| --- | --- | --- |
+| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientIllegal-0.1.0-dev.5%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. |
+| Rot Client Legal | [RotClientLegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientLegal-0.1.0-dev.5%2Bmc26.2.jar) | Same dashboard and HUD editor, without the four Illegal modules. |
+| Rot Client+ | [RotClientPlus-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client and the rebuild's reference. |
+| Rot Client Lite | [RotClient-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition and reference. |
+
+The [rebuild guide](../rebuild-26.2/README.md) covers the current source and test steps. The notes below describe historical releases of the previous Plus and Lite client line.
+
+## Legacy editions
+
 This repository builds **two** Fabric mods from the same source. They share
 package `fi.rotclient`, author Rot Tools, icon, version `2.0.1+mc26.2`, and
 the `/rot` command. They must not be **enabled** at the same time (each

@@ -2,7 +2,6 @@ package fi.rotclient.rebuild;
 
 import java.util.Locale;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -33,10 +32,8 @@ final class AppearanceScreen extends Screen {
             fields[i].setValue(String.format(Locale.ROOT, "#%06X", values[i] & 0xFFFFFF));
             addRenderableWidget(fields[i]);
         }
-        addRenderableWidget(Button.builder(Component.literal("Back"), b -> onClose())
-                .bounds(left + 10, top + 128, 52, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Apply"), b -> save())
-                .bounds(left + panelWidth - 75, top + 128, 65, 20).build());
+        addRenderableWidget(RotChrome.button(font, "Back", left + 10, top + 128, 52, 20, false, this::onClose));
+        addRenderableWidget(RotChrome.button(font, "Apply", left + panelWidth - 75, top + 128, 65, 20, true, this::save));
     }
 
     private void save() {
@@ -60,9 +57,8 @@ final class AppearanceScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        InterfaceSettings settings = RebuildClient.settings();
-        graphics.fill(left, top, left + panelWidth, top + 156, 0xFF000000 | settings.panel);
-        graphics.fill(left, top, left + panelWidth, top + 2, 0xFF000000 | settings.accent);
+        RotChrome.panel(graphics, left, top, panelWidth, 156);
+        graphics.fill(left + 10, top + 2, left + 72, top + 4, RotChrome.accent());
         graphics.text(font, getTitle(), left + 10, top + 9, 0xFFF8F5FF);
         for (int i = 0; i < LABELS.length; i++) {
             graphics.text(font, LABELS[i], left + 10, top + 29 + 23 * i, 0xFFC8BFD8);

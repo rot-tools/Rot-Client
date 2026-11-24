@@ -1,223 +1,590 @@
 package fi.rotclient.rebuild;
 
-import java.util.Locale;
-import java.util.function.DoubleConsumer;
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
+/** The original Plus world-editor inspector for the HUD features shipped in this edition. */
 final class HudEditorScreen extends Screen {
     private final Screen parent;
-    private boolean layers;
-    private boolean dragging;
-    private double grabX, grabY;
-    private int layerOffset;
-    private int layerRows;
-    private int toolbarWidth;
-    private int toolsX;
-    private int toolsY;
+    private final ArrayDeque<LayoutSnapshot> undo = new ArrayDeque<>();
+    private final ArrayDeque<LayoutSnapshot> redo = new ArrayDeque<>();
+    private List<HudLayerSettings.HitArea> hitAreas = List.of();
+    private HudLayerSettings.Layer selection;
+    private boolean movingInspector;
+    private boolean movingElement;
+    private boolean changed;
+    private double offsetX, offsetY;
 
     HudEditorScreen(Screen parent) {
+        this(parent, null);
+    }
+
+    HudEditorScreen(Screen parent, HudLayerSettings.Layer selection) {
         super(Component.literal("HUD Elements Editor"));
         this.parent = parent;
+        this.selection = selection;
+    }
+
+    private HudEditorChromePolicy.Rect inspector() {
+        var settings = RebuildClient.settings();
+        return HudEditorChromePolicy.resolve(HudEditorChromePolicy.Panel.TITLE,
+                settings.hudInspectorX, settings.hudInspectorY, width, height);
     }
 
     @Override
-    protected void init() {
-        toolbarWidth = Math.min(402, width - 16);
-        toolsX = (width - toolbarWidth) / 2;
-        toolsY = layers ? 50 : height - 56;
-        button("Back", 8, 8, 52, this::onClose);
-        button(layers ? "HUD Preview" : "HUD Visibility", width - 108, 8, 100, () -> {
-            layers = !layers;
-            rebuildWidgets();
-        });
-        if (layers) {
-            addLayerControls();
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        // The world is the placement reference, as in the Plus editor.
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+        RotClientUiClock.beginFrame(minecraft);
+        RotClientTheme.apply(RebuildClient.settings());
+        hitAreas = HudLayerSettings.takeHitAreas();
+        drawElementSelection(g, mouseX, mouseY);
+        RotClientUiDraw.drawBackButton(g, font, mouseX, mouseY, 12, 12);
+        drawEditorChromeCard(g, inspector(), selection == null ? "Select a visible HUD element" : selection.title(), mouseX, mouseY);
+        super.extractRenderState(g, mouseX, mouseY, delta);
+    }
+
+    private void drawEditorChromeCard(
+            GuiGraphicsExtractor graphics,
+            HudEditorChromePolicy.Rect rect,
+            String selected,
+            int mouseX,
+            int mouseY) {
+
+        int x = rect.x();
+        int y = rect.y();
+        int w = rect.w();
+        int h = rect.h();
+        boolean canEdit = selection != null;
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x + 2,
+                y + 3,
+                x + w + 2,
+                y + h + 3,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.SHADOW,
+                        0x58),
+                6);
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x,
+                y,
+                x + w,
+                y + h,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.SURFACE,
+                        0xF4),
+                6);
+
+        RotClientUiDraw.roundedOutline(
+                graphics,
+                x,
+                y,
+                x + w,
+                y + h,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.BORDER,
+                        0xD0),
+                6);
+
+        RotClientUiDraw.roundedFill(
+                graphics,
+                x + 10,
+                y,
+                x + 72,
+                y + 2,
+                RotClientTheme.HUD_ACCENT,
+                1);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "HUD EDITOR",
+                x + 10,
+                y + 8,
+                RotClientTheme.TEXT,
+                true);
+
+        String selectedText =
+                selected == null
+                        || selected.isBlank()
+                        || selected.startsWith(
+                                "No QoL")
+                        ? "Click a HUD to edit it"
+                        : selected;
+
+        selectedText =
+                RotClientUiDraw.ellipsize(
+                        font,
+                        selectedText,
+                        w - 20);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                selectedText,
+                x + 10,
+                y + 22,
+                RotClientTheme.TEXT_DIM,
+                false);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                canEdit ? "Drag to move  ·  Scroll to resize" : "Click a visible HUD element to edit it",
+                x + 10,
+                y + 37,
+                RotClientTheme.TEXT_MUTED,
+                false);
+
+        graphics.fill(
+                x + 10,
+                y + 52,
+                x + w - 10,
+                y + 53,
+                RotClientUiDraw.withAlpha(
+                        RotClientTheme.DIVIDER,
+                        0xC0));
+
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "SCALE",
+                x + 10,
+                y + 59,
+                RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 10,
+                y + 70,
+                30,
+                20,
+                "-",
+                false,
+                canEdit);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 44,
+                y + 70,
+                66,
+                20,
+                Math.round(
+                        (canEdit ? HudLayerSettings.placement(selection).scale() : 1)
+                                * 100.0F)
+                        + "%",
+                false,
+                false);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 114,
+                y + 70,
+                30,
+                20,
+                "+",
+                false,
+                canEdit);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "POSITION",
+                x + 10,
+                y + 96,
+                RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 10,
+                y + 107,
+                96,
+                20,
+                "Center",
+                false,
+                canEdit);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 112,
+                y + 107,
+                96,
+                20,
+                "Default",
+                false,
+                canEdit);
+
+        RotClientUiDraw.text(
+                graphics,
+                font,
+                "STYLE",
+                x + 10,
+                y + 133,
+                RotClientTheme.TEXT_MUTED,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 10,
+                y + 144,
+                48,
+                20,
+                "BG",
+                false,
+                false);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 62,
+                y + 144,
+                48,
+                20,
+                "Title",
+                false,
+                false);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 114,
+                y + 144,
+                48,
+                20,
+                "Text",
+                false,
+                false);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 166,
+                y + 144,
+                48,
+                20,
+                "Panel",
+                false,
+                false);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 10,
+                y + 171,
+                64,
+                20,
+                canEdit && HudLayerSettings.hidden(selection) ? "Show" : "Hide",
+                false,
+                canEdit);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 78,
+                y + 171,
+                64,
+                20,
+                "Undo",
+                false,
+                !undo.isEmpty());
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 146,
+                y + 171,
+                64,
+                20,
+                "Redo",
+                false,
+                !redo.isEmpty());
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 10,
+                y + 197,
+                100,
+                20,
+                "Reset all",
+                false,
+                true);
+
+        RotClientUiDraw.drawButton(
+                graphics,
+                font,
+                mouseX,
+                mouseY,
+                x + 114,
+                y + 197,
+                100,
+                20,
+                "Done",
+                true,
+                true);
+    }
+
+    private void drawElementSelection(GuiGraphicsExtractor graphics, int mx, int my) {
+        var hovered = targetAt(mx, my);
+        if (hovered != null && hovered != selection) {
+            outline(graphics, area(hovered), RotClientUiDraw.withAlpha(RotClientTheme.VIOLET, 0x9C));
+        }
+        if (selection == null) return;
+        ScreenRectangle rect = area(selection);
+        if (rect != null) {
+            outline(graphics, rect, RotClientTheme.HUD_ACCENT);
             return;
         }
-        InterfaceSettings settings = RebuildClient.settings();
-        int half = (toolbarWidth - 5) / 2;
-        addRenderableWidget(slider("Scale", toolsX, half, settings.hudScale, 0.5, 2,
-                value -> settings.hudScale = value));
-        addRenderableWidget(slider("Panel opacity", toolsX + half + 5, half, settings.hudOpacity, 0, 1,
-                value -> settings.hudOpacity = value));
-        int small = (toolbarWidth - 10) / 3;
-        button(settings.hudShowBackground ? "Background ON" : "Background OFF", toolsX, toolsY + 24, small, () -> {
-            settings.hudShowBackground = !settings.hudShowBackground;
-            settings.save();
-            rebuildWidgets();
-        });
-        button(settings.hudShadow ? "Shadow ON" : "Shadow OFF", toolsX + small + 5, toolsY + 24, small, () -> {
-            settings.hudShadow = !settings.hudShadow;
-            settings.save();
-            rebuildWidgets();
-        });
-        button("Reset preview", toolsX + 2 * (small + 5), toolsY + 24, small, () -> {
-            settings.resetHud();
-            rebuildWidgets();
-        });
+        rect = marker(selection);
+        RotClientUiDraw.roundedFill(graphics, rect.left(), rect.top(), rect.right(), rect.bottom(), RotClientTheme.SURFACE);
+        outline(graphics, rect, RotClientTheme.HUD_ACCENT);
+        String suffix = HudLayerSettings.hidden(selection) ? " (hidden)" : " (not visible)";
+        RotClientUiDraw.text(graphics, font,
+                RotClientUiDraw.ellipsize(font, selection.title() + suffix, rect.width() - 10),
+                rect.left() + 5, rect.top() + 5, RotClientTheme.TEXT_DIM, false);
     }
 
-    private void addLayerControls() {
-        layerRows = Math.max(1, (height - toolsY - 29) / 22);
-        var entries = HudLayerSettings.LAYERS;
-        var hidden = RebuildClient.settings().hiddenVanillaLayers;
-        layerOffset = Math.clamp(layerOffset, 0, Math.max(0, entries.size() - layerRows));
-        for (int row = 0; row < layerRows && row + layerOffset < entries.size(); row++) {
-            var layer = entries.get(row + layerOffset);
-            button(layer.title() + (hidden.contains(layer.id()) ? "   HIDDEN" : "   VISIBLE"),
-                    toolsX, toolsY + 22 * row, toolbarWidth, () -> {
-                        if (!hidden.remove(layer.id())) hidden.add(layer.id());
-                        RebuildClient.settings().save();
-                        rebuildWidgets();
-                    });
-        }
-        if (entries.size() > layerRows) {
-            button("▲", width / 2 - 36, height - 24, 34, () -> scrollLayers(-1)).active = layerOffset > 0;
-            button("▼", width / 2 + 2, height - 24, 34, () -> scrollLayers(1)).active =
-                    layerOffset + layerRows < entries.size();
-        }
+    private static void outline(GuiGraphicsExtractor graphics, ScreenRectangle rect, int color) {
+        RotClientUiDraw.roundedOutline(graphics, rect.left() - 2, rect.top() - 2,
+                rect.right() + 2, rect.bottom() + 2, color, 2);
     }
 
-    private void scrollLayers(int delta) {
-        int next = Math.clamp(layerOffset + delta, 0, Math.max(0, HudLayerSettings.LAYERS.size() - layerRows));
-        if (next != layerOffset) {
-            layerOffset = next;
-            rebuildWidgets();
-        }
+    private ScreenRectangle area(HudLayerSettings.Layer layer) {
+        return hitAreas.stream().filter(hit -> hit.layer() == layer).map(HudLayerSettings.HitArea::bounds)
+                .findFirst().orElse(null);
     }
 
-    private AbstractSliderButton slider(String title, int x, int w, double current, double min, double max,
-                                        DoubleConsumer update) {
-        return new AbstractSliderButton(x, toolsY, w, 20, caption(title, current), (current - min) / (max - min)) {
-            @Override
-            protected void updateMessage() {
-                setMessage(caption(title, actual()));
-            }
-
-            @Override
-            protected void applyValue() {
-                update.accept(actual());
-            }
-
-            @Override
-            public boolean mouseReleased(MouseButtonEvent event) {
-                RebuildClient.settings().save();
-                return super.mouseReleased(event);
-            }
-
-            private double actual() {
-                return min + value * (max - min);
-            }
-        };
+    private ScreenRectangle marker(HudLayerSettings.Layer layer) {
+        HudPlacement pos = HudLayerSettings.placement(layer);
+        int w = Math.min(134, width - 12);
+        int x = (int) (layer.anchorX(width) + pos.x()) - w / 2;
+        int y = (int) (layer.anchorY(height) + pos.y()) - 9;
+        return new ScreenRectangle(Math.clamp(x, 3, width - w - 3), Math.clamp(y, 3, height - 21), w, 18);
     }
 
-    private static Component caption(String title, double value) {
-        return Component.literal(title + " " + String.format(Locale.ROOT, "%.2f", value));
-    }
-
-    private Button button(String title, int x, int y, int w, Runnable click) {
-        return addRenderableWidget(Button.builder(Component.literal(title), ignored -> click.run())
-                .bounds(x, y, w, 20).build());
-    }
-
-    private Preview preview() {
-        var settings = RebuildClient.settings();
-        int boxWidth = (int) Math.round(118 * settings.hudScale);
-        int boxHeight = (int) Math.round(32 * settings.hudScale);
-        int x = 8 + (int) Math.round(settings.hudX * Math.max(0, width - 16 - boxWidth));
-        int y = 47 + (int) Math.round(settings.hudY * Math.max(0, toolsY - 55 - boxHeight));
-        return new Preview(x, y, boxWidth, boxHeight);
+    private HudLayerSettings.Layer targetAt(double x, double y) {
+        if (inspector().contains((int) x, (int) y)) return null;
+        if (selection != null && area(selection) == null && marker(selection).containsPoint((int) x, (int) y)) return selection;
+        return hitAreas.stream().filter(hit -> hit.bounds().containsPoint((int) x, (int) y))
+                .min(Comparator.comparingLong(hit -> (long) hit.bounds().width() * hit.bounds().height()))
+                .map(HudLayerSettings.HitArea::layer).orElse(null);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (super.mouseClicked(event, doubleClick)) return true;
-        if (!layers && event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            Preview preview = preview();
-            if (event.x() >= preview.x && event.x() < preview.x + preview.w
-                    && event.y() >= preview.y && event.y() < preview.y + preview.h) {
-                dragging = true;
-                grabX = event.x() - preview.x;
-                grabY = event.y() - preview.y;
-                return true;
-            }
+    public boolean mouseClicked(MouseButtonEvent event, boolean twice) {
+        int mx = (int) event.x(), my = (int) event.y();
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && RotClientUiDraw.hitBackButton(mx, my, 12, 12)) {
+            onClose();
+            return true;
         }
-        return false;
+        if (inspector().contains(mx, my) && event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            handleInspector(mx, my);
+            return true;
+        }
+        var target = targetAt(event.x(), event.y());
+        if (target == null) return false;
+        selection = target;
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            remember();
+            HudLayerSettings.toggleHidden(selection);
+            return true;
+        }
+        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
+        movingElement = true;
+        changed = false;
+        return true;
+    }
+
+    private void handleInspector(int mx, int my) {
+        var rect = inspector();
+        int x = rect.x(), y = rect.y();
+        if (hit(mx, my, x + 10, y + 197, 100)) {
+            var settings = RebuildClient.settings();
+            if (!settings.hiddenVanillaLayers.isEmpty() || !settings.vanillaHudPlacements.isEmpty()) {
+                remember();
+                settings.hiddenVanillaLayers.clear();
+                settings.vanillaHudPlacements.clear();
+                settings.save();
+            }
+        } else if (hit(mx, my, x + 114, y + 197, 100)) {
+            onClose();
+        } else if (hit(mx, my, x + 78, y + 171, 64)) {
+            restore(undo, redo);
+        } else if (hit(mx, my, x + 146, y + 171, 64)) {
+            restore(redo, undo);
+        } else if (selection != null && hit(mx, my, x + 10, y + 171, 64)) {
+            remember();
+            HudLayerSettings.toggleHidden(selection);
+        } else if (selection != null && hit(mx, my, x + 112, y + 107, 96)) {
+            changePlacement(HudPlacement.DEFAULT);
+        } else if (selection != null && hit(mx, my, x + 10, y + 107, 96)) {
+            HudPlacement pos = HudLayerSettings.placement(selection);
+            ScreenRectangle bounds = area(selection);
+            double centerX = bounds != null ? bounds.left() + bounds.width() / 2d : selection.anchorX(width) + pos.x();
+            double centerY = bounds != null ? bounds.top() + bounds.height() / 2d : selection.anchorY(height) + pos.y();
+            changePlacement(pos.move(width / 2d - centerX, height / 2d - centerY));
+        } else if (selection != null && hit(mx, my, x + 10, y + 70, 30)) {
+            resize(-0.05);
+        } else if (selection != null && hit(mx, my, x + 114, y + 70, 30)) {
+            resize(0.05);
+        } else if (rect.containsHeader(mx, my, 52)) {
+            movingInspector = true;
+            offsetX = mx - x;
+            offsetY = my - y;
+        }
+    }
+
+    private static boolean hit(int mx, int my, int x, int y, int width) {
+        return RotClientUiDraw.inside(mx, my, x, y, width, 20);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
-        if (!dragging) return super.mouseDragged(event, deltaX, deltaY);
-        var settings = RebuildClient.settings();
-        Preview preview = preview();
-        settings.hudX = Math.clamp((event.x() - grabX - 8) / Math.max(1, width - 16 - preview.w), 0, 1);
-        settings.hudY = Math.clamp((event.y() - grabY - 47) / Math.max(1, toolsY - 55 - preview.h), 0, 1);
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        if (movingInspector) {
+            var settings = RebuildClient.settings();
+            var rect = inspector();
+            settings.hudInspectorX = HudEditorChromePolicy.clampDragX((int) (event.x() - offsetX), rect.w(), width);
+            settings.hudInspectorY = HudEditorChromePolicy.clampDragY((int) (event.y() - offsetY), rect.h(), height);
+            return true;
+        }
+        if (!movingElement || selection == null) return super.mouseDragged(event, dx, dy);
+        if (dx == 0 && dy == 0) return true;
+        if (!changed) remember();
+        changed = true;
+        var placement = HudLayerSettings.placement(selection);
+        HudLayerSettings.place(selection, placement.move(dx, dy));
         return true;
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (!dragging) return super.mouseReleased(event);
-        dragging = false;
-        RebuildClient.settings().save();
+        if (!movingElement && !movingInspector) return super.mouseReleased(event);
+        if (changed || movingInspector) RebuildClient.settings().save();
+        movingElement = false;
+        movingInspector = false;
+        changed = false;
         return true;
     }
 
     @Override
     public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
-        if (layers && vertical != 0) {
-            scrollLayers(vertical > 0 ? -1 : 1);
-            return true;
-        }
-        return super.mouseScrolled(x, y, horizontal, vertical);
+        var target = targetAt(x, y);
+        if (target == null || vertical == 0) return super.mouseScrolled(x, y, horizontal, vertical);
+        selection = target;
+        resize(vertical > 0 ? 0.05 : -0.05);
+        return true;
+    }
+
+    private void resize(double delta) {
+        changePlacement(HudLayerSettings.placement(selection).resize(delta));
+    }
+
+    private void changePlacement(HudPlacement placement) {
+        if (placement.equals(HudLayerSettings.placement(selection))) return;
+        remember();
+        HudLayerSettings.place(selection, placement);
+        RebuildClient.settings().save();
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        InterfaceSettings settings = RebuildClient.settings();
-        graphics.fill(0, 0, width, 35, 0xE0000000 | settings.panel);
-        graphics.fill(0, 34, width, 35, 0xFF000000 | settings.accent);
-        graphics.centeredText(font, getTitle(), width / 2 - 12, 14, 0xFFF8F5FF);
-        if (layers) {
-            graphics.fill(toolsX - 4, 39, toolsX + toolbarWidth + 4, height - 4, 0xF0000000 | settings.panel);
-        } else {
-            graphics.text(font, "Drag the HUD preview to place it.", 8, 38, 0xFFE6DDF0);
-            Preview p = preview();
-            int alpha = (int) Math.round(settings.hudOpacity * 255);
-            if (settings.hudShowBackground) {
-                graphics.fill(p.x, p.y, p.x + p.w, p.y + p.h,
-                        (alpha << 24) | settings.hudBackground);
+    public boolean keyPressed(KeyEvent event) {
+        if ((event.modifiers() & GLFW.GLFW_MOD_CONTROL) != 0) {
+            if (event.key() == GLFW.GLFW_KEY_Z) {
+                if ((event.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0) restore(redo, undo);
+                else restore(undo, redo);
+                return true;
             }
-            int accent = 0xFF000000 | settings.accent;
-            graphics.fill(p.x, p.y, p.x + p.w, p.y + 1, accent);
-            graphics.pose().pushMatrix();
-            try {
-                graphics.pose().translate(p.x, p.y).scale((float) settings.hudScale);
-                graphics.text(font, "HUD preview", 8, 6, 0xFF000000 | settings.hudText, settings.hudShadow);
-                graphics.text(font, "Layout sample", 8, 18, 0xFFC8BFD8, settings.hudShadow);
-            } finally {
-                graphics.pose().popMatrix();
+            if (event.key() == GLFW.GLFW_KEY_Y) {
+                restore(redo, undo);
+                return true;
             }
         }
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        return super.keyPressed(event);
+    }
+
+    private void remember() {
+        undo.push(snapshot());
+        if (undo.size() > 32) undo.removeLast();
+        redo.clear();
+    }
+
+    private static LayoutSnapshot snapshot() {
+        var settings = RebuildClient.settings();
+        return new LayoutSnapshot(Set.copyOf(settings.hiddenVanillaLayers), Map.copyOf(settings.vanillaHudPlacements));
+    }
+
+    private static void restore(ArrayDeque<LayoutSnapshot> from, ArrayDeque<LayoutSnapshot> to) {
+        if (from.isEmpty()) return;
+        LayoutSnapshot next = from.pop();
+        to.push(snapshot());
+        var settings = RebuildClient.settings();
+        settings.hiddenVanillaLayers.clear();
+        settings.hiddenVanillaLayers.addAll(next.hidden);
+        settings.vanillaHudPlacements.clear();
+        settings.vanillaHudPlacements.putAll(next.placements);
+        settings.save();
     }
 
     @Override
     public void onClose() {
-        RebuildClient.settings().save();
+        if (changed || movingInspector) RebuildClient.settings().save();
         minecraft.gui.setScreen(parent);
     }
 
     @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+    public boolean isPauseScreen() { return false; }
 
-    private record Preview(int x, int y, int w, int h) {}
+    private record LayoutSnapshot(Set<String> hidden, Map<String, HudPlacement> placements) {}
 }

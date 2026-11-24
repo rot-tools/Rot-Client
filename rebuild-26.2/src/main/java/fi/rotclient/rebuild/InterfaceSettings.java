@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +25,11 @@ final class InterfaceSettings {
     int accent = DEFAULT_ACCENT;
     int hudBackground = 0x100C12;
     int hudText = DEFAULT_TEXT;
-    double hudX = 0.5;
-    double hudY = 0.45;
-    double hudScale = 1.0;
     double hudOpacity = 0.85;
-    boolean hudShadow = true;
-    boolean hudShowBackground = true;
+    int hudInspectorX = HudEditorChromePolicy.UNPLACED;
+    int hudInspectorY = HudEditorChromePolicy.UNPLACED;
     Set<String> hiddenVanillaLayers = new HashSet<>();
+    Map<String, HudPlacement> vanillaHudPlacements = new HashMap<>();
     private transient Path path;
 
     static InterfaceSettings load(Path path) {
@@ -43,11 +43,14 @@ final class InterfaceSettings {
             }
         }
         settings.path = path;
-        settings.hudX = clamp(settings.hudX, 0, 1, 0.5);
-        settings.hudY = clamp(settings.hudY, 0, 1, 0.45);
-        settings.hudScale = clamp(settings.hudScale, 0.5, 2, 1);
+        if (settings.hudInspectorX == 12 && settings.hudInspectorY == 38) {
+            settings.hudInspectorX = HudEditorChromePolicy.UNPLACED;
+            settings.hudInspectorY = HudEditorChromePolicy.UNPLACED;
+        }
         settings.hudOpacity = clamp(settings.hudOpacity, 0, 1, 0.85);
         if (settings.hiddenVanillaLayers == null) settings.hiddenVanillaLayers = new HashSet<>();
+        if (settings.vanillaHudPlacements == null) settings.vanillaHudPlacements = new HashMap<>();
+        settings.vanillaHudPlacements.values().removeIf(java.util.Objects::isNull);
         return settings;
     }
 
@@ -73,18 +76,6 @@ final class InterfaceSettings {
                 }
             }
         }
-    }
-
-    void resetHud() {
-        hudX = 0.5;
-        hudY = 0.45;
-        hudScale = 1;
-        hudOpacity = 0.85;
-        hudBackground = 0x100C12;
-        hudText = DEFAULT_TEXT;
-        hudShadow = true;
-        hudShowBackground = true;
-        save();
     }
 
     static double clamp(double value, double min, double max, double fallback) {

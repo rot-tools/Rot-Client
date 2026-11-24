@@ -2,7 +2,31 @@
   <img src="src/main/resources/assets/rotclient/icon.png" alt="Rot Client" width="128" height="128">
 </p>
 
-> **Current 26.2 development** is the [Illegal and Legal rebuild](rebuild-26.2/README.md). Illegal is the primary test-server edition. Legal starts with the shared dashboard and HUD editor. The rebuild has a separate source tree and local playtest JARs. The rest of this README describes the existing Plus and Lite editions.
+## Start here · Minecraft 26.2 playtest
+
+> [!IMPORTANT]
+> **Rot Client Illegal is the active development edition for the designated test server.** Start there to test the current dashboard and HUD editor.
+
+**[RotClientIllegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientIllegal-0.1.0-dev.5%2Bmc26.2.jar)** · [Playtest notes](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.5) · [SHA256SUMS.txt](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/SHA256SUMS.txt)
+
+| Edition | Download | Scope |
+| --- | --- | --- |
+| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientIllegal-0.1.0-dev.5%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. |
+| Rot Client Legal | [RotClientLegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientLegal-0.1.0-dev.5%2Bmc26.2.jar) | Same dashboard and HUD editor, without the four Illegal modules. |
+| Rot Client+ | [RotClientPlus-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client and the rebuild's reference. |
+| Rot Client Lite | [RotClient-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.5/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition and reference. |
+
+Use Minecraft 26.2, Java 25, Fabric Loader 0.19.3 or newer and Fabric API for 26.2. Enable **one** edition at a time. Press **Right Shift** or run **`/rot`** to open the dashboard.
+
+For this playtest, toggle **Visuals → HUD Elements Editor → Hide Status Effects** with an effect active. Check gameplay and the E inventory with the switch on and off. The two rebuilds passed build and packaging checks. The inventory change awaits gameplay validation.
+
+Development starts with Illegal. After a feature passes its playtest, review which parts fit Legal, port them and test Legal separately. See the [rebuild guide](rebuild-26.2/README.md) and [edition matrix](docs/WHICH_JAR.md).
+
+---
+
+## Plus and Lite reference documentation
+
+The sections below describe the previous Plus and Lite build line and archived playtests.
 
 <h1 align="center">Rot Client</h1>
 

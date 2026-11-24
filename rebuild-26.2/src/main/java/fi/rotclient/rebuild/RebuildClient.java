@@ -60,6 +60,10 @@ public final class RebuildClient implements ClientModInitializer {
         return settings;
     }
 
+    public static boolean hideStatusEffects() {
+        return settings != null && settings.hiddenVanillaLayers.contains(HudLayerSettings.STATUS_EFFECTS);
+    }
+
     static List<ModuleCard> modules() {
         return modules;
     }
