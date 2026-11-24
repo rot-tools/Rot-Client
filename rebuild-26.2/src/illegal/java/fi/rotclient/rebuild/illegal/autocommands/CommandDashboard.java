@@ -3,8 +3,8 @@
 package fi.rotclient.rebuild.illegal.autocommands;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import fi.rotclient.rebuild.RotChrome;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -17,9 +17,6 @@ import java.util.function.Consumer;
 
 public final class CommandDashboard extends Screen {
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("rotclient_rebuild", "icon.png");
-    private static final int GOLD = 0xFFFFCC65;
-    private static final int TEXT = 0xFFEDF3FF;
-    private static final int MUTED = 0xFFADB9CB;
 
     private final PopupConfig config;
     private final Screen parent;
@@ -55,7 +52,7 @@ public final class CommandDashboard extends Screen {
         int quarter = (usable - 12) / 4;
 
         if (browsing) {
-            var search = new EditBox(font, x, top + 37, usable - 58, 20, Component.literal("Search warps"));
+            var search = RotChrome.field(font, x, top + 37, usable - 58, 20, "Search warps");
             search.setHint(Component.literal("Search destinations or commands"));
             search.setMaxLength(64);
             search.setValue(query);
@@ -85,8 +82,8 @@ public final class CommandDashboard extends Screen {
     }
 
     private Button addButton(String text, int x, int y, int buttonWidth, Consumer<Button> action) {
-        return addRenderableWidget(Button.builder(Component.literal(text), action::accept)
-                .bounds(x, y, buttonWidth, 20).build());
+        return addRenderableWidget(RotChrome.button(font, Component.literal(text), x, y, buttonWidth, 20,
+                "Done".equals(text) || "Add command".equals(text), action::accept));
     }
 
     private void rebuildRows() {
@@ -145,42 +142,40 @@ public final class CommandDashboard extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        graphics.fill(0, 0, width, height, 0x99060910);
-        graphics.fill(left, top, left + panelWidth, bottom, 0xF2192234);
-        graphics.fill(left, top, left + panelWidth, top + 2, GOLD);
+        RotChrome.panel(graphics, left, top, panelWidth, bottom - top);
+        graphics.fill(left + 12, top + 1, left + 78, top + 3, RotChrome.accent());
         graphics.blit(RenderPipelines.GUI_TEXTURED, ICON, left + 12, top + 8, 0, 0, 23, 23, 128, 128, 128, 128);
-        graphics.text(font, title, left + 42, top + 9, GOLD);
-        graphics.text(font, browsing ? "Hypixel SkyBlock destinations" : "Command shortcuts", left + 42, top + 22, MUTED);
+        RotChrome.text(graphics, font, title.getString(), left + 42, top + 9, panelWidth - 54, RotChrome.TEXT);
+        RotChrome.text(graphics, font, browsing ? "Warp destinations" : "Command shortcuts",
+                left + 42, top + 22, panelWidth - 54, RotChrome.MUTED);
 
         if (entryCount() == 0) {
-            graphics.centeredText(font, browsing ? "No destinations found." : "Add a command to create a shortcut.",
-                    width / 2, top + 71, MUTED);
+            RotChrome.centered(graphics, font, browsing ? "No destinations found." : "Add a command to create a shortcut.",
+                    width / 2, top + 71, RotChrome.MUTED);
         }
         for (int row = 0; row < rows && page * rows + row < entryCount(); row++) {
             int index = page * rows + row;
             int y = top + 61 + row * 29;
             int x = left + 17;
-            graphics.fill(left + 12, y, left + panelWidth - 11, y + 26, 0xFF25314A);
+            RotChrome.row(graphics, left + 12, y, panelWidth - 24, 27, mouseY >= y && mouseY < y + 27
+                    && mouseX >= left + 12 && mouseX < left + panelWidth - 12);
             if (browsing) {
                 var warp = matches.get(index);
-                graphics.text(font, clipped(warp.name(), panelWidth - 83), x, y + 4, TEXT);
-                graphics.text(font, clipped(warp.command(), panelWidth - 83), x, y + 15, MUTED);
+                RotChrome.text(graphics, font, warp.name(), x, y + 3, panelWidth - 83, RotChrome.TEXT);
+                RotChrome.text(graphics, font, warp.command(), x, y + 14, panelWidth - 83, RotChrome.MUTED);
             } else {
                 var shortcut = config.shortcuts.get(index);
                 String key = ShortcutEditor.keyLabel(shortcut.key());
                 int keyWidth = Math.min(76, font.width(key));
                 int available = panelWidth - 95 - keyWidth;
-                graphics.text(font, clipped(shortcut.notice().title(), available), x, y + 4, TEXT);
-                graphics.text(font, clipped(shortcut.command(), available), x, y + 15, MUTED);
-                graphics.text(font, clipped(key, 76), left + panelWidth - 66 - keyWidth, y + 9, GOLD);
+                RotChrome.text(graphics, font, shortcut.notice().title(), x, y + 3, available, RotChrome.TEXT);
+                RotChrome.text(graphics, font, shortcut.command(), x, y + 14, available, RotChrome.MUTED);
+                RotChrome.text(graphics, font, key, left + panelWidth - 66 - keyWidth, y + 8, keyWidth,
+                        shortcut.key().isEmpty() ? RotChrome.MUTED : RotChrome.accent());
             }
         }
-        graphics.centeredText(font, (page + 1) + " / " + pageCount(), width / 2, bottom - 22, MUTED);
+        RotChrome.centered(graphics, font, (page + 1) + " / " + pageCount(), width / 2, bottom - 22, RotChrome.MUTED);
         super.extractRenderState(graphics, mouseX, mouseY, delta);
-    }
-
-    private String clipped(String value, int maxWidth) {
-        return font.width(value) <= maxWidth ? value : font.plainSubstrByWidth(value, Math.max(0, maxWidth - font.width("…"))) + "…";
     }
 
     @Override public boolean isPauseScreen() { return false; }

@@ -12,16 +12,19 @@ import fi.rotclient.rebuild.illegal.autocommands.AutoCommandsClient;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 
 public final class IllegalEdition implements ClientEdition {
     private static IllegalSettings settings = new IllegalSettings();
+    private static AutoLoadout autoLoadout;
     private boolean sprintWasDown;
     private boolean dashboardWasDown;
 
     @Override
     public void initialize() {
         settings = IllegalSettings.load();
+        autoLoadout = new AutoLoadout(settings.autoLoadout);
         new AutoCommandsClient().register();
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
     }
@@ -64,11 +67,26 @@ public final class IllegalEdition implements ClientEdition {
                             Minecraft client = Minecraft.getInstance();
                             var screen = AutoCommandsClient.settingsScreen(parent);
                             if (screen != parent) client.gui.setScreen(screen);
-                        }))));
+                        }))),
+                new ModuleCard("auto_loadout", "Auto Loadout",
+                        "Equip a saved loadout with a hotkey on the designated test server.", Category.UTILITIES,
+                        List.of(new Toggle("Auto Loadout", () -> settings.autoLoadout.enabled, enabled -> {
+                            settings.autoLoadout.enabled = enabled;
+                            settings.save();
+                        }), new Action("Edit timing and keybinds", parent ->
+                                Minecraft.getInstance().gui.setScreen(new AutoLoadoutScreen(parent, settings))))));
     }
 
     public static boolean autoCommandsEnabled() {
         return settings.autoCommands;
+    }
+
+    public static boolean handleAutoLoadoutKey(long window, int action, KeyEvent event) {
+        return autoLoadout != null && autoLoadout.onKey(window, action, event);
+    }
+
+    public static boolean loadoutKeyAssigned(int key) {
+        return settings.autoLoadout.slotForKey(key) >= 0;
     }
 
     public static boolean autoSprintEnabled() {
@@ -104,6 +122,7 @@ public final class IllegalEdition implements ClientEdition {
     }
 
     private void tick(Minecraft client) {
+        autoLoadout.tick(client);
         long handle = client.getWindow().handle();
         boolean sprintDown = keyDown(handle, settings.autoSprintKey);
         boolean dashboardDown = settings.clickGui && keyDown(handle, settings.clickGuiKey);
@@ -135,6 +154,6 @@ public final class IllegalEdition implements ClientEdition {
     }
 
     private static int configurableKey(int key) {
-        return key == GLFW.GLFW_KEY_RIGHT_SHIFT ? GLFW.GLFW_KEY_UNKNOWN : key;
+        return key == GLFW.GLFW_KEY_RIGHT_SHIFT || loadoutKeyAssigned(key) ? GLFW.GLFW_KEY_UNKNOWN : key;
     }
 }

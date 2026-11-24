@@ -85,6 +85,11 @@ public final class AutoCommandsClient {
 
     public static PopupConfig config() { return instance == null ? null : instance.config; }
 
+    public static boolean keyIsAssigned(String key) {
+        var config = config();
+        return config != null && !key.isEmpty() && config.shortcuts.stream().anyMatch(shortcut -> key.equals(shortcut.key()));
+    }
+
     public static void showShortcut(Minecraft client, CommandShortcut shortcut) {
         if (instance != null && instance.enabled() && !shortcut.isTravelCommand()) {
             instance.show(client, shortcut.notice());

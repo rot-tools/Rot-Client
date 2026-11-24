@@ -2,8 +2,8 @@
 // AutoCommands 2.2.0, copyright 2026 Pickaxe Popup contributors.
 package fi.rotclient.rebuild.illegal.autocommands;
 
+import fi.rotclient.rebuild.RotChrome;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -23,12 +23,13 @@ public final class PopupPositionScreen extends Screen {
     }
 
     @Override protected void init() {
-        addRenderableWidget(Button.builder(Component.literal(previewFailure ? "Show success" : "Show failure"), button -> {
+        addRenderableWidget(RotChrome.button(font, Component.literal(previewFailure ? "Show success" : "Show failure"),
+                width / 2 - 112, height - 29, 103, 20, false, button -> {
             previewFailure = !previewFailure;
             button.setMessage(Component.literal(previewFailure ? "Show success" : "Show failure"));
-        }).bounds(width / 2 - 112, height - 29, 103, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Back to settings"), button -> onClose())
-                .bounds(width / 2 - 5, height - 29, 117, 20).build());
+        }));
+        addRenderableWidget(RotChrome.button(font, Component.literal("Back to settings"),
+                width / 2 - 5, height - 29, 117, 20, true, button -> onClose()));
     }
 
     private CommandShortcut.Notice sample() {
@@ -42,11 +43,11 @@ public final class PopupPositionScreen extends Screen {
         if (dragging || box.contains(mouseX, mouseY)) {
             graphics.outline(Math.round(box.left()) - 1, Math.round(box.top()) - 1,
                     Math.round(box.right() - box.left()) + 2, Math.round(box.bottom() - box.top()) + 2,
-                    dragging ? 0xFFFFFFFF : 0x8063F594);
+                    RotChrome.accent());
         }
-        graphics.centeredText(font, "Drag the popup. Scroll to resize.", width / 2, 10, 0xFFFFFFFF);
-        graphics.centeredText(font, config.enabled ? "Preview" : "Preview (popup is disabled)",
-                width / 2, 23, 0xFFB6C6BC);
+        RotChrome.centered(graphics, font, "Drag the popup. Scroll to resize.", width / 2, 10, RotChrome.TEXT);
+        RotChrome.centered(graphics, font, config.enabled ? "Preview" : "Preview (popup is disabled)",
+                width / 2, 23, RotChrome.MUTED);
         super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 

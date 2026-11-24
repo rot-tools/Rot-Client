@@ -26,12 +26,17 @@ final class IllegalSettings {
     boolean clickGui;
     int autoSprintKey = GLFW.GLFW_KEY_UNKNOWN;
     int clickGuiKey = GLFW.GLFW_KEY_UNKNOWN;
+    AutoLoadoutSettings autoLoadout = new AutoLoadoutSettings();
 
     static IllegalSettings load() {
         if (Files.isRegularFile(FILE)) {
             try (var input = Files.newBufferedReader(FILE)) {
                 IllegalSettings restored = GSON.fromJson(input, IllegalSettings.class);
-                if (restored != null) return restored;
+                if (restored != null) {
+                    if (restored.autoLoadout == null) restored.autoLoadout = new AutoLoadoutSettings();
+                    restored.autoLoadout.normalize();
+                    return restored;
+                }
             } catch (IOException | RuntimeException error) {
                 LOGGER.warn("Could not read {}", FILE, error);
             }

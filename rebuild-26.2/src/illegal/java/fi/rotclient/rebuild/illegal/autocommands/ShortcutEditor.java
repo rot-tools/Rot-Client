@@ -3,6 +3,8 @@
 package fi.rotclient.rebuild.illegal.autocommands;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import fi.rotclient.rebuild.RotChrome;
+import fi.rotclient.rebuild.illegal.IllegalEdition;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -47,36 +49,36 @@ final class ShortcutEditor extends Screen {
         top = (height - 204) / 2;
         int x = left + 12;
         int usable = panelWidth - 24;
-        commandInput = addRenderableWidget(new EditBox(font, x, top + 42, usable, 20, Component.literal("Command")));
+        commandInput = addRenderableWidget(RotChrome.field(font, x, top + 42, usable, 20, "Command"));
         commandInput.setMaxLength(CommandShortcut.MAX_COMMAND_LENGTH);
         commandInput.setHint(Component.literal("/warp mines"));
         commandInput.setValue(command);
         commandInput.setResponder(value -> { command = value; status = ""; });
-        labelInput = addRenderableWidget(new EditBox(font, x, top + 81, usable, 20, Component.literal("Custom label")));
+        labelInput = addRenderableWidget(RotChrome.field(font, x, top + 81, usable, 20, "Custom label"));
         labelInput.setMaxLength(CommandShortcut.MAX_LABEL_LENGTH);
         labelInput.setHint(Component.literal("Automatic destination name"));
         labelInput.setValue(label);
         labelInput.setResponder(value -> { label = value; status = ""; });
 
-        bindButton = addRenderableWidget(Button.builder(bindLabel(), button -> {
+        bindButton = addRenderableWidget(RotChrome.button(font, bindLabel(), x, top + 109, usable - 64, 20, false, button -> {
             capturing = !capturing;
             button.setMessage(bindLabel());
             status = capturing ? "Esc cancels. Choose a single keyboard key." : "";
-        }).bounds(x, top + 109, usable - 64, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Clear key"), button -> {
+        }));
+        addRenderableWidget(RotChrome.button(font, Component.literal("Clear key"), x + usable - 60, top + 109, 60, 20, false, button -> {
             key = "";
             capturing = false;
             status = "";
             bindButton.setMessage(bindLabel());
-        }).bounds(x + usable - 60, top + 109, 60, 20).build());
+        }));
 
-        Button remove = addRenderableWidget(Button.builder(Component.literal("Remove"), button -> commit(true))
-                .bounds(x, top + 174, 63, 20).build());
+        Button remove = addRenderableWidget(RotChrome.button(font, Component.literal("Remove"),
+                x, top + 174, 63, 20, false, button -> commit(true)));
         remove.active = index >= 0;
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> onClose())
-                .bounds(x + usable - 125, top + 174, 59, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Save"), button -> commit(false))
-                .bounds(x + usable - 61, top + 174, 61, 20).build());
+        addRenderableWidget(RotChrome.button(font, Component.literal("Cancel"),
+                x + usable - 125, top + 174, 59, 20, false, button -> onClose()));
+        addRenderableWidget(RotChrome.button(font, Component.literal("Save"),
+                x + usable - 61, top + 174, 61, 20, true, button -> commit(false)));
     }
 
     private Component bindLabel() {
@@ -116,8 +118,9 @@ final class ShortcutEditor extends Screen {
                 status = "Choose a key without modifiers.";
                 return true;
             }
-            if (keyInUse(candidate)) {
-                status = "That key is assigned to another command.";
+            if (keyInUse(candidate) || IllegalEdition.loadoutKeyAssigned(event.key())) {
+                status = "That key is already assigned to a command or loadout.";
+                return true;
             } else {
                 key = candidate;
                 status = "";
@@ -160,16 +163,15 @@ final class ShortcutEditor extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        graphics.fill(0, 0, width, height, 0x99060910);
-        graphics.fill(left, top, left + panelWidth, top + 204, 0xF2192234);
-        graphics.fill(left, top, left + panelWidth, top + 2, 0xFFFFCC65);
-        graphics.centeredText(font, title, width / 2, top + 11, 0xFFFFCC65);
-        graphics.text(font, "Command", left + 12, top + 28, 0xFFEDF3FF);
-        graphics.text(font, "Custom label (optional)", left + 12, top + 68, 0xFFEDF3FF);
+        RotChrome.panel(graphics, left, top, panelWidth, 204);
+        graphics.fill(left + 12, top + 1, left + 78, top + 3, RotChrome.accent());
+        RotChrome.centered(graphics, font, title.getString(), width / 2, top + 11, RotChrome.TEXT);
+        RotChrome.text(graphics, font, "Command", left + 12, top + 28, panelWidth - 24, RotChrome.TEXT);
+        RotChrome.text(graphics, font, "Custom label (optional)", left + 12, top + 68, panelWidth - 24, RotChrome.TEXT);
         var shortcut = new CommandShortcut(CommandShortcut.cleanCommand(command), CommandShortcut.cleanLabel(label), key);
         String line = (shortcut.isTravelCommand() ? "Shortcut label: " : "Popup: ") + shortcut.notice().title();
-        graphics.text(font, font.plainSubstrByWidth(line, panelWidth - 24), left + 12, top + 138, 0xFFFFCC65);
-        graphics.text(font, font.plainSubstrByWidth(status, panelWidth - 24), left + 12, top + 154, 0xFFFFC48D);
+        RotChrome.text(graphics, font, line, left + 12, top + 138, panelWidth - 24, RotChrome.MUTED);
+        RotChrome.text(graphics, font, status, left + 12, top + 154, panelWidth - 24, 0xFFFFA0B0);
         super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 

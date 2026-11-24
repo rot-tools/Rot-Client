@@ -1,10 +1,10 @@
 # Rot Client rebuild for Minecraft 26.2
 
-Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current build is `0.1.0-dev.5+mc26.2`. Choose **Illegal** for the first test on the designated test server. All four downloads are in the [GitHub playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.5).
+Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current local Illegal test candidate is `0.1.0-dev.6+mc26.2`. Choose **Illegal** for the first test on the designated test server. The [published GitHub playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.5) contains dev.5 and the Plus and Lite reference builds.
 
 | Edition in Prism | Scope of the first playtest |
 | --- | --- |
-| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint and AutoCommands. |
+| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands and Auto Loadout. |
 | **26.2 Mod Client Legal** | Dashboard and HUD editor. Legal module ports start after the Illegal dashboard and the relevant module have been tested. |
 
 The dashboard reuses Rot Client+'s drawing code, UI font, dashboard dimensions, tab strip and scroll behavior. The HUD landing page has a Hide switch and Settings button for each supported vanilla HUD layer. Click a visible element in the world editor to select it, then drag it, scroll to resize, or use **Position → Default**. Elements that are temporarily absent have a labeled positioning marker when opened through Settings. Illegal saves interface settings in `config/rotclientillegal/interface.json` and Legal uses `config/rotclientlegal/interface.json`.
@@ -20,8 +20,8 @@ cd rebuild-26.2
 
 On Linux and macOS, run `./gradlew build` from the same directory. The build includes `verifyEditions`, which checks Fabric metadata, verifies the shared classes, and checks that Illegal classes and mixins stay out of the Legal JAR. The playable files are:
 
-- `build/libs/RotClientIllegal-0.1.0-dev.5+mc26.2.jar`
-- `build/libs/RotClientLegal-0.1.0-dev.5+mc26.2.jar`
+- `build/libs/RotClientIllegal-0.1.0-dev.6+mc26.2.jar`
+- `build/libs/RotClientLegal-0.1.0-dev.6+mc26.2.jar`
 
 ## Prism playtest
 
@@ -37,6 +37,12 @@ Record the edition, JAR version, what you clicked, what you saw, and whether the
 
 ## Development workflow
 
+### Dev.6 Illegal playtest
+
+- Open **Utilities → AutoCommands → Edit shortcuts and popup style**. Try the warp search, shortcut editor, popup sliders and movable preview. Saved bindings and popup colors carry over.
+- Open **Utilities → Auto Loadout → Edit timing and keybinds**. Set equip and close delays from 1 to 8 ticks. Max delay variety from 1 to 5 adds zero to the selected maximum to each delay. Use **Keybinds** to assign or clear any of the 12 slots.
+- On the designated test server, switch on Auto Loadout and press one assigned key outside menus. Check an available loadout, a slot that's already selected and what happens if you close or change the menu. If Ionic is installed, disable its own Auto Loadout while testing the Rot version.
+
 1. Fix the dashboard and HUD based on the owner's Illegal playtest.
 2. Add or restore one module in Illegal. Stabilize it and obtain the owner's in-game confirmation.
 3. Review which parts suit Legal. Move or implement only those parts, then test them in Legal.
@@ -49,3 +55,7 @@ The GitHub playtest includes the rebuild JARs and the preserved 2.0.11 Plus and 
 ## Source provenance
 
 The original Rot Client UI code and assets come from the 26.2 Plus project. Both JARs include the original UI font and its OFL notice. AutoCommands uses the separately developed MIT-licensed AutoCommands implementation. Its notice is included in the Illegal JAR.
+
+Auto Loadout's menu compatibility was reviewed against Starred's Ionic
+`0.0.2+26.2` binary and the [official Loadouts notes](https://hypixel.net/threads/hypixel-skyblock-0-26-skyblock-resource-pack-loadouts-security-quest-and-more.6117801/).
+Its Rot Client implementation is written independently.

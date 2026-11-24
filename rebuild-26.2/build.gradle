@@ -10,6 +10,10 @@ sourceSets {
         compileClasspath += main.output + main.compileClasspath
         runtimeClasspath += main.output + main.runtimeClasspath
     }
+    test {
+        compileClasspath += illegal.output
+        runtimeClasspath += illegal.output
+    }
 }
 
 dependencies {
@@ -96,6 +100,7 @@ tasks.register('verifyEditions') {
                 assert legalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientillegal'] as Set
                 assert illegalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientlegal'] as Set
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/IllegalEdition.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoLoadout.class') != null
                 assert testJar.getEntry('rot-rebuild-illegal.mixins.json') != null
                 def uiMixin = 'rot-rebuild-ui.mixins.json'
                 def entries = parser.parse(publicJar.getInputStream(publicJar.getEntry(uiMixin)))
