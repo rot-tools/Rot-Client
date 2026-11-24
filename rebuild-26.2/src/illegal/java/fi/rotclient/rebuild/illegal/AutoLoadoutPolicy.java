@@ -2,6 +2,9 @@ package fi.rotclient.rebuild.illegal;
 
 import java.util.Locale;
 import java.util.List;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /** Compatibility with the server's 4-by-3 Loadouts menu. */
@@ -28,8 +31,30 @@ final class AutoLoadoutPolicy {
             if (state.equals("equipped") || state.equals("currently equipped!") || state.equals("currently equipped")
                     || state.equals("selected") || state.equals("currently selected!")) return true;
         }
+        if (lore.stream().map(line -> line.strip().toLowerCase(Locale.ROOT))
+                .anyMatch(line -> line.contains("click to equip") || line.contains("click to load"))) return false;
         // In the reviewed Loadouts layout the equipped entry omits the action line before the edit hint.
-        return lore.size() >= 2 && lore.get(lore.size() - 2).isBlank();
+        return lore.size() >= 2 && lore.get(lore.size() - 2).isBlank()
+                && lore.getLast().toLowerCase(Locale.ROOT).contains("click to edit");
+    }
+
+    /** Keeps the close request alive through short server-side menu refreshes. */
+    static final class CloseWindow {
+        private static final int REFRESH_TICKS = 16;
+        private final long closeAt;
+        private final Set<Object> closed = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        CloseWindow(long closeAt) {
+            this.closeAt = closeAt;
+        }
+
+        boolean expired(long tick) {
+            return tick > closeAt + REFRESH_TICKS || closed.size() >= 3;
+        }
+
+        boolean shouldClose(long tick, Object menu, boolean cursorEmpty) {
+            return tick >= closeAt && !expired(tick) && menu != null && cursorEmpty && closed.add(menu);
+        }
     }
 
     static boolean unavailable(String title, List<String> lore) {

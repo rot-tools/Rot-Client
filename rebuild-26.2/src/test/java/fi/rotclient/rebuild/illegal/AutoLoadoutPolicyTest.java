@@ -21,8 +21,23 @@ final class AutoLoadoutPolicyTest {
     void respectsEmptyAndAlreadySelectedEntries() {
         assertTrue(AutoLoadoutPolicy.equipped(List.of("A loadout", "", "Right-click to edit!")));
         assertFalse(AutoLoadoutPolicy.equipped(List.of("A loadout", "Left-click to equip!", "Right-click to edit!")));
+        assertFalse(AutoLoadoutPolicy.equipped(List.of("Left-click to equip!", "", "Right-click to edit!")));
         assertTrue(AutoLoadoutPolicy.unavailable("Empty Loadout", List.of()));
         assertFalse(AutoLoadoutPolicy.unavailable("Mining", List.of("Left-click to equip!")));
+    }
+
+    @Test
+    void closesRefreshedMenusOnceAndWaitsForEmptyCursor() {
+        var window = new AutoLoadoutPolicy.CloseWindow(10);
+        Object original = new Object();
+        Object refreshed = new Object();
+        assertFalse(window.shouldClose(9, original, true));
+        assertFalse(window.shouldClose(10, original, false));
+        assertFalse(window.shouldClose(11, null, true));
+        assertTrue(window.shouldClose(12, original, true));
+        assertFalse(window.shouldClose(13, original, true));
+        assertTrue(window.shouldClose(15, refreshed, true));
+        assertFalse(window.shouldClose(27, new Object(), true));
     }
 
     @Test

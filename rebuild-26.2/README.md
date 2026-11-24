@@ -1,6 +1,6 @@
 # Rot Client rebuild for Minecraft 26.2
 
-Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current local Illegal test candidate is `0.1.0-dev.6+mc26.2`. Choose **Illegal** for the first test on the designated test server. The [published GitHub playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.5) contains dev.5 and the Plus and Lite reference builds.
+Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current Illegal build is `0.1.0-dev.7+mc26.2`. The [published GitHub playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.7) contains Illegal dev.7, Legal dev.5 and the Plus and Lite reference builds. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
 
 | Edition in Prism | Scope of the first playtest |
 | --- | --- |
@@ -20,8 +20,8 @@ cd rebuild-26.2
 
 On Linux and macOS, run `./gradlew build` from the same directory. The build includes `verifyEditions`, which checks Fabric metadata, verifies the shared classes, and checks that Illegal classes and mixins stay out of the Legal JAR. The playable files are:
 
-- `build/libs/RotClientIllegal-0.1.0-dev.6+mc26.2.jar`
-- `build/libs/RotClientLegal-0.1.0-dev.6+mc26.2.jar`
+- `build/libs/RotClientIllegal-0.1.0-dev.7+mc26.2.jar`
+- `build/libs/RotClientLegal-0.1.0-dev.7+mc26.2.jar` (source-build candidate; published Legal playtest remains dev.5)
 
 ## Prism playtest
 
@@ -37,18 +37,19 @@ Record the edition, JAR version, what you clicked, what you saw, and whether the
 
 ## Development workflow
 
-### Dev.6 Illegal playtest
+### Dev.7 Illegal playtest
 
 - Open **Utilities → AutoCommands → Edit shortcuts and popup style**. Try the warp search, shortcut editor, popup sliders and movable preview. Saved bindings and popup colors carry over.
 - Open **Utilities → Auto Loadout → Edit timing and keybinds**. Set equip and close delays from 1 to 8 ticks. Max delay variety from 1 to 5 adds zero to the selected maximum to each delay. Use **Keybinds** to assign or clear any of the 12 slots.
 - On the designated test server, switch on Auto Loadout and press one assigned key outside menus. Check an available loadout, a slot that's already selected and what happens if you close or change the menu. If Ionic is installed, disable its own Auto Loadout while testing the Rot version.
+- The owner confirmed the Auto Loadout switch and automatic menu close in dev.7. The close step follows briefly refreshed Loadouts menus and never sends another equip click.
 
 1. Fix the dashboard and HUD based on the owner's Illegal playtest.
 2. Add or restore one module in Illegal. Stabilize it and obtain the owner's in-game confirmation.
 3. Review which parts suit Legal. Move or implement only those parts, then test them in Legal.
 4. Start the next module after the current one has passed its applicable playtests.
 
-The source branch is `codex/26.2-client-rebuild`. Shared UI lives under `src/main` and Illegal implementations under `src/illegal`. Treat old Plus and Lite as references when restoring a specific feature. The repository's root build remains the legacy distribution.
+The integration branch is `development`. Shared UI lives under `src/main` and Illegal implementations under `src/illegal`. Use separate feature branches for Illegal and Legal work, and coordinate changes to the shared UI. Treat old Plus and Lite as references when restoring a specific feature. The repository's root build remains the legacy distribution.
 
 The GitHub playtest includes the rebuild JARs and the preserved 2.0.11 Plus and Lite reference builds. The rebuild includes a shared rendering hook that hides status effects in the HUD and the inventory. Test both views with an effect active and with **Hide Status Effects** on and off. Modrinth and CurseForge are later destinations for Legal after its release review.
 

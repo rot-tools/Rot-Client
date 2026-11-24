@@ -1,7 +1,7 @@
 package fi.rotclient.rebuild.illegal;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -29,7 +29,7 @@ public final class AutoLoadout {
         int binding = settings.slotForKey(event.key());
         if (binding < 0) return false;
         Minecraft client = Minecraft.getInstance();
-        if (pending != null || !client.isSameThread() || !client.isWindowActive() || client.getWindow().handle() != window
+        if ((pending != null && pending.close == null) || !client.isSameThread() || !client.isWindowActive() || client.getWindow().handle() != window
                 || client.gui.screen() != null || client.gui.overlay() != null || client.player == null
                 || client.level == null || !client.player.isAlive() || client.getConnection() == null) return false;
         pending = new Attempt(binding, tick + MENU_TIMEOUT, client.getConnection(), client.level);
@@ -43,11 +43,23 @@ public final class AutoLoadout {
         if (current == null) return;
         if (!settings.enabled || client.player == null || !client.player.isAlive() || client.gameMode == null
                 || client.getConnection() != current.connection || client.level != current.world
-                || !client.isWindowActive() || client.gui.overlay() != null || tick > current.deadline) {
+                || !client.isWindowActive() || client.gui.overlay() != null
+                || (current.close != null ? current.close.expired(tick) : tick > current.deadline)) {
             pending = null;
             return;
         }
         var screen = client.gui.screen();
+        if (current.close != null) {
+            if (screen == null) return;
+            if (!(screen instanceof AbstractContainerScreen<?> container) || !(container.getMenu() instanceof ChestMenu menu)
+                    || menu != client.player.containerMenu || menu.getRowCount() < 5
+                    || AutoLoadoutPolicy.menuCapacity(container.getTitle().getString()) == 0) {
+                pending = null;
+            } else if (current.close.shouldClose(tick, menu, menu.getCarried().isEmpty())) {
+                client.player.closeContainer();
+            }
+            return;
+        }
         if (screen == null && current.screen == null) return;
         if (!(screen instanceof AbstractContainerScreen<?> container) || !(container.getMenu() instanceof ChestMenu menu)
                 || menu != client.player.containerMenu || menu.getRowCount() < 5
@@ -65,11 +77,6 @@ public final class AutoLoadout {
             return;
         }
         if (tick < current.actionAt) return;
-        if (current.closing) {
-            pending = null;
-            client.player.closeContainer();
-            return;
-        }
         int slot = AutoLoadoutPolicy.containerSlot(current.binding);
         var entry = menu.getSlot(slot).getItem();
         if (entry.isEmpty()) return;
@@ -83,9 +90,7 @@ public final class AutoLoadout {
         if (!selected) {
             client.gameMode.handleContainerInput(menu.containerId, slot, 0, ContainerInput.PICKUP, client.player);
         }
-        current.closing = true;
-        current.actionAt = tick + delay(settings.closeDelay);
-        current.deadline = current.actionAt;
+        current.close = new AutoLoadoutPolicy.CloseWindow(tick + delay(settings.closeDelay));
     }
 
     private int delay(int base) {
@@ -96,11 +101,11 @@ public final class AutoLoadout {
         final int binding;
         final ClientPacketListener connection;
         final ClientLevel world;
-        long deadline;
+        final long deadline;
         long actionAt;
         AbstractContainerScreen<?> screen;
         ChestMenu menu;
-        boolean closing;
+        AutoLoadoutPolicy.CloseWindow close;
 
         Attempt(int binding, long deadline, ClientPacketListener connection, ClientLevel world) {
             this.binding = binding;
