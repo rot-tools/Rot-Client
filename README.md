@@ -37,7 +37,7 @@ Actual Illegal dev.21 screens captured in a local Minecraft world.
 | Legacy SkyBlock Textures | Restore mapped classic item models and manage compatible resource packs. Includes the three Rot dark packs and MSC Black Glass with independent color choices for blocks and panes. The public JAR reads `MSC-Black-Glass-26.2.zip` from the instance's `resourcepacks` folder. |
 | Auto Healing | Detect the configured healing item in any of the nine hotbar slots. Use fresh SkyBlock HP/max-HP to check a 1–100% threshold. Separate 1–10 tick sliders control selection, use and return, with a 1–20 second minimum interval and observed item cooldown. Manual hotbar changes cancel the sequence. Missing items keep it idle and reinsertion resumes detection. |
 
-### Dashboard and HUD
+### Visuals and HUD Elements Editor
 
 Search module names, settings and supported HUD elements from the dashboard. Categories remain available for future modules. The rebuild currently contains the nine modules listed above.
 
@@ -53,7 +53,7 @@ Supported layers are Hotbar, Health Hearts, Hunger, Armor Icons, XP Bar / Level,
 4. Open the dashboard with **`/rot`** or **`/rotclient`**. An additional key can be enabled through **Interface → Click GUI**.
 5. For MSC Black Glass, keep the original `MSC-Black-Glass-26.2.zip` in `minecraft/resourcepacks`.
 
-New module settings default to off. Your saved choices persist. Illegal is the test-server edition. Legal is the future public HUD/QoL edition and still needs its own gameplay and publication review.
+New module settings default to off. Your saved choices persist. Preserve the old Plus/Lite configuration files when migrating to the rebuild, which keeps its own edition-specific configuration directories. Illegal is the test-server edition. Legal is the future public HUD/QoL edition and still needs its own gameplay and publication review.
 
 ## Current validation
 
@@ -75,4 +75,6 @@ Open **`rebuild-26.2/` in VS Code**. Run `gradlew.bat build` from that directory
 
 ## Credits
 
-Rot Tools maintains the project. The UI font retains its OFL notice, AutoCommands retains its MIT notice, and resource packs retain their attribution. [License](LICENSE) · [Third-party notices](THIRD_PARTY.md)
+Rot Tools maintains the project. The UI font retains its OFL notice, AutoCommands retains its MIT notice, and resource packs retain their attribution. [License](LICENSE) · [Third-party notices](THIRD_PARTY.md) · [NOTICE](NOTICE)
+
+[Report an issue](https://github.com/rot-tools/Rot-Client/issues) · [Community Discord](https://discord.gg/8UpMfvZugq) · [Brand palette and icon notes](docs/BRANDING.md)
