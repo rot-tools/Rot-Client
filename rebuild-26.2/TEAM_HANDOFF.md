@@ -7,7 +7,7 @@ and enable one Rot Client edition at a time.
 
 | Edition | Download version | Role |
 | --- | --- | --- |
-| **Illegal** | `0.1.0-dev.13+mc26.2` | Primary test-server edition. Shared UI plus seven modules. |
+| **Illegal** | `0.1.0-dev.15+mc26.2` | Primary test-server edition. Shared UI plus eight modules. |
 | **Legal** | `0.1.0-dev.5+mc26.2` | Published dashboard and HUD foundation for the next development track. |
 | **Plus** | `2.0.11+mc26.2` | Original full client and implementation reference. |
 | **Lite** | `2.0.11+mc26.2` | Original HUD/QoL edition and implementation reference. |
@@ -19,12 +19,12 @@ and enable one Rot Client edition at a time.
 - The HUD editor supports visibility, dragging, wheel scaling and restoring
   the vanilla position and size for supported elements. **Hide Status Effects**
   also covers the player inventory effects panel.
-- Illegal includes Click GUI, Fullbright and Night, Auto Sprint, AutoCommands
-  Auto Loadout, Auto Clicker and Daily Reward Claim. AutoCommands settings and preview use the Rot theme.
+- Illegal includes Click GUI, Fullbright and Night, Auto Sprint, AutoCommands,
+  Auto Loadout, Auto Clicker, Daily Reward Claim and Legacy SkyBlock Textures. AutoCommands settings and preview use the Rot theme.
   Auto Loadout provides twelve keybind slots, 1–8 tick equip and close delays,
   and 1–5 tick maximum delay variety.
 - The owner confirmed the Auto Loadout switch and the menu-close fix in
-  Illegal dev.7, Daily Reward Claim in dev.12, and Auto Clicker in dev.13. The broader
+  Illegal dev.7, Daily Reward Claim in dev.12, Auto Clicker in dev.13, and per-color Black Glass in dev.15. The broader
   dashboard, HUD and Legal regression checks still need their own playtests.
 - The Legal foundation uses the shared dashboard and HUD and omits the
   Illegal modules and legacy trackers. It is a GitHub playtest, with a separate

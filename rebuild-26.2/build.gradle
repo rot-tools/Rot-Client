@@ -27,6 +27,27 @@ dependencies {
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 test.useJUnitPlatform()
 
+def mscBlackGlassZip = providers.gradleProperty('mscBlackGlassPack').map { file(it) }
+if (mscBlackGlassZip.isPresent() && !mscBlackGlassZip.get().isFile()) {
+    throw new GradleException('mscBlackGlassPack must point to MSC-Black-Glass-26.2.zip')
+}
+
+tasks.named('processIllegalResources') {
+    from(layout.projectDirectory.file('../src/main/resources/assets/rotclient/data/legacy-item-models.json')) {
+        into 'assets/rotclient_rebuild/data'
+    }
+    from(layout.projectDirectory.dir('../src/client/resources/resourcepacks')) {
+        include 'dark_overworld/**', 'dark_crimson/**', 'dark_end/**'
+        into 'resourcepacks'
+    }
+    if (mscBlackGlassZip.isPresent()) {
+        from(mscBlackGlassZip) {
+            into 'assets/rotclient_rebuild/black_glass'
+            rename { 'source.zip' }
+        }
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
     options.encoding = 'UTF-8'
@@ -104,6 +125,22 @@ tasks.register('verifyEditions') {
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoClicker.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/RewardClaimScreen.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/RewardBookMixin.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/LegacyItemModelMixin.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/BlackGlassPackSourceMixin.class') != null
+                def blackGlassSource = 'assets/rotclient_rebuild/black_glass/source.zip'
+                assert (testJar.getEntry(blackGlassSource) != null) == mscBlackGlassZip.isPresent()
+                if (mscBlackGlassZip.isPresent()) {
+                    assert Arrays.equals(testJar.getInputStream(testJar.getEntry(blackGlassSource)).bytes,
+                        mscBlackGlassZip.get().bytes)
+                }
+                assert publicJar.getEntry(blackGlassSource) == null
+                def legacyMap = 'assets/rotclient_rebuild/data/legacy-item-models.json'
+                assert testJar.getEntry(legacyMap) != null && publicJar.getEntry(legacyMap) == null
+                ['dark_overworld', 'dark_crimson', 'dark_end'].each { pack ->
+                    assert testJar.getEntry("resourcepacks/$pack/pack.mcmeta") != null
+                    assert testJar.getEntry("resourcepacks/$pack/ATTRIBUTION.txt") != null
+                    assert publicJar.getEntry("resourcepacks/$pack/pack.mcmeta") == null
+                }
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoClickerInputMixin.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoClickerKeyMappingAccessor.class') != null
                 assert testJar.getEntry('rot-rebuild-illegal.mixins.json') != null

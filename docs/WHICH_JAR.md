@@ -2,11 +2,11 @@
 
 ## Current 26.2 playtest
 
-Choose an edition below and enable one at a time. The [latest Illegal playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.13) includes the owner-tested Auto Clicker and Daily Reward Claim.
+Choose an edition below and enable one at a time. The [latest Illegal playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.15) includes the owner-tested Auto Clicker, Daily Reward Claim, and MSC Black Glass color selection.
 
 | Edition | Download | Scope |
 | --- | --- | --- |
-| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.13+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.13/RotClientIllegal-0.1.0-dev.13%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. |
+| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.15+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.15/RotClientIllegal-0.1.0-dev.15%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. For MSC Black Glass, keep MSC-Black-Glass-26.2.zip in resourcepacks. |
 | Rot Client Legal | [RotClientLegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientLegal-0.1.0-dev.5%2Bmc26.2.jar) | Same dashboard and HUD editor, without Illegal modules. |
 | Rot Client+ | [RotClientPlus-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client and the rebuild's reference. |
 | Rot Client Lite | [RotClient-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition and reference. |

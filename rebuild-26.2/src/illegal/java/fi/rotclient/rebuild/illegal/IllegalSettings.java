@@ -25,6 +25,8 @@ final class IllegalSettings {
     boolean autoSprint;
     boolean clickGui;
     boolean rewardClaim;
+    boolean legacyTextures;
+    volatile BlackGlassSettings blackGlass = BlackGlassSettings.OFF;
     int autoSprintKey = GLFW.GLFW_KEY_UNKNOWN;
     int clickGuiKey = GLFW.GLFW_KEY_UNKNOWN;
     AutoLoadoutSettings autoLoadout = new AutoLoadoutSettings();
@@ -39,6 +41,7 @@ final class IllegalSettings {
                     restored.autoLoadout.normalize();
                     if (restored.autoClicker == null) restored.autoClicker = new AutoClickerSettings();
                     restored.autoClicker.normalize();
+                    if (restored.blackGlass == null) restored.blackGlass = BlackGlassSettings.OFF;
                     return restored;
                 }
             } catch (IOException | RuntimeException error) {

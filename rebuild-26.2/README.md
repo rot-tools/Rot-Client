@@ -1,10 +1,10 @@
 # Rot Client rebuild for Minecraft 26.2
 
-Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current source build is `0.1.0-dev.13+mc26.2`. Auto Clicker recognizes Hypixel by default. The owner confirmed Daily Reward Claim in dev.12 and Auto Clicker in dev.13. [Illegal dev.13 is published on GitHub](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.13). See [edition downloads](../docs/WHICH_JAR.md) for Legal dev.5 and the Plus and Lite references. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
+Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current source build is `0.1.0-dev.15+mc26.2`, with owner-confirmed per-color MSC Black Glass inside Legacy SkyBlock Textures. The owner confirmed Daily Reward Claim in dev.12 and Auto Clicker in dev.13. [Illegal dev.15 is published on GitHub](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.15). See [edition downloads](../docs/WHICH_JAR.md) for Legal dev.5 and the Plus and Lite references. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
 
 | Edition in Prism | Scope of the first playtest |
 | --- | --- |
-| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands, Auto Loadout, Auto Clicker and Daily Reward Claim. |
+| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands, Auto Loadout, Auto Clicker, Daily Reward Claim and Legacy SkyBlock Textures. |
 | **26.2 Mod Client Legal** | Dashboard and HUD editor. Legal module ports start after the Illegal dashboard and the relevant module have been tested. |
 
 The dashboard reuses Rot Client+'s drawing code, UI font, dashboard dimensions, tab strip and scroll behavior. The HUD landing page has a Hide switch and Settings button for each supported vanilla HUD layer. Click a visible element in the world editor to select it, then drag it, scroll to resize, or use **Position → Default**. Elements that are temporarily absent have a labeled positioning marker when opened through Settings. Illegal saves interface settings in `config/rotclientillegal/interface.json` and Legal uses `config/rotclientlegal/interface.json`.
@@ -20,8 +20,12 @@ cd rebuild-26.2
 
 On Linux and macOS, run `./gradlew build` from the same directory. The build includes `verifyEditions`, which checks Fabric metadata, verifies the shared classes, and checks that Illegal classes and mixins stay out of the Legal JAR. The playable files are:
 
-- `build/libs/RotClientIllegal-0.1.0-dev.13+mc26.2.jar`
-- `build/libs/RotClientLegal-0.1.0-dev.13+mc26.2.jar` (source build). The published Legal playtest is dev.5.
+- `build/libs/RotClientIllegal-0.1.0-dev.15+mc26.2.jar`
+- `build/libs/RotClientLegal-0.1.0-dev.15+mc26.2.jar` (source build). The published Legal playtest is dev.5.
+
+Pass `-PmscBlackGlassPack=<path to MSC-Black-Glass-26.2.zip>` to bundle a
+local copy into Illegal. The module can also read that ZIP by name from the
+instance's `resourcepacks` folder.
 
 ## Prism playtest
 
@@ -36,6 +40,18 @@ On Linux and macOS, run `./gradlew build` from the same directory. The build inc
 Record the edition, JAR version, what you clicked, what you saw, and whether the result survived a restart. A Gradle build verifies the package contents. The in-game checklist verifies interaction and rendering.
 
 ## Development workflow
+
+### Dev.15 MSC Black Glass playtest
+
+- Open **Render → Legacy SkyBlock Textures → MSC Black Glass settings**. Enable Black Glass, choose one or more of the 16 stained colors, clear glass, or tinted glass, and select **Apply**. Each stained color applies to blocks and panes. Tinted glass has its own block switch.
+- Compare a selected and unselected color before and after Apply, then switch Black Glass off. The main switch preserves the color choices. Apply deselects the full standalone MSC pack so it cannot cover the unselected colors. The source ZIP stays available in the resource-pack folder.
+- In **Manage resource packs**, check the three Rot dark packs have **made by Rot-Tools** in their titles. The MSC pack retains its source attribution.
+
+### Dev.14 Legacy SkyBlock Textures playtest
+
+- Open **Render → Legacy SkyBlock Textures** and switch **Replace SkyBlock item models** on or off. For example, a mapped Hyperion or Terminator uses the corresponding vanilla model when enabled. The server pack continues to supply its fonts, HUD assets, player heads and unmapped items.
+- Open **Manage resource packs** from the same card. Select a bundled Rot dark pack or a compatible third-party pack from the standard Minecraft list. Use **Open Pack Folder** or drag a ZIP into the screen to import it. Select **Done** to apply and let Minecraft reload the selected packs.
+- Check a mapped item in inventory and in hand with the toggle both ways. Then test a custom pack that targets the corresponding vanilla item texture. Keep the legacy switch off when testing a pack that retextures the Hypixel models directly.
 
 ### Dev.13 Auto Clicker playtest
 
@@ -83,3 +99,8 @@ Auto Clicker uses the old 26.2 Plus behavior as an in-repository reference.
 Starred's Ionic `0.0.2+26.2` binary was reviewed for its two independent click
 rates, tick accumulator, block mode and item filters. The rebuild implements
 those behaviors in Java using its own settings and Minecraft's input loop.
+
+Legacy SkyBlock Textures uses the original Rot item-model map and the three
+Rot dark packs from the 26.2 Plus source tree. Each bundled pack retains its
+attribution. The model substitution runs in item rendering, and Minecraft
+handles resource pack activation and order.

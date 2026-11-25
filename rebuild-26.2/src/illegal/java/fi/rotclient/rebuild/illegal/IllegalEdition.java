@@ -37,6 +37,7 @@ public final class IllegalEdition implements ClientEdition {
         new AutoCommandsClient().register();
         rewardClaim = new RewardClaim(settings);
         rewardClaim.register();
+        SkyBlockResourcePacks.register();
         ClientTickEvents.START_CLIENT_TICK.register(autoClicker::tick);
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
     }
@@ -93,6 +94,14 @@ public final class IllegalEdition implements ClientEdition {
                             settings.rewardClaim = value;
                             settings.save();
                         }))),
+                new ModuleCard("legacy_textures", "Legacy SkyBlock Textures",
+                        "Restore classic item models and select compatible resource packs.", Category.RENDER,
+                        List.of(new Toggle("Replace SkyBlock item models", IllegalEdition::legacyTexturesEnabled, value -> {
+                            settings.legacyTextures = value;
+                            settings.save();
+                        }), new Action("Manage resource packs", SkyBlockResourcePacks::openSelection),
+                                new Action("MSC Black Glass settings", parent -> Minecraft.getInstance().gui.setScreen(
+                                        new BlackGlassScreen(parent, settings))))),
                 new ModuleCard("auto_clicker", "Auto Clicker",
                         "Repeat attack or use while holding an input in a test world.", Category.COMBAT,
                         List.of(new Toggle("Auto Clicker", () -> settings.autoClicker.enabled, value -> {
@@ -109,6 +118,14 @@ public final class IllegalEdition implements ClientEdition {
 
     public static boolean openRewardBook(BookViewScreen book, BookViewScreen.BookAccess access) {
         return rewardClaim != null && rewardClaim.openBook(book, access);
+    }
+
+    public static boolean legacyTexturesEnabled() {
+        return settings.legacyTextures;
+    }
+
+    static BlackGlassSettings blackGlassSettings() {
+        return settings.blackGlass;
     }
 
     public static boolean autoClickerKeyAssigned(int binding) {
