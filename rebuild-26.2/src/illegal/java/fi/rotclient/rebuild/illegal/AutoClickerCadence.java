@@ -4,8 +4,11 @@ import java.util.random.RandomGenerator;
 
 /** Converts a per-tick rate into at most one click on each active tick. */
 final class AutoClickerCadence {
+    static final long HOLD_DELAY_NANOS = 180_000_000L;
     private static final int TICKS_PER_SECOND = 20;
     private int remainder;
+    private boolean holding;
+    private long pressedAt;
     private boolean needsRelease = true;
 
     static int variedRate(int cps, int jitter, RandomGenerator random) {
@@ -15,12 +18,23 @@ final class AutoClickerCadence {
         return Math.clamp(rate + sample, 1, AutoClickerSettings.MAX_CPS);
     }
 
-    boolean active(boolean down) {
+    boolean active(boolean down, long now) {
         if (!down) {
-            needsRelease = false;
-            clear();
+            release();
+            return false;
         }
-        return down && !needsRelease;
+        if (needsRelease) return false;
+        if (!holding) {
+            pressedAt = now;
+            holding = true;
+        }
+        return now - pressedAt >= HOLD_DELAY_NANOS;
+    }
+
+    void release() {
+        needsRelease = false;
+        holding = false;
+        clear();
     }
 
     boolean tick(int rate) {
@@ -36,6 +50,7 @@ final class AutoClickerCadence {
 
     void disarm() {
         needsRelease = true;
+        holding = false;
         clear();
     }
 }

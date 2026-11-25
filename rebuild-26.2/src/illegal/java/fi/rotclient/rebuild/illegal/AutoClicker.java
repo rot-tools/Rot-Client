@@ -43,11 +43,17 @@ final class AutoClicker {
             right.disarm();
         }
 
+        if (IllegalEdition.healingSequenceActive()) {
+            clearCadence();
+            return;
+        }
+
         var leftKey = AutoClickerSettings.inputKey(settings.left.binding);
         var rightKey = AutoClickerSettings.inputKey(settings.right.binding);
-        boolean leftHeld = left.active(settings.left.enabled && isHeld(client, leftKey));
+        long now = System.nanoTime();
+        boolean leftHeld = left.active(settings.left.enabled && isHeld(client, leftKey), now);
         boolean rightHeld = right.active(settings.terminatorOnly
-                ? client.options.keyUse.isDown() : settings.right.enabled && isHeld(client, rightKey));
+                ? client.options.keyUse.isDown() : settings.right.enabled && isHeld(client, rightKey), now);
         if ((!leftHeld && !rightHeld) || client.player.isUsingItem()) {
             clearCadence();
             return;
@@ -108,6 +114,16 @@ final class AutoClicker {
             }
         } else {
             right.clear();
+        }
+    }
+
+    void mouseReleased(Minecraft client, int button) {
+        if (!settings.enabled || level == null) return;
+        var key = InputConstants.Type.MOUSE.getOrCreate(button);
+        if (AutoClickerSettings.inputKey(settings.left.binding).equals(key)) left.release();
+        if (settings.terminatorOnly ? client.options.keyUse.matches(key)
+                : AutoClickerSettings.inputKey(settings.right.binding).equals(key)) {
+            right.release();
         }
     }
 

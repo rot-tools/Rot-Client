@@ -13,10 +13,11 @@ final class AutoClickerCadenceTest {
     @Test
     void fixedRateUsesOneClickPerTickAtMostAndPreservesCadence() {
         var cadence = new AutoClickerCadence();
-        assertFalse(cadence.active(false));
+        assertFalse(cadence.active(false, 0));
+        assertFalse(cadence.active(true, 0));
         int clicks = 0;
         for (int tick = 1; tick <= 20; tick++) {
-            assertTrue(cadence.active(true));
+            assertTrue(cadence.active(true, AutoClickerCadence.HOLD_DELAY_NANOS + tick * 50_000_000L));
             if (cadence.tick(7)) clicks++;
         }
         assertEquals(7, clicks);
@@ -41,19 +42,38 @@ final class AutoClickerCadenceTest {
     }
 
     @Test
+    void rapidTapsAndReleasesBetweenTicksDoNotActivateTheRepeater() {
+        var cadence = new AutoClickerCadence();
+        long delay = AutoClickerCadence.HOLD_DELAY_NANOS;
+        assertFalse(cadence.active(false, 0));
+        assertFalse(cadence.active(true, 0));
+        assertFalse(cadence.active(true, delay - 1));
+        cadence.release();
+        assertFalse(cadence.active(true, delay));
+        assertFalse(cadence.active(true, 2 * delay - 1));
+        assertTrue(cadence.active(true, 2 * delay));
+    }
+
+    @Test
     void releasingAndLeavingGameplayDiscardStoredClickProgress() {
         var cadence = new AutoClickerCadence();
-        assertFalse(cadence.active(true));
-        assertFalse(cadence.active(false));
-        assertTrue(cadence.active(true));
+        long delay = AutoClickerCadence.HOLD_DELAY_NANOS;
+        assertFalse(cadence.active(true, delay));
+        assertFalse(cadence.active(true, 2 * delay));
+        assertFalse(cadence.active(false, 2 * delay));
+        assertFalse(cadence.active(true, 2 * delay));
+        assertTrue(cadence.active(true, 3 * delay));
         assertFalse(cadence.tick(19));
+
         cadence.disarm();
-        assertFalse(cadence.active(true));
-        assertFalse(cadence.active(false));
-        assertTrue(cadence.active(true));
+        assertFalse(cadence.active(true, 4 * delay));
+        assertFalse(cadence.active(false, 4 * delay));
+        assertFalse(cadence.active(true, 4 * delay));
+        assertTrue(cadence.active(true, 5 * delay));
         assertFalse(cadence.tick(19));
-        assertFalse(cadence.active(false));
-        assertTrue(cadence.active(true));
+        cadence.release();
+        assertFalse(cadence.active(true, 5 * delay));
+        assertTrue(cadence.active(true, 6 * delay));
         assertFalse(cadence.tick(19));
         assertTrue(cadence.tick(1));
     }

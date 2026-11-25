@@ -1,58 +1,51 @@
-# Rot Client 26.2 team handoff
+# Team handoff for Minecraft 26.2
 
-The rebuild is the active Minecraft 26.2 development line. It uses Java 25
-and Fabric and builds independently from the original Plus and Lite project.
-Use the [edition download matrix](../docs/WHICH_JAR.md)
-and enable one Rot Client edition at a time.
+Updated 2026-11-26.
 
-| Edition | Download version | Role |
-| --- | --- | --- |
-| **Illegal** | `0.1.0-dev.15+mc26.2` | Primary test-server edition. Shared UI plus eight modules. |
-| **Legal** | `0.1.0-dev.5+mc26.2` | Published dashboard and HUD foundation for the next development track. |
-| **Plus** | `2.0.11+mc26.2` | Original full client and implementation reference. |
-| **Lite** | `2.0.11+mc26.2` | Original HUD/QoL edition and implementation reference. |
+## Message for the collaborator
 
-## What is in the rebuild
+We are actively developing the Minecraft 26.2 rebuild of Rot Client. I will
+continue implementing and playtesting the Illegal edition. Please take ownership
+of the Legal edition.
 
-- The new dashboard uses the original Plus font, theme, tabs and category
-  navigation. The search suggests modules and vanilla HUD settings.
-- The HUD editor supports visibility, dragging, wheel scaling and restoring
-  the vanilla position and size for supported elements. **Hide Status Effects**
-  also covers the player inventory effects panel.
-- Illegal includes Click GUI, Fullbright and Night, Auto Sprint, AutoCommands,
-  Auto Loadout, Auto Clicker, Daily Reward Claim and Legacy SkyBlock Textures. AutoCommands settings and preview use the Rot theme.
-  Auto Loadout provides twelve keybind slots, 1–8 tick equip and close delays,
-  and 1–5 tick maximum delay variety.
-- The owner confirmed the Auto Loadout switch and the menu-close fix in
-  Illegal dev.7, Daily Reward Claim in dev.12, Auto Clicker in dev.13, and per-color Black Glass in dev.15. The broader
-  dashboard, HUD and Legal regression checks still need their own playtests.
-- The Legal foundation uses the shared dashboard and HUD and omits the
-  Illegal modules and legacy trackers. It is a GitHub playtest, with a separate
-  review needed before any Modrinth or CurseForge submission.
+Both editions share the dashboard, theme, search and HUD editor. Illegal currently
+contains nine module parents. Legal dev.21 contains the shared UI/HUD foundation.
+The previous Plus and Lite 2.0.11 builds remain available as references.
 
-## Suggested ownership
+Start from development and open rebuild-26.2 as your VS Code project. Shared UI
+and HUD code lives in src/main. Illegal implementation code and mixins live in
+src/illegal. The root Gradle project is the earlier Plus/Lite build.
 
-**I’ll keep developing Illegal on the designated test server. Could you take
-the lead on Legal?** A good first task is to test the Legal dashboard and HUD
-with a clean config, especially HUD placement, reset, persistence after a
-restart, search and Hide Status Effects in the inventory. Record the edition,
-build, steps and actual observations. Then fix or add one reviewed Legal
-feature at a time.
+First, test Legal dev.21 with a clean configuration. Verify /rot and /rotclient,
+search, category navigation, HUD visibility, dragging, scaling, Default, undo/redo,
+inventory status-effect hiding and persistence. Record actual game results.
 
-Use separate feature branches from `development` and coordinate when changing
-the shared UI. Run the edition checks before merging. Review features
-individually before moving any from Illegal to Legal.
+For each proposed Legal feature, review its behavior and suitability, implement
+the appropriate version, and playtest it separately. A passing Illegal test alone
+does not validate Legal. Coordinate shared UI edits and fetch before integration.
 
-## Source and build
+Use a codex/ feature branch from development. Run gradlew.bat build inside
+rebuild-26.2 with Java 25. This runs the tests and verifyEditions. Merge reviewed
+work back into development. Keep main for tested stable releases.
 
-Open `rebuild-26.2/`. Shared UI is in `src/main/`; the Illegal modules
-and their input hooks are in `src/illegal/`. Legal currently builds from the
-shared source set. If Legal needs its own implementation later, introduce a
-separate Legal source set for it. Keep edition settings isolated under
-`config/rotclientillegal/` and `config/rotclientlegal/`.
+The latest development slice adds Auto Healing timing and missing-item guards,
+and replaces the default Right Shift dashboard shortcut with /rot, /rotclient
+and the optional Click GUI binding. The build passes 38 tests. The owner's
+dev.20 timing test was positive. Dev.21's new missing-item and command behavior
+still needs a focused gameplay pass.
 
-From `rebuild-26.2/`, run `./gradlew build` on Linux/macOS or
-`.\gradlew.bat build` on Windows. The build runs tests and `verifyEditions`.
-Use **Right Shift** or **`/rot`** to open the dashboard. The
-[rebuild guide](README.md) contains the full test steps and the current
-toolchain requirements.
+[Downloads](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.21) · [Feature list](../README.md) · [Roadmap](../docs/REBUILD_ROADMAP.md)
+
+## Build and source map
+
+| Location inside rebuild-26.2 | Purpose |
+| --- | --- |
+| src/main/java/fi/rotclient/rebuild | Shared dashboard, rendering, search, HUD configuration and entrypoint |
+| src/illegal/java/fi/rotclient/rebuild/illegal | Illegal module implementations, settings and runtime hooks |
+| src/test/java | Automated tests |
+| build.gradle | Edition packaging and verifier |
+| build/libs | Generated playable JARs |
+
+Use the original resource ZIP with the optional mscBlackGlassPack Gradle property
+when reproducing the owner's bundled local build. Public builds use the local
+resource-pack fallback. [Build instructions](README.md)

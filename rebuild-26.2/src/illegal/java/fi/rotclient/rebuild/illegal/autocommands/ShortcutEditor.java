@@ -110,7 +110,7 @@ final class ShortcutEditor extends Screen {
         if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
             status = "";
         } else if (event.key() == GLFW.GLFW_KEY_RIGHT_SHIFT) {
-            status = "Right Shift opens the Rot Client dashboard.";
+            status = "Assign Right Shift through the Click GUI settings.";
             return true;
         } else {
             String candidate = CommandShortcut.cleanKey(InputConstants.getKey(event).getName());

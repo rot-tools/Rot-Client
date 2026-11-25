@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public final class IllegalEdition implements ClientEdition {
@@ -25,6 +26,7 @@ public final class IllegalEdition implements ClientEdition {
     private static IllegalSettings settings = new IllegalSettings();
     private static AutoLoadout autoLoadout;
     private static AutoClicker autoClicker;
+    private static AutoHealing autoHealing;
     private static RewardClaim rewardClaim;
     private boolean sprintWasDown;
     private boolean dashboardWasDown;
@@ -34,6 +36,8 @@ public final class IllegalEdition implements ClientEdition {
         settings = IllegalSettings.load();
         autoLoadout = new AutoLoadout(settings.autoLoadout);
         autoClicker = new AutoClicker(settings.autoClicker);
+        autoHealing = new AutoHealing(settings.autoHealing);
+        autoHealing.register();
         new AutoCommandsClient().register();
         rewardClaim = new RewardClaim(settings);
         rewardClaim.register();
@@ -102,6 +106,13 @@ public final class IllegalEdition implements ClientEdition {
                         }), new Action("Manage resource packs", SkyBlockResourcePacks::openSelection),
                                 new Action("MSC Black Glass settings", parent -> Minecraft.getInstance().gui.setScreen(
                                         new BlackGlassScreen(parent, settings))))),
+                new ModuleCard("auto_healing", "Auto Healing",
+                        "Use a selected hotbar healing item below a SkyBlock health threshold.", Category.COMBAT,
+                        List.of(new Toggle("Auto Healing", () -> settings.autoHealing.enabled, value -> {
+                            autoHealing.updateEnabled(value);
+                            settings.save();
+                        }), new Action("Healing settings", parent -> Minecraft.getInstance().gui.setScreen(
+                                new AutoHealingScreen(parent, settings))))),
                 new ModuleCard("auto_clicker", "Auto Clicker",
                         "Repeat attack or use while holding an input in a test world.", Category.COMBAT,
                         List.of(new Toggle("Auto Clicker", () -> settings.autoClicker.enabled, value -> {
@@ -114,6 +125,26 @@ public final class IllegalEdition implements ClientEdition {
 
     public static int autoClickerActions(Minecraft client) {
         return autoClicker == null ? 0 : autoClicker.takeActions(client);
+    }
+
+    public static void autoClickerMouseReleased(Minecraft client, int button) {
+        if (autoClicker != null) autoClicker.mouseReleased(client, button);
+    }
+
+    public static void observeHealingActionBar(Component component) {
+        if (autoHealing != null) autoHealing.observeActionBar(component);
+    }
+
+    public static void healingSlotChanged(net.minecraft.world.entity.player.Inventory inventory, int slot) {
+        if (autoHealing != null) autoHealing.selectedSlotChanged(inventory, slot);
+    }
+
+    public static boolean healingSequenceActive() {
+        return autoHealing != null && autoHealing.active();
+    }
+
+    public static void afterInputAutoHealing(Minecraft client) {
+        if (autoHealing != null) autoHealing.afterInput(client);
     }
 
     public static boolean openRewardBook(BookViewScreen book, BookViewScreen.BookAccess access) {
@@ -204,12 +235,11 @@ public final class IllegalEdition implements ClientEdition {
 
     private static boolean keyDown(long handle, int key) {
         return key >= GLFW.GLFW_KEY_SPACE && key <= GLFW.GLFW_KEY_LAST
-                && key != GLFW.GLFW_KEY_RIGHT_SHIFT
                 && GLFW.glfwGetKey(handle, key) == GLFW.GLFW_PRESS;
     }
 
     private static int configurableKey(int key) {
-        return key == GLFW.GLFW_KEY_RIGHT_SHIFT || loadoutKeyAssigned(key) || autoClickerKeyAssigned(key)
+        return loadoutKeyAssigned(key) || autoClickerKeyAssigned(key)
                 ? GLFW.GLFW_KEY_UNKNOWN : key;
     }
 }

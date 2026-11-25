@@ -1,0 +1,269 @@
+<p align="center">
+  <img src="../../src/main/resources/assets/rotclient/icon.png" alt="Rot Client" width="128" height="128">
+</p>
+
+## Start here · Minecraft 26.2 playtest
+
+> [!IMPORTANT]
+> **Rot Client Illegal is the active development edition for the designated test server.** Start there to test the current dashboard and HUD editor.
+
+**[RotClientIllegal-0.1.0-dev.15+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.15/RotClientIllegal-0.1.0-dev.15%2Bmc26.2.jar)** · [Playtest notes](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.15) · [SHA256SUMS.txt](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.15/SHA256SUMS.txt)
+
+| Edition | Download | Scope |
+| --- | --- | --- |
+| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.15+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.15/RotClientIllegal-0.1.0-dev.15%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. For MSC Black Glass, keep MSC-Black-Glass-26.2.zip in resourcepacks. |
+| Rot Client Legal | [RotClientLegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientLegal-0.1.0-dev.5%2Bmc26.2.jar) | Same dashboard and HUD editor, without Illegal modules. |
+| Rot Client+ | [RotClientPlus-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client and the rebuild's reference. |
+| Rot Client Lite | [RotClient-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition and reference. |
+
+Use Minecraft 26.2, Java 25, Fabric Loader 0.19.3 or newer and Fabric API for 26.2. Enable **one** edition at a time. Press **Right Shift** or run **`/rot`** to open the dashboard.
+
+For this playtest, toggle **Visuals → HUD Elements Editor → Hide Status Effects** with an effect active. Check gameplay and the E inventory with the switch on and off. The owner confirmed Auto Loadout in dev.7, Daily Reward Claim in dev.12, Auto Clicker in dev.13, and MSC Black Glass color selection in dev.15. The inventory change awaits separate gameplay validation.
+
+Development starts with Illegal. After a feature passes its playtest, review which parts fit Legal, port them and test Legal separately. See the [team handoff](../../rebuild-26.2/TEAM_HANDOFF.md), [rebuild guide](../../rebuild-26.2/README.md) and [edition matrix](../../docs/WHICH_JAR.md).
+
+---
+
+## Plus and Lite reference documentation
+
+The sections below describe the previous Plus and Lite build line and archived playtests.
+
+<h1 align="center">Rot Client</h1>
+
+<p align="center">
+  made by <b>Rot Tools</b><br>
+  <b>A client-side Fabric companion for Hypixel SkyBlock</b><br>
+  One dashboard for quality-of-life modules, Visuals, mining, and sessions.<br>
+  Built for Minecraft <code>26.2</code>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml"><img src="https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-a855f7.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Minecraft-26.2-2ea44f?logo=minecraft&logoColor=white" alt="Minecraft 26.2">
+  <img src="https://img.shields.io/badge/Java-25-f89820?logo=openjdk&logoColor=white" alt="Java 25">
+  <img src="https://img.shields.io/badge/Fabric-0.19.3-dbd0b4" alt="Fabric 0.19.3">
+  <a href="https://discord.gg/8UpMfvZugq"><img src="https://img.shields.io/badge/Discord-community-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
+</p>
+
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#playtest-jar">Playtest JAR</a> ·
+  <a href="#in-game">Using the client</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="#privacy">Privacy</a> ·
+  <a href="https://discord.gg/8UpMfvZugq">Discord</a>
+</p>
+
+Rot Client is an independent community project. It is **not** affiliated with,
+endorsed by, or approved by Hypixel.
+
+> **`2.0.2+mc26.2`** is a development playtest build. Rot Client Lite is **not yet ready for public Modrinth or CurseForge publication**; see the [release audit](../../docs/MODRINTH_LITE_RELEASE.md) for the remaining code, runtime, rule, and provenance checks.
+> Each build produces **two** JARs. See [Which JAR](../../docs/WHICH_JAR.md).
+> Rot Client+ automation (clickers, scanners, dungeon helpers, Free Camera) is
+> **opt-in and off by default**. Do not use those features on Hypixel.
+
+## Install
+
+**Requires** Minecraft `26.2`, Java `25`, [Fabric Loader](https://fabricmc.net/use/) `0.19.3` or newer, and [Fabric API](https://modrinth.com/mod/fabric-api) `0.155.2+26.2`. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
+
+Pick **one** edition. Both files can sit in `mods/`; enable only one. They
+`breaks` each other if both load. Skip `-sources.jar`. Remove any legacy
+MiningTracker JAR.
+
+| File | What it is |
+| --- | --- |
+| `RotClient-2.0.2+mc26.2.jar` | **Rot Client** — HUD and QoL development playtest build. Public release checks remain pending. |
+| `RotClientPlus-2.0.2+mc26.2.jar` | **Rot Client+** — same client plus opt-in automation. |
+
+### Minecraft version availability
+
+| Minecraft | Rot Client Lite | Rot Client+ | Status |
+| --- | --- | --- | --- |
+| 26.1.2 | [`2.1.1+mc26.1.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | [First Plus candidate](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2-upstream-refresh) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.2 | [`2.0.2+mc26.2` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest) | Automated build and edition checks pass; Minecraft smoke test pending. |
+| 26.3 | [`2.0.2+mc26.3` playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | [Same playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.3-upstream-refresh) | Upstream module candidate passes automated checks; new gameplay behavior awaits runtime validation. |
+
+Install a JAR only into the matching Minecraft version with its matching Fabric
+API. These are playtest artifacts; none is approved for public Modrinth or
+CurseForge publication yet. The 26.3 source lives on [`port/26.3`](https://github.com/rot-tools/Rot-Client/tree/port/26.3); the 26.2 `development` branch and its rolling playtest remain separate.
+
+### Playtest JAR
+
+Testers do not need to build. Each green push to `development` replaces
+the [latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
+pre-release with **both** JARs and `SHA256SUMS.txt`:
+
+1. Open [Latest playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest).
+2. Download the edition you want. Skip `-sources.jar`.
+3. Put that file in the instance `mods/` folder. Enable only one Rot Tools JAR.
+
+The same pair is attached as artifact `RotClient-playable` on the matching
+green [Build](https://github.com/rot-tools/Rot-Client/actions/workflows/build.yml)
+run if you need a specific commit.
+
+### Build from source
+
+1. Install Fabric Loader and Fabric API for Minecraft 26.2.
+2. Build with the included wrapper: `.\gradlew.bat build`
+3. Copy `RotClient-2.0.2+mc26.2.jar` and/or `RotClientPlus-2.0.2+mc26.2.jar`
+   from `build/libs/` into `mods/`. Enable only one.
+
+Rot Tools includes bounded migration for supported legacy MiningTracker
+configuration data. Back up the instance before upgrading. Never copy runtime
+configuration or session files into this repository.
+
+## In game
+
+| Action | What it does |
+| --- | --- |
+| **Right Shift** | Opens the dashboard (Click GUI key, rebindable) |
+| **Sidebar** | Overview, Visuals (Appearance, HUD Elements Editor, Profiles), then Modules |
+| **Overview** | Session / tracker / powder chips, then Go-to cards: Modules, Visuals, Mining, Events |
+| `/rot` or `/rot ui` | Same dashboard |
+| `/rot qol` | QoL module catalog |
+| `/rot edit` | HUD Elements Editor (world overlay placement) |
+| `/rot help` | Command list |
+
+Search the dashboard address bar to jump to a module. Most utilities stay off until you enable them.
+
+## Features
+
+**Rot Client** currently ships **83** HUD/QoL parents. **Rot Client+** ships
+**135**. Wired means a catalog entry, saved
+settings, a runtime bridge, and automated contracts. Which file to download
+is in [Which JAR](../../docs/WHICH_JAR.md). The module table lives in
+[QoL Utilities](../../docs/QOL_UTILITIES.md).
+
+| Area | What you get |
+| --- | --- |
+| **Profiles** | Saved client setups under Visuals. Switch module, QoL, HUD, and tracker preferences live without restarting. Tracker history stays global. **Auto Switch** (off by default) can change profile for you when you enter Dungeons, Kuudra, a mining area, the Garden, and more. **Examples** offers four Lite setups (Everyday, Mining, Slayer, Fishing); Plus also offers Dungeons |
+| **GUI** | Custom Scoreboard sidebar rebuild, hide vanilla, HUD placement |
+| **Interface** | Click GUI, inventory and storage overlays, inventory buttons, SkyBlock menus |
+| **Utilities** | Menu keybinds, pet/loadout configuration, chat commands, and market guard. Auto Sprint, Cheater Wardrobe automation, Inventory Walk, Escrow Fix, and custom macros are Rot Client+; Cheater Wardrobe settings and hidden-equip runtime are excluded from Lite |
+| **HUD & display** | Player, pet, performance overlays, custom cursor, tooltip extras. Appearance and HUD Elements Editor live under Visuals |
+| **Render** | Fullbright, viewmodel, player size, and legacy textures. **Plus:** eye-height fix, Fox, Ghosts, Free Camera, and clip camera |
+| **Combat** | Etherwarp destination preview with depth check. Trajectories, Mob Highlight, Auto Clicker, and Auto Dojo are Rot Client+ |
+| **Events** | Diana burrows, rare mob ESP, drop HUD, and share helpers are Rot Client+ |
+| **Dungeons** | Temporarily Plus-only, including the HUD, map, carry tracker, reward reels, ESP, terminal and puzzle solvers, and F7 helpers. Lite dungeon features will be rebuilt individually after the separation audit. |
+| **Kuudra** | Waypoints, Fresh Tools, party commands, fight HUDs |
+| **Slayer** | Shared boss engine, HUDs, carry manager, alerts, and drop helpers |
+| **Mining QoL** | Commissions, Scatha, Glacite, HOTM helpers. World Scanner is Rot Client+ |
+| **Fishing, foraging & garden** | Bite HUD, sea creatures, observed hotspot circles, trophy, tree HUD. Sea-creature auto attack, hotspot radar/tracer, Farm Keys, and foraging cheats are Rot Client+ |
+
+On Rot Client+, dungeon cheat-tagged options (auto terminals, auto Simon, auto
+I4, and similar) stay off even after you enable the parent module, until you
+opt in separately.
+
+The Lite build is packaged from the shared policy/client source sets only.
+Separated Plus policies, Minecraft runtimes, mixins, and the Fox asset live in
+`plus` / `plusClient` source sets. `verifyLegitJar` rejects the separated
+classes and identifiers if they leak into `RotClient-*.jar`. Moved settings
+from older profiles survive in compatibility fields or opaque data. The full
+dungeon runtime and puzzle solver now compile into Plus; Lite contains inert
+compatibility classes while its dungeon catalog and example profile are absent.
+Four mixed F7/assist/leftover policy families now package only in Plus; other
+dungeon policy classes and callers still need a bytecode audit. Auto Clicker's typed
+settings, whitelists, and CPS HUD position are now Plus-owned; Lite does not
+store them in its typed config. Publication validation is tracked in
+[Modrinth Lite Release](../../docs/MODRINTH_LITE_RELEASE.md),
+[CurseForge Lite Release](../../docs/CURSEFORGE_LITE_RELEASE.md), and
+[Project State](../../docs/PROJECT_STATE.md).
+
+Auto Superboom's settings, click-trigger state, extra-block commands, and timed
+hotbar swap-back run only in Rot Client+.
+
+### Fox (Rot Client+)
+
+**Fox** is a local visual module and is off by default. When
+enabled it draws the bundled image in place of rendered maps, paintings, and
+large fixed item-display wall art without changing map items, painting
+entities, packets, or any server state. Paintings stretch the image to their
+own dimensions. Contiguous, same-facing, unrotated horizontal item frames or
+matching item-display panels form one rectangular canvas, so the image
+stretches over a map wall instead of repeating in every frame. The dashboard
+can also use a custom local image path; leave it blank for the bundled image.
+
+### Mining tracker and sessions
+
+A searchable material and gemstone selector with isolated per-target state, movable HUDs, and optional Bazaar estimates. Coal through Quartz combine ordinary and Pure Ore forms. Mithril and Titanium share a ledger; Tungsten and Umber are independent. Twelve gemstones keep their own tier quantities.
+
+Current Session is the one live ledger (pause, resume, start new). Session History 2.0 keeps immutable local freezes. Powder Chest and bounded MOB accounting sit beside that ledger, not inside a second quantity store.
+
+Accepted totals are evidence-based estimates, not server accounting. See [Tracking Model](../../docs/TRACKING.md).
+
+## Commands
+
+The command root is `/rot`. Legacy aliases `/rotclient`, `/miningtracker`, `/MiningTracker`, and `/miningui` print a deprecation notice.
+
+| Command | Purpose |
+| --- | --- |
+| `/rot`, `/rot ui`, `/rot qol`, `/rot help` | Dashboard, QoL catalog, help |
+| `/rot edit` | HUD Elements Editor |
+| `/rot toggle`, `reset`, `status` | Selected mining tracker |
+| `/rot target <material>` | Select a supported material |
+| `/rot session ...` | Pause, resume, reset, copy, or save Current Session |
+| `/rot history ...` | List, open, copy, or delete history records |
+| `/rot slayer ...` | Slayer status, stats, and carry list |
+| `/rot dcarry ...` | Dungeon-floor carry add/remove/list/history (Rot Client+) |
+| `/rot superboom add\|remove\|list` | Extra Auto Superboom walls (Rot Client+) |
+| `/rot termsim [ping]` | Rot Client+ local terminal simulator hub |
+| `/rot autoclicker ...` | Auto Clicker item whitelist (Rot Client+) |
+| `/rot fortune auto\|<mining> [material]` | Material Fortune input |
+
+Gemstones are selected from the searchable UI.
+
+## Privacy
+
+No telemetry, cloud sync, remote analytics, or account-token requirement. Configuration, sessions, history, and optional diagnostics stay in the local Minecraft instance.
+
+Material valuation can request public Hypixel Bazaar data. Price Tooltips, when enabled, also request public item and lowest-BIN snapshots. An optional Slayer carry webhook sends only the configured summary to a URL you provide, and is off by default.
+
+Read [Privacy](../../PRIVACY.md) before sharing diagnostics or launcher logs.
+
+## Development
+
+Java 25 and the included Gradle wrapper:
+
+```powershell
+.\gradlew.bat test testPlus --rerun-tasks --console=plain
+.\gradlew.bat compileClientJava compilePlusJava compilePlusClientJava --console=plain
+git diff --check
+.\gradlew.bat clean build --console=plain
+```
+
+A green build proves packaging. It does not prove in-game correctness. See [Contributing](../../CONTRIBUTING.md), [Branching](../../docs/BRANCHING.md), and [Testing](../../docs/TESTING.md).
+
+## Docs
+
+- [Changelog](../../CHANGELOG.md)
+- [Branching](../../docs/BRANCHING.md) — `main`, `development`, and feature branches
+- [Example profiles](../../docs/PROFILE_PRESETS.md) — the bundled starter profiles and how to change them
+- [Code walkthrough](../../docs/CODE_WALKTHROUGH.md) — how the JAR is organized, Policy/Runtime/Mixin, and the build-to-play loop
+- [Project state](../../docs/PROJECT_STATE.md)
+- [Architecture](../../docs/ARCHITECTURE.md)
+- [QoL utilities](../../docs/QOL_UTILITIES.md)
+- [Branding](../../docs/BRANDING.md)
+- [Issues](https://github.com/rot-tools/Rot-Client/issues)
+- [Discussions](https://github.com/rot-tools/Rot-Client/discussions) — category welcome posts
+- [Which JAR](../../docs/WHICH_JAR.md) — Rot Client vs Rot Client+
+- [Wiki](https://github.com/rot-tools/Rot-Client/wiki) — player guide ([Which JAR](../../docs/WHICH_JAR.md) is the edition picker until that wiki page is copied)
+
+## Credits
+
+Rot Client is created and owned by **Rot Tools**.
+
+## License
+
+[MIT](../../LICENSE). Bundled third-party works (Adobe Source Sans OFL, Hypixel
+public data facts, Minecraft EULA for any vanilla pack paths) are listed in
+[THIRD_PARTY.md](../../THIRD_PARTY.md) and [NOTICE](../../NOTICE).
+
+## Mining/Pet repair candidate — 2026-10-01
+
+Shared Pet XP/tab, commissions/mob markers, SkyMall/HOTM and optional Hypixel Mod API callback repairs; static Dwarven waypoints; Pickobulus timer/alerts and Plus-only estimated preview; Plus-only Puzzler helper. Automated validation is not Minecraft runtime confirmation. Exact Pickobulus and full modern area waypoint coverage remain open. See [repair notes](../../docs/MINING_HUD_FIXES.md).
+
+## Upstream module refresh (2026-10-08)
+
+Shared Pet/commission/API fixes and Plus-only terminal/dagger corrections were ported from the 26.3 candidate. Current simulator defaults are three Melody rows and ten numbers; actual legacy layouts remain supported. See [pinned comparisons and remaining work](../../docs/UPSTREAM_REFRESH_2026-10-08.md). New gameplay behavior requires runtime validation.

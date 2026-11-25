@@ -1,10 +1,10 @@
 # Rot Client rebuild for Minecraft 26.2
 
-Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current source build is `0.1.0-dev.15+mc26.2`, with owner-confirmed per-color MSC Black Glass inside Legacy SkyBlock Textures. The owner confirmed Daily Reward Claim in dev.12 and Auto Clicker in dev.13. [Illegal dev.15 is published on GitHub](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.15). See [edition downloads](../docs/WHICH_JAR.md) for Legal dev.5 and the Plus and Lite references. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
+Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current source build is `0.1.0-dev.21+mc26.2`, with Auto Healing and the Auto Clicker hold delay in local playtest. The owner confirmed Daily Reward Claim in dev.12, Auto Clicker in dev.13, and per-color MSC Black Glass in dev.15. [Current four-edition playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.21). See [edition downloads](../docs/WHICH_JAR.md) for Legal dev.21 and the Plus and Lite references. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
 
 | Edition in Prism | Scope of the first playtest |
 | --- | --- |
-| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands, Auto Loadout, Auto Clicker, Daily Reward Claim and Legacy SkyBlock Textures. |
+| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands, Auto Loadout, Auto Clicker, Daily Reward Claim, Legacy SkyBlock Textures and Auto Healing. |
 | **26.2 Mod Client Legal** | Dashboard and HUD editor. Legal module ports start after the Illegal dashboard and the relevant module have been tested. |
 
 The dashboard reuses Rot Client+'s drawing code, UI font, dashboard dimensions, tab strip and scroll behavior. The HUD landing page has a Hide switch and Settings button for each supported vanilla HUD layer. Click a visible element in the world editor to select it, then drag it, scroll to resize, or use **Position → Default**. Elements that are temporarily absent have a labeled positioning marker when opened through Settings. Illegal saves interface settings in `config/rotclientillegal/interface.json` and Legal uses `config/rotclientlegal/interface.json`.
@@ -20,8 +20,8 @@ cd rebuild-26.2
 
 On Linux and macOS, run `./gradlew build` from the same directory. The build includes `verifyEditions`, which checks Fabric metadata, verifies the shared classes, and checks that Illegal classes and mixins stay out of the Legal JAR. The playable files are:
 
-- `build/libs/RotClientIllegal-0.1.0-dev.15+mc26.2.jar`
-- `build/libs/RotClientLegal-0.1.0-dev.15+mc26.2.jar` (source build). The published Legal playtest is dev.5.
+- `build/libs/RotClientIllegal-0.1.0-dev.21+mc26.2.jar`
+- `build/libs/RotClientLegal-0.1.0-dev.21+mc26.2.jar` (source build). The published Legal playtest is dev.21.
 
 Pass `-PmscBlackGlassPack=<path to MSC-Black-Glass-26.2.zip>` to bundle a
 local copy into Illegal. The module can also read that ZIP by name from the
@@ -32,7 +32,7 @@ instance's `resourcepacks` folder.
 1. Close Minecraft and open **26.2 Rot Client Playtest → Edit → Mods**.
 2. Add the two candidate JARs if they are absent. Keep the existing Plus and Lite files in the instance.
 3. Enable **one** Rot Client edition at a time. For the first pass, disable the old Plus and Lite entries and enable **26.2 Mod Client Illegal**. Fabric blocks combinations of editions.
-4. Start Minecraft and open the dashboard with **Right Shift** or `/rot`. Use a local world or the owner's designated test server for the Illegal candidate.
+4. Start Minecraft and open the dashboard with **the configured Click GUI key** or `/rot`. Use a local world or the owner's designated test server for the Illegal candidate.
 5. Try tabs, the sidebar, module search, expandable cards, settings search, and Appearance controls. In the dashboard search, type **hotbar** and try both its suggestion and **Settings**. Check the Hide switch, drag and scroll on the hotbar, then try **Default**. Click another visible element to change selection. Restart to verify that each edition keeps its own layout.
 6. Test the four starting features separately. Enable Click GUI's custom shortcut and check it opens and closes the dashboard. Check Fullbright and Night on and off, then assign an Auto Sprint key and verify one toggle per press. Enable AutoCommands in the module card and its popup in **Popup Style**. Add a shortcut and check that one press sends one command. Verify the warp feedback and popup appearance in the test environment.
 7. Close Minecraft, switch to Legal, and repeat the dashboard and HUD checks. Its settings and available modules should be independent from Illegal.
@@ -40,6 +40,18 @@ instance's `resourcepacks` folder.
 Record the edition, JAR version, what you clicked, what you saw, and whether the result survived a restart. A Gradle build verifies the package contents. The in-game checklist verifies interaction and rendering.
 
 ## Development workflow
+
+### Dev.19 Auto Healing and Auto Clicker playtest
+
+- Open **Combat → Auto Healing → Healing settings**. Choose the wand or Zombie Sword variant you keep on the hotbar. The defaults are **Wand of Atonement**, **20%** health, a **6 s** minimum interval and **2 ticks** for each timing slider. The module starts off.
+- Set **Select delay**, **Heal delay** and **Return delay** independently from 1–10 ticks. The client waits before selecting the item, waits before activating the ability, then waits before returning to the original slot. At 20 TPS one client tick is about 50 ms.
+- A manual hotbar change cancels the pending steps and keeps your selection. Auto Healing re-arms after a fresh HP reading above the threshold.
+- The HP check accepts readings at or below the configured percentage, including a large sudden drop. Full HP, dead players and stale readings do not trigger healing. Cooldown starts at the use attempt.
+- Test both ends of the slider, manual interruption before and after use, item removal, changing worlds, and Auto Clicker resuming after restoration. In-game confirmation remains pending.
+- With Auto Clicker bound to a mouse button, tap it quickly for a normal Minecraft click. Holding it continuously for at least 180 ms lets the repeater take over on a game tick. Release to stop repetition and reset the timer.
+- Confirm a missing item and an open menu produce no attempt. Check that the next attempt honors the minimum interval and any longer item cooldown visible in the item's lore or vanilla cooldown state.
+
+Hypixel lists the healing wand and Zombie Sword variants and their revised Vitality costs in its [0.26.1 Healing Revamp notes](https://hypixel.net/threads/hypixel-skyblock-0-26-1-new-player-improvements-harvest-feast-changes-healing-revamp-and-more.6127383/).
 
 ### Dev.15 MSC Black Glass playtest
 
@@ -104,3 +116,8 @@ Legacy SkyBlock Textures uses the original Rot item-model map and the three
 Rot dark packs from the 26.2 Plus source tree. Each bundled pack retains its
 attribution. The model substitution runs in item rendering, and Minecraft
 handles resource pack activation and order.
+
+### Dev.21 dashboard and missing healing items
+
+Use /rot or /rotclient to open the dashboard. Click GUI provides an optional keyboard shortcut.
+Auto Healing stays idle without the configured healing item in the hotbar and resumes detecting it when reinserted. Removing it during a pending pre-use delay cancels the attempt.

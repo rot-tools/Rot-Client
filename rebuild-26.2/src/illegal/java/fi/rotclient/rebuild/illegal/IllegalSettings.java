@@ -31,6 +31,7 @@ final class IllegalSettings {
     int clickGuiKey = GLFW.GLFW_KEY_UNKNOWN;
     AutoLoadoutSettings autoLoadout = new AutoLoadoutSettings();
     AutoClickerSettings autoClicker = new AutoClickerSettings();
+    AutoHealingSettings autoHealing = new AutoHealingSettings();
 
     static IllegalSettings load() {
         if (Files.isRegularFile(FILE)) {
@@ -41,6 +42,8 @@ final class IllegalSettings {
                     restored.autoLoadout.normalize();
                     if (restored.autoClicker == null) restored.autoClicker = new AutoClickerSettings();
                     restored.autoClicker.normalize();
+                    if (restored.autoHealing == null) restored.autoHealing = new AutoHealingSettings();
+                    restored.autoHealing.normalize();
                     if (restored.blackGlass == null) restored.blackGlass = BlackGlassSettings.OFF;
                     return restored;
                 }

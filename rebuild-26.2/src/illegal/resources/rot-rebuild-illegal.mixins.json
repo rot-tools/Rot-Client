@@ -5,8 +5,13 @@
   "client": [
     "AutoClickerInputMixin",
     "AutoClickerKeyMappingAccessor",
+    "AutoClickerMouseMixin",
     "AutoCommandsKeyboardMixin",
     "AutoCommandsWarpMixin",
+    "AutoHealingActionBarMixin",
+    "AutoHealingInputMixin",
+    "AutoHealingInventoryMixin",
+    "AutoHealingGameModeAccessor",
     "BlackGlassPackSourceMixin",
     "LegacyItemModelMixin",
     "LegacyTextureDataAccessor",

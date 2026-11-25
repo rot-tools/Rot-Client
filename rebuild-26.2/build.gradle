@@ -123,6 +123,9 @@ tasks.register('verifyEditions') {
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/IllegalEdition.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoLoadout.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoClicker.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoHealing.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoHealingActionBarMixin.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoHealingInputMixin.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/RewardClaimScreen.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/RewardBookMixin.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/LegacyItemModelMixin.class') != null

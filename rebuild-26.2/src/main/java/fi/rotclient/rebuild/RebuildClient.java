@@ -3,11 +3,9 @@ package fi.rotclient.rebuild;
 import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
@@ -18,7 +16,6 @@ public final class RebuildClient implements ClientModInitializer {
     private static boolean testEdition;
     private static InterfaceSettings settings;
     private static List<ModuleCard> modules = List.of();
-    private boolean dashboardKeyDown;
 
     @Override
     public void onInitializeClient() {
@@ -34,22 +31,14 @@ public final class RebuildClient implements ClientModInitializer {
         edition.initialize();
         modules = List.copyOf(edition.modules());
         HudLayerSettings.register();
-        ClientTickEvents.END_CLIENT_TICK.register(this::handleDashboardKey);
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, access) ->
-                dispatcher.register(literal("rot").executes(context -> {
-                    Minecraft client = context.getSource().getClient();
-                    client.schedule(() -> openDashboard(client.gui.screen()));
-                    return 1;
-                })));
-    }
-
-    private void handleDashboardKey(Minecraft client) {
-        boolean down = GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-        boolean pressed = down && !dashboardKeyDown;
-        dashboardKeyDown = down;
-        if (!pressed || client.player == null || !client.isWindowActive() || client.gui.overlay() != null) return;
-        if (client.gui.screen() == null) openDashboard(null);
-        else if (client.gui.screen() instanceof DashboardScreen screen && !screen.isEditing()) screen.onClose();
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, access) -> {
+            var dashboardCommand = dispatcher.register(literal("rot").executes(context -> {
+                Minecraft client = context.getSource().getClient();
+                client.schedule(() -> openDashboard(client.gui.screen()));
+                return 1;
+            }));
+            dispatcher.register(literal("rotclient").executes(dashboardCommand.getCommand()).redirect(dashboardCommand));
+        });
     }
 
     public static void openDashboard(Screen parent) {

@@ -1,68 +1,21 @@
-# Which JAR?
+# Minecraft 26.2 editions
 
-## Current 26.2 playtest
+[Current four-edition playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.21)
 
-Choose an edition below and enable one at a time. The [latest Illegal playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.15) includes the owner-tested Auto Clicker, Daily Reward Claim, and MSC Black Glass color selection.
-
-| Edition | Download | Scope |
+| Edition | Download | Role |
 | --- | --- | --- |
-| **Rot Client Illegal** | [RotClientIllegal-0.1.0-dev.15+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.15/RotClientIllegal-0.1.0-dev.15%2Bmc26.2.jar) | Primary 26.2 development edition for the designated test server. For MSC Black Glass, keep MSC-Black-Glass-26.2.zip in resourcepacks. |
-| Rot Client Legal | [RotClientLegal-0.1.0-dev.5+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientLegal-0.1.0-dev.5%2Bmc26.2.jar) | Same dashboard and HUD editor, without Illegal modules. |
-| Rot Client+ | [RotClientPlus-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client and the rebuild's reference. |
-| Rot Client Lite | [RotClient-2.0.11+mc26.2.jar](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.7/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition and reference. |
+| **Rot Client Illegal dev.21** | [Download JAR](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.21/RotClientIllegal-0.1.0-dev.21%2Bmc26.2.jar) | Primary Minecraft 26.2 development and test edition, maintained by the project owner. |
+| **Rot Client Legal dev.21** | [Download JAR](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.21/RotClientLegal-0.1.0-dev.21%2Bmc26.2.jar) | Shared dashboard and HUD foundation, developed by the collaborator. |
+| Rot Client+ 2.0.11 | [Reference JAR](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.21/RotClientPlus-2.0.11%2Bmc26.2.jar) | Previous full client, preserved as a feature and source reference. |
+| Rot Client Lite 2.0.11 | [Reference JAR](https://github.com/rot-tools/Rot-Client/releases/download/playtest-26.2-rebuild-dev.21/RotClient-2.0.11%2Bmc26.2.jar) | Previous HUD/QoL edition, preserved as a reference. |
 
-The [rebuild guide](../rebuild-26.2/README.md) covers the current source and test steps. The notes below describe historical releases of the previous Plus and Lite client line.
+Illegal and Legal dev.21 are the current rebuild artifacts. Plus and Lite 2.0.11
+are preserved reference artifacts from the earlier build line. Enable one edition
+at a time. Public distribution review for Legal and legacy Lite remains open.
 
-## Legacy editions
+The public Illegal artifact reads MSC Black Glass from the original local
+resource ZIP. The owner's installed local build additionally embeds that ZIP.
+Both use the same Java implementation. Checksums for the four public files
+are in the release's SHA256SUMS.txt.
 
-This repository builds **two** Fabric mods from the same source. They share
-package `fi.rotclient`, author Rot Tools, icon, version `2.0.1+mc26.2`, and
-the `/rot` command. They must not be **enabled** at the same time (each
-`breaks` the other). You can keep both files in a Prism `mods/` folder and
-enable the one you want.
-
-| Edition | Display name | Fabric id | File | Catalog |
-| --- | --- | --- | --- | --- |
-| Lite | Rot Client | `rotclient` | `RotClient-2.0.1+mc26.2.jar` | **83** HUD / QoL parents |
-| Automation | Rot Client+ | `rotclientplus` | `RotClientPlus-2.0.1+mc26.2.jar` | **135** parents (current full client) |
-
-Skip `-sources.jar`, `-javadoc.jar`, and `-dev-unsigned.jar`. Verify
-`SHA256SUMS.txt` when you download from GitHub.
-
-## Rot Client (legit)
-
-This is the HUD/QoL playtest edition. Trajectories, World Scanner, Mob
-Highlight, the complete Dungeons catalog/runtime, Auto Sprint's input
-override, and Terminal Click Trails are Plus-only. Etherwarp destination boxes respect block occlusion
-in Lite, including when an older profile saved depth check off. Mixed dungeon
-policy classes still require an edition audit before a public Lite release.
-
-Older profiles retain moved Plus settings, some through shared compatibility
-fields and others as opaque JSON, so switching editions does not erase them.
-`verifyLegitJar` checks the packaged archive for the
-implementation classes and identifiers already separated. Automated checks
-do not replace a Lite Minecraft runtime playtest.
-
-## Rot Client+ (automation)
-
-This is the full 135-module client. Clickers, wardrobe automation, Ghosts,
-Escrow Fix, Free Camera, Inventory Walk, auto terminals, Farm Keys, and the
-other cheat-tagged options stay **opt-in and off by default**. Do not use
-those features on Hypixel.
-
-Plus settings persist in `rotclient-plus.json` so switching JARs in the same
-instance does not mix cheat toggles into the legit `rotclient.json`.
-
-## Playtest and releases
-
-Each green push to `development` replaces the
-[playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest)
-pre-release with **both** JARs and `SHA256SUMS.txt`. Versioned GitHub
-Releases do the same.
-
-The [26.1.2 Lite playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.1.2)
-is built from `release/26.1.2` with the current dungeon edition split. It is a
-separate artifact and requires Minecraft 26.1.2. No 26.3 JAR is available:
-`port/26.3` still fails compilation. A 26.2 JAR must not be relabeled for 26.3.
-Every version still needs a matching Minecraft runtime smoke test before
-release claims.
+[Full feature list](../README.md) · [Build the rebuild](../rebuild-26.2/README.md)
