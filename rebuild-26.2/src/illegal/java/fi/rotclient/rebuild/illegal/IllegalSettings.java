@@ -24,9 +24,11 @@ final class IllegalSettings {
     boolean autoCommands;
     boolean autoSprint;
     boolean clickGui;
+    boolean rewardClaim;
     int autoSprintKey = GLFW.GLFW_KEY_UNKNOWN;
     int clickGuiKey = GLFW.GLFW_KEY_UNKNOWN;
     AutoLoadoutSettings autoLoadout = new AutoLoadoutSettings();
+    AutoClickerSettings autoClicker = new AutoClickerSettings();
 
     static IllegalSettings load() {
         if (Files.isRegularFile(FILE)) {
@@ -35,6 +37,8 @@ final class IllegalSettings {
                 if (restored != null) {
                     if (restored.autoLoadout == null) restored.autoLoadout = new AutoLoadoutSettings();
                     restored.autoLoadout.normalize();
+                    if (restored.autoClicker == null) restored.autoClicker = new AutoClickerSettings();
+                    restored.autoClicker.normalize();
                     return restored;
                 }
             } catch (IOException | RuntimeException error) {

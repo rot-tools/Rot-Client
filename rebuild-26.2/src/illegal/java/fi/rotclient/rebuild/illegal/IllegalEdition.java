@@ -12,12 +12,20 @@ import fi.rotclient.rebuild.illegal.autocommands.AutoCommandsClient;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 
 public final class IllegalEdition implements ClientEdition {
+    public static final int AUTO_ATTACK = 1;
+    public static final int AUTO_USE = 2;
+    public static final int AUTO_BREAK = 4;
+    public static final int REPLACE_VANILLA_ATTACK = 8;
+    public static final int REPLACE_VANILLA_USE = 16;
     private static IllegalSettings settings = new IllegalSettings();
     private static AutoLoadout autoLoadout;
+    private static AutoClicker autoClicker;
+    private static RewardClaim rewardClaim;
     private boolean sprintWasDown;
     private boolean dashboardWasDown;
 
@@ -25,7 +33,11 @@ public final class IllegalEdition implements ClientEdition {
     public void initialize() {
         settings = IllegalSettings.load();
         autoLoadout = new AutoLoadout(settings.autoLoadout);
+        autoClicker = new AutoClicker(settings.autoClicker);
         new AutoCommandsClient().register();
+        rewardClaim = new RewardClaim(settings);
+        rewardClaim.register();
+        ClientTickEvents.START_CLIENT_TICK.register(autoClicker::tick);
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
     }
 
@@ -74,7 +86,33 @@ public final class IllegalEdition implements ClientEdition {
                             settings.autoLoadout.enabled = enabled;
                             settings.save();
                         }), new Action("Edit timing and keybinds", parent ->
-                                Minecraft.getInstance().gui.setScreen(new AutoLoadoutScreen(parent, settings))))));
+                                Minecraft.getInstance().gui.setScreen(new AutoLoadoutScreen(parent, settings))))),
+                new ModuleCard("reward_claim", "Daily Reward Claim",
+                        "Open Hypixel daily rewards with item icons and streak details.", Category.INTERFACE,
+                        List.of(new Toggle("Daily Reward Claim", () -> settings.rewardClaim, value -> {
+                            settings.rewardClaim = value;
+                            settings.save();
+                        }))),
+                new ModuleCard("auto_clicker", "Auto Clicker",
+                        "Repeat attack or use while holding an input in a test world.", Category.COMBAT,
+                        List.of(new Toggle("Auto Clicker", () -> settings.autoClicker.enabled, value -> {
+                                    settings.autoClicker.enabled = value;
+                                    settings.save();
+                                }),
+                                new Action("Clicker settings", parent ->
+                                        Minecraft.getInstance().gui.setScreen(new AutoClickerScreen(parent, settings))))));
+    }
+
+    public static int autoClickerActions(Minecraft client) {
+        return autoClicker == null ? 0 : autoClicker.takeActions(client);
+    }
+
+    public static boolean openRewardBook(BookViewScreen book, BookViewScreen.BookAccess access) {
+        return rewardClaim != null && rewardClaim.openBook(book, access);
+    }
+
+    public static boolean autoClickerKeyAssigned(int binding) {
+        return settings.autoClicker.hasBinding(binding);
     }
 
     public static boolean autoCommandsEnabled() {
@@ -154,6 +192,7 @@ public final class IllegalEdition implements ClientEdition {
     }
 
     private static int configurableKey(int key) {
-        return key == GLFW.GLFW_KEY_RIGHT_SHIFT || loadoutKeyAssigned(key) ? GLFW.GLFW_KEY_UNKNOWN : key;
+        return key == GLFW.GLFW_KEY_RIGHT_SHIFT || loadoutKeyAssigned(key) || autoClickerKeyAssigned(key)
+                ? GLFW.GLFW_KEY_UNKNOWN : key;
     }
 }

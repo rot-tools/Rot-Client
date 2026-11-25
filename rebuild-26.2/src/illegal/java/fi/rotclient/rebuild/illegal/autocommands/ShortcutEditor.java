@@ -118,7 +118,8 @@ final class ShortcutEditor extends Screen {
                 status = "Choose a key without modifiers.";
                 return true;
             }
-            if (keyInUse(candidate) || IllegalEdition.loadoutKeyAssigned(event.key())) {
+            if (keyInUse(candidate) || IllegalEdition.loadoutKeyAssigned(event.key())
+                    || IllegalEdition.autoClickerKeyAssigned(event.key())) {
                 status = "That key is already assigned to a command or loadout.";
                 return true;
             } else {

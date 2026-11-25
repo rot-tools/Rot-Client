@@ -3,10 +3,14 @@
   "package": "fi.rotclient.rebuild.illegal.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "AutoClickerInputMixin",
+    "AutoClickerKeyMappingAccessor",
     "AutoCommandsKeyboardMixin",
     "AutoCommandsWarpMixin",
     "LightmapRenderStateExtractorMixin",
     "LocalPlayerAutoSprintMixin",
+    "RewardBookAccessor",
+    "RewardBookMixin",
     "SkyRendererExtractMixin"
   ],
   "injectors": { "defaultRequire": 1 }

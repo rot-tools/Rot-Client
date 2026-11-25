@@ -101,6 +101,11 @@ tasks.register('verifyEditions') {
                 assert illegalMetadata.breaks.keySet() == ['rotclient', 'rotclientplus', 'rotclientlegal'] as Set
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/IllegalEdition.class') != null
                 assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoLoadout.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/AutoClicker.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/RewardClaimScreen.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/RewardBookMixin.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoClickerInputMixin.class') != null
+                assert testJar.getEntry('fi/rotclient/rebuild/illegal/mixin/AutoClickerKeyMappingAccessor.class') != null
                 assert testJar.getEntry('rot-rebuild-illegal.mixins.json') != null
                 def uiMixin = 'rot-rebuild-ui.mixins.json'
                 def entries = parser.parse(publicJar.getInputStream(publicJar.getEntry(uiMixin)))

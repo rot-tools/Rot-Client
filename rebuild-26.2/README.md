@@ -1,10 +1,10 @@
 # Rot Client rebuild for Minecraft 26.2
 
-Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current Illegal build is `0.1.0-dev.7+mc26.2`. The [published GitHub playtest](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.7) contains Illegal dev.7, Legal dev.5 and the Plus and Lite reference builds. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
+Rot Tools is rebuilding the dashboard and HUD editor before bringing modules back one at a time. The current source build is `0.1.0-dev.13+mc26.2`. Auto Clicker recognizes Hypixel by default. The owner confirmed Daily Reward Claim in dev.12 and Auto Clicker in dev.13. [Illegal dev.13 is published on GitHub](https://github.com/rot-tools/Rot-Client/releases/tag/playtest-26.2-rebuild-dev.13). See [edition downloads](../docs/WHICH_JAR.md) for Legal dev.5 and the Plus and Lite references. See the [team handoff](TEAM_HANDOFF.md) for responsibilities and first tasks.
 
 | Edition in Prism | Scope of the first playtest |
 | --- | --- |
-| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands and Auto Loadout. |
+| **26.2 Mod Client Illegal** | Primary development edition for the owner's SkyBlock test server. Dashboard, HUD editor, Click GUI, Fullbright and Night, Auto Sprint, AutoCommands, Auto Loadout, Auto Clicker and Daily Reward Claim. |
 | **26.2 Mod Client Legal** | Dashboard and HUD editor. Legal module ports start after the Illegal dashboard and the relevant module have been tested. |
 
 The dashboard reuses Rot Client+'s drawing code, UI font, dashboard dimensions, tab strip and scroll behavior. The HUD landing page has a Hide switch and Settings button for each supported vanilla HUD layer. Click a visible element in the world editor to select it, then drag it, scroll to resize, or use **Position → Default**. Elements that are temporarily absent have a labeled positioning marker when opened through Settings. Illegal saves interface settings in `config/rotclientillegal/interface.json` and Legal uses `config/rotclientlegal/interface.json`.
@@ -20,8 +20,8 @@ cd rebuild-26.2
 
 On Linux and macOS, run `./gradlew build` from the same directory. The build includes `verifyEditions`, which checks Fabric metadata, verifies the shared classes, and checks that Illegal classes and mixins stay out of the Legal JAR. The playable files are:
 
-- `build/libs/RotClientIllegal-0.1.0-dev.7+mc26.2.jar`
-- `build/libs/RotClientLegal-0.1.0-dev.7+mc26.2.jar` (source-build candidate; published Legal playtest remains dev.5)
+- `build/libs/RotClientIllegal-0.1.0-dev.13+mc26.2.jar`
+- `build/libs/RotClientLegal-0.1.0-dev.13+mc26.2.jar` (source build). The published Legal playtest is dev.5.
 
 ## Prism playtest
 
@@ -36,6 +36,24 @@ On Linux and macOS, run `./gradlew build` from the same directory. The build inc
 Record the edition, JAR version, what you clicked, what you saw, and whether the result survived a restart. A Gradle build verifies the package contents. The in-game checklist verifies interaction and rendering.
 
 ## Development workflow
+
+### Dev.13 Auto Clicker playtest
+
+- With **Daily Reward Claim** enabled, open the Daily Reward from the server menu. The picker uses the official link from the book or the matching system message. Verify that an ordinary book and the **Open book** fallback still open normally.
+- Bind the **Left key** to the left mouse button and **Right key** to the right mouse button. Hypixel and singleplayer are eligible by default. An additional test server can be set under **Customisation → Server and item filters**. Enable the module and the side you want to test. Check rate, release and native Attack and Use with the module off. The Ionic-style CPS accumulator, jitter and block hold are used here as well.
+
+### Dev.10 Daily Reward Claim playtest
+
+- Turn on **Interface → Daily Reward Claim** and trigger an official daily reward link. Confirm the cards show icons, titles and rarity. Compare **Streak** and **Best** with the official page.
+- Select a reward and press **Claim** on a page that allows claiming in-game. When the page requires a browser step, use **Open website**. The original chat link remains available. The module is off by default.
+
+### Dev.9 Auto Clicker playtest
+
+- Open **Combat → Auto Clicker → Clicker settings**. Open **Left clicker** or **Right clicker**, assign an unused keyboard key or mouse button, and select 5–20 CPS. Under **Customisation**, set CPS jitter to 1–3 for Ionic-style variation or 0 for a fixed rate.
+- Under **Customisation → Server and item filters**, you can enter an extra test server address, including its port when present. Enable Auto Clicker and the side you want to test.
+- Hold a binding in the world and release it. Open a menu or switch window focus while holding it, then return to the game and verify a fresh press is required. Check block breaking, separate item filters, and the Dungeon Breaker guard. If Ionic is installed, turn off its Auto Clicker during this test.
+- **Allow breaking blocks** switches to continuous vanilla Attack when a solid block is targeted. Turning it off keeps ordinary click pulses on block targets. Left and right whitelist entries match an item UUID, ID or exact display name.
+- **Terminator only**, under **Server and item filters**, replaces the two regular bindings with repeated left clicks while holding vanilla Use with an item whose SkyBlock ID is `TERMINATOR`. It uses the left CPS setting.
 
 ### Dev.7 Illegal playtest
 
@@ -60,3 +78,8 @@ The original Rot Client UI code and assets come from the 26.2 Plus project. Both
 Auto Loadout's menu compatibility was reviewed against Starred's Ionic
 `0.0.2+26.2` binary and the [official Loadouts notes](https://hypixel.net/threads/hypixel-skyblock-0-26-skyblock-resource-pack-loadouts-security-quest-and-more.6117801/).
 Its Rot Client implementation is written independently.
+
+Auto Clicker uses the old 26.2 Plus behavior as an in-repository reference.
+Starred's Ionic `0.0.2+26.2` binary was reviewed for its two independent click
+rates, tick accumulator, block mode and item filters. The rebuild implements
+those behaviors in Java using its own settings and Minecraft's input loop.

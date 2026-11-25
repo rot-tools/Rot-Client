@@ -128,7 +128,8 @@ final class AutoLoadoutScreen extends Screen {
         int existing = settings.slotForKey(key);
         String keyName = InputConstants.Type.KEYSYM.getOrCreate(key).getName();
         boolean command = AutoCommandsClient.keyIsAssigned(keyName);
-        if ((existing >= 0 && existing != capturing) || command || key == config.clickGuiKey || key == config.autoSprintKey) {
+        if ((existing >= 0 && existing != capturing) || command || IllegalEdition.autoClickerKeyAssigned(key)
+                || key == config.clickGuiKey || key == config.autoSprintKey) {
             status = "That key is already assigned in Rot Client.";
             return true;
         }
